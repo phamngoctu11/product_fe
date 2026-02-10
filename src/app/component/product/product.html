@@ -1,0 +1,142 @@
+<div class="container mt-4">
+  <h2 class="text-center mb-4">Quản lý Sản Phẩm</h2>
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Thêm sản phẩm mới</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <form [formGroup]="productForm" class="w-100">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="pID" class="form-label fw-bold">ID sản phẩm</label>
+              <input type="text" id="pID" class="form-control" formControlName="id" readonly />
+            </div>
+            <div class="col-md-6">
+              <label for="pName" class="form-label fw-bold">Tên sản phẩm</label>
+              <input
+                type="text"
+                id="pName"
+                class="form-control"
+                required
+                minlength="5"
+                formControlName="product_name"
+                placeholder="Ví dụ: Iphone 15"
+              />
+              <div class="text-danger">
+                @if (productForm.controls['product_name'].errors?.['required']) {
+                  <span> ProductName is required!</span>
+                }
+                @if (productForm.controls['product_name'].errors?.['minlength']) {
+                  <span>Atleast 5 Characters!</span>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="pQty" class="form-label fw-bold">Số lượng</label>
+              <input
+                type="number"
+                id="pQty"
+                class="form-control"
+                formControlName="quantity"
+                placeholder="Nhập số lượng"
+              />
+              <div class="text-danger">
+                @if (productForm.controls['quantity'].errors?.['required']) {
+                  <span> Quantity is required!</span>
+                }
+                @if (productForm.controls['quantity'].errors?.['min']) {
+                  <span> Quantity must be atleast 1!</span>
+                }
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="pPri" class="form-label fw-bold">Giá tiền</label>
+              <input
+                type="number"
+                id="pPri"
+                class="form-control"
+                formControlName="price"
+                placeholder="Nhập giá tiền"
+              />
+              <div class="text-danger">
+                @if (productForm.controls['price'].errors?.['required']) {
+                  <span> Price is required!</span>
+                }
+              </div>
+            </div>
+          </div>
+        </form>
+        <div class="col-12">
+          <button class="btn btn-success w-100 mb-2" (click)="create()">
+            <i class="bi bi-save"></i> Thêm mới sản phẩm
+          </button>
+          <button class="btn btn-warning w-100" (click)="update()">Cập nhật</button>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h5 class="mb-0">Danh sách sản phẩm</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover table-bordered mb-0 align-middle">
+            <thead class="table-dark text-center">
+              <tr>
+                <th scope="col" style="width: 10%">ID</th>
+                <th scope="col" style="width: 20%">Tên Sản Phẩm</th>
+                <th scope="col" style="width: 15%">Số lượng</th>
+                <th scope="col" style="width: 15%">Giá tiền</th>
+                <th scope="col" style="width: 20%">Hành động</th>
+                <th scope="col" style="width: 20%">Số lượng thêm</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of plist; track $index) {
+                <tr>
+                  <td class="text-center">{{ p.id }}</td>
+                  <td>{{ p.product_name }}</td>
+                  <td class="text-center">
+                    <span>{{ p.quantity }}</span>
+                  </td>
+                  <td class="text-center">
+                    <span>{{ p.price | na }}</span>
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group" role="group">
+                      <button class="btn btn-warning btn-sm me-2" (click)="onEdit(p)">Sửa</button>
+
+                      <button class="btn btn-danger btn-sm" (click)="delete(p)">Xóa</button>
+                      <button
+                        class="btn btn-success btn-sm ms-2"
+                        (click)="onAddToCart(p.id, $index)"
+                      >
+                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      class="form-control form-control-sm"
+                      style="width: 80px"
+                      min="1"
+                      [(ngModel)]="addQuan[$index]"
+                    />
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted">Chưa có sản phẩm nào</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
