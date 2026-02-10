@@ -42,10 +42,13 @@ export class CartService {
     }) as Observable<string>;
   }
   updateQuantity(userId: number, productId: number, newQuantity: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/update-quantity`, {
-      userId,
-      productId,
-      newQuantity,
+    return this.http.put(`${this.apiUrl}/update`, null, {
+      params: {
+        userId: userId.toString(),
+        productId: productId.toString(),
+        quantity: newQuantity.toString(),
+      },
+      responseType: 'text',
     });
   }
 }
