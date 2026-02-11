@@ -4,7 +4,6 @@ export interface CartItemRes {
   quantity: number;
   price: number;
 }
-
 export interface CartRes {
   user_id: number;
   items: CartItemRes[];

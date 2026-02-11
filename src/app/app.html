@@ -16,38 +16,27 @@
       >
         <i class="bi bi-person me-2"></i> User
       </a>
-
-      <div class="list-group-item bg-light border-0">
-        <a
-          class="text-decoration-none text-dark d-flex justify-content-between align-items-center"
-          data-bs-toggle="collapse"
-          href="#treeviewMenu"
-          role="button"
-        >
-          <span><i class="bi bi-folder me-2"></i> Categories</span>
-          <i class="bi bi-chevron-down small"></i>
-        </a>
-        <div class="collapse ps-3 mt-2" id="treeviewMenu">
-          <a href="#" class="list-group-item list-group-item-action border-0 py-1 small">Action</a>
-          <a href="#" class="list-group-item list-group-item-action border-0 py-1 small"
-            >Another action</a
-          >
-          <a
-            href="#"
-            class="list-group-item list-group-item-action border-0 py-1 small text-muted italic"
-            >Disabled</a
-          >
-        </div>
-      </div>
     </div>
   </div>
 
-  <div class="flex-grow-1 p-4" id="page-content-wrapper">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4">
-      <div class="container-fluid"></div>
+  <div class="flex-grow-1" id="page-content-wrapper">
+    <nav class="navbar navbar-light bg-light border-bottom">
+      <div class="container-fluid justify-content-end">
+        <button class="btn btn-outline-success me-2" routerLink="login" routerLinkActive="active">
+          Login
+        </button>
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          type="button"
+          routerLink="login"
+          (click)="logout()"
+        >
+          LogOut
+        </button>
+      </div>
     </nav>
 
-    <div class="container-fluid">
+    <div class="p-4">
       <router-outlet></router-outlet>
     </div>
   </div>

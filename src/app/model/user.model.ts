@@ -1,12 +1,11 @@
 import { CartRes } from './cart.model';
-
 export interface UserResDTO {
   id: number;
   username: string;
   role: string;
   cart: CartRes;
+  reputation: number;
 }
-
 export interface UserCreDTO {
   id?: number;
   username: string;
@@ -18,7 +17,6 @@ export interface LoginResponse {
   user_id: number;
   username: string;
 }
-
 export interface LoginRequest {
   username: string;
   password?: string;

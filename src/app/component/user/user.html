@@ -60,9 +60,10 @@
         <table class="table table-striped table-hover table-bordered mb-0 align-middle">
           <thead class="table-dark text-center">
             <tr>
-              <th scope="col" style="width: 10%">ID</th>
-              <th scope="col" style="width: 30%">Username</th>
+              <th scope="col" style="width: 20%">ID</th>
+              <th scope="col" style="width: 20%">Username</th>
               <th scope="col" style="width: 20%">Role</th>
+              <th scope="col" style="width: 20%">Reputation</th>
               <th scope="col" style="width: 20%">Hành động</th>
             </tr>
           </thead>
@@ -72,6 +73,7 @@
                 <td class="text-center">{{ u.id }}</td>
                 <td class="text-center">{{ u.username }}</td>
                 <td class="text-center">{{ u.role }}</td>
+                <td class="text-center">{{ u.reputation }}</td>
                 <td class="text-center">
                   <div class="btn-group" role="group">
                     <button (click)="openCartModal(u.id)" class="btn btn-sm btn-info">

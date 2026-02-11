@@ -5,7 +5,6 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { CartService } from '../../service/cart.service';
 import { CartRes } from '../../model/cart.model';
 import { forkJoin, Observable, of } from 'rxjs';
-
 @Component({
   selector: 'app-cart-modal',
   standalone: true,
@@ -14,29 +13,26 @@ import { forkJoin, Observable, of } from 'rxjs';
 })
 export class CartModalComponent implements OnInit {
   isLoading = false;
-  listCurQuan: number[] = []; // Mảng lưu số lượng tạm thời trên giao diện
+  listCurQuan: number[] = [];
   public cartData?: CartRes;
   public userId = inject(MAT_DIALOG_DATA);
-  currentUser: any; // Thông tin người đăng nhập (id, role, ...)
+  currentUser: any;
   isOwner: boolean = false;
   constructor(
     private cartService: CartService,
     public dialogRef: MatDialogRef<CartModalComponent>,
   ) {}
-
   ngOnInit(): void {
     const userStr = localStorage.getItem('user_id');
     this.isOwner = userStr === this.userId.toString();
     this.loadCart();
   }
-
   loadCart() {
     this.isLoading = true;
     this.cartService.getCartByUserId(this.userId).subscribe({
       next: (res) => {
         this.cartData = res;
         if (this.cartData && this.cartData.items) {
-          // Gán giá trị ban đầu từ Backend vào mảng tạm
           this.listCurQuan = this.cartData.items.map((item: any) => item.quantity);
         }
         this.isLoading = false;
@@ -47,8 +43,6 @@ export class CartModalComponent implements OnInit {
       },
     });
   }
-
-  // Hàm thay đổi số lượng trên UI
   changeQuantity(index: number, delta: number) {
     const newValue = this.listCurQuan[index] + delta;
     if (newValue >= 1) {
@@ -56,7 +50,6 @@ export class CartModalComponent implements OnInit {
       this.updateTempTotal();
     }
   }
-
   updateTempTotal() {
     if (this.cartData && this.cartData.items) {
       this.cartData.totalPrice = this.cartData.items.reduce((total, item, i) => {
