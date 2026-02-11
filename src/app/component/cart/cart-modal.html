@@ -30,17 +30,21 @@
               <tr>
                 <td class="ps-3 fw-semibold text-primary">{{ item.productName }}</td>
                 <td class="text-center">
-                  <div
-                    class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center p-1"
-                  >
-                    <button class="btn btn-danger btn-custom-sm" (click)="changeQuantity(i, -1)">
-                      -
-                    </button>
-                    <span class="mx-2 fw-bold">{{ listCurQuan[i] }}</span>
-                    <button class="btn btn-success btn-custom-sm" (click)="changeQuantity(i, 1)">
-                      +
-                    </button>
-                  </div>
+                  @if (isOwner) {
+                    <div
+                      class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center p-1"
+                    >
+                      <button class="btn btn-danger btn-custom-sm" (click)="changeQuantity(i, -1)">
+                        -
+                      </button>
+                      <span class="mx-2 fw-bold">{{ listCurQuan[i] }}</span>
+                      <button class="btn btn-success btn-custom-sm" (click)="changeQuantity(i, 1)">
+                        +
+                      </button>
+                    </div>
+                  } @else {
+                    <span class="fw-bold">{{ listCurQuan[i] }}</span>
+                  }
                 </td>
                 <td class="text-end text-muted">{{ item.price | number }}đ</td>
                 <td class="text-end fw-bold text-dark">
@@ -63,9 +67,11 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" (click)="onClose()">Đóng</button>
-        <button type="button" class="btn btn-primary px-4" (click)="approve()">
-          <i class="bi bi-check2-circle me-1"></i> Thanh toán
-        </button>
+        @if (isOwner) {
+          <button type="button" class="btn btn-primary px-4" (click)="approve()">
+            <i class="bi bi-check2-circle me-1"></i> Thanh toán
+          </button>
+        }
       </div>
     </div>
   </div>

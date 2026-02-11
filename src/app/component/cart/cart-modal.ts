@@ -17,13 +17,16 @@ export class CartModalComponent implements OnInit {
   listCurQuan: number[] = []; // Mảng lưu số lượng tạm thời trên giao diện
   public cartData?: CartRes;
   public userId = inject(MAT_DIALOG_DATA);
-
+  currentUser: any; // Thông tin người đăng nhập (id, role, ...)
+  isOwner: boolean = false;
   constructor(
     private cartService: CartService,
     public dialogRef: MatDialogRef<CartModalComponent>,
   ) {}
 
   ngOnInit(): void {
+    const userStr = localStorage.getItem('user_id');
+    this.isOwner = userStr === this.userId.toString();
     this.loadCart();
   }
 
@@ -54,7 +57,6 @@ export class CartModalComponent implements OnInit {
     }
   }
 
-  // Cập nhật lại tổng tiền hiển thị tạm thời trên Modal
   updateTempTotal() {
     if (this.cartData && this.cartData.items) {
       this.cartData.totalPrice = this.cartData.items.reduce((total, item, i) => {
@@ -62,10 +64,8 @@ export class CartModalComponent implements OnInit {
       }, 0);
     }
   }
-
-  // Hàm xử lý gom tất cả các yêu cầu updateQuantity lại
   private getUpdateRequests(): Observable<any>[] {
-    const requests: Observable<any>[] = []; // Xác định kiểu rõ ràng
+    const requests: Observable<any>[] = [];
     if (this.cartData?.items) {
       this.cartData.items.forEach((item: any, i: number) => {
         if (item.quantity !== this.listCurQuan[i]) {
