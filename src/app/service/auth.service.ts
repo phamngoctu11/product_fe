@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { LoginRequest, LoginResponse } from '../model/user.model';
+import { UserService } from './user.service';
 
 @Injectable({
   providedIn: 'root',
@@ -25,4 +26,5 @@ export class AuthService {
     const id = localStorage.getItem('user_id');
     return id ? parseInt(id, 10) : null;
   }
+  getCurrentUser() {}
 }

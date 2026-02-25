@@ -1,0 +1,62 @@
+<div class="orders-container" style="padding: 20px">
+  <h2>Lịch sử mua hàng</h2>
+
+  <div *ngIf="orders.length === 0" style="text-align: center; margin-top: 20px">
+    <p>Bạn chưa có đơn hàng nào.</p>
+  </div>
+
+  <div
+    *ngFor="let order of orders"
+    style="border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 20px"
+  >
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+      "
+    >
+      <div>
+        <p style="margin: 0">
+          <strong>Ngày đặt:</strong> {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
+        </p>
+        <p style="margin: 0">
+          <strong>Trạng thái:</strong> <span style="color: blue">{{ order.status }}</span>
+        </p>
+      </div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; text-align: left">
+      <thead>
+        <tr style="background-color: #f9f9f9">
+          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 25%">Tên sản phẩm</th>
+          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 25%">Số lượng</th>
+          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 25%">Đơn giá</th>
+          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 25%">Thành tiền</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of order.items">
+          <td style="padding: 8px; border-bottom: 1px solid #eee">
+            {{ item.productName || 'Sản phẩm ID: ' + item.productId }}
+          </td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee">{{ item.quantity }}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee">
+            {{ item.price | number: '1.0-0' }} đ
+          </td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee">
+            {{ item.quantity * item.price | number: '1.0-0' }} đ
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="text-align: right; margin-top: 15px">
+      <h4 style="margin: 0; color: #d9534f">
+        Tổng đơn: {{ order.totalPrice | number: '1.0-0' }} đ
+      </h4>
+    </div>
+  </div>
+</div>
