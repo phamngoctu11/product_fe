@@ -8,8 +8,8 @@ import { Myinfor } from './component/myinfor/myinfor';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
-  { path: 'product', component: Product }, //
+  { path: 'product', component: Product },
   { path: 'user', component: UserComponent },
   { path: 'orders', component: Orders },
-  { path: 'myinfor', component: Myinfor }, //
+  { path: 'myinfor', component: Myinfor },
 ];

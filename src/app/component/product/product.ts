@@ -34,6 +34,9 @@ export class Product implements OnInit {
     private productService: ProductService,
   ) {}
   currentUserId: any;
+  filteredProducts: any[] = []; // Dữ liệu dùng để hiển thị lên bảng
+
+  searchTerm: string = '';
   search_id = signal<number>(0);
   pObj: any = {
     id: null,
@@ -48,6 +51,7 @@ export class Product implements OnInit {
   getAll() {
     this.productService.getAll().subscribe((res: any) => {
       this.plist = res;
+      this.filteredProducts = [...res];
       this.addQuan = new Array(res.length).fill(1);
     });
   }
@@ -70,6 +74,20 @@ export class Product implements OnInit {
     } else {
       alert('Cảnh báo: Bạn cần đăng nhập!');
     }
+  }
+  filterProducts() {
+    if (!this.searchTerm || this.searchTerm.trim() === '') {
+      this.filteredProducts = [...this.plist];
+      return;
+    }
+
+    const term = this.searchTerm.toLowerCase().trim();
+
+    this.filteredProducts = this.plist.filter((p) => {
+      // Đổi productName thành product_name cho khớp với dữ liệu thật
+      const productName = p.product_name ? p.product_name.toLowerCase() : '';
+      return productName.includes(term);
+    });
   }
   create() {
     debugger;

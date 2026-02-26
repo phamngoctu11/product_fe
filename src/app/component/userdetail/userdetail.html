@@ -1,0 +1,102 @@
+<div class="modal-header bg-primary text-white p-3">
+  <h5 class="modal-title m-0 fw-bold">
+    {{
+      isView
+        ? 'Chi tiết Người dùng'
+        : isEdit
+          ? 'Cập nhật Thông tin Người dùng'
+          : 'Thêm Người dùng mới'
+    }}
+  </h5>
+</div>
+
+<div class="modal-body p-4">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Họ (Lastname)</label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="currentUser.lastname"
+        [disabled]="isView"
+      />
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Tên (Firstname)</label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="currentUser.firstname"
+        [disabled]="isView"
+      />
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Tên đăng nhập</label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="currentUser.username"
+        [disabled]="isEdit || isView"
+      />
+    </div>
+
+    @if (!isEdit && !isView) {
+      <div class="col-md-6">
+        <label class="form-label fw-bold">Mật khẩu</label>
+        <input type="password" class="form-control" [(ngModel)]="currentUser.password" />
+      </div>
+    }
+
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Vai trò</label>
+      <select class="form-control" [(ngModel)]="currentUser.role" [disabled]="isView">
+        <option value="USER">Người dùng (USER)</option>
+        <option value="ADMIN">Quản trị (ADMIN)</option>
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Giới tính</label>
+      <select class="form-control" [(ngModel)]="currentUser.gender" [disabled]="isView">
+        <option value="male">Nam</option>
+        <option value="female">Nữ</option>
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Số điện thoại</label>
+      <input type="text" class="form-control" [(ngModel)]="currentUser.phone" [disabled]="isView" />
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Ngày sinh</label>
+      <input
+        type="date"
+        class="form-control"
+        [ngModel]="currentUser.birth | date: 'yyyy-MM-dd'"
+        (ngModelChange)="currentUser.birth = $event"
+        [disabled]="isView"
+      />
+    </div>
+
+    <div class="col-md-12">
+      <label class="form-label fw-bold">Địa chỉ</label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="currentUser.address"
+        [disabled]="isView"
+      />
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer p-3 bg-light">
+  <button class="btn btn-secondary" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
+
+  @if (!isView) {
+    <button class="btn btn-success" (click)="saveUser()">
+      <i class="bi" [ngClass]="isEdit ? 'bi-check-circle' : 'bi-person-plus'"></i>
+      {{ isEdit ? 'Lưu thay đổi' : 'Tạo mới' }}
+    </button>
+  }
+</div>

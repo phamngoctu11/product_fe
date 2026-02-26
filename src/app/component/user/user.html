@@ -1,92 +1,82 @@
 <div class="container mt-4">
-  <h2 class="text-center mb-4">Quản lý Người dùng</h2>
-
-  <div class="card mb-4 shadow-sm">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">{{ isEdit ? 'Cập nhật Người dùng' : 'Thêm Người dùng mới' }}</h5>
-    </div>
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Tên đăng nhập</label>
-          <input
-            type="text"
-            class="form-control"
-            [(ngModel)]="currentUser.username"
-            placeholder="Ví dụ: nguyenvan_a"
-          />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Mật khẩu</label>
-          <input
-            type="password"
-            class="form-control"
-            [(ngModel)]="currentUser.password"
-            [disabled]="isEdit"
-            placeholder="Nhập mật khẩu"
-          />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Vai trò</label>
-          <select class="form-control" (change)="onRoleChange($event)" [disabled]="isEdit">
-            <option value="USER">Người dùng (USER)</option>
-            <option value="ADMIN">Quản trị (ADMIN)</option>
-          </select>
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-          @if (!isEdit) {
-            <button class="btn btn-success w-100" (click)="saveUser()">
-              <i class="bi bi-person-plus"></i> Thêm mới
-            </button>
-          }
-        </div>
-
-        @if (isEdit) {
-          <div class="col-12 mt-3">
-            <button class="btn btn-warning btn-sm me-2" (click)="saveUser()">Cập nhật</button>
-            <button class="btn btn-secondary btn-sm" (click)="resetForm()">Hủy bỏ</button>
-          </div>
-        }
-      </div>
-    </div>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Quản lý Người dùng</h2>
+    <button class="btn btn-success" (click)="openUserDialog()">
+      <i class="bi bi-person-plus"></i> Thêm Người dùng mới
+    </button>
   </div>
 
   <div class="card shadow-sm">
-    <div class="card-header">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
       <h5 class="mb-0">Danh sách người dùng</h5>
+
+      <div class="input-group" style="width: 300px">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input
+          type="text"
+          class="form-control border-start-0 ps-0"
+          placeholder="Tìm kiếm theo tên..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="filterUsers()"
+        />
+      </div>
     </div>
+
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-striped table-hover table-bordered mb-0 align-middle">
           <thead class="table-dark text-center">
             <tr>
-              <th scope="col" style="width: 20%">ID</th>
-              <th scope="col" style="width: 20%">Username</th>
-              <th scope="col" style="width: 20%">Role</th>
-              <th scope="col" style="width: 20%">Reputation</th>
-              <th scope="col" style="width: 20%">Hành động</th>
+              <th scope="col" style="width: 15%">ID</th>
+              <th scope="col" style="width: 25%">Họ và Tên</th>
+              <th scope="col" style="width: 15%">Vai trò</th>
+              <th scope="col" style="width: 15%">Uy tín</th>
+              <th scope="col" style="width: 30%">Hành động</th>
             </tr>
           </thead>
           <tbody>
-            @for (u of users; track u.id) {
-              <tr>
+            @for (u of filteredUsers; track u.id) {
+              <tr (click)="viewUser(u.id)" style="cursor: pointer">
                 <td class="text-center">{{ u.id }}</td>
-                <td class="text-center">{{ u.username }}</td>
-                <td class="text-center">{{ u.role }}</td>
+                <td class="text-center">{{ u.lastname }} {{ u.firstname }}</td>
+                <td class="text-center">
+                  <span>
+                    {{ u.role }}
+                  </span>
+                </td>
                 <td class="text-center">{{ u.reputation }}</td>
                 <td class="text-center">
                   <div class="btn-group" role="group">
-                    <button (click)="openCartModal(u.id)" class="btn btn-sm btn-info">
+                    <button
+                      (click)="openCartModal(u.id); $event.stopPropagation()"
+                      class="btn btn-sm btn-info text-white"
+                    >
                       <i class="bi bi-cart"></i> Giỏ hàng
                     </button>
-                    <button class="btn btn-warning btn-sm me-2" (click)="editUser(u)">Sửa</button>
-                    <button class="btn btn-danger btn-sm" (click)="deleteUser(u.id)">Xóa</button>
+                    <button
+                      class="btn btn-warning btn-sm me-2 ms-2"
+                      (click)="openUserDialog(u.id); $event.stopPropagation()"
+                    >
+                      <i class="bi bi-pencil-square"></i> Sửa
+                    </button>
+                    <button
+                      class="btn btn-danger btn-sm"
+                      (click)="deleteUser(u.id); $event.stopPropagation()"
+                    >
+                      <i class="bi bi-trash"></i> Xóa
+                    </button>
                   </div>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="text-center py-4 text-muted">Chưa có người dùng nào</td>
+                <td colspan="5" class="text-center py-4 text-muted">
+                  {{
+                    searchTerm
+                      ? 'Không tìm thấy người dùng nào phù hợp với từ khóa.'
+                      : 'Chưa có người dùng nào.'
+                  }}
+                </td>
               </tr>
             }
           </tbody>

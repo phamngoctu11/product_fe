@@ -1,83 +1,90 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserResDTO, UserCreDTO } from '../../model/user.model';
+import { UserResListDTO } from '../../model/user.model';
 import { UserService } from '../../service/user.service';
-import { FormsModule } from '@angular/forms';
-import { CartService } from '../../service/cart.service';
 import { CartRes } from '../../model/cart.model';
 import { CartModalComponent } from '../cart/cart-modal';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Userdetail } from '../userdetail/userdetail';
+import { FormsModule } from '@angular/forms';
+// Điều chỉnh đường dẫn file cho đúng
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [FormsModule, CommonModule, MatDialogModule],
+  imports: [CommonModule, MatDialogModule, FormsModule],
   templateUrl: './user.html',
 })
 export class UserComponent implements OnInit {
-  users: UserResDTO[] = [];
-  selectedUserId: number | null = null;
-  currentUser: UserCreDTO = { username: '', password: '', role: '' };
-  isEdit = false;
+  users: UserResListDTO[] = [];
+  filteredUsers: UserResListDTO[] = [];
   cartData?: CartRes;
+  searchTerm: string = '';
+
   constructor(
     private userService: UserService,
     private dialog: MatDialog,
   ) {}
+
   ngOnInit(): void {
     this.loadUsers();
   }
+
   loadUsers() {
     this.userService.getAll().subscribe((data) => {
       this.users = [...data];
+      this.filteredUsers = [...data];
     });
   }
-  saveUser() {
-    if (this.isEdit && this.currentUser.id) {
-      this.userService.update(this.currentUser.id, this.currentUser).subscribe(() => {
-        alert('Cập nhật user thành công!!');
-        this.loadUsers();
-        this.resetForm();
-      });
-    }
-    {
-      this.userService.create(this.currentUser).subscribe(() => {
-        alert('Tạo mới user thành công!!');
-        this.loadUsers();
-        this.resetForm();
-      });
-    }
+
+  // Hàm mở Dialog cho cả Thêm mới (id = null) và Cập nhật (id có giá trị)
+  openUserDialog(id: number | null = null) {
+    const dialogRef = this.dialog.open(Userdetail, {
+      width: '700px',
+      data: { id: id, action: 'edit' },
+      disableClose: true,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.loadUsers(); // Load lại sẽ tự động reset cả bảng và ô tìm kiếm (nếu muốn giữ nguyên ô tìm kiếm thì gọi thêm this.filterUsers() ở loadUsers)
+      }
+    });
   }
-  onRoleChange(event: any) {
-    const selectedRole = event.target.value;
-    if (selectedRole) {
-      this.currentUser.role = selectedRole;
-    } else {
-      this.currentUser.role = '';
+  filterUsers() {
+    if (!this.searchTerm || this.searchTerm.trim() === '') {
+      // Nếu không nhập gì, hiển thị lại toàn bộ
+      this.filteredUsers = [...this.users];
+      return;
     }
+
+    const term = this.searchTerm.toLowerCase().trim();
+
+    // Lọc danh sách: kiểm tra xem Họ + Tên có chứa từ khóa không
+    this.filteredUsers = this.users.filter((u) => {
+      const fullName = `${u.lastname} ${u.firstname}`.toLowerCase();
+      return fullName.includes(term);
+    });
   }
-  editUser(user: UserResDTO) {
-    this.isEdit = true;
-    this.currentUser = { ...user };
+  viewUser(id: number) {
+    this.dialog.open(Userdetail, {
+      width: '700px',
+      data: { id: id, action: 'view' },
+      disableClose: false,
+    });
   }
   deleteUser(id: number) {
-    if (
-      confirm('Bạn có chắc muốn xóa người dùng này? Thao tác này sẽ xóa cả giỏ hàng liên quan.')
-    ) {
+    if (confirm('Bạn có chắc muốn xóa người dùng này?')) {
       this.userService.delete(id).subscribe(() => {
         this.loadUsers();
-        if (this.cartData?.user_id === id) this.cartData = undefined;
       });
     }
   }
+
   openCartModal(userId: number) {
     this.dialog.open(CartModalComponent, {
       width: '300px',
       data: userId,
     });
-  }
-  resetForm() {
-    this.currentUser = { username: '', password: '' };
-    this.isEdit = false;
   }
 }
