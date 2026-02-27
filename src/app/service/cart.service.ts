@@ -36,8 +36,9 @@ export class CartService {
       responseType: 'text' as 'json',
     }) as Observable<string>;
   }
-  acceptCart(userId: number): Observable<string> {
-    return this.http.post(`${this.apiUrl}/approve/${userId}`, null, {
+ acceptCart(userId: number, productIds: number[]): Observable<string> {
+    // Đưa danh sách productIds vào phần body thay vì null
+    return this.http.post(`${this.apiUrl}/approve/${userId}`, productIds, {
       responseType: 'text' as 'json',
     }) as Observable<string>;
   }
@@ -51,4 +52,5 @@ export class CartService {
       responseType: 'text',
     });
   }
+
 }

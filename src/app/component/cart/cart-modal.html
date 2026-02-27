@@ -1,8 +1,4 @@
-<div
-  class="modal fade show d-block"
-  style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px)"
-  tabindex="-1"
->
+<div class="modal fade show d-block" style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px)" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content shadow-lg">
       <div class="modal-header bg-info text-white">
@@ -19,28 +15,30 @@
         <table class="table table-hover table-bordered align-middle mb-0">
           <thead class="table-secondary text-center">
             <tr>
-              <th>Sản phẩm</th>
-              <th>Số lượng</th>
-              <th>Đơn giá</th>
-              <th>Thành tiền</th>
+              <th *ngIf="isOwner" style="width: 60px;"><i class="bi bi-check-square"></i> Chọn</th>
+              <th style="width:30%">Sản phẩm</th>
+              <th style="width:10%">Số lượng</th>
+              <th style="width:30%">Đơn giá</th>
+              <th style="width:30%">Thành tiền</th>
             </tr>
           </thead>
           <tbody>
             @for (item of cartData?.items; track item.productId; let i = $index) {
               <tr>
-                <td class="ps-3 fw-semibold text-primary">{{ item.productName }}</td>
+                <td *ngIf="isOwner" class="text-center">
+                  <input class="form-check-input border-secondary" type="checkbox"
+                         [checked]="selectedProductIds.includes(item.productId)"
+                         (change)="toggleSelection(item.productId)"
+                         style="cursor: pointer; transform: scale(1.3);">
+                </td>
+
+                <td class="ps-3 fw-semibold text-primary">{{ item.productName || 'Sản phẩm ID: ' + item.productId }}</td>
                 <td class="text-center">
                   @if (isOwner) {
-                    <div
-                      class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center p-1"
-                    >
-                      <button class="btn btn-danger btn-custom-sm" (click)="changeQuantity(i, -1)">
-                        -
-                      </button>
+                    <div class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center p-1">
+                      <button class="btn btn-danger btn-custom-sm" (click)="changeQuantity(i, -1)">-</button>
                       <span class="mx-2 fw-bold">{{ listCurQuan[i] }}</span>
-                      <button class="btn btn-success btn-custom-sm" (click)="changeQuantity(i, 1)">
-                        +
-                      </button>
+                      <button class="btn btn-success btn-custom-sm" (click)="changeQuantity(i, 1)">+</button>
                     </div>
                   } @else {
                     <span class="fw-bold">{{ listCurQuan[i] }}</span>
@@ -55,7 +53,7 @@
           </tbody>
           <tfoot>
             <tr class="table-light">
-              <td colspan="3" class="text-end py-3 text-uppercase small fw-bold text-muted">
+              <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-3 text-uppercase small fw-bold text-muted">
                 Tổng thanh toán:
               </td>
               <td class="text-end py-3">

@@ -1,47 +1,50 @@
 <div class="orders-container" style="padding: 20px">
-  <h2>Lịch sử mua hàng</h2>
 
-  <div *ngIf="orders.length === 0" style="text-align: center; margin-top: 20px">
-    <p>Bạn chưa có đơn hàng nào.</p>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0;">Đơn hàng đang xử lý</h2>
+    <div>
+      <button class="btn btn-outline-success me-2" data-bs-toggle="modal" data-bs-target="#historyModal" (click)="openHistoryModal('DELIVERED')">
+        <i class="bi bi-box-seam me-1"></i> Đã giao ({{ deliveredOrders.length }})
+      </button>
+      <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#historyModal" (click)="openHistoryModal('CANCELLED')">
+        <i class="bi bi-x-circle me-1"></i> Đã hủy ({{ cancelledOrders.length }})
+      </button>
+    </div>
   </div>
 
-  <div
-    *ngFor="let order of orders"
-    style="border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 20px"
-  >
-    <div
-      style="
-        display: flex;
-        justify-content: space-between;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-      "
-    >
+  <div *ngIf="activeOrders.length === 0" style="text-align: center; margin-top: 40px; color: #6c757d;">
+    <p>Bạn không có đơn hàng nào đang trong quá trình xử lý.</p>
+  </div>
+
+  <div *ngFor="let order of activeOrders">
+    <ng-container *ngTemplateOutlet="orderCardTemplate; context: { order: order }"></ng-container>
+  </div>
+</div>
+
+
+<ng-template #orderCardTemplate let-order="order">
+  <div style="border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 20px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
       <div>
-        <p style="margin: 0">
-          <strong>Ngày đặt:</strong> {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
+        <p style="margin: 0"><strong>Ngày đặt:</strong> {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}</p>
+
+        <p *ngIf="order.endOrderTime" style="margin: 0; color: #6c757d; margin-top: 5px;">
+          <strong *ngIf="order.status === 'DELIVERED'">Ngày giao thực tế:</strong>
+          <strong *ngIf="order.status === 'CANCELLED'">Ngày hoàn tất hủy:</strong>
+          {{ order.endOrderTime | date: 'dd/MM/yyyy HH:mm' }}
         </p>
-        <p style="margin: 0; display: flex; align-items: center; gap: 15px">
+        <p *ngIf="order.status === 'CANCELLED' && order.cancelReason" style="margin: 0; color: #dc3545; margin-top: 5px;">
+          <strong>Lý do hủy:</strong> {{ order.cancelReason }}
+        </p>
+
+        <p style="margin: 0; display: flex; align-items: center; gap: 15px; margin-top: 10px;">
           <strong>Trạng thái:</strong>
-          <span
-            style="
-              color: #0d6efd;
-              font-weight: bold;
-              background: #e9ecef;
-              padding: 4px 8px;
-              border-radius: 4px;
-            "
-          >
+          <span style="color: #0d6efd; font-weight: bold; background: #e9ecef; padding: 4px 8px; border-radius: 4px;">
             {{ getStatusName(order.status) }}
           </span>
 
           <ng-container *ngIf="getNextStatus(order.status) as nextStatus">
-            <button
-              class="btn btn-sm btn-outline-primary"
-              style="display: flex; align-items: center; gap: 5px"
-              (click)="confirmUpdateStatus(order.id, nextStatus)"
-            >
+            <button class="btn btn-sm btn-outline-primary" style="display: flex; align-items: center; gap: 5px" (click)="confirmUpdateStatus(order.id, nextStatus)">
               <i class="bi bi-arrow-right-circle"></i> Chuyển sang: {{ getStatusName(nextStatus) }}
             </button>
           </ng-container>
@@ -49,104 +52,87 @@
       </div>
     </div>
 
-    <table style="width: 100%; border-collapse: collapse; text-align: left">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; margin-bottom: 10px;">
       <thead>
         <tr style="background-color: #f9f9f9">
-          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 25%">Tên sản phẩm</th>
-          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 25%">Số lượng</th>
-          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 25%">Đơn giá</th>
-          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 25%">Thành tiền</th>
+          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 40%">Tên sản phẩm</th>
+          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 20%">Số lượng</th>
+          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 20%">Đơn giá</th>
+          <th style="padding: 8px; border-bottom: 1px solid #ddd; width: 20%">Thành tiền</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of order.items">
-          <td style="padding: 8px; border-bottom: 1px solid #eee">
-            {{ item.productName || 'Sản phẩm ID: ' + item.productId }}
-          </td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee">{{ item.productName || 'Sản phẩm ID: ' + item.productId }}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee">{{ item.quantity }}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee">
-            {{ item.price | number: '1.0-0' }} đ
-          </td>
-          <td style="padding: 8px; border-bottom: 1px solid #eee">
-            {{ item.quantity * item.price | number: '1.0-0' }} đ
-          </td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee">{{ item.price | number: '1.0-0' }} đ</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee">{{ item.quantity * item.price | number: '1.0-0' }} đ</td>
         </tr>
       </tbody>
     </table>
 
-    <div
-      style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px"
-    >
+    <div style="display: flex; justify-content: space-between; align-items: center;">
       <div>
         <ng-container *ngIf="order.status === 'PENDING_WAREHOUSE'">
           <button class="btn btn-outline-danger btn-sm me-2" (click)="cancelOrder(order)">
             <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
           </button>
-          <button
-            class="btn btn-outline-secondary btn-sm"
-            data-bs-toggle="modal"
-            data-bs-target="#reputationPolicyModal"
-          >
-            <i class="bi bi-info-circle me-1"></i> Quy định điểm uy tín
+          <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#reputationPolicyModal">
+            <i class="bi bi-info-circle me-1"></i> Quy định điểm
           </button>
         </ng-container>
       </div>
-      <h4 style="margin: 0; color: #d9534f">
-        Tổng đơn: {{ order.totalPrice | number: '1.0-0' }} đ
-      </h4>
+      <h4 style="margin: 0; color: #d9534f">Tổng đơn: {{ order.totalPrice | number: '1.0-0' }} đ</h4>
+    </div>
+  </div>
+</ng-template>
+<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-light border-0">
+        <h5 class="modal-title fw-bold text-primary">{{ modalTitle }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="background-color: #f4f6f9; padding: 20px;">
+
+        <div *ngIf="modalOrders.length === 0" class="text-center py-4 text-muted">
+          Không có đơn hàng nào trong mục này.
+        </div>
+
+        <div *ngFor="let order of modalOrders">
+          <ng-container *ngTemplateOutlet="orderCardTemplate; context: { order: order }"></ng-container>
+        </div>
+
+      </div>
+      <div class="modal-footer bg-white border-0">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+      </div>
     </div>
   </div>
 </div>
 
-<div
-  class="modal fade"
-  id="reputationPolicyModal"
-  tabindex="-1"
-  aria-labelledby="policyModalLabel"
-  aria-hidden="true"
->
+<div class="modal fade" id="reputationPolicyModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow-lg border-0">
       <div class="modal-header bg-warning text-dark border-0">
-        <h5 class="modal-title fw-bold" id="policyModalLabel">
-          <i class="bi bi-shield-exclamation me-2"></i> Chính sách Điểm Uy Tín
-        </h5>
+        <h5 class="modal-title fw-bold"><i class="bi bi-shield-exclamation me-2"></i> Chính sách Điểm Uy Tín</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4">
-        <h6 class="fw-bold text-danger mb-3">
-          <i class="bi bi-dash-circle me-2"></i>Quy định trừ điểm khi hủy đơn:
-        </h6>
+        <h6 class="fw-bold text-danger mb-3"><i class="bi bi-dash-circle me-2"></i>Quy định trừ điểm:</h6>
         <ul class="list-group list-group-flush mb-4 border rounded">
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            Dưới 1.000.000 đ <span class="badge bg-danger rounded-pill px-3">-1 Điểm</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            Từ 1tr đến 5.000.000 đ <span class="badge bg-danger rounded-pill px-3">-2 Điểm</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            Từ 5tr đến 10.000.000 đ <span class="badge bg-danger rounded-pill px-3">-3 Điểm</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            Trên 10.000.000 đ <span class="badge bg-danger rounded-pill px-3">-5 Điểm</span>
-          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">Dưới 1.000.000 đ <span class="badge bg-danger rounded-pill px-3">-1 Điểm</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">Từ 1tr đến 5.000.000 đ <span class="badge bg-danger rounded-pill px-3">-2 Điểm</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">Từ 5tr đến 10.000.000 đ <span class="badge bg-danger rounded-pill px-3">-3 Điểm</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">Trên 10.000.000 đ <span class="badge bg-danger rounded-pill px-3">-5 Điểm</span></li>
         </ul>
-        <h6 class="fw-bold text-success mb-3">
-          <i class="bi bi-star me-2"></i>Đặc quyền & Hạn chế:
-        </h6>
+        <h6 class="fw-bold text-success mb-3"><i class="bi bi-star me-2"></i>Đặc quyền & Hạn chế:</h6>
         <div class="alert alert-danger py-2 mb-2 border-0 shadow-sm">
-          <strong><i class="bi bi-x-octagon"></i> Dưới 20 điểm:</strong> Yêu cầu thanh toán Online
-          khi đặt hàng. Từ chối hỗ trợ Ship COD.
+          <strong><i class="bi bi-x-octagon"></i> Dưới 20 điểm:</strong> Bắt buộc thanh toán Online. Từ chối hỗ trợ Ship COD.
         </div>
         <div class="alert alert-success py-2 mb-0 border-0 shadow-sm">
-          <strong><i class="bi bi-gift"></i> Trên 40 điểm:</strong> Tặng kèm Voucher Freeshipping và
-          nhiều ưu đãi đặc quyền.
+          <strong><i class="bi bi-gift"></i> Trên 40 điểm:</strong> Nhận Voucher Freeship và nhiều ưu đãi.
         </div>
-      </div>
-      <div class="modal-footer bg-light border-0">
-        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
-          Đã hiểu
-        </button>
       </div>
     </div>
   </div>

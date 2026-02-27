@@ -11,11 +11,14 @@ export class OrderService {
   getOrdersByUserId(userId: number): Observable<Order[]> {
     return this.http.get<Order[]>(`${this.apiUrl}/user/${userId}`);
   }
-  updateOrderStatus(orderId: number, status: string, cancellReason: string): Observable<string> {
-    const params = new HttpParams().set('status', status).set('cancellReason', cancellReason);
+ updateOrderStatus(orderId: number, status: string, reason?: string): Observable<string> {
+    let params = new HttpParams().set('status', status);
+    if (reason) {
+      params = params.set('cancelledReason', reason);
+    }
     return this.http.put(`${this.apiUrl}/${orderId}/status`, null, {
       params,
-      responseType: 'text', // Vì backend trả về String (ResponseEntity<String>)
+      responseType: 'text',
     });
   }
 }
