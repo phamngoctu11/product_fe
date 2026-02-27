@@ -28,10 +28,21 @@
               </div>
               <h3 class="fw-bold mb-1">{{ userInfo.lastname }} {{ userInfo.firstname }}</h3>
               <p class="text-muted mb-2">@{{ userInfo.username }}</p>
-              <span class="badge bg-success px-3 py-2">
-                <i class="bi bi-star-fill text-warning me-1"></i> Điểm uy tín:
-                {{ userInfo.reputation }}
-              </span>
+              <div class="d-flex flex-column align-items-center text-center mb-4">
+                <div class="d-flex gap-2">
+                  <span class="badge bg-success px-3 py-2">
+                    <i class="bi bi-star-fill text-warning me-1"></i> Điểm uy tín:
+                    {{ userInfo.reputation }}
+                  </span>
+
+                  <button
+                    class="btn btn-outline-primary btn-sm rounded-pill px-3"
+                    (click)="openCart()"
+                  >
+                    <i class="bi bi-cart3 me-1"></i> Giỏ hàng của tôi
+                  </button>
+                </div>
+              </div>
             </div>
 
             <hr class="text-muted" />

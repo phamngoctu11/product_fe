@@ -34,8 +34,7 @@ export class Product implements OnInit {
     private productService: ProductService,
   ) {}
   currentUserId: any;
-  filteredProducts: any[] = []; // Dữ liệu dùng để hiển thị lên bảng
-
+  filteredProducts: any[] = [];
   searchTerm: string = '';
   search_id = signal<number>(0);
   pObj: any = {
@@ -80,11 +79,8 @@ export class Product implements OnInit {
       this.filteredProducts = [...this.plist];
       return;
     }
-
     const term = this.searchTerm.toLowerCase().trim();
-
     this.filteredProducts = this.plist.filter((p) => {
-      // Đổi productName thành product_name cho khớp với dữ liệu thật
       const productName = p.product_name ? p.product_name.toLowerCase() : '';
       return productName.includes(term);
     });

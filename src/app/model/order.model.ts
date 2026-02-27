@@ -6,6 +6,7 @@ export interface OrderItem {
 }
 
 export interface Order {
+  id: number;
   user_id: number;
   items: OrderItem[];
   totalPrice: number;

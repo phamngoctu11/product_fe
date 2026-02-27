@@ -22,8 +22,29 @@
         <p style="margin: 0">
           <strong>Ngày đặt:</strong> {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
         </p>
-        <p style="margin: 0">
-          <strong>Trạng thái:</strong> <span style="color: blue">{{ order.status }}</span>
+        <p style="margin: 0; display: flex; align-items: center; gap: 15px">
+          <strong>Trạng thái:</strong>
+          <span
+            style="
+              color: #0d6efd;
+              font-weight: bold;
+              background: #e9ecef;
+              padding: 4px 8px;
+              border-radius: 4px;
+            "
+          >
+            {{ getStatusName(order.status) }}
+          </span>
+
+          <ng-container *ngIf="getNextStatus(order.status) as nextStatus">
+            <button
+              class="btn btn-sm btn-outline-primary"
+              style="display: flex; align-items: center; gap: 5px"
+              (click)="confirmUpdateStatus(order.id, nextStatus)"
+            >
+              <i class="bi bi-arrow-right-circle"></i> Chuyển sang: {{ getStatusName(nextStatus) }}
+            </button>
+          </ng-container>
         </p>
       </div>
     </div>
@@ -53,10 +74,80 @@
       </tbody>
     </table>
 
-    <div style="text-align: right; margin-top: 15px">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px"
+    >
+      <div>
+        <ng-container *ngIf="order.status === 'PENDING_WAREHOUSE'">
+          <button class="btn btn-outline-danger btn-sm me-2" (click)="cancelOrder(order)">
+            <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
+          </button>
+          <button
+            class="btn btn-outline-secondary btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#reputationPolicyModal"
+          >
+            <i class="bi bi-info-circle me-1"></i> Quy định điểm uy tín
+          </button>
+        </ng-container>
+      </div>
       <h4 style="margin: 0; color: #d9534f">
         Tổng đơn: {{ order.totalPrice | number: '1.0-0' }} đ
       </h4>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="reputationPolicyModal"
+  tabindex="-1"
+  aria-labelledby="policyModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-warning text-dark border-0">
+        <h5 class="modal-title fw-bold" id="policyModalLabel">
+          <i class="bi bi-shield-exclamation me-2"></i> Chính sách Điểm Uy Tín
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <h6 class="fw-bold text-danger mb-3">
+          <i class="bi bi-dash-circle me-2"></i>Quy định trừ điểm khi hủy đơn:
+        </h6>
+        <ul class="list-group list-group-flush mb-4 border rounded">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Dưới 1.000.000 đ <span class="badge bg-danger rounded-pill px-3">-1 Điểm</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Từ 1tr đến 5.000.000 đ <span class="badge bg-danger rounded-pill px-3">-2 Điểm</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Từ 5tr đến 10.000.000 đ <span class="badge bg-danger rounded-pill px-3">-3 Điểm</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Trên 10.000.000 đ <span class="badge bg-danger rounded-pill px-3">-5 Điểm</span>
+          </li>
+        </ul>
+        <h6 class="fw-bold text-success mb-3">
+          <i class="bi bi-star me-2"></i>Đặc quyền & Hạn chế:
+        </h6>
+        <div class="alert alert-danger py-2 mb-2 border-0 shadow-sm">
+          <strong><i class="bi bi-x-octagon"></i> Dưới 20 điểm:</strong> Yêu cầu thanh toán Online
+          khi đặt hàng. Từ chối hỗ trợ Ship COD.
+        </div>
+        <div class="alert alert-success py-2 mb-0 border-0 shadow-sm">
+          <strong><i class="bi bi-gift"></i> Trên 40 điểm:</strong> Tặng kèm Voucher Freeshipping và
+          nhiều ưu đãi đặc quyền.
+        </div>
+      </div>
+      <div class="modal-footer bg-light border-0">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+          Đã hiểu
+        </button>
+      </div>
     </div>
   </div>
 </div>
