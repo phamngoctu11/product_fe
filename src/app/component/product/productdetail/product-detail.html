@@ -1,0 +1,41 @@
+<div class="modal-header bg-primary text-white p-3">
+  <h5 class="modal-title m-0 fw-bold">
+    {{ isEdit ? 'Cập nhật Sản phẩm' : 'Thêm Sản phẩm mới' }}
+  </h5>
+</div>
+
+<div class="modal-body p-4">
+  <form [formGroup]="productForm" class="row g-3">
+    <div class="col-md-12">
+      <label class="form-label fw-bold">Tên sản phẩm</label>
+      <input
+        type="text"
+        class="form-control"
+        formControlName="product_name"
+        placeholder="Ví dụ: Iphone 15"
+      />
+      @if (productForm.controls['product_name'].touched && productForm.controls['product_name'].invalid) {
+        <div class="text-danger mt-1">
+          <small>Tên sản phẩm tối thiểu 5 ký tự!</small>
+        </div>
+      }
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Số lượng</label>
+      <input type="number" class="form-control" formControlName="quantity" />
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label fw-bold">Giá tiền</label>
+      <input type="number" class="form-control" formControlName="price" />
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer p-3 bg-light">
+  <button class="btn btn-secondary" (click)="onCancel()">Hủy bỏ</button>
+  <button class="btn btn-success" [disabled]="productForm.invalid" (click)="save()">
+    <i class="bi bi-check-circle"></i> {{ isEdit ? 'Lưu thay đổi' : 'Tạo mới' }}
+  </button>
+</div>

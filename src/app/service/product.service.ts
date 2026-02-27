@@ -19,7 +19,9 @@ export class ProductService {
   update(id: number, user: ProductResDTO): Observable<ProductResDTO> {
     return this.http.put<ProductResDTO>(`${this.apiUrl}/${id}`, user);
   }
-
+  getById(id:number):Observable<ProductResDTO>{
+    return this.http.get<ProductResDTO>(`${this.apiUrl}/${id}`)
+  }
   delete(id: number): Observable<string> {
     return this.http.delete<string>(`${this.apiUrl}/${id}`, { responseType: 'text' as 'json' });
   }
