@@ -20,6 +20,10 @@ export class UserComponent implements OnInit {
   filteredUsers: UserResListDTO[] = [];
   cartData?: CartRes;
   searchTerm: string = '';
+  currentPage: number = 0;
+  pageSize: number = 10;
+  totalElements: number = 0;
+  totalPages: number = 0;
 
   constructor(
     private userService: UserService,
@@ -27,13 +31,24 @@ export class UserComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.loadUsers(this.currentPage, this.pageSize);
   }
 
-  loadUsers() {
-    this.userService.getAll().subscribe((data) => {
-      this.users = [...data];
-      this.filteredUsers = [...data];
+ loadUsers(page: number, size: number) {
+    this.userService.getAll(page, size).subscribe({
+      next: (data) => {
+        // Trỏ vào data.content để lấy mảng
+        this.users = data.content;
+        this.filteredUsers = [...data.content];
+
+        // Lưu lại thông tin phân trang để dùng cho HTML
+        this.totalElements = data.totalElements;
+        this.totalPages = data.totalPages;
+        this.currentPage = data.number; // Backend Spring Boot đếm trang từ 0
+      },
+      error: (err) => {
+        console.error('Lỗi khi tải danh sách User:', err);
+      }
     });
   }
 
@@ -47,7 +62,7 @@ export class UserComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.loadUsers(); // Load lại sẽ tự động reset cả bảng và ô tìm kiếm (nếu muốn giữ nguyên ô tìm kiếm thì gọi thêm this.filterUsers() ở loadUsers)
+        this.loadUsers(this.currentPage, this.pageSize); // Load lại sẽ tự động reset cả bảng và ô tìm kiếm (nếu muốn giữ nguyên ô tìm kiếm thì gọi thêm this.filterUsers() ở loadUsers)
       }
     });
   }
@@ -76,7 +91,7 @@ export class UserComponent implements OnInit {
   deleteUser(id: number) {
     if (confirm('Bạn có chắc muốn xóa người dùng này?')) {
       this.userService.delete(id).subscribe(() => {
-        this.loadUsers();
+        this.loadUsers(this.currentPage, this.pageSize);
       });
     }
   }

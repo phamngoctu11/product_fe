@@ -15,3 +15,10 @@ export interface Order {
   status: string;
   cancelReason: string | null;
 }
+export interface OrderStatusHistory {
+  id: number;
+  oldstatus: string;
+  newstatus: string;
+  updatetime: string;
+  changer: string;
+}

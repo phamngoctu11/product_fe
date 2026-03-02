@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { OrderService } from '../../service/order.service';
 import { AuthService } from '../../service/auth.service';
 import { UserService } from '../../service/user.service';
-import { Order } from '../../model/order.model';
+import { Order, OrderStatusHistory } from '../../model/order.model';
 import { UserInforDTO } from '../../model/user.model';
 
 @Component({
@@ -13,13 +13,13 @@ import { UserInforDTO } from '../../model/user.model';
   templateUrl: './orders.html',
 })
 export class Orders implements OnInit {
-  // Mảng gốc và các mảng đã được phân loại
   orders: Order[] = [];
   activeOrders: Order[] = [];
   deliveredOrders: Order[] = [];
   cancelledOrders: Order[] = [];
-
-  // Quản lý trạng thái của Modal Lịch sử
+  selectedOrderHistory: OrderStatusHistory[] = [];
+  selectedOrderId: number | null = null;
+isLoadingTimeline: boolean = false;
   modalOrders: Order[] = [];
   modalTitle: string = '';
 
@@ -47,13 +47,10 @@ export class Orders implements OnInit {
     this.orderService.getOrdersByUserId(this.userId).subscribe({
       next: (data: Order[]) => {
         this.orders = data;
-
-        // PHÂN LOẠI ĐƠN HÀNG
         this.activeOrders = data.filter(o => o.status === 'PENDING_WAREHOUSE' || o.status === 'SHIPPING');
         this.deliveredOrders = data.filter(o => o.status === 'DELIVERED');
         this.cancelledOrders = data.filter(o => o.status === 'CANCELLED');
 
-        // Đồng bộ lại dữ liệu nếu Modal đang được mở
         if (this.modalTitle.includes('giao')) {
           this.modalOrders = this.deliveredOrders;
         } else if (this.modalTitle.includes('hủy')) {
@@ -71,7 +68,6 @@ export class Orders implements OnInit {
     });
   }
 
-  // Hàm mở Modal Lịch sử (Tái sử dụng cho 2 nút)
   openHistoryModal(type: 'DELIVERED' | 'CANCELLED'): void {
     if (type === 'DELIVERED') {
       this.modalOrders = this.deliveredOrders;
@@ -100,7 +96,7 @@ export class Orders implements OnInit {
 
   confirmUpdateStatus(orderId: number, nextStatus: string): void {
     if (window.confirm(`Bạn có chắc chắn muốn chuyển trạng thái: "${this.getStatusName(nextStatus)}" không?`)) {
-      this.orderService.updateOrderStatus(orderId, nextStatus, '').subscribe({
+      this.orderService.updateOrderStatus(orderId, nextStatus).subscribe({
         next: () => {
           alert('Cập nhật trạng thái thành công!');
           this.loadMyOrders();
@@ -136,7 +132,8 @@ export class Orders implements OnInit {
     const confirmMsg = `⚠️ CẢNH BÁO HỦY ĐƠN ⚠️\n\nGiá trị đơn: ${order.totalPrice.toLocaleString()} đ\nTrừ uy tín: -${deduction} điểm\nĐiểm hiện tại: ${currentRep}\nLý do: ${reason}\n\nBạn có chắc chắn muốn hủy?`;
 
     if (window.confirm(confirmMsg)) {
-      this.orderService.updateOrderStatus(order.id, 'CANCELLED', reason).subscribe({
+      // Chỉ thay đổi dòng này để gọi API Cancel
+      this.orderService.cancelOrder(order.id, reason).subscribe({
         next: () => {
           alert('Hủy đơn hàng thành công!');
           this.loadMyOrders();
@@ -145,5 +142,35 @@ export class Orders implements OnInit {
         error: (err) => alert('Không thể hủy đơn: ' + (err.error || err.message))
       });
     }
+  }
+  viewTimeline(orderId: number): void {
+    this.selectedOrderId = orderId;
+    this.selectedOrderHistory = [];
+    this.isLoadingTimeline = true; // Bật cờ loading khi bắt đầu gọi API
+
+    // Lấy thông tin đơn hàng gốc từ danh sách đã load (để lấy thời gian chốt đơn)
+    const order = this.orders.find(o => o.id === orderId);
+
+    this.orderService.getOrderHistory(orderId).subscribe({
+      next: (data) => {
+        // Tạo Bước 1: Mốc thời gian chốt đơn (Khởi tạo)
+        const initialStep: OrderStatusHistory = {
+          id: 0,
+          oldstatus: '', // Trạng thái ban đầu nên không có oldstatus
+          newstatus: 'PENDING_WAREHOUSE',
+          updatetime: order?.startOrderTime || new Date().toISOString(),
+          changer: 'Khách hàng' // Hoặc 'HỆ THỐNG'
+        };
+
+        // Gộp mốc Khởi tạo (Bước 1) vào đầu mảng lịch sử nhận từ Backend
+        this.selectedOrderHistory = [initialStep, ...data];
+
+        this.isLoadingTimeline = false; // Tắt cờ loading khi đã có dữ liệu
+      },
+      error: (err) => {
+        alert('Không thể tải lịch sử đơn hàng: ' + err.message);
+        this.isLoadingTimeline = false; // Lỗi cũng phải tắt loading
+      }
+    });
   }
 }

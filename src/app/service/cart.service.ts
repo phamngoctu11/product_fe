@@ -36,11 +36,10 @@ export class CartService {
       responseType: 'text' as 'json',
     }) as Observable<string>;
   }
- acceptCart(userId: number, productIds: number[]): Observable<string> {
-    // Đưa danh sách productIds vào phần body thay vì null
+acceptCart(userId: number, productIds: number[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/approve/${userId}`, productIds, {
-      responseType: 'text' as 'json',
-    }) as Observable<string>;
+      responseType: 'text' // Dòng này là "chìa khóa" giải quyết lỗi
+    });
   }
   updateQuantity(userId: number, productId: number, newQuantity: number): Observable<any> {
     return this.http.put(`${this.apiUrl}/update`, null, {

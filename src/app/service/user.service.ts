@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserCreDTO, UserResListDTO } from '../model/user.model';
+import { PageResponse } from '../model/page-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,10 +11,13 @@ export class UserService {
   private apiUrl = 'http://localhost:8080/api/users';
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<UserResListDTO[]> {
-    return this.http.get<UserResListDTO[]>(this.apiUrl);
-  }
+ getAll(page: number = 0, size: number = 10): Observable<PageResponse<UserResListDTO>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
 
+    return this.http.get<PageResponse<UserResListDTO>>(this.apiUrl, { params });
+  }
   getById(id: number): Observable<UserResListDTO> {
     return this.http.get<UserResListDTO>(`${this.apiUrl}/${id}`);
   }

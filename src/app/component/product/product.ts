@@ -5,7 +5,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CartService } from '../../service/cart.service';
 import { AuthService } from '../../service/auth.service';
 import { ProductService } from '../../service/product.service';
-import { NaPipe } from '../../pipes/na-pipe'; // Import component vừa tạo
+import { NaPipe } from '../../pipes/na-pipe';
 import { ProductDetailComponent } from './productdetail/product-detail';
 
 @Component({
@@ -21,27 +21,49 @@ export class Product implements OnInit {
   searchTerm: string = '';
   currentUserId: any;
 
+  // --- THÊM CÁC BIẾN QUẢN LÝ PHÂN TRANG ---
+  currentPage: number = 0;
+  pageSize: number = 10;
+  totalPages: number = 0;
+  totalElements: number = 0;
+
   constructor(
     private cartService: CartService,
     private authService: AuthService,
     private productService: ProductService,
-    private dialog: MatDialog // Thêm MatDialog vào constructor
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.currentUserId = this.authService.getUserId();
-    this.getAll();
+    // Gọi hàm getAll với trang mặc định là 0
+    this.getAll(this.currentPage, this.pageSize);
   }
 
-  getAll() {
-    this.productService.getAll().subscribe((res: any) => {
-      this.plist = res;
-      this.filteredProducts = [...res];
-      this.addQuan = new Array(res.length).fill(1);
+  // --- CẬP NHẬT HÀM GET ALL ĐỂ NHẬN PHÂN TRANG ---
+  getAll(page: number = 0, size: number = 10) {
+    this.productService.getAll(page, size).subscribe({
+      next: (res: any) => {
+        // Backend trả về Object PageResponse, mảng sản phẩm nằm trong thuộc tính 'content'
+        const productsArray = res.content || [];
+
+        this.plist = productsArray;
+        // Đã hết lỗi 'res is not iterable' vì productsArray chắc chắn là mảng
+        this.filteredProducts = [...productsArray];
+        this.addQuan = new Array(productsArray.length).fill(1);
+
+        // Lưu lại thông số phân trang từ Backend để dùng cho HTML
+        this.currentPage = res.number || 0;
+        this.pageSize = res.size || 10;
+        this.totalPages = res.totalPages || 0;
+        this.totalElements = res.totalElements || 0;
+      },
+      error: (err) => {
+        console.error('Lỗi khi lấy danh sách sản phẩm:', err);
+      }
     });
   }
 
-  // Hàm mở Dialog để Thêm hoặc Sửa
   openProductDialog(id: number | null = null) {
     const dialogRef = this.dialog.open(ProductDetailComponent, {
       width: '600px',
@@ -51,7 +73,8 @@ export class Product implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.getAll(); // Tải lại danh sách nếu có thay đổi
+        // Tải lại danh sách ở trang hiện tại sau khi thêm/sửa
+        this.getAll(this.currentPage, this.pageSize);
       }
     });
   }
@@ -59,7 +82,8 @@ export class Product implements OnInit {
   delete(item: any) {
     if (confirm('Xác nhận xóa sản phẩm?')) {
       this.productService.delete(item.id).subscribe({
-        next: () => this.getAll(),
+        // Tải lại đúng trang hiện tại sau khi xóa
+        next: () => this.getAll(this.currentPage, this.pageSize),
         error: () => alert('Lỗi khi xóa!')
       });
     }
@@ -85,6 +109,12 @@ export class Product implements OnInit {
       });
     } else {
       alert('Vui lòng đăng nhập!');
+    }
+  }
+
+  changePage(newPage: number) {
+    if (newPage >= 0 && newPage < this.totalPages) {
+      this.getAll(newPage, this.pageSize);
     }
   }
 }

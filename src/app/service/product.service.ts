@@ -1,7 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ProductCreDTO, ProductResDTO } from '../model/product.model';
+import { PageResponse } from '../model/page-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -12,9 +13,13 @@ export class ProductService {
   create(product: ProductCreDTO): Observable<ProductCreDTO> {
     return this.http.post<ProductCreDTO>(this.apiUrl, product);
   }
+getAll(page: number = 0, size: number = 10): Observable<PageResponse<ProductResDTO>> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
 
-  getAll(): Observable<ProductResDTO[]> {
-    return this.http.get<ProductResDTO[]>(this.apiUrl);
+    // Đổi kiểu trả về thành PageResponse
+    return this.http.get<PageResponse<ProductResDTO>>(this.apiUrl, { params });
   }
   update(id: number, user: ProductResDTO): Observable<ProductResDTO> {
     return this.http.put<ProductResDTO>(`${this.apiUrl}/${id}`, user);
