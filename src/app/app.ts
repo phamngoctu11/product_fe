@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CartModalComponent } from './component/cart/cart-modal';
 import { OrderDialogComponent } from './component/orders/orders-dialog/order-dialog';
+import { RewardDialogComponent } from './component/reward/reward-dialog';
 
 @Component({
   selector: 'app-root',
@@ -23,7 +24,9 @@ export class App {
   get userLastName(): string {
     return localStorage.getItem('username') || 'User';
   }
-
+  signUp(){
+   this.authService
+  }
   openCart() {
     const userId = this.authService.getUserId();
     if (userId) {
@@ -37,7 +40,12 @@ export class App {
       this.dialog.open(OrderDialogComponent, { data: userId, width: '800px' });
     }
   }
-
+openRewards() {
+    const userId = this.authService.getUserId();
+    if (userId) {
+      this.dialog.open(RewardDialogComponent, { data: userId, width: '850px' });
+    }
+  }
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);

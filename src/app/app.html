@@ -2,32 +2,16 @@
   <div class="bg-light border-end" style="width: 280px" id="sidebar-wrapper">
     <div class="sidebar-heading p-3 border-bottom fs-4 fw-bold text-primary">My App</div>
     <div class="list-group list-group-flush">
-      <a
-        routerLink="product"
-        routerLinkActive="active"
-        class="list-group-item list-group-item-action bg-light"
-      >
+      <a routerLink="product" routerLinkActive="active" class="list-group-item list-group-item-action bg-light">
         <i class="bi bi-box me-2"></i> Product
       </a>
-      <a
-        routerLink="user"
-        routerLinkActive="active"
-        class="list-group-item list-group-item-action bg-light"
-      >
+      <a routerLink="user" routerLinkActive="active" class="list-group-item list-group-item-action bg-light">
         <i class="bi bi-person me-2"></i> User
       </a>
-      <a
-        routerLink="myinfor"
-        routerLinkActive="active"
-        class="list-group-item list-group-item-action bg-light"
-      >
+      <a routerLink="myinfor" routerLinkActive="active" class="list-group-item list-group-item-action bg-light">
         <i class="bi bi-person me-2"></i> My Information
       </a>
-      <a
-        routerLink="orders"
-        routerLinkActive="active"
-        class="list-group-item list-group-item-action bg-light"
-      >
+      <a routerLink="orders" routerLinkActive="active" class="list-group-item list-group-item-action bg-light">
         <i class="bi bi-person me-2"></i> Orders
       </a>
     </div>
@@ -36,22 +20,27 @@
   <div class="flex-grow-1" id="page-content-wrapper">
     <nav class="navbar navbar-light bg-light border-bottom">
       <div class="container-fluid justify-content-end">
+
         <button
           *ngIf="!authService.getUserId()"
           class="btn btn-outline-success me-2"
-          routerLink="login"
+          routerLink="/login"
         >
           Login
         </button>
 
+        <button
+          *ngIf="!authService.getUserId()"
+          class="btn btn-outline-primary me-4"
+          [routerLink]="['/login']"
+          [queryParams]="{ mode: 'signup' }"
+        >
+          Sign Up
+        </button>
+
+
         <div *ngIf="authService.getUserId()" class="dropdown">
-          <button
-            class="btn btn-outline-primary dropdown-toggle d-flex align-items-center"
-            type="button"
-            id="userMenu"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
+          <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-person-circle me-2"></i>
             Xin chào, {{ userLastName }}
           </button>
@@ -60,6 +49,12 @@
             <li>
               <a class="dropdown-item" routerLink="myinfor">
                 <i class="bi bi-person-vcard me-2"></i>Thông tin cá nhân
+              </a>
+            </li>
+
+            <li>
+              <a class="dropdown-item text-warning fw-bold" (click)="openRewards()" style="cursor: pointer">
+                <i class="bi bi-gift-fill me-2"></i>Voucher 
               </a>
             </li>
             <li>

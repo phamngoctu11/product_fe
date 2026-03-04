@@ -51,23 +51,64 @@
               </tr>
             }
           </tbody>
+
           <tfoot>
             <tr class="table-light">
-              <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-3 text-uppercase small fw-bold text-muted">
+              <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-2 text-uppercase small fw-bold text-muted">
+                Tạm tính:
+              </td>
+              <td class="text-end py-2">
+                <span class="fs-6 fw-bold text-dark">{{ tempTotalPrice | number }}đ</span>
+              </td>
+            </tr>
+
+            @if (isOwner) {
+            <tr class="table-light">
+              <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-2 align-middle">
+                <div class="d-flex justify-content-end align-items-center">
+                  <i class="bi bi-ticket-perforated text-danger me-2"></i>
+                  <span class="me-2 fw-semibold">Mã giảm giá:</span>
+
+                  <select class="form-select form-select-sm border-danger" style="width: auto; min-width: 250px;"
+                          [(ngModel)]="selectedVoucherId"
+                          (ngModelChange)="onVoucherChange()">
+
+                    <option [ngValue]="0">-- Không sử dụng mã giảm giá --</option>
+
+                    @for (uv of myWallet; track uv.id) {
+                      <option [ngValue]="uv.id" [disabled]="tempTotalPrice < uv.template.minOrderValue">
+                        {{ uv.template.name }} (Đơn từ {{ uv.template.minOrderValue | number }}đ)
+                      </option>
+                    }
+                  </select>
+                </div>
+              </td>
+             <td class="text-end py-2 align-middle">
+                  @if (tempDiscountAmount > 0) {
+                    <span class="fw-bold text-success">-{{ tempDiscountAmount | number }}đ</span>
+                  } @else {
+                    <span class="text-muted">0đ</span>
+                  }
+              </td>
+            </tr>
+            }
+
+            <tr class="table-light">
+              <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-3 text-uppercase small fw-bold text-dark">
                 Tổng thanh toán:
               </td>
               <td class="text-end py-3">
-                <span class="fs-5 fw-bold text-danger">{{ cartData?.totalPrice | number }}đ</span>
+                <span class="fs-5 fw-bold text-danger">{{ tempFinalPrice | number }}đ</span>
               </td>
             </tr>
           </tfoot>
         </table>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer bg-light">
         <button type="button" class="btn btn-outline-secondary" (click)="onClose()">Đóng</button>
         @if (isOwner) {
-          <button type="button" class="btn btn-primary px-4" (click)="approve()">
-            <i class="bi bi-check2-circle me-1"></i> Thanh toán
+          <button type="button" class="btn btn-danger px-4 fw-bold" (click)="approve()">
+            <i class="bi bi-check2-circle me-1"></i> Chốt đơn hàng
           </button>
         }
       </div>

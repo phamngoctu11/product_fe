@@ -5,6 +5,8 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { CartService } from '../../service/cart.service';
 import { CartRes } from '../../model/cart.model';
 import { forkJoin, Observable, of } from 'rxjs';
+import { VoucherService } from '../../service/voucher.service';
+import { UserVoucher } from '../../model/voucher.model';
 
 @Component({
   selector: 'app-cart-modal',
@@ -17,14 +19,22 @@ export class CartModalComponent implements OnInit {
   listCurQuan: number[] = [];
   public cartData?: CartRes;
   public userId = inject(MAT_DIALOG_DATA);
-  currentUser: any;
   isOwner: boolean = false;
-
-  // Mảng lưu ID các sản phẩm được chọn
   selectedProductIds: number[] = [];
+
+  // VOUCHER WALLET
+  myWallet: UserVoucher[] = [];
+
+  // BEST PRACTICE: Khai báo cực ngắn gọn, số 0 đại diện cho việc chưa chọn mã
+  selectedVoucherId: number = 0;
+
+  tempTotalPrice: number = 0;
+  tempDiscountAmount: number = 0;
+  tempFinalPrice: number = 0;
 
   constructor(
     private cartService: CartService,
+    private voucherService: VoucherService,
     public dialogRef: MatDialogRef<CartModalComponent>,
   ) {}
 
@@ -32,6 +42,16 @@ export class CartModalComponent implements OnInit {
     const userStr = localStorage.getItem('user_id');
     this.isOwner = userStr === this.userId.toString();
     this.loadCart();
+    if (this.isOwner) {
+      this.loadWallet();
+    }
+  }
+
+  loadWallet() {
+    this.voucherService.getMyWallet(this.userId).subscribe({
+      next: (data) => this.myWallet = data,
+      error: (err) => console.error('Lỗi tải ví:', err)
+    });
   }
 
   loadCart() {
@@ -43,52 +63,82 @@ export class CartModalComponent implements OnInit {
           this.listCurQuan = this.cartData.items.map((item: any) => item.quantity);
         }
         this.isLoading = false;
-        this.updateTempTotal(); // Tính toán lại tổng tiền lần đầu
+        this.calculateInvoice();
       },
       error: (err) => {
         console.error('Lỗi khi tải giỏ hàng:', err);
         this.isLoading = false;
-      },
+      }
     });
   }
 
-  // Hàm xử lý khi check/uncheck vào ô checkbox
   toggleSelection(productId: number) {
     const index = this.selectedProductIds.indexOf(productId);
     if (index > -1) {
-      this.selectedProductIds.splice(index, 1); // Bỏ chọn
+      this.selectedProductIds.splice(index, 1);
     } else {
-      this.selectedProductIds.push(productId); // Chọn
+      this.selectedProductIds.push(productId);
     }
-    this.updateTempTotal(); // Cập nhật lại tổng tiền ngay lập tức
+    this.calculateInvoice();
   }
 
   changeQuantity(index: number, delta: number) {
     const newValue = this.listCurQuan[index] + delta;
     if (newValue >= 1) {
       this.listCurQuan[index] = newValue;
-      this.updateTempTotal();
+      this.calculateInvoice();
     }
   }
 
-  // Cập nhật lại logic tính tổng tiền
-  updateTempTotal() {
-    if (this.cartData && this.cartData.items) {
-      if (this.selectedProductIds.length === 0) {
-        // Nếu không có item nào được chọn, tính tổng TẤT CẢ theo yêu cầu
-        this.cartData.totalPrice = this.cartData.items.reduce((total, item, i) => {
-          return total + item.price * this.listCurQuan[i];
-        }, 0);
-      } else {
-        // Nếu có chọn, CHỈ tính tổng các item được chọn
-        this.cartData.totalPrice = this.cartData.items.reduce((total, item, i) => {
-          if (this.selectedProductIds.includes(item.productId)) {
-            return total + item.price * this.listCurQuan[i];
+  // HÀM TÍNH TOÁN (Xử lý mọi nghiệp vụ)
+  calculateInvoice() {
+    if (!this.cartData || !this.cartData.items) return;
+
+    // 1. TÍNH TỔNG TIỀN GỐC
+    if (this.selectedProductIds.length === 0) {
+      this.tempTotalPrice = this.cartData.items.reduce((total, item, i) => total + item.price * this.listCurQuan[i], 0);
+    } else {
+      this.tempTotalPrice = this.cartData.items.reduce((total, item, i) => {
+        return this.selectedProductIds.includes(item.productId) ? total + item.price * this.listCurQuan[i] : total;
+      }, 0);
+    }
+
+    // 2. TÍNH TIỀN GIẢM GIÁ
+    this.tempDiscountAmount = 0; // LUÔN RESET VỀ 0 ĐẦU TIÊN
+
+    if (this.selectedVoucherId !== 0) {
+      const voucher = this.myWallet.find(v => v.id === this.selectedVoucherId);
+
+      if (voucher) {
+        if (this.tempTotalPrice < voucher.template.minOrderValue) {
+          this.selectedVoucherId = 0; // Ép về 0 (Gỡ thẻ) nếu khách giảm số lượng làm không đủ điều kiện
+        } else {
+          // Xử lý giảm theo %
+          if (voucher.template.discountPercent > 0) {
+            let discount = (this.tempTotalPrice * voucher.template.discountPercent) / 100;
+            if (voucher.template.maxDiscountAmount > 0 && discount > voucher.template.maxDiscountAmount) {
+              discount = voucher.template.maxDiscountAmount;
+            }
+            this.tempDiscountAmount = discount;
+          } else {
+            // Xử lý giảm thẳng tiền mặt
+            this.tempDiscountAmount = voucher.template.maxDiscountAmount;
           }
-          return total;
-        }, 0);
+        }
       }
     }
+
+    // Đảm bảo không giảm âm tiền
+    if (this.tempDiscountAmount > this.tempTotalPrice) {
+      this.tempDiscountAmount = this.tempTotalPrice;
+    }
+
+    // 3. TÍNH TIỀN THỰC TRẢ
+    this.tempFinalPrice = this.tempTotalPrice - this.tempDiscountAmount;
+  }
+
+  onVoucherChange() {
+    this.calculateInvoice();
   }
 
   private getUpdateRequests(): Observable<any>[] {
@@ -96,9 +146,7 @@ export class CartModalComponent implements OnInit {
     if (this.cartData?.items) {
       this.cartData.items.forEach((item: any, i: number) => {
         if (item.quantity !== this.listCurQuan[i]) {
-          requests.push(
-            this.cartService.updateQuantity(this.userId, item.productId, this.listCurQuan[i]),
-          );
+          requests.push(this.cartService.updateQuantity(this.userId, item.productId, this.listCurQuan[i]));
         }
       });
     }
@@ -109,18 +157,19 @@ export class CartModalComponent implements OnInit {
     if (!this.cartData?.user_id) return;
     this.isLoading = true;
 
-    // Xác định những sản phẩm nào sẽ được thanh toán
     const productIdsToCheckout = this.selectedProductIds.length > 0
       ? this.selectedProductIds
       : this.cartData.items.map((item: any) => item.productId);
+
+    // CHỈ TRUYỀN ID XUỐNG API (Nếu = 0 thì truyền undefined để BE bỏ qua logic tính voucher)
+    let voucherIdToPass = this.selectedVoucherId !== 0 ? this.selectedVoucherId : undefined;
 
     const updates = this.getUpdateRequests();
     const performUpdate$: Observable<any> = updates.length > 0 ? forkJoin(updates) : of(null);
 
     performUpdate$.subscribe({
       next: () => {
-        // Gửi danh sách ID sản phẩm qua API
-        this.cartService.acceptCart(this.cartData!.user_id, productIdsToCheckout).subscribe({
+        this.cartService.acceptCart(this.cartData!.user_id, productIdsToCheckout, voucherIdToPass).subscribe({
           next: () => {
             alert('Thanh toán thành công!');
             this.isLoading = false;
@@ -133,10 +182,9 @@ export class CartModalComponent implements OnInit {
         });
       },
       error: (err: any) => {
-        console.error('Chi tiết lỗi:', err);
         alert('Lỗi cập nhật số lượng: ' + (err.error?.message || err.message));
         this.isLoading = false;
-      },
+      }
     });
   }
 

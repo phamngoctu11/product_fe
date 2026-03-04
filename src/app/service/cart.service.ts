@@ -36,9 +36,16 @@ export class CartService {
       responseType: 'text' as 'json',
     }) as Observable<string>;
   }
-acceptCart(userId: number, productIds: number[]): Observable<any> {
+acceptCart(userId: number, productIds: number[], userVoucherId?: number): Observable<any> {
+    let params = new HttpParams();
+
+    if (userVoucherId) {
+      params = params.set('userVoucherId', userVoucherId.toString());
+    }
+
     return this.http.post(`${this.apiUrl}/approve/${userId}`, productIds, {
-      responseType: 'text' // Dòng này là "chìa khóa" giải quyết lỗi
+      params: params,
+      responseType: 'text'
     });
   }
   updateQuantity(userId: number, productId: number, newQuantity: number): Observable<any> {
