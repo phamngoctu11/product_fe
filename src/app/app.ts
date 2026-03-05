@@ -4,8 +4,10 @@ import { AuthService } from './service/auth.service';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CartModalComponent } from './component/cart/cart-modal';
-import { OrderDialogComponent } from './component/orders/orders-dialog/order-dialog';
 import { RewardDialogComponent } from './component/reward/reward-dialog';
+import { Orders } from './component/orders/orders';
+import { SettingsModalComponent } from './component/setting/settings-modal';
+import { ThemeService } from './service/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -20,13 +22,17 @@ export class App {
   private dialog = inject(MatDialog);
   private router = inject(Router);
 
-  // Lấy username hoặc từ localStorage (trong auth.service.ts bạn đang lưu 'username')
+  // Inject ThemeService để tự động đổi màu khi F5
+  constructor(private themeService: ThemeService) {}
+
   get userLastName(): string {
     return localStorage.getItem('username') || 'User';
   }
-  signUp(){
-   this.authService
+
+  signUp() {
+    // Code xử lý signup sau
   }
+
   openCart() {
     const userId = this.authService.getUserId();
     if (userId) {
@@ -37,15 +43,24 @@ export class App {
   openOrders() {
     const userId = this.authService.getUserId();
     if (userId) {
-      this.dialog.open(OrderDialogComponent, { data: userId, width: '800px' });
+     this.router.navigate(['/orders']);
     }
   }
-openRewards() {
+
+  openRewards() {
     const userId = this.authService.getUserId();
     if (userId) {
       this.dialog.open(RewardDialogComponent, { data: userId, width: '850px' });
     }
   }
+
+  openSettings() {
+    this.dialog.open(SettingsModalComponent, {
+      width: '500px',
+      disableClose: false
+    });
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);

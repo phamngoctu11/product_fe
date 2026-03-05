@@ -1,0 +1,52 @@
+<div class="modal-content shadow-lg border-0">
+  <div class="modal-header bg-primary text-white border-bottom-0">
+    <h5 class="modal-title fw-bold">
+      <i class="bi bi-palette me-2"></i>Cài đặt giao diện
+    </h5>
+    <button type="button" class="btn-close btn-close-white" (click)="close()"></button>
+  </div>
+
+  <div class="modal-body p-4">
+    <div class="mb-4">
+      <label class="form-label fw-semibold text-secondary mb-3">Màu nền tùy chỉnh:</label>
+      <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-3 border">
+        <input type="color"
+               class="form-control form-control-color border-0 p-1 shadow-sm"
+               style="width: 60px; height: 45px; cursor: pointer;"
+               [(ngModel)]="selectedColor"
+               (ngModelChange)="applyColor($event)"
+               title="Chọn màu tùy chỉnh">
+        <span class="text-muted fw-medium">Nhấp vào ô vuông để tự pha màu</span>
+      </div>
+    </div>
+
+    <hr class="text-muted opacity-25">
+
+    <div class="mb-2">
+      <label class="form-label fw-semibold text-secondary mb-3">Hoặc chọn màu gợi ý:</label>
+      <div class="d-flex flex-wrap gap-3">
+        @for (color of presetColors; track color) {
+          <button class="btn rounded-circle shadow-sm"
+                  [style.background-color]="color"
+                  [class.border-primary]="selectedColor === color"
+                  [class.border-2]="selectedColor === color"
+                  [class.border]="selectedColor !== color"
+                  style="width: 45px; height: 45px; transition: transform 0.2s;"
+                  (click)="applyColor(color)">
+            <i class="bi bi-check-lg fs-5"
+               [ngClass]="color === '#212529' ? 'text-white' : 'text-primary'"
+               *ngIf="selectedColor === color">
+            </i>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer bg-light border-top-0">
+    <button class="btn btn-outline-danger me-auto fw-medium" (click)="resetColor()">
+      <i class="bi bi-arrow-counterclockwise me-1"></i>Khôi phục mặc định
+    </button>
+    <button class="btn btn-primary px-4 fw-medium" (click)="close()">Hoàn tất</button>
+  </div>
+</div>
