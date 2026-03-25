@@ -8,7 +8,7 @@ import { LoginRequest, LoginResponse } from '../model/user.model';
 })
 export class AuthService {
   private apiUrl = 'http://localhost:8080/api/auth';
-  private userUrl = 'http://localhost:8080/api/users'; // Thêm URL gọi sang UserController
+  private userUrl = 'http://localhost:8080/api/users';
 
   constructor(private http: HttpClient) {}
 
@@ -22,9 +22,7 @@ export class AuthService {
     );
   }
 
-  // THÊM HÀM ĐĂNG KÝ
   register(userData: any): Observable<any> {
-    // Gọi đến API POST /api/users để khởi chạy quy trình Camunda
     return this.http.post<any>(this.userUrl, userData);
   }
 
@@ -37,5 +35,52 @@ export class AuthService {
     return id ? parseInt(id, 10) : null;
   }
 
-  getCurrentUser() {}
+  // =========================================================================
+  // BỘ HÀM QUẢN LÝ QUYỀN (ROLE) VÀ TOKEN TOÀN CỤC (GLOBAL AUTHORIZATION)
+  // =========================================================================
+
+  // 1. Lấy Token từ LocalStorage
+  getToken(): string | null {
+    return localStorage.getItem('accessToken');
+  }
+
+  // 2. Giải mã Token để lấy Payload chứa thông tin User
+  getDecodedToken(): any {
+    const token = this.getToken();
+    if (token) {
+      try {
+        const payloadBase64Url = token.split('.')[1];
+        const payloadBase64 = payloadBase64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const decodedJson = decodeURIComponent(atob(payloadBase64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(decodedJson);
+      } catch (error) {
+        console.error('Lỗi khi giải mã Token:', error);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // 3. Lấy Role của User hiện tại
+  getUserRole(): string {
+    const decodedToken = this.getDecodedToken();
+    return decodedToken ? (decodedToken.role || '') : '';
+  }
+
+  // 4. Kiểm tra xem User có phải là Admin không
+  isAdmin(): boolean {
+    const role = this.getUserRole();
+    return role.toUpperCase() === 'ADMIN' || role.toUpperCase() === 'ROLE_ADMIN';
+  }
+
+  // 5. Kiểm tra xem User đã đăng nhập chưa
+  isLoggedIn(): boolean {
+    return this.getToken() !== null;
+  }
+
+  getCurrentUser() {
+    return this.getDecodedToken();
+  }
 }

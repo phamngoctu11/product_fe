@@ -5,6 +5,7 @@ export interface UserResListDTO {
   lastname: string;
   role: string;
   reputation: number;
+  avatar_url?: string;
 }
 export interface UserCreDTO {
   id?: number;
@@ -17,6 +18,7 @@ export interface UserCreDTO {
   phone: string;
   birth: Date;
   role?: string;
+  avatar_url?: string;
 }
 export interface LoginResponse {
   accessToken: string;
@@ -38,4 +40,5 @@ export interface UserInforDTO {
   phone: string;
   cart: CartRes;
   reputation: number;
+  avatar_url?: string;
 }

@@ -1,102 +1,103 @@
-<div class="modal-header bg-primary text-white p-3">
-  <h5 class="modal-title m-0 fw-bold">
-    {{
-      isView
-        ? 'Chi tiết Người dùng'
-        : isEdit
-          ? 'Cập nhật Thông tin Người dùng'
-          : 'Thêm Người dùng mới'
-    }}
-  </h5>
-</div>
+<div class="modal-content shadow-lg border-0">
+  <div class="modal-header bg-primary text-white border-0 p-3">
+    <h5 class="modal-title m-0 fw-bold">
+      <i class="bi me-2" [ngClass]="isView ? 'bi-person-vcard' : (isEdit ? 'bi-pencil-square' : 'bi-person-plus-fill')"></i>
+      {{ isView ? 'Chi tiết Người dùng' : (isEdit ? 'Cập nhật Thông tin' : 'Thêm Người dùng mới') }}
+    </h5>
+  </div>
 
-<div class="modal-body p-4">
-  <div class="row g-3">
-    <div class="col-md-6">
-      <label class="form-label fw-bold">Họ (Lastname)</label>
-      <input
-        type="text"
-        class="form-control"
-        [(ngModel)]="currentUser.lastname"
-        [disabled]="isView"
-      />
-    </div>
-    <div class="col-md-6">
-      <label class="form-label fw-bold">Tên (Firstname)</label>
-      <input
-        type="text"
-        class="form-control"
-        [(ngModel)]="currentUser.firstname"
-        [disabled]="isView"
-      />
-    </div>
+  <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
 
-    <div class="col-md-6">
-      <label class="form-label fw-bold">Tên đăng nhập</label>
-      <input
-        type="text"
-        class="form-control"
-        [(ngModel)]="currentUser.username"
-        [disabled]="isEdit || isView"
-      />
-    </div>
-
-    @if (!isEdit && !isView) {
-      <div class="col-md-6">
-        <label class="form-label fw-bold">Mật khẩu</label>
-        <input type="password" class="form-control" [(ngModel)]="currentUser.password" />
+    <div class="row mb-4 align-items-center bg-light p-3 rounded border border-light">
+      <div class="col-md-3 text-center">
+        <div class="border rounded-circle bg-white d-flex justify-content-center align-items-center shadow-sm overflow-hidden"
+             style="width: 100px; height: 100px; margin: 0 auto; border: 2px dashed #ced4da !important;">
+          <div *ngIf="isUploadingAvatar" class="spinner-border text-primary" role="status"></div>
+          <i *ngIf="!uploadedAvatarUrl && !isUploadingAvatar" class="bi bi-person text-muted" style="font-size: 3rem;"></i>
+          <img *ngIf="uploadedAvatarUrl && !isUploadingAvatar" [src]="uploadedAvatarUrl" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
       </div>
-    }
-
-    <div class="col-md-6">
-      <label class="form-label fw-bold">Vai trò</label>
-      <select class="form-control" [(ngModel)]="currentUser.role" [disabled]="isView">
-        <option value="USER">Người dùng (USER)</option>
-        <option value="ADMIN">Quản trị (ADMIN)</option>
-      </select>
-    </div>
-    <div class="col-md-6">
-      <label class="form-label fw-bold">Giới tính</label>
-      <select class="form-control" [(ngModel)]="currentUser.gender" [disabled]="isView">
-        <option value="male">Nam</option>
-        <option value="female">Nữ</option>
-      </select>
+      <div class="col-md-9 mt-3 mt-md-0">
+        <label class="form-label fw-bold text-primary"><i class="bi bi-image me-1"></i> Ảnh đại diện (Avatar)</label>
+        <div class="input-group shadow-sm">
+          <input type="file" class="form-control" (change)="onAvatarSelected($event)" accept="image/*" [disabled]="isUploadingAvatar || isView">
+        </div>
+        <div class="form-text text-muted mt-2">
+          Tùy chọn. Ảnh sẽ được sử dụng làm hình đại diện toàn hệ thống.
+        </div>
+      </div>
     </div>
 
-    <div class="col-md-6">
-      <label class="form-label fw-bold">Số điện thoại</label>
-      <input type="text" class="form-control" [(ngModel)]="currentUser.phone" [disabled]="isView" />
-    </div>
-    <div class="col-md-6">
-      <label class="form-label fw-bold">Ngày sinh</label>
-      <input
-        type="date"
-        class="form-control"
-        [ngModel]="currentUser.birth | date: 'yyyy-MM-dd'"
-        (ngModelChange)="currentUser.birth = $event"
-        [disabled]="isView"
-      />
+    <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">1. Thông tin hệ thống (Tài khoản)</h6>
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <label class="form-label fw-bold text-muted small mb-1">Tên đăng nhập</label>
+        <input type="text" class="form-control fw-semibold text-primary bg-light"
+               [(ngModel)]="currentUser.username" [disabled]="isEdit || isView" placeholder="Nhập tên đăng nhập..." />
+      </div>
+
+      @if (!isEdit && !isView) {
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-muted small mb-1">Mật khẩu</label>
+          <input type="password" class="form-control" [(ngModel)]="currentUser.password" placeholder="Tạo mật khẩu..." />
+        </div>
+      }
+
+      <div class="col-md-6" *ngIf="isEdit || isView || (!isEdit && !isView)">
+        <label class="form-label fw-bold text-muted small mb-1">Vai trò</label>
+        <select class="form-select bg-light" [(ngModel)]="currentUser.role" [disabled]="isView">
+          <option value="USER">Người dùng (USER)</option>
+          <option value="ADMIN">Quản trị (ADMIN)</option>
+        </select>
+      </div>
     </div>
 
-    <div class="col-md-12">
-      <label class="form-label fw-bold">Địa chỉ</label>
-      <input
-        type="text"
-        class="form-control"
-        [(ngModel)]="currentUser.address"
-        [disabled]="isView"
-      />
+    <h6 class="text-success fw-bold mb-3 border-bottom pb-2 mt-4">2. Thông tin cá nhân</h6>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label fw-bold text-muted small mb-1">Họ (Lastname)</label>
+        <input type="text" class="form-control" [(ngModel)]="currentUser.lastname" [disabled]="isView" placeholder="VD: Nguyễn Văn" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold text-muted small mb-1">Tên (Firstname)</label>
+        <input type="text" class="form-control" [(ngModel)]="currentUser.firstname" [disabled]="isView" placeholder="VD: A" />
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold text-muted small mb-1">Giới tính</label>
+        <select class="form-select" [(ngModel)]="currentUser.gender" [disabled]="isView">
+          <option value="male">Nam</option>
+          <option value="female">Nữ</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold text-muted small mb-1">Ngày sinh</label>
+        <input type="date" class="form-control"
+               [ngModel]="currentUser.birth | date: 'yyyy-MM-dd'"
+               (ngModelChange)="currentUser.birth = $event" [disabled]="isView" />
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-bold text-muted small mb-1">Số điện thoại</label>
+        <input type="text" class="form-control" [(ngModel)]="currentUser.phone" [disabled]="isView" placeholder="VD: 0987654321" />
+      </div>
+
+      <div class="col-md-12">
+        <label class="form-label fw-bold text-muted small mb-1">Địa chỉ</label>
+        <textarea class="form-control" rows="2" [(ngModel)]="currentUser.address" [disabled]="isView" placeholder="Nhập địa chỉ cụ thể..."></textarea>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="modal-footer p-3 bg-light">
-  <button class="btn btn-secondary" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
+  <div class="modal-footer p-3 bg-light border-0">
+    <button class="btn btn-secondary px-4 fw-bold shadow-sm" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
 
-  @if (!isView) {
-    <button class="btn btn-success" (click)="saveUser()">
-      <i class="bi" [ngClass]="isEdit ? 'bi-check-circle' : 'bi-person-plus'"></i>
-      {{ isEdit ? 'Lưu thay đổi' : 'Tạo mới' }}
-    </button>
-  }
+    @if (!isView) {
+      <button class="btn btn-success px-4 fw-bold shadow-sm" (click)="saveUser()">
+        <i class="bi" [ngClass]="isEdit ? 'bi-check-circle' : 'bi-person-plus'"></i>
+        {{ isEdit ? 'Lưu thay đổi' : 'Tạo mới' }}
+      </button>
+    }
+  </div>
 </div>

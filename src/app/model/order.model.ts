@@ -1,9 +1,9 @@
-import { VoucherTemplate } from "./voucher.model";
 export interface OrderItem {
-  productId: number;
+productId: number;
   productName: string;
   quantity: number;
   price: number;
+  image_url?: string;
 }
 export interface Order {
   id: number;

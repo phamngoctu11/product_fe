@@ -1,21 +1,21 @@
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Quản lý Người dùng</h2>
-    <button class="btn btn-success" (click)="openUserDialog()">
-      <i class="bi bi-person-plus"></i> Thêm Người dùng mới
+    <h2 class="m-0 fw-bold"><i class="bi bi-people me-2 text-primary"></i>Quản lý Người dùng</h2>
+    <button class="btn btn-success fw-bold shadow-sm" (click)="openUserDialog()">
+      <i class="bi bi-person-plus-fill me-1"></i> Thêm Người dùng mới
     </button>
   </div>
 
-  <div class="card shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-      <h5 class="mb-0">Danh sách người dùng</h5>
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center py-3 border-bottom-0 gap-3">
+      <h5 class="mb-0 fw-bold text-secondary">Danh sách người dùng</h5>
 
-      <div class="input-group" style="width: 300px">
-        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+      <div class="input-group" style="width: 350px" title="Tìm kiếm theo tên...">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
         <input
           type="text"
-          class="form-control border-start-0 ps-0"
-          placeholder="Tìm kiếm theo tên..."
+          class="form-control border-start-0 bg-light"
+          placeholder="Nhập tên người dùng..."
           [(ngModel)]="searchTerm"
           (ngModelChange)="filterUsers()"
         />
@@ -24,58 +24,82 @@
 
     <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-striped table-hover table-bordered mb-0 align-middle">
-          <thead class="table-dark text-center">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-secondary text-center">
             <tr>
-              <th scope="col" style="width: 15%">ID</th>
-              <th scope="col" style="width: 25%">Họ và Tên</th>
+              <th scope="col" style="width: 10%">ID</th>
+              <th scope="col" style="width: 30%" class="text-start ps-4">Họ và Tên</th>
               <th scope="col" style="width: 15%">Vai trò</th>
               <th scope="col" style="width: 15%">Uy tín</th>
-              <th scope="col" style="width: 30%">Hành động</th>
+              <th scope="col" style="width: 30%">Thao tác</th>
             </tr>
           </thead>
           <tbody>
             @for (u of filteredUsers; track u.id) {
               <tr (click)="viewUser(u.id)" style="cursor: pointer">
-                <td class="text-center">{{ u.id }}</td>
-                <td class="text-center">{{ u.lastname }} {{ u.firstname }}</td>
+                <td class="text-center fw-bold text-muted">{{ u.id }}</td>
+                <td class="ps-4">
+                  <div class="d-flex align-items-center">
+
+                    <div class="rounded-circle d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden bg-primary bg-opacity-10 text-primary"
+                         style="width: 45px; height: 45px; flex-shrink: 0;">
+                      <img *ngIf="u.avatar_url" [src]="u.avatar_url" style="width: 100%; height: 100%; object-fit: cover;">
+                      <span *ngIf="!u.avatar_url" class="fw-bold fs-5">
+                        {{ u.firstname.charAt(0) | uppercase }}
+                      </span>
+                    </div>
+
+                    <div class="fw-bold text-dark fs-6">{{ u.lastname }} {{ u.firstname }}</div>
+                  </div>
+                </td>
                 <td class="text-center">
-                  <span>
-                    {{ u.role }}
+                  <span class="badge rounded-pill px-3 py-2"
+                        [ngClass]="u.role === 'ADMIN' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-primary bg-opacity-10 text-primary'">
+                    <i class="bi" [ngClass]="u.role === 'ADMIN' ? 'bi-shield-lock-fill' : 'bi-person-badge'"></i> {{ u.role }}
                   </span>
                 </td>
-                <td class="text-center">{{ u.reputation }}</td>
                 <td class="text-center">
-                  <div class="btn-group" role="group">
+                  <span class="badge bg-warning text-dark border border-warning px-3 py-2 shadow-sm">
+                    <i class="bi bi-star-fill text-danger me-1"></i> {{ u.reputation }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <div class="d-flex gap-2 justify-content-center">
                     <button
                       (click)="openCartModal(u.id); $event.stopPropagation()"
-                      class="btn btn-sm btn-info text-white"
+                      class="btn btn-outline-info fw-bold shadow-sm"
+                      title="Xem giỏ hàng"
                     >
-                      <i class="bi bi-cart"></i>
+                      <i class="bi bi-cart3 me-1"></i> Giỏ hàng
                     </button>
-                    <button
-                      class="btn btn-warning btn-sm me-2 ms-2"
-                      (click)="openUserDialog(u.id); $event.stopPropagation()"
-                    >
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button
-                      class="btn btn-danger btn-sm"
-                      (click)="deleteUser(u.id); $event.stopPropagation()"
-                    >
-                      <i class="bi bi-trash"></i>
-                    </button>
+
+                    @if(isAdmin){
+                      <div class="btn-group shadow-sm">
+                        <button
+                          class="btn btn-light border text-warning"
+                          (click)="openUserDialog(u.id); $event.stopPropagation()"
+                          title="Chỉnh sửa"
+                        >
+                          <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button
+                          class="btn btn-light border text-danger"
+                          (click)="deleteUser(u.id); $event.stopPropagation()"
+                          title="Xóa"
+                        >
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    }
                   </div>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="5" class="text-center py-4 text-muted">
-                  {{
-                    searchTerm
-                      ? 'Không tìm thấy người dùng nào phù hợp với từ khóa.'
-                      : 'Chưa có người dùng nào.'
-                  }}
+                <td colspan="5" class="text-center py-5 text-muted">
+                  <i class="bi bi-people fs-1 d-block mb-3 opacity-50"></i>
+                  <h5>Chưa có dữ liệu</h5>
+                  <p>{{ searchTerm ? 'Không tìm thấy người dùng nào phù hợp với từ khóa.' : 'Chưa có người dùng nào.' }}</p>
                 </td>
               </tr>
             }

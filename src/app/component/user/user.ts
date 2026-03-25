@@ -7,6 +7,7 @@ import { CartModalComponent } from '../cart/cart-modal';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Userdetail } from '../userdetail/userdetail';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../service/auth.service';
 // Điều chỉnh đường dẫn file cho đúng
 
 @Component({
@@ -24,13 +25,16 @@ export class UserComponent implements OnInit {
   pageSize: number = 10;
   totalElements: number = 0;
   totalPages: number = 0;
+  isAdmin = false;
 
   constructor(
     private userService: UserService,
     private dialog: MatDialog,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin()
     this.loadUsers(this.currentPage, this.pageSize);
   }
 

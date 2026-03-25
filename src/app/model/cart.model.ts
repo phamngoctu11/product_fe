@@ -1,8 +1,9 @@
 export interface CartItemRes {
-  productId: number;
+ productId: number;
   productName: string;
   quantity: number;
   price: number;
+  image_url?: string;
 }
 export interface CartRes {
   user_id: number;

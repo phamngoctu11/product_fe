@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { CartRes } from '../model/cart.model';
 
 @Injectable({
@@ -10,31 +10,47 @@ export class CartService {
   private apiUrl = 'http://localhost:8080/api/cart';
 
   constructor(private http: HttpClient) {}
+  private checkoutSuccessSource = new Subject<void>();
+
+  // Biến này để các Component khác (như ProductComponent) Subscribe (lắng nghe)
+  checkoutSuccess$ = this.checkoutSuccessSource.asObservable();
+
+  // Hàm này để Component Giỏ hàng gọi khi muốn "phát loa" thông báo
+  notifyCheckoutSuccess() {
+    this.checkoutSuccessSource.next();
+  }
 
   getCartByUserId(userId: number): Observable<CartRes> {
     return this.http.get<CartRes>(`${this.apiUrl}/${userId}`);
   }
 
-  addToCart(userId: number, productId: number, quantity: number): Observable<string> {
+addToCart(userId: number, variantId: number, quantity: number): Observable<any> {
     const params = new HttpParams()
       .set('userId', userId.toString())
-      .set('productId', productId.toString())
+      // CHỖ NÀY QUAN TRỌNG NHẤT: Đổi tên key thành 'variantId' cho khớp với Backend
+      .set('variantId', variantId.toString())
       .set('quantity', quantity.toString());
 
-    return this.http.post(`${this.apiUrl}/add`, null, {
-      params,
-      responseType: 'text' as 'json',
-    }) as Observable<string>;
+    // Gửi POST request với query params
+    return this.http.post(`${this.apiUrl}/add`, null, { params, responseType: 'text' as 'json' });
   }
-  removeFromCart(userId: number, productId: number): Observable<string> {
+
+  // Tiện thể sửa luôn các hàm Cập nhật và Xóa giỏ hàng (vì backend cũng đã đổi sang variantId)
+  updateQuantity(userId: number, variantId: number, quantity: number): Observable<any> {
     const params = new HttpParams()
       .set('userId', userId.toString())
-      .set('productId', productId.toString());
+      .set('variantId', variantId.toString()) // Đổi sang variantId
+      .set('quantity', quantity.toString());
 
-    return this.http.delete(`${this.apiUrl}/remove`, {
-      params,
-      responseType: 'text' as 'json',
-    }) as Observable<string>;
+    return this.http.put(`${this.apiUrl}/update`, null, { params, responseType: 'text' as 'json' });
+  }
+
+  removeFromCart(userId: number, variantId: number): Observable<any> {
+    const params = new HttpParams()
+      .set('userId', userId.toString())
+      .set('variantId', variantId.toString()); // Đổi sang variantId
+
+    return this.http.delete(`${this.apiUrl}/remove`, { params, responseType: 'text' as 'json' });
   }
 acceptCart(userId: number, productIds: number[], userVoucherId?: number): Observable<any> {
     let params = new HttpParams();
@@ -48,15 +64,4 @@ acceptCart(userId: number, productIds: number[], userVoucherId?: number): Observ
       responseType: 'text'
     });
   }
-  updateQuantity(userId: number, productId: number, newQuantity: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/update`, null, {
-      params: {
-        userId: userId.toString(),
-        productId: productId.toString(),
-        quantity: newQuantity.toString(),
-      },
-      responseType: 'text',
-    });
-  }
-
 }

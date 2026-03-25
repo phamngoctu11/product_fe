@@ -1,8 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ProductCreDTO, ProductResDTO } from '../model/product.model';
-import { PageResponse } from '../model/page-response.model';
+import { Product, PageResponse } from '../model/product.model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,22 +9,19 @@ import { PageResponse } from '../model/page-response.model';
 export class ProductService {
   private apiUrl = 'http://localhost:8080/api/products';
   constructor(private http: HttpClient) {}
-  create(product: ProductCreDTO): Observable<ProductCreDTO> {
-    return this.http.post<ProductCreDTO>(this.apiUrl, product);
-  }
-getAll(page: number = 0, size: number = 10): Observable<PageResponse<ProductResDTO>> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
 
-    // Đổi kiểu trả về thành PageResponse
-    return this.http.get<PageResponse<ProductResDTO>>(this.apiUrl, { params });
+  create(product: Product): Observable<Product> {
+    return this.http.post<Product>(this.apiUrl, product);
   }
-  update(id: number, user: ProductResDTO): Observable<ProductResDTO> {
-    return this.http.put<ProductResDTO>(`${this.apiUrl}/${id}`, user);
+  getAll(page: number = 0, size: number = 10): Observable<PageResponse<Product>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PageResponse<Product>>(this.apiUrl, { params });
   }
-  getById(id:number):Observable<ProductResDTO>{
-    return this.http.get<ProductResDTO>(`${this.apiUrl}/${id}`)
+  update(id: number, product: Product): Observable<Product> {
+    return this.http.put<Product>(`${this.apiUrl}/${id}`, product);
+  }
+  getById(id: number): Observable<Product> {
+    return this.http.get<Product>(`${this.apiUrl}/${id}`);
   }
   delete(id: number): Observable<string> {
     return this.http.delete<string>(`${this.apiUrl}/${id}`, { responseType: 'text' as 'json' });

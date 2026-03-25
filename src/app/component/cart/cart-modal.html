@@ -1,114 +1,122 @@
 <div class="modal fade show d-block" style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px)" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content shadow-lg">
-      <div class="modal-header bg-info text-white">
-        <h5 class="modal-title">
-          <i class="bi bi-cart3 me-2"></i>Giỏ hàng người dùng #{{ userId }}
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-primary text-white border-0 p-3">
+        <h5 class="modal-title fw-bold m-0">
+          <i class="bi bi-cart3 me-2"></i>Giỏ hàng của tôi
         </h5>
         <button type="button" class="btn-close btn-close-white" (click)="onClose()"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body p-0">
         <div *ngIf="isLoading" class="text-center py-5">
-          <div class="spinner-border text-info"></div>
-          <p class="mt-2">Đang tải dữ liệu...</p>
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-2 text-muted fw-medium">Đang tải dữ liệu...</p>
         </div>
-        <table class="table table-hover table-bordered align-middle mb-0">
-          <thead class="table-secondary text-center">
-            <tr>
-              <th *ngIf="isOwner" style="width: 60px;"><i class="bi bi-check-square"></i> Chọn</th>
-              <th style="width:30%">Sản phẩm</th>
-              <th style="width:10%">Số lượng</th>
-              <th style="width:30%">Đơn giá</th>
-              <th style="width:30%">Thành tiền</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of cartData?.items; track item.productId; let i = $index) {
-              <tr>
-                <td *ngIf="isOwner" class="text-center">
-                  <input class="form-check-input border-secondary" type="checkbox"
-                         [checked]="selectedProductIds.includes(item.productId)"
-                         (change)="toggleSelection(item.productId)"
-                         style="cursor: pointer; transform: scale(1.3);">
-                </td>
 
-                <td class="ps-3 fw-semibold text-primary">{{ item.productName || 'Sản phẩm ID: ' + item.productId }}</td>
-                <td class="text-center">
-                  @if (isOwner) {
-                    <div class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center p-1">
-                      <button class="btn btn-danger btn-custom-sm" (click)="changeQuantity(i, -1)">-</button>
-                      <span class="mx-2 fw-bold">{{ listCurQuan[i] }}</span>
-                      <button class="btn btn-success btn-custom-sm" (click)="changeQuantity(i, 1)">+</button>
+        <div class="table-responsive" *ngIf="!isLoading">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-secondary text-center">
+              <tr>
+                <th *ngIf="isOwner" style="width: 10%"><i class="bi bi-check-square"></i> Chọn</th>
+                <th style="width: 35%" class="text-start ps-4">Sản phẩm</th>
+                <th style="width: 20%">Số lượng</th>
+                <th style="width: 15%" class="text-end">Đơn giá</th>
+                <th style="width: 20%" class="text-end pe-4">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of cartData?.items; track item.productId; let i = $index) {
+                <tr>
+                  <td *ngIf="isOwner" class="text-center">
+                    <input class="form-check-input border-secondary" type="checkbox"
+                           [checked]="selectedProductIds.includes(item.productId)"
+                           (change)="toggleSelection(item.productId)"
+                           style="cursor: pointer; transform: scale(1.3);">
+                  </td>
+                  <td class="ps-4 fw-bold text-dark">
+                    <div class="d-flex align-items-center">
+                      <div class="rounded d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden"
+                           style="width: 45px; height: 45px; background-color: #f8f9fa; flex-shrink: 0;">
+                        <img *ngIf="item.image_url" [src]="item.image_url" style="width: 100%; height: 100%; object-fit: cover;">
+                        <i *ngIf="!item.image_url" class="bi bi-box-seam text-secondary fs-5"></i>
+                      </div>
+                      {{ item.productName || 'Sản phẩm ID: ' + item.productId }}
                     </div>
-                  } @else {
-                    <span class="fw-bold">{{ listCurQuan[i] }}</span>
-                  }
+                  </td>
+                  <td class="text-center">
+                    @if (isOwner) {
+                      <div class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center p-1 shadow-sm">
+                        <button class="btn btn-light btn-sm rounded-circle py-0 px-2 fw-bold text-danger border" (click)="changeQuantity(i, -1)">-</button>
+                        <span class="mx-3 fw-bold fs-6">{{ listCurQuan[i] }}</span>
+                        <button class="btn btn-light btn-sm rounded-circle py-0 px-2 fw-bold text-success border" (click)="changeQuantity(i, 1)">+</button>
+                      </div>
+                    } @else {
+                      <span class="fw-bold fs-6">{{ listCurQuan[i] }}</span>
+                    }
+                  </td>
+                  <td class="text-end text-muted">{{ item.price | number }}đ</td>
+                  <td class="text-end fw-bold text-dark pe-4">
+                    {{ listCurQuan[i] * item.price | number }}đ
+                  </td>
+                </tr>
+              }
+            </tbody>
+
+            <tfoot>
+              <tr class="table-light border-top border-2">
+                <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-3 text-uppercase small fw-bold text-muted border-0">
+                  Tạm tính:
                 </td>
-                <td class="text-end text-muted">{{ item.price | number }}đ</td>
-                <td class="text-end fw-bold text-dark">
-                  {{ listCurQuan[i] * item.price | number }}đ
+                <td class="text-end py-3 border-0 pe-4">
+                  <span class="fs-6 fw-bold text-dark">{{ tempTotalPrice | number }}đ</span>
                 </td>
               </tr>
-            }
-          </tbody>
 
-          <tfoot>
-            <tr class="table-light">
-              <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-2 text-uppercase small fw-bold text-muted">
-                Tạm tính:
-              </td>
-              <td class="text-end py-2">
-                <span class="fs-6 fw-bold text-dark">{{ tempTotalPrice | number }}đ</span>
-              </td>
-            </tr>
-
-            @if (isOwner) {
-            <tr class="table-light">
-              <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-2 align-middle">
-                <div class="d-flex justify-content-end align-items-center">
-                  <i class="bi bi-ticket-perforated text-danger me-2"></i>
-                  <span class="me-2 fw-semibold">Mã giảm giá:</span>
-
-                  <select class="form-select form-select-sm border-danger" style="width: auto; min-width: 250px;"
-                          [(ngModel)]="selectedVoucherId"
-                          (ngModelChange)="onVoucherChange()">
-
-                    <option [ngValue]="0">-- Không sử dụng mã giảm giá --</option>
-
-                    @for (uv of myWallet; track uv.id) {
-                      <option [ngValue]="uv.id" [disabled]="tempTotalPrice < uv.template.minOrderValue">
-                        {{ uv.template.name }} (Đơn từ {{ uv.template.minOrderValue | number }}đ)
-                      </option>
+              @if (isOwner) {
+              <tr class="table-light border-0">
+                <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-2 align-middle border-0">
+                  <div class="d-flex justify-content-end align-items-center">
+                    <i class="bi bi-ticket-perforated text-danger me-2"></i>
+                    <span class="me-2 fw-semibold">Mã giảm giá:</span>
+                    <select class="form-select form-select-sm border-danger shadow-sm" style="width: auto; min-width: 250px;"
+                            [(ngModel)]="selectedVoucherId"
+                            (ngModelChange)="onVoucherChange()">
+                      <option [ngValue]="0">-- Không sử dụng mã giảm giá --</option>
+                      @for (uv of myWallet; track uv.id) {
+                        <option [ngValue]="uv.id" [disabled]="tempTotalPrice < uv.template.minOrderValue">
+                          {{ uv.template.name }} (Đơn từ {{ uv.template.minOrderValue | number }}đ)
+                        </option>
+                      }
+                    </select>
+                  </div>
+                </td>
+                <td class="text-end py-2 align-middle border-0 pe-4">
+                    @if (tempDiscountAmount > 0) {
+                      <span class="fw-bold text-success">-{{ tempDiscountAmount | number }}đ</span>
+                    } @else {
+                      <span class="text-muted">0đ</span>
                     }
-                  </select>
-                </div>
-              </td>
-             <td class="text-end py-2 align-middle">
-                  @if (tempDiscountAmount > 0) {
-                    <span class="fw-bold text-success">-{{ tempDiscountAmount | number }}đ</span>
-                  } @else {
-                    <span class="text-muted">0đ</span>
-                  }
-              </td>
-            </tr>
-            }
+                </td>
+              </tr>
+              }
 
-            <tr class="table-light">
-              <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-3 text-uppercase small fw-bold text-dark">
-                Tổng thanh toán:
-              </td>
-              <td class="text-end py-3">
-                <span class="fs-5 fw-bold text-danger">{{ tempFinalPrice | number }}đ</span>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+              <tr class="bg-white border-top border-2">
+                <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-4 text-uppercase small fw-bold text-dark border-0">
+                  Tổng thanh toán:
+                </td>
+                <td class="text-end py-4 border-0 pe-4">
+                  <span class="fs-4 fw-bold text-danger">{{ tempFinalPrice | number }}đ</span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
-      <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-outline-secondary" (click)="onClose()">Đóng</button>
+      <div class="modal-footer bg-light border-0 p-3">
+        <button type="button" class="btn btn-secondary px-4 fw-bold" (click)="onClose()">Đóng</button>
         @if (isOwner) {
-          <button type="button" class="btn btn-danger px-4 fw-bold" (click)="approve()">
-            <i class="bi bi-check2-circle me-1"></i> Chốt đơn hàng
+          <button type="button" class="btn btn-danger px-4 fw-bold shadow-sm" (click)="approve()">
+            <i class="bi bi-cart-check me-1"></i> Chốt đơn hàng
           </button>
         }
       </div>

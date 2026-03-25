@@ -8,6 +8,7 @@ import { RewardDialogComponent } from './component/reward/reward-dialog';
 import { Orders } from './component/orders/orders';
 import { SettingsModalComponent } from './component/setting/settings-modal';
 import { ThemeService } from './service/theme.service';
+import { UserService } from './service/user.service';
 
 @Component({
   selector: 'app-root',
@@ -19,11 +20,15 @@ import { ThemeService } from './service/theme.service';
 export class App {
   protected readonly title = signal('fe_product');
   authService = inject(AuthService);
+  userService = inject(UserService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
+  userLastNamee: string = '';
+  userAvatarUrl: string = '';
 
   // Inject ThemeService để tự động đổi màu khi F5
-  constructor(private themeService: ThemeService) {}
+  constructor(private themeService: ThemeService,
+  ) {}
 
   get userLastName(): string {
     return localStorage.getItem('username') || 'User';
@@ -60,7 +65,18 @@ export class App {
       disableClose: false
     });
   }
-
+ngOnInit() {
+    const userId = this.authService.getUserId();
+    if (userId) {
+      // Gọi API lấy thông tin User để gán vào Navbar
+      this.userService.getById(userId).subscribe({
+        next: (res: any) => {
+          this.userLastNamee = res.lastname;
+          this.userAvatarUrl = res.avatar_url || res.imageUrl || '';
+        }
+      });
+    }
+  }
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);

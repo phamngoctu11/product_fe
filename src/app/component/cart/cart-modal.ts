@@ -172,6 +172,7 @@ export class CartModalComponent implements OnInit {
         this.cartService.acceptCart(this.cartData!.user_id, productIdsToCheckout, voucherIdToPass).subscribe({
           next: () => {
             alert('Thanh toán thành công!');
+            this.cartService.notifyCheckoutSuccess();
             this.isLoading = false;
             this.dialogRef.close(true);
           },
@@ -186,6 +187,7 @@ export class CartModalComponent implements OnInit {
         this.isLoading = false;
       }
     });
+
   }
 
   onClose(): void {
