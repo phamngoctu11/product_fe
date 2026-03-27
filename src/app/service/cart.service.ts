@@ -12,10 +12,8 @@ export class CartService {
   constructor(private http: HttpClient) {}
   private checkoutSuccessSource = new Subject<void>();
 
-  // Biến này để các Component khác (như ProductComponent) Subscribe (lắng nghe)
   checkoutSuccess$ = this.checkoutSuccessSource.asObservable();
 
-  // Hàm này để Component Giỏ hàng gọi khi muốn "phát loa" thông báo
   notifyCheckoutSuccess() {
     this.checkoutSuccessSource.next();
   }
@@ -24,22 +22,19 @@ export class CartService {
     return this.http.get<CartRes>(`${this.apiUrl}/${userId}`);
   }
 
-addToCart(userId: number, variantId: number, quantity: number): Observable<any> {
+  addToCart(userId: number, variantId: number, quantity: number): Observable<any> {
     const params = new HttpParams()
       .set('userId', userId.toString())
-      // CHỖ NÀY QUAN TRỌNG NHẤT: Đổi tên key thành 'variantId' cho khớp với Backend
       .set('variantId', variantId.toString())
       .set('quantity', quantity.toString());
 
-    // Gửi POST request với query params
     return this.http.post(`${this.apiUrl}/add`, null, { params, responseType: 'text' as 'json' });
   }
 
-  // Tiện thể sửa luôn các hàm Cập nhật và Xóa giỏ hàng (vì backend cũng đã đổi sang variantId)
   updateQuantity(userId: number, variantId: number, quantity: number): Observable<any> {
     const params = new HttpParams()
       .set('userId', userId.toString())
-      .set('variantId', variantId.toString()) // Đổi sang variantId
+      .set('variantId', variantId.toString())
       .set('quantity', quantity.toString());
 
     return this.http.put(`${this.apiUrl}/update`, null, { params, responseType: 'text' as 'json' });
@@ -48,20 +43,23 @@ addToCart(userId: number, variantId: number, quantity: number): Observable<any> 
   removeFromCart(userId: number, variantId: number): Observable<any> {
     const params = new HttpParams()
       .set('userId', userId.toString())
-      .set('variantId', variantId.toString()); // Đổi sang variantId
+      .set('variantId', variantId.toString());
 
     return this.http.delete(`${this.apiUrl}/remove`, { params, responseType: 'text' as 'json' });
   }
-acceptCart(userId: number, productIds: number[], userVoucherId?: number): Observable<any> {
-    let params = new HttpParams();
 
+  // ĐÃ SỬA: Giữ nguyên tên hàm acceptCart, thêm paymentMethod vào cuối cùng để không gây lỗi các file khác
+  acceptCart(userId: number, productIds: number[], userVoucherId?: number, paymentMethod: string = 'COD', note:string = ''): Observable<any> {
+    let params = new HttpParams().set('paymentMethod', paymentMethod)
+    if(note)
+      params = params.set('note',note)
     if (userVoucherId) {
       params = params.set('userVoucherId', userVoucherId.toString());
     }
 
-    return this.http.post(`${this.apiUrl}/approve/${userId}`, productIds, {
-      params: params,
-      responseType: 'text'
+    // Backend đang trả về JSON (có status, url, message) nên KHÔNG dùng responseType: 'text' nữa
+    return this.http.post<any>(`${this.apiUrl}/approve/${userId}`, productIds, {
+      params: params
     });
   }
 }

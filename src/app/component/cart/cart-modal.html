@@ -112,13 +112,19 @@
           </table>
         </div>
       </div>
+
       <div class="modal-footer bg-light border-0 p-3">
         <button type="button" class="btn btn-secondary px-4 fw-bold" (click)="onClose()">Đóng</button>
         @if (isOwner) {
-          <button type="button" class="btn btn-danger px-4 fw-bold shadow-sm" (click)="approve()">
-            <i class="bi bi-cart-check me-1"></i> Chốt đơn hàng
+          <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" (click)="approve('ONLINE')" [disabled]="isLoading">
+            <i class="bi bi-wallet2 me-1"></i> Thanh toán MoMo
+          </button>
+
+          <button type="button" class="btn btn-danger px-4 fw-bold shadow-sm" (click)="approve('COD')" [disabled]="isLoading">
+            <i class="bi bi-truck me-1"></i> Thanh toán COD
           </button>
         }
+        <input placeholder = "ghi chú người mua"[(ngModel)]="note"/>
       </div>
     </div>
   </div>

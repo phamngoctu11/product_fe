@@ -96,7 +96,20 @@
               <td class="text-center fw-bold text-dark">{{ item.quantity }}</td>
               <td class="text-end text-muted">{{ item.price | number: '1.0-0' }} đ</td>
               <td class="text-end fw-bold text-dark pe-4">{{ item.quantity * item.price | number: '1.0-0' }} đ</td>
+
             </tr>
+            <tr class="table-light">
+  <tr class="border-top">
+  <td colspan="4" class="ps-4 py-3">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-pencil-square text-secondary me-2"></i>
+
+      <span class="fw-bold text-dark me-2" style="white-space: nowrap;">Ghi chú:</span>
+
+      <span class="text-muted text-break">{{ order.note || 'Chưa có ghi chú cho đơn hàng này' }}</span>
+    </div>
+  </td>
+</tr>
           </tbody>
         </table>
       </div>

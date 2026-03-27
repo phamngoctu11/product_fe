@@ -1,0 +1,29 @@
+<div class="container mt-5 pt-5 mb-5 d-flex justify-content-center">
+  <div class="card shadow-lg border-0 rounded-4" style="max-width: 500px; width: 100%;">
+    <div class="card-body p-5 text-center">
+
+      <div class="mb-4">
+        <i *ngIf="isSuccess" class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+        <i *ngIf="!isSuccess" class="bi bi-x-circle-fill text-danger" style="font-size: 5rem;"></i>
+      </div>
+
+      <h3 class="fw-bold mb-3" [ngClass]="isSuccess ? 'text-success' : 'text-danger'">
+        {{ isSuccess ? 'Giao dịch thành công!' : 'Giao dịch thất bại!' }}
+      </h3>
+
+      <p class="text-muted fs-6 mb-4">{{ message }}</p>
+
+      <div class="bg-light p-3 rounded-3 mb-4 text-start" *ngIf="orderId">
+        <span class="fw-bold text-secondary">Mã đơn hàng:</span>
+        <span class="float-end fw-bold text-dark">#{{ orderId }}</span>
+      </div>
+
+      <div class="d-grid gap-2">
+        <button class="btn btn-primary fw-bold py-2 shadow-sm" (click)="goHome()">
+          <i class="bi bi-house-door me-2"></i> Trở về Trang chủ
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

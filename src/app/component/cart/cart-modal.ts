@@ -21,13 +21,9 @@ export class CartModalComponent implements OnInit {
   public userId = inject(MAT_DIALOG_DATA);
   isOwner: boolean = false;
   selectedProductIds: number[] = [];
-
-  // VOUCHER WALLET
+  note:any;
   myWallet: UserVoucher[] = [];
-
-  // BEST PRACTICE: Khai báo cực ngắn gọn, số 0 đại diện cho việc chưa chọn mã
   selectedVoucherId: number = 0;
-
   tempTotalPrice: number = 0;
   tempDiscountAmount: number = 0;
   tempFinalPrice: number = 0;
@@ -90,11 +86,9 @@ export class CartModalComponent implements OnInit {
     }
   }
 
-  // HÀM TÍNH TOÁN (Xử lý mọi nghiệp vụ)
   calculateInvoice() {
     if (!this.cartData || !this.cartData.items) return;
 
-    // 1. TÍNH TỔNG TIỀN GỐC
     if (this.selectedProductIds.length === 0) {
       this.tempTotalPrice = this.cartData.items.reduce((total, item, i) => total + item.price * this.listCurQuan[i], 0);
     } else {
@@ -103,17 +97,15 @@ export class CartModalComponent implements OnInit {
       }, 0);
     }
 
-    // 2. TÍNH TIỀN GIẢM GIÁ
-    this.tempDiscountAmount = 0; // LUÔN RESET VỀ 0 ĐẦU TIÊN
+    this.tempDiscountAmount = 0;
 
     if (this.selectedVoucherId !== 0) {
       const voucher = this.myWallet.find(v => v.id === this.selectedVoucherId);
 
       if (voucher) {
         if (this.tempTotalPrice < voucher.template.minOrderValue) {
-          this.selectedVoucherId = 0; // Ép về 0 (Gỡ thẻ) nếu khách giảm số lượng làm không đủ điều kiện
+          this.selectedVoucherId = 0;
         } else {
-          // Xử lý giảm theo %
           if (voucher.template.discountPercent > 0) {
             let discount = (this.tempTotalPrice * voucher.template.discountPercent) / 100;
             if (voucher.template.maxDiscountAmount > 0 && discount > voucher.template.maxDiscountAmount) {
@@ -121,19 +113,16 @@ export class CartModalComponent implements OnInit {
             }
             this.tempDiscountAmount = discount;
           } else {
-            // Xử lý giảm thẳng tiền mặt
             this.tempDiscountAmount = voucher.template.maxDiscountAmount;
           }
         }
       }
     }
 
-    // Đảm bảo không giảm âm tiền
     if (this.tempDiscountAmount > this.tempTotalPrice) {
       this.tempDiscountAmount = this.tempTotalPrice;
     }
 
-    // 3. TÍNH TIỀN THỰC TRẢ
     this.tempFinalPrice = this.tempTotalPrice - this.tempDiscountAmount;
   }
 
@@ -153,15 +142,19 @@ export class CartModalComponent implements OnInit {
     return requests;
   }
 
-  approve() {
+  approve(paymentMethod: string) {
     if (!this.cartData?.user_id) return;
-    this.isLoading = true;
 
     const productIdsToCheckout = this.selectedProductIds.length > 0
       ? this.selectedProductIds
       : this.cartData.items.map((item: any) => item.productId);
 
-    // CHỈ TRUYỀN ID XUỐNG API (Nếu = 0 thì truyền undefined để BE bỏ qua logic tính voucher)
+    if (productIdsToCheckout.length === 0) {
+      alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!');
+      return;
+    }
+
+    this.isLoading = true;
     let voucherIdToPass = this.selectedVoucherId !== 0 ? this.selectedVoucherId : undefined;
 
     const updates = this.getUpdateRequests();
@@ -169,15 +162,21 @@ export class CartModalComponent implements OnInit {
 
     performUpdate$.subscribe({
       next: () => {
-        this.cartService.acceptCart(this.cartData!.user_id, productIdsToCheckout, voucherIdToPass).subscribe({
-          next: () => {
-            alert('Thanh toán thành công!');
-            this.cartService.notifyCheckoutSuccess();
-            this.isLoading = false;
-            this.dialogRef.close(true);
+        // ĐÃ SỬA: Gọi đúng tên hàm, đúng thứ tự tham số
+        this.cartService.acceptCart(this.cartData!.user_id, productIdsToCheckout, voucherIdToPass, paymentMethod,this.note).subscribe({
+          next: (res: any) => {
+            if (res.status === 'REDIRECT') {
+              window.location.href = res.url;
+            } else {
+              alert(res.message || 'Thanh toán thành công!');
+              this.cartService.notifyCheckoutSuccess();
+              this.isLoading = false;
+              this.dialogRef.close(true);
+            }
           },
           error: (err: any) => {
-            alert('Lỗi thanh toán: ' + (err.error?.message || err.message || err.error));
+            const errorMsg = err.error?.message || err.error || err.message;
+            alert('Lỗi thanh toán: ' + errorMsg);
             this.isLoading = false;
           },
         });
@@ -187,7 +186,6 @@ export class CartModalComponent implements OnInit {
         this.isLoading = false;
       }
     });
-
   }
 
   onClose(): void {

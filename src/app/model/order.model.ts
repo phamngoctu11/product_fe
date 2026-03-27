@@ -17,6 +17,7 @@ export interface Order {
   endOrderTime: string | null;
   status: string;
   cancelReason: string | null;
+  note:string|null;
 }
 export interface OrderStatusHistory {
   id: number;
