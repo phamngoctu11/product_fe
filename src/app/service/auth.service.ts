@@ -83,4 +83,7 @@ export class AuthService {
   getCurrentUser() {
     return this.getDecodedToken();
   }
+  getCurrentUserName(){
+    return localStorage.getItem('username');
+  }
 }

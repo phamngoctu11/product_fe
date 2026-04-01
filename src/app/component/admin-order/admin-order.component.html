@@ -1,0 +1,74 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Quản lý Đơn hàng chờ duyệt</h2>
+    <button class="btn btn-outline-primary" (click)="loadPendingOrders()" [disabled]="isLoading">
+      <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+    </button>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+      </div>
+
+      <div *ngIf="!isLoading && pendingOrders.length === 0" class="text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted"></i>
+        <h5 class="mt-3 text-muted">Không có đơn hàng nào đang chờ duyệt.</h5>
+      </div>
+
+      <div class="table-responsive" *ngIf="!isLoading && pendingOrders.length > 0">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light text-muted text-uppercase small fw-bold">
+            <tr>
+              <th class="ps-4">Mã Đơn</th>
+              <th>Khách hàng</th>
+              <th>Thanh toán</th>
+              <th>Tổng tiền</th>
+              <th>Ghi chú</th>
+              <th class="text-center pe-4">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of pendingOrders">
+              <td class="ps-4 fw-bold">#{{ order.id }}</td>
+              <td>{{ order.lastname || 'Khách Vãng Lai' }}</td>
+
+              <td>
+                <span class="badge"
+                      [ngClass]="order.paymentMethod === 'ONLINE' ? 'bg-success' : 'bg-warning text-dark'">
+                  {{ order.paymentMethod }}
+                </span>
+              </td>
+
+              <td class="fw-bold text-danger">{{ order.finalPrice | number }}đ</td>
+
+              <td>
+                <span *ngIf="order.note" class="text-danger fw-medium" title="{{ order.note }}">
+                  <i class="bi bi-exclamation-circle-fill me-1"></i> {{ order.note }}
+                </span>
+                <span *ngIf="!order.note" class="text-muted small">Không có</span>
+              </td>
+
+              <td class="text-center pe-4">
+                <button class="btn btn-sm btn-primary me-2 shadow-sm"
+                        (click)="approveOrder(order)"
+                        [disabled]="isLoading" title="Duyệt đơn hàng">
+                  <i class="bi bi-check-lg"></i> Duyệt
+                </button>
+                <button class="btn btn-sm btn-outline-danger shadow-sm"
+                        (click)="rejectOrder(order.id)"
+                        [disabled]="isLoading" title="Từ chối đơn hàng">
+                  <i class="bi bi-x-lg"></i> Từ chối
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

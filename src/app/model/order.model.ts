@@ -7,7 +7,8 @@ productId: number;
 }
 export interface Order {
   id: number;
-  user_id: number;
+  userId:number;
+  lastname: string;
   items: OrderItem[];
   totalPrice: number;
   finalPrice:number;
