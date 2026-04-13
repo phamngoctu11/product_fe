@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './service/auth.service';
 import { CommonModule } from '@angular/common';
@@ -9,6 +9,8 @@ import { Orders } from './component/orders/orders';
 import { SettingsModalComponent } from './component/setting/settings-modal';
 import { ThemeService } from './service/theme.service';
 import { UserService } from './service/user.service';
+import { WebsocketService } from './service/websocket.service';
+import { NotificationService } from './service/notification.service';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +19,7 @@ import { UserService } from './service/user.service';
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {
+export class App implements OnInit, OnDestroy {
   protected readonly title = signal('fe_product');
   authService = inject(AuthService);
   userService = inject(UserService);
@@ -26,8 +28,14 @@ export class App {
   userLastNamee: string = '';
   userAvatarUrl: string = '';
 
-  // Inject ThemeService để tự động đổi màu khi F5
-  constructor(private themeService: ThemeService,
+  // Kho lưu trữ thông báo
+  notifications: any[] = [];
+  unreadCount: number = 0;
+
+  constructor(
+    private themeService: ThemeService,
+    private websocketService: WebsocketService,
+    private notificationService: NotificationService
   ) {}
 
   get userLastName(): string {
@@ -65,10 +73,31 @@ export class App {
       disableClose: false
     });
   }
-ngOnInit() {
+
+  ngOnInit() {
     const userId = this.authService.getUserId();
-    if (userId) {
-      // Gọi API lấy thông tin User để gán vào Navbar
+    const isAdmin = this.authService.isAdmin();
+
+    if (this.authService.isLoggedIn() && userId) {
+      // 1. NGAY LÚC MỞ TRANG (HOẶC F5): Tải toàn bộ thông báo cũ từ Database
+      this.notificationService.getHistory(userId, isAdmin).subscribe({
+        next: (data) => {
+          this.notifications = data;
+          // Tính số lượng tin nhắn chưa đọc (isRead === false)
+          this.unreadCount = data.filter(n => !n.read).length;
+        }
+      });
+
+      // 2. KẾT NỐI WEBSOCKET: Nghe ngóng thông báo MỚI tinh đang tới
+      this.websocketService.connect(isAdmin, userId);
+
+      this.websocketService.notifications$.subscribe(notification => {
+        // Đẩy lên đầu danh sách và tăng số đỏ
+        this.notifications.unshift(notification);
+        this.unreadCount++;
+      });
+
+      // Lấy avatar và tên User (như cũ)
       this.userService.getById(userId).subscribe({
         next: (res: any) => {
           this.userLastNamee = res.lastname;
@@ -77,8 +106,31 @@ ngOnInit() {
       });
     }
   }
-  logout() {
+markAsRead() {
+    const userId = this.authService.getUserId();
+    const isAdmin = this.authService.isAdmin();
+
+    if (this.unreadCount > 0 && userId) {
+      this.unreadCount = 0; // Xóa số đỏ trên Frontend trước cho mượt
+
+      // Cập nhật trạng thái "đã đọc" xuống Database
+      this.notificationService.markAllAsRead(userId, isAdmin).subscribe();
+
+      // Đổi thủ công biến read trong mảng thành true
+      this.notifications.forEach(n => n.read = true);
+    }
+  }
+  ngOnDestroy() {
+    this.websocketService.disconnect();
+  }
+
+ logout() {
+    this.websocketService.disconnect();
+    this.notifications = [];
+    this.unreadCount = 0;
+    this.userLastNamee = '';
+    this.userAvatarUrl = '';
     this.authService.logout();
-    this.router.navigate(['/login']);
+    window.location.href = '/login';
   }
 }
