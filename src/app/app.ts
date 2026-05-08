@@ -11,11 +11,12 @@ import { ThemeService } from './service/theme.service';
 import { UserService } from './service/user.service';
 import { WebsocketService } from './service/websocket.service';
 import { NotificationService } from './service/notification.service';
+import { ChatWidgetComponent } from './component/chat/chat-widget.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, MatDialogModule],
+  imports: [RouterOutlet, RouterLink, CommonModule, MatDialogModule,ChatWidgetComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

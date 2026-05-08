@@ -1,0 +1,53 @@
+<div *ngIf="authService.isLoggedIn() && !authService.isAdmin()" class="chat-widget-container">
+
+  <div class="chat-window shadow-lg rounded-4" *ngIf="isOpen" style="animation: slideUp 0.3s ease-out;">
+
+    <div class="chat-header bg-primary text-white p-3 rounded-top-4 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-headset fs-5"></i>
+        <h6 class="mb-0 fw-bold">CSKH Trực tuyến</h6>
+      </div>
+      <button class="btn btn-sm btn-link text-white p-0" (click)="toggleChat()">
+        <i class="bi bi-x-lg fs-5"></i>
+      </button>
+    </div>
+
+    <div class="chat-body p-3" #chatBody>
+      <div *ngIf="messages.length === 0" class="text-center text-muted small my-4">
+        Hãy gửi tin nhắn để bắt đầu trò chuyện với chúng tôi!
+      </div>
+
+      <div *ngFor="let msg of messages" class="mb-3 d-flex flex-column"
+           [ngClass]="{'align-items-end': !msg.isAdminSender, 'align-items-start': msg.isAdminSender}">
+
+        <span class="small text-muted mb-1" style="font-size: 0.7rem;">
+          {{ msg.isAdminSender ? 'Admin' : 'Bạn' }} • {{ msg.timestamp | date:'HH:mm' }}
+        </span>
+
+        <div class="chat-bubble px-3 py-2 rounded-4"
+             [ngClass]="msg.isAdminSender ? 'bg-light text-dark border' : 'bg-primary text-white'">
+          {{ msg.content }}
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-footer p-2 border-top bg-white rounded-bottom-4 d-flex align-items-center gap-2">
+      <input type="text" class="form-control rounded-pill bg-light border-0 px-3"
+             placeholder="Nhập tin nhắn..."
+             [(ngModel)]="newMessage"
+             (keyup.enter)="sendMessage()">
+      <button class="btn btn-primary rounded-circle shadow-sm d-flex justify-content-center align-items-center"
+              style="width: 40px; height: 40px;"
+              (click)="sendMessage()">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary rounded-circle shadow-lg chat-toggle-btn d-flex justify-content-center align-items-center"
+          *ngIf="!isOpen"
+          (click)="toggleChat()">
+    <i class="bi bi-chat-dots-fill fs-3"></i>
+  </button>
+
+</div>

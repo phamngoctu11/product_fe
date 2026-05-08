@@ -19,6 +19,7 @@ export interface UserCreDTO {
   birth: Date;
   role?: string;
   avatar_url?: string;
+  email:string;
 }
 export interface LoginResponse {
   accessToken: string;
@@ -41,4 +42,5 @@ export interface UserInforDTO {
   cart: CartRes;
   reputation: number;
   avatar_url?: string;
+  email:string;
 }

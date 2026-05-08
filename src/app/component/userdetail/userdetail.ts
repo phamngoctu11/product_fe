@@ -24,7 +24,8 @@ export class Userdetail implements OnInit {
     address: '',
     phone: '',
     birth: new Date(),
-    avatar_url: '' // Khởi tạo trường ảnh
+    avatar_url: '',
+    email:''
   };
   isEdit = false;
   isView = false;
