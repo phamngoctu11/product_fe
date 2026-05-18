@@ -8,6 +8,7 @@ import { PaymentSuccessComponent } from './component/payment-success/payment-suc
 import { AdminOrderComponent } from './component/admin-order/admin-order.component';
 import { AdminDashboard } from './component/admin-dashboard/admin-dashboard';
 import { AdminChatComponent } from './component/chat/admin_chat/admin-chat.component';
+import { ProductPageComponent } from './component/product-page/product-page.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -18,6 +19,7 @@ export const routes: Routes = [
   { path: 'myinfor', component: Myinfor },
    { path: 'admin-orders', component: AdminOrderComponent },
   { path: 'payment-success', component: PaymentSuccessComponent },
+  { path: 'product/:id', component: ProductPageComponent },
   {
   path: 'admin-dashboard',
   component:AdminDashboard

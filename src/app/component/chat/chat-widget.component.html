@@ -1,8 +1,17 @@
-<div *ngIf="authService.isLoggedIn() && !authService.isAdmin()" class="chat-widget-container">
+<style>
+  .chat-scrollbar::-webkit-scrollbar { width: 6px; }
+  .chat-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 10px; }
+  @keyframes slideUpChat { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
 
-  <div class="chat-window shadow-lg rounded-4" *ngIf="isOpen" style="animation: slideUp 0.3s ease-out;">
+<div *ngIf="authService.isLoggedIn() && !authService.isAdmin()"
+     class="position-fixed bottom-0 end-0 m-4" style="z-index: 9999;">
 
-    <div class="chat-header bg-primary text-white p-3 rounded-top-4 d-flex justify-content-between align-items-center">
+  <div class="shadow-lg rounded-4 bg-white d-flex flex-column overflow-hidden"
+       *ngIf="isOpen"
+       style="width: 350px; height: 480px; animation: slideUpChat 0.3s ease-out; border: 1px solid #dee2e6;">
+
+    <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center gap-2">
         <i class="bi bi-headset fs-5"></i>
         <h6 class="mb-0 fw-bold">CSKH Trực tuyến</h6>
@@ -12,42 +21,58 @@
       </button>
     </div>
 
-    <div class="chat-body p-3" #chatBody>
+    <div class="flex-grow-1 overflow-auto bg-light p-3 chat-scrollbar" #chatBody>
       <div *ngIf="messages.length === 0" class="text-center text-muted small my-4">
         Hãy gửi tin nhắn để bắt đầu trò chuyện với chúng tôi!
       </div>
 
       <div *ngFor="let msg of messages" class="mb-3 d-flex flex-column"
-           [ngClass]="{'align-items-end': !msg.isAdminSender, 'align-items-start': msg.isAdminSender}">
+           [ngClass]="msg.adminSender ? 'align-items-start' : 'align-items-end'">
 
-        <span class="small text-muted mb-1" style="font-size: 0.7rem;">
-          {{ msg.isAdminSender ? 'Admin' : 'Bạn' }} • {{ msg.timestamp | date:'HH:mm' }}
+        <span class="text-muted mb-1" style="font-size: 0.7rem;">
+          {{ msg.adminSender ? 'Admin' : 'Bạn' }} • {{ msg.timestamp | date:'HH:mm' }}
         </span>
 
-        <div class="chat-bubble px-3 py-2 rounded-4"
-             [ngClass]="msg.isAdminSender ? 'bg-light text-dark border' : 'bg-primary text-white'">
+        <div *ngIf="!msg.messageType || msg.messageType === 'TEXT'"
+             class="px-3 py-2 rounded-4 text-break shadow-sm"
+             style="max-width: 85%; font-size: 0.9rem; line-height: 1.4;"
+             [ngClass]="msg.adminSender ? 'bg-white text-dark border' : 'bg-primary text-white'">
           {{ msg.content }}
+        </div>
+
+        <div *ngIf="msg.messageType === 'PRODUCT' && msg.productData"
+             class="card shadow-sm border-0 rounded-4 overflow-hidden"
+             style="width: 200px; text-align: left;">
+          <img [src]="msg.productData.imageUrl" class="card-img-top border-bottom" style="height: 120px; object-fit: cover;">
+          <div class="card-body p-2 bg-white text-dark">
+            <h6 class="card-title fw-bold mb-1 text-truncate" style="font-size: 0.85rem;" [title]="msg.productData.name">
+              {{ msg.productData.name }}
+            </h6>
+            <p class="card-text text-danger fw-bold mb-2" style="font-size: 0.85rem;">
+              {{ msg.productData.price | number }} đ
+            </p>
+            <a [routerLink]="['/product', msg.productId]" target="_blank" class="btn btn-sm btn-outline-primary w-100 rounded-pill" style="font-size: 0.8rem;">
+              Xem chi tiết
+            </a>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="chat-footer p-2 border-top bg-white rounded-bottom-4 d-flex align-items-center gap-2">
+    <div class="p-2 border-top bg-white d-flex align-items-center gap-2">
       <input type="text" class="form-control rounded-pill bg-light border-0 px-3"
-             placeholder="Nhập tin nhắn..."
-             [(ngModel)]="newMessage"
-             (keyup.enter)="sendMessage()">
-      <button class="btn btn-primary rounded-circle shadow-sm d-flex justify-content-center align-items-center"
-              style="width: 40px; height: 40px;"
-              (click)="sendMessage()">
+             placeholder="Nhập tin nhắn..." [(ngModel)]="newMessage" (keyup.enter)="sendMessage()">
+      <button class="btn btn-primary rounded-circle shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
+              style="width: 40px; height: 40px;" (click)="sendMessage()">
         <i class="bi bi-send-fill"></i>
       </button>
     </div>
   </div>
 
-  <button class="btn btn-primary rounded-circle shadow-lg chat-toggle-btn d-flex justify-content-center align-items-center"
-          *ngIf="!isOpen"
-          (click)="toggleChat()">
+  <button class="btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center float-end mt-2"
+          *ngIf="!isOpen" (click)="toggleChat()"
+          style="width: 60px; height: 60px; transition: transform 0.2s;"
+          onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
     <i class="bi bi-chat-dots-fill fs-3"></i>
   </button>
-
 </div>

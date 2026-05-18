@@ -3,12 +3,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserCreDTO, UserResListDTO } from '../model/user.model';
 import { PageResponse } from '../model/page-response.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private apiUrl = 'http://localhost:8080/api/users';
+  private apiUrl = `${environment.apiUrl}/users`;
   constructor(private http: HttpClient) {}
 
  getAll(page: number = 0, size: number = 10): Observable<PageResponse<UserResListDTO>> {

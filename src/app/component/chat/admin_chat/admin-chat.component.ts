@@ -1,24 +1,22 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-
-import SockJS from 'sockjs-client';
-import { Stomp } from '@stomp/stompjs';
-import { environment } from '../../../../environments/environment';
+import { RouterModule } from '@angular/router'; // 🚨 THÊM IMPORT NÀY
 import { ChatUser, ChatMessage } from '../../../model/chat.model';
 import { AuthService } from '../../../service/auth.service';
 import { ChatService } from '../../../service/chat.service';
+import { environment } from '../../../../environments/environment';
+import SockJS from 'sockjs-client';
+import { Stomp } from '@stomp/stompjs';
 
 @Component({
   selector: 'app-admin-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule], // 🚨 THÊM RouterModule VÀO ĐÂY
   templateUrl: './admin-chat.component.html'
 })
 export class AdminChatComponent implements OnInit, AfterViewChecked {
   @ViewChild('chatBody') private chatBody!: ElementRef;
-
   users: ChatUser[] = [];
   selectedUser: ChatUser | null = null;
   messages: ChatMessage[] = [];
@@ -32,66 +30,86 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
     this.connectWebSocket();
   }
 
-  ngAfterViewChecked() {
-    this.scrollToBottom();
-  }
+  ngAfterViewChecked() { this.scrollToBottom(); }
 
   loadChattedUsers() {
     this.chatService.getChattedUsers().subscribe({
-      next: (res) => this.users = res,
-      error: (err) => console.error(">>> Lỗi tải danh sách khách hàng:", err)
+      next: (res) => {
+        this.users = res;
+        this.sortUsers();
+      },
+      error: (err) => console.error("Lỗi:", err)
+    });
+  }
+
+  sortUsers() {
+    this.users.sort((a, b) => {
+      if (a.isActive === b.isActive) return 0;
+      return a.isActive ? -1 : 1;
     });
   }
 
   selectUser(user: ChatUser) {
     this.selectedUser = user;
     this.chatService.getChatHistory(user.id).subscribe({
-      next: (res) => this.messages = res,
-      error: (err) => console.error(">>> Lỗi tải lịch sử chat:", err)
+      next: (res) => {
+        // 🚨 GIẢI MÃ DỮ LIỆU KHI TẢI LỊCH SỬ
+        this.messages = res.map(msg => {
+          if (msg.messageType === 'PRODUCT' && msg.content) {
+            try { msg.productData = JSON.parse(msg.content); } catch(e) {}
+          }
+          return msg;
+        });
+      },
+      error: (err) => console.error("Lỗi:", err)
     });
   }
 
   connectWebSocket() {
     try {
-      // 🚨 Sử dụng đường dẫn từ file Environment
       const socket = new SockJS(environment.wsUrl);
       this.stompClient = Stomp.over(socket);
       this.stompClient.debug = () => {};
 
-      this.stompClient.connect({}, () => {
-        console.log(">>> WebSocket Chat (Admin) đã kết nối thành công!");
 
+      this.stompClient.connect({}, () => {
         this.stompClient.subscribe('/topic/chat/admin', (msg: any) => {
           const receivedMessage: ChatMessage = JSON.parse(msg.body);
+
+          // 🚨 GIẢI MÃ DỮ LIỆU KHI NHẬN TIN NHẮN MỚI
+          if (receivedMessage.messageType === 'PRODUCT' && receivedMessage.content) {
+            try { receivedMessage.productData = JSON.parse(receivedMessage.content); } catch(e) {}
+          }
 
           if (this.selectedUser && receivedMessage.userId === this.selectedUser.id) {
             this.messages.push(receivedMessage);
           }
-
           if (!this.users.find(u => u.id === receivedMessage.userId)) {
             this.loadChattedUsers();
           }
         });
-      }, (error: any) => {
-        console.error(">>> WebSocket Admin bị mất kết nối:", error);
+
+        this.stompClient.subscribe('/topic/chat/admin/status', (msg: any) => {
+          const statusUpdate = JSON.parse(msg.body);
+          const userIndex = this.users.findIndex(u => u.id === statusUpdate.userId);
+          if (userIndex !== -1) {
+            this.users[userIndex].isActive = statusUpdate.isActive;
+            this.sortUsers();
+          }
+        });
+
       });
-    } catch (e) {
-      console.error(">>> Lỗi khởi tạo SockJS/Stomp bên Admin:", e);
-    }
+    } catch (e) {}
   }
 
   sendMessage() {
-    if (!this.stompClient || !this.stompClient.connected) {
-      console.warn(">>> Máy chủ đang kết nối, vui lòng chờ trong giây lát...");
-      return;
-    }
-
-    if (this.newMessage.trim() === '' || !this.selectedUser) return;
+    if (!this.stompClient || !this.stompClient.connected || this.newMessage.trim() === '' || !this.selectedUser) return;
 
     const chatMsg: ChatMessage = {
       userId: this.selectedUser.id,
       content: this.newMessage,
-      isAdminSender: true
+      adminSender: true,
+      messageType: 'TEXT' // Mặc định Admin gõ phím là TEXT
     };
 
     this.stompClient.send('/app/chat.send', {}, JSON.stringify(chatMsg));
@@ -99,10 +117,6 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
   }
 
   private scrollToBottom(): void {
-    try {
-      if (this.chatBody) {
-        this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
-      }
-    } catch(err) { }
+    try { if (this.chatBody) this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight; } catch(err) { }
   }
 }

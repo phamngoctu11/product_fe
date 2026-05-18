@@ -12,11 +12,12 @@ import { UserService } from './service/user.service';
 import { WebsocketService } from './service/websocket.service';
 import { NotificationService } from './service/notification.service';
 import { ChatWidgetComponent } from './component/chat/chat-widget.component';
+import { TimeAgoPipe } from './pipes/time-ago.pipe';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, MatDialogModule,ChatWidgetComponent],
+  imports: [RouterOutlet, RouterLink, CommonModule, MatDialogModule,ChatWidgetComponent,TimeAgoPipe],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

@@ -92,7 +92,7 @@
                   <div>
                     <h6 class="mb-1 fw-bold text-dark fs-6">{{ notif.title }}</h6>
                     <p class="mb-0 text-muted small" style="line-height: 1.4;">{{ notif.content }}</p>
-                    <small class="text-primary fw-medium mt-1 d-block">Vừa xong</small>
+                    <small class="text-primary fw-medium mt-1 d-block">{{ notif.createdAt | timeAgo }}</small>
                   </div>
                 </a>
               </li>

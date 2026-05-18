@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { VoucherTemplate, UserVoucher } from '../model/voucher.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class VoucherService {
-  private apiUrl = 'http://localhost:8080/api/vouchers';
+  private apiUrl = `${environment.apiUrl}/vouchers`;
 
   constructor(private http: HttpClient) {}
 

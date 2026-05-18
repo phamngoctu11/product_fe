@@ -5,6 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/materia
 import { HttpClient } from '@angular/common/http'; // BẮT BUỘC THÊM HTTP CLIENT
 import { UserService } from '../../service/user.service';
 import { UserCreDTO } from '../../model/user.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-userdetail',
@@ -64,7 +65,7 @@ export class Userdetail implements OnInit {
       const formData = new FormData();
       formData.append('file', file);
 
-      this.http.post<{url: string}>('http://localhost:8080/api/upload/image', formData).subscribe({
+      this.http.post<{url: string}>(`${environment.apiUrl}/upload/image`, formData).subscribe({
         next: (res) => {
           this.uploadedAvatarUrl = res.url;
           this.currentUser.avatar_url = res.url; // Gán vào payload

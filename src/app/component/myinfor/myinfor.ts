@@ -5,6 +5,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserService } from '../../service/user.service';
 import { UserInforDTO } from '../../model/user.model';
 import { CartModalComponent } from '../cart/cart-modal';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-myinfor',
@@ -61,7 +62,7 @@ export class Myinfor implements OnInit {
       formData.append('file', file);
 
       // Gọi API tải ảnh lên Cloudinary
-      this.http.post<{url: string}>('http://localhost:8080/api/upload/image', formData).subscribe({
+      this.http.post<{url: string}>(`${environment.apiUrl}/upload/image`, formData).subscribe({
         next: (res) => {
           // Cập nhật URL ảnh trên giao diện
           this.userInfo!.avatar_url = res.url;

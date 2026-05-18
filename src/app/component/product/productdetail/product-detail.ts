@@ -4,6 +4,8 @@ import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Va
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { ProductService } from '../../../service/product.service';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../../service/auth.service';
+import { ChatService } from '../../../service/chat.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -42,7 +44,9 @@ export class ProductDetailComponent implements OnInit {
     public dialogRef: MatDialogRef<ProductDetailComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { id: number | null, availableTags: string[], isView?: boolean },
     private productService: ProductService,
-    private http: HttpClient
+    private http: HttpClient,
+    private chatService: ChatService,
+    public authService: AuthService // 🚨 Đổi thành public để dùng trong HTML
   ) {
     this.isView = data.isView || false;
     this.availableTags = data.availableTags || [];
@@ -68,7 +72,6 @@ export class ProductDetailComponent implements OnInit {
     if (this.data && this.data.id) {
       this.isEdit = true;
       this.productService.getById(this.data.id).subscribe((res: any) => {
-        // ĐÃ DỌN DẸP: Chỉ gọi duy nhất res.image_url
         this.uploadedImageUrl = res.image_url || '';
 
         this.productForm.patchValue({
@@ -104,6 +107,35 @@ export class ProductDetailComponent implements OnInit {
     } else {
       this.addVariant();
     }
+  }
+
+  // 🚨 HÀM TƯ VẤN ĐÃ ĐƯỢC FIX CHUẨN
+  askAboutProduct() {
+    if (!this.authService.isLoggedIn()) {
+      alert("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
+      return;
+    }
+
+    // Dùng getRawValue() để lấy dữ liệu kể cả khi Form bị disable (isView = true)
+    const formValue = this.productForm.getRawValue();
+
+    if (!formValue.id) {
+      alert("Sản phẩm chưa có trên hệ thống!");
+      return;
+    }
+
+    const productInfo = {
+      id: formValue.id,
+      name: formValue.product_name,
+      price: formValue.price,
+      imageUrl: formValue.image_url
+    };
+
+    // Bắn tín hiệu sang Khung Chat
+    this.chatService.triggerProductQuery(productInfo);
+
+    // Tự động đóng Modal chi tiết sản phẩm lại để khách nhìn thấy Khung chat rõ hơn
+    this.dialogRef.close();
   }
 
   onFileSelected(event: any) {
@@ -204,7 +236,6 @@ export class ProductDetailComponent implements OnInit {
     if (this.productForm.invalid || this.isView) return;
     const payload = JSON.parse(JSON.stringify(this.productForm.getRawValue()));
 
-    // ĐÃ DỌN DẸP: Không cần nhồi nhét thêm imageUrl nữa
     payload.variants = payload.variants.map((v: any) => {
       const attrs = { ...v.dynamicAttributes };
       Object.keys(attrs).forEach(k => { if (!attrs[k]) delete attrs[k]; });

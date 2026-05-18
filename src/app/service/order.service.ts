@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Order, OrderStatusHistory } from '../model/order.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrderService {
-  private apiUrl = 'http://localhost:8080/api/orders';
+  private apiUrl = `${environment.apiUrl}/orders`;
 
   constructor(private http: HttpClient) {}
 
@@ -42,7 +43,7 @@ export class OrderService {
     const payload = {
       approved: approved,
       cancelReason: cancelReason,
-      changer: adminName 
+      changer: adminName
     };
 
     return this.http.post(`${this.apiUrl}/admin/review-order/${orderId}`, payload, { responseType: 'text' as 'json' });
