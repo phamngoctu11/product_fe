@@ -4,8 +4,11 @@ import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Va
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { ProductService } from '../../../service/product.service';
 import { HttpClient } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 import { AuthService } from '../../../service/auth.service';
 import { ChatService } from '../../../service/chat.service';
+import { ApiResponse, unwrapApiResponse } from '../../../model/api-response.model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-product-detail',
@@ -128,7 +131,9 @@ export class ProductDetailComponent implements OnInit {
       id: formValue.id,
       name: formValue.product_name,
       price: formValue.price,
-      imageUrl: formValue.image_url
+      imageUrl: formValue.image_url,
+      tags: formValue.tags || '',
+      variantsCount: formValue.variants ? formValue.variants.length : 0
     };
 
     // Bắn tín hiệu sang Khung Chat
@@ -144,7 +149,10 @@ export class ProductDetailComponent implements OnInit {
     if (file) {
       this.isUploadingImage = true;
       const formData = new FormData(); formData.append('file', file);
-      this.http.post<{url: string}>('http://localhost:8080/api/upload/image', formData).subscribe({
+      this.http
+        .post<ApiResponse<{ url: string }> | { url: string }>(`${environment.apiUrl}/upload/image`, formData)
+        .pipe(map(unwrapApiResponse))
+        .subscribe({
         next: (res) => { this.uploadedImageUrl = res.url; this.productForm.patchValue({ image_url: res.url }); this.isUploadingImage = false; },
         error: () => { alert('Lỗi tải ảnh lên!'); this.isUploadingImage = false; }
       });
@@ -157,7 +165,10 @@ export class ProductDetailComponent implements OnInit {
     if (file) {
       this.isUploadingVariantImage[index] = true;
       const formData = new FormData(); formData.append('file', file);
-      this.http.post<{url: string}>('http://localhost:8080/api/upload/image', formData).subscribe({
+      this.http
+        .post<ApiResponse<{ url: string }> | { url: string }>(`${environment.apiUrl}/upload/image`, formData)
+        .pipe(map(unwrapApiResponse))
+        .subscribe({
         next: (res) => { (this.variants.at(index) as FormGroup).patchValue({ image_url: res.url }); this.isUploadingVariantImage[index] = false; },
         error: () => { alert('Lỗi tải ảnh biến thể!'); this.isUploadingVariantImage[index] = false; }
       });

@@ -1,43 +1,98 @@
-<div class="container py-5" style="min-height: 80vh;">
+<style>
+  .product-img-main { transition: transform 0.4s ease; }
+  .product-img-main:hover { transform: scale(1.08); }
+  .variant-card { transition: all 0.3s ease; border: 1px solid #e9ecef; }
+  .variant-card:hover { border-color: #0d6efd; transform: translateY(-4px); box-shadow: 0 1rem 2rem rgba(0,0,0,.1)!important; }
+  .attr-badge { font-size: 0.8rem; background-color: #fff; border: 1px solid #dee2e6; color: #495057; }
+</style>
+
+<div class="container py-5" style="min-height: 80vh; animation: fadeIn 0.5s;">
   <div *ngIf="isLoading" class="text-center py-5 text-muted">
     <div class="spinner-border text-primary mb-3" role="status"></div>
     <h5>Đang tải thông tin sản phẩm...</h5>
   </div>
 
-  <div *ngIf="!isLoading && product" class="row bg-white p-4 rounded-4 shadow-sm border">
+  <div *ngIf="!isLoading && product" class="bg-white p-4 p-lg-5 rounded-4 shadow-lg border-0">
+    <div class="row g-5">
 
-    <div class="col-md-5 text-center mb-4 mb-md-0">
-      <div class="border rounded-4 overflow-hidden shadow-sm" style="height: 400px; background-color: #f8f9fa;">
-        <img *ngIf="product.image_url" [src]="product.image_url" style="width: 100%; height: 100%; object-fit: contain;" alt="Product">
-        <i *ngIf="!product.image_url" class="bi bi-image text-muted d-flex justify-content-center align-items-center h-100" style="font-size: 5rem;"></i>
-      </div>
-    </div>
+      <!-- Phần Hình Ảnh (Bên Trái) -->
+      <div class="col-lg-5 text-center mb-4 mb-lg-0">
+        <div class="position-sticky" style="top: 20px;">
+          <div class="border rounded-4 overflow-hidden shadow-sm d-flex align-items-center justify-content-center bg-light" style="height: 450px;">
+            <img *ngIf="product.image_url" [src]="product.image_url" class="product-img-main" style="width: 100%; height: 100%; object-fit: contain;" alt="Product">
+            <i *ngIf="!product.image_url" class="bi bi-image text-muted opacity-25" style="font-size: 6rem;"></i>
+          </div>
 
-    <div class="col-md-7 d-flex flex-column justify-content-between">
-      <div>
-        <span class="badge bg-danger mb-2">HOT</span>
-        <h2 class="fw-bold text-dark mb-3">{{ product.product_name }}</h2>
-
-        <div class="bg-light p-3 rounded-3 mb-4">
-          <h3 class="text-danger fw-bold m-0">{{ product.price | number }} ₫</h3>
-        </div>
-
-        <div class="mb-4">
-          <h6 class="fw-bold text-muted">Mô tả sản phẩm:</h6>
-          <p>Sản phẩm chính hãng. (Bạn có thể in thêm các thông tin variants, mô tả chi tiết ở đây...)</p>
+          <!-- Nút Tư vấn (Chỉ hiện cho Khách) -->
+          <button class="btn btn-outline-primary btn-lg w-100 fw-bold rounded-pill shadow-sm mt-4 d-flex justify-content-center align-items-center gap-2"
+                  *ngIf="!authService.isAdmin()"
+                  (click)="askAboutProduct()">
+            <i class="bi bi-chat-heart-fill fs-5"></i> Cần tư vấn thêm về sản phẩm?
+          </button>
         </div>
       </div>
 
-      <div class="d-flex gap-3 mt-auto">
-        <button class="btn btn-primary btn-lg flex-grow-1 fw-bold rounded-pill shadow-sm">
-          <i class="bi bi-cart-plus me-2"></i> Thêm vào giỏ hàng
-        </button>
+      <!-- Phần Thông Tin Chi Tiết (Bên Phải) -->
+      <div class="col-lg-7 d-flex flex-column">
 
-        <button class="btn btn-outline-primary btn-lg fw-bold rounded-pill px-4"
-                *ngIf="!authService.isAdmin()"
-                (click)="askAboutProduct()">
-          <i class="bi bi-chat-dots-fill me-2"></i> Tư vấn
-        </button>
+        <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+          <span class="badge bg-danger rounded-pill px-3 py-2 fw-bold shadow-sm"><i class="bi bi-fire me-1"></i> SẢN PHẨM HOT</span>
+          <ng-container *ngIf="product.tags">
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 shadow-sm" *ngFor="let tag of product.tags.split(',')">
+              {{ tag.trim() }}
+            </span>
+          </ng-container>
+        </div>
+
+        <h2 class="fw-bold text-dark mb-3 lh-base">{{ product.product_name }}</h2>
+
+        <!-- Khối Giá Tóm tắt -->
+        <div class="bg-light p-4 rounded-4 mb-4 border border-light shadow-sm">
+          <p class="text-muted small fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Giá tham khảo</p>
+          <h2 class="text-danger fw-bold m-0 d-flex align-items-center">
+            {{ product.price | number }} ₫
+          </h2>
+        </div>
+
+        <!-- Danh sách Phân loại (Biến thể) -->
+        <div *ngIf="product.variants && product.variants.length > 0" class="mb-5">
+          <h5 class="fw-bold text-dark mb-3"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Các phân loại đang bán:</h5>
+          <div class="row g-3">
+            <div class="col-md-6" *ngFor="let v of product.variants">
+              <div class="card h-100 bg-white shadow-sm rounded-4 variant-card">
+                <div class="d-flex p-3">
+                  <div class="me-3 rounded-3 overflow-hidden border shadow-sm d-flex align-items-center justify-content-center bg-light" style="width: 75px; height: 75px; flex-shrink: 0;">
+                    <img *ngIf="v.image_url" [src]="v.image_url" style="width: 100%; height: 100%; object-fit: cover;">
+                    <i *ngIf="!v.image_url" class="bi bi-box-seam text-secondary fs-3"></i>
+                  </div>
+                  <div class="d-flex flex-column justify-content-center">
+                    <h6 class="fw-bold text-dark mb-1">{{ v.variantName }}</h6>
+                    <div class="text-danger fw-bold mb-1">{{ v.price | number }} ₫</div>
+                    <div>
+                      <span class="badge rounded-pill" [ngClass]="v.quantity > 0 ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger'">
+                        {{ v.quantity > 0 ? 'Kho: ' + v.quantity : 'Hết hàng' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Thuộc tính động của biến thể -->
+                <div class="card-footer bg-transparent border-top-0 pt-0 pb-3 px-3" *ngIf="v.parsedAttributes">
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="badge attr-badge rounded-pill px-2 py-1 shadow-sm" *ngFor="let attr of v.parsedAttributes | keyvalue">
+                      {{ getLabel($any(attr.key)) }}: <span class="text-primary fw-bold">{{ attr.value }}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mô tả chung -->
+        <div class="mt-auto pt-4 border-top">
+          <h5 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Mô tả chi tiết:</h5>
+          <p class="text-muted lh-lg">Sản phẩm chính hãng chất lượng cao. Khách hàng vui lòng kiểm tra kỹ thông tin phân loại, màu sắc, kích cỡ (nếu có) trước khi đặt hàng. Để biết thêm thông tin chi tiết hoặc có bất kỳ thắc mắc nào, vui lòng nhấn nút "Cần tư vấn thêm" bên dưới ảnh sản phẩm để chat trực tiếp với đội ngũ hỗ trợ của chúng tôi.</p>
+        </div>
       </div>
 
     </div>

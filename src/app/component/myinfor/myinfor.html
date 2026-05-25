@@ -1,11 +1,22 @@
-<div class="container mt-4 mb-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="m-0 fw-bold"><i class="bi bi-person-badge me-2 text-primary"></i>Hồ sơ Cá nhân</h2>
+<style>
+  .profile-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .profile-card:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,.15)!important; }
+  .info-icon-box { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; }
+</style>
+
+<div class="container mt-4 mb-5" style="animation: fadeIn 0.4s;">
+  <div class="d-flex justify-content-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 56px; height: 56px;">
+        <i class="bi bi-person-badge fs-3"></i>
+      </div>
+      <h2 class="m-0 fw-bold text-dark">Hồ sơ Cá nhân</h2>
+    </div>
   </div>
 
   <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-      <div class="card shadow-sm border-0">
+    <div class="col-md-8 col-lg-7">
+      <div class="card shadow border-0 rounded-4 profile-card overflow-hidden">
         <div class="card-body p-5">
           @if (isLoading) {
             <div class="text-center py-5">
@@ -33,61 +44,61 @@
                   </span>
                 </div>
 
-                <label class="btn btn-sm btn-primary rounded-circle position-absolute"
-                       style="bottom: 0; right: 0; width: 35px; height: 35px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Đổi ảnh đại diện">
-                  <i class="bi bi-camera-fill" style="line-height: 25px;"></i>
+                <label class="btn btn-primary rounded-circle position-absolute d-flex justify-content-center align-items-center"
+                       style="bottom: 0; right: 0; width: 38px; height: 38px; cursor: pointer; box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.15); transition: transform 0.2s;" title="Đổi ảnh đại diện" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                  <i class="bi bi-camera-fill fs-6"></i>
                   <input type="file" class="d-none" (change)="onAvatarSelected($event)" accept="image/*" [disabled]="isUploadingAvatar">
                 </label>
               </div>
 
-              <h3 class="fw-bold mb-1 text-dark">{{ userInfo.lastname }} {{ userInfo.firstname }}</h3>
+              <h3 class="fw-bold mb-1 text-dark fs-4">{{ userInfo.lastname }} {{ userInfo.firstname }}</h3>
               <p class="text-muted mb-3 fw-medium">@{{ userInfo.username }}</p>
 
               <div class="d-flex gap-2">
-                <span class="badge bg-warning text-dark border border-warning shadow-sm px-3 py-2 fs-6">
-                  <i class="bi bi-star-fill text-danger me-1"></i> Điểm uy tín: {{ userInfo.reputation }}
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-50 shadow-sm px-3 py-2 rounded-pill fs-6 d-flex align-items-center">
+                  <i class="bi bi-star-fill text-warning me-2"></i> Uy tín: <span class="text-dark ms-1">{{ userInfo.reputation }}</span>
                 </span>
-                <button class="btn btn-outline-primary shadow-sm fw-bold px-4" (click)="openCart()">
-                  <i class="bi bi-cart3 me-1"></i> Giỏ hàng của tôi
+                <button class="btn btn-primary shadow-sm fw-bold px-4 rounded-pill d-flex align-items-center" (click)="openCart()">
+                  <i class="bi bi-cart3 me-2"></i> Giỏ hàng
                 </button>
               </div>
             </div>
 
-            <hr class="text-muted opacity-25 my-4" />
+            <hr class="text-muted opacity-10 my-4" />
 
             <div class="row g-4 px-3">
               <div class="col-6">
                 <div class="d-flex align-items-center mb-1">
-                  <div class="bg-light rounded p-2 me-2"><i class="bi bi-gender-ambiguous text-primary"></i></div>
-                  <small class="text-muted fw-bold text-uppercase">Giới tính</small>
+                  <div class="bg-info bg-opacity-10 text-info info-icon-box me-3"><i class="bi bi-gender-ambiguous fs-5"></i></div>
+                  <small class="text-muted fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Giới tính</small>
                 </div>
-                <p class="fw-bold fs-6 mb-0 text-dark ms-5 ps-1">{{ userInfo.gender || 'Chưa cập nhật' }}</p>
+                <p class="fw-bold fs-6 mb-0 text-dark" style="margin-left: 58px;">{{ userInfo.gender || 'Chưa cập nhật' }}</p>
               </div>
 
               <div class="col-6">
                 <div class="d-flex align-items-center mb-1">
-                  <div class="bg-light rounded p-2 me-2"><i class="bi bi-calendar-date text-primary"></i></div>
-                  <small class="text-muted fw-bold text-uppercase">Ngày sinh</small>
+                  <div class="bg-success bg-opacity-10 text-success info-icon-box me-3"><i class="bi bi-calendar-date fs-5"></i></div>
+                  <small class="text-muted fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Ngày sinh</small>
                 </div>
-                <p class="fw-bold fs-6 mb-0 text-dark ms-5 ps-1">
+                <p class="fw-bold fs-6 mb-0 text-dark" style="margin-left: 58px;">
                   {{ (userInfo.birth | date: 'dd/MM/yyyy') || 'Chưa cập nhật' }}
                 </p>
               </div>
 
               <div class="col-6">
                 <div class="d-flex align-items-center mb-1">
-                  <div class="bg-light rounded p-2 me-2"><i class="bi bi-telephone text-primary"></i></div>
-                  <small class="text-muted fw-bold text-uppercase">Số điện thoại</small>
+                  <div class="bg-primary bg-opacity-10 text-primary info-icon-box me-3"><i class="bi bi-telephone fs-5"></i></div>
+                  <small class="text-muted fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Số điện thoại</small>
                 </div>
-                <p class="fw-bold fs-6 mb-0 text-dark ms-5 ps-1">{{ userInfo.phone || 'Chưa cập nhật' }}</p>
+                <p class="fw-bold fs-6 mb-0 text-dark" style="margin-left: 58px;">{{ userInfo.phone || 'Chưa cập nhật' }}</p>
               </div>
 
               <div class="col-6">
                 <div class="d-flex align-items-center mb-1">
-                  <div class="bg-light rounded p-2 me-2"><i class="bi bi-geo-alt text-primary"></i></div>
-                  <small class="text-muted fw-bold text-uppercase">Địa chỉ</small>
+                  <div class="bg-danger bg-opacity-10 text-danger info-icon-box me-3"><i class="bi bi-geo-alt fs-5"></i></div>
+                  <small class="text-muted fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Địa chỉ</small>
                 </div>
-                <p class="fw-bold fs-6 mb-0 text-dark ms-5 ps-1">{{ userInfo.address || 'Chưa cập nhật' }}</p>
+                <p class="fw-bold fs-6 mb-0 text-dark" style="margin-left: 58px;">{{ userInfo.address || 'Chưa cập nhật' }}</p>
               </div>
             </div>
           }

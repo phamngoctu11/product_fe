@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { CartRes } from '../model/cart.model';
+import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -20,7 +22,9 @@ export class CartService {
   }
 
   getCartByUserId(userId: number): Observable<CartRes> {
-    return this.http.get<CartRes>(`${this.apiUrl}/${userId}`);
+    return this.http
+      .get<ApiResponse<CartRes> | CartRes>(`${this.apiUrl}/${userId}`)
+      .pipe(map(unwrapApiResponse));
   }
 
   addToCart(userId: number, variantId: number, quantity: number): Observable<any> {
@@ -59,8 +63,8 @@ export class CartService {
     }
 
     // Backend đang trả về JSON (có status, url, message) nên KHÔNG dùng responseType: 'text' nữa
-    return this.http.post<any>(`${this.apiUrl}/approve/${userId}`, productIds, {
+    return this.http.post<ApiResponse<any> | any>(`${this.apiUrl}/approve/${userId}`, productIds, {
       params: params
-    });
+    }).pipe(map(unwrapApiResponse));
   }
 }

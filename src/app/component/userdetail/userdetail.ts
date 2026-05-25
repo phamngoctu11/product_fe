@@ -3,8 +3,10 @@ import { CommonModule, DatePipe } from '@angular/common'; // Thêm DatePipe
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http'; // BẮT BUỘC THÊM HTTP CLIENT
+import { map } from 'rxjs/operators';
 import { UserService } from '../../service/user.service';
 import { UserCreDTO } from '../../model/user.model';
+import { ApiResponse, unwrapApiResponse } from '../../model/api-response.model';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -65,7 +67,10 @@ export class Userdetail implements OnInit {
       const formData = new FormData();
       formData.append('file', file);
 
-      this.http.post<{url: string}>(`${environment.apiUrl}/upload/image`, formData).subscribe({
+      this.http
+        .post<ApiResponse<{ url: string }> | { url: string }>(`${environment.apiUrl}/upload/image`, formData)
+        .pipe(map(unwrapApiResponse))
+        .subscribe({
         next: (res) => {
           this.uploadedAvatarUrl = res.url;
           this.currentUser.avatar_url = res.url; // Gán vào payload
@@ -80,7 +85,7 @@ export class Userdetail implements OnInit {
   }
 
   saveUser() {
-    // 1. Tạo một bản sao của dữ liệu để không làm ảnh hưởng đến form đang hiển thị
+
     const payload = { ...this.currentUser };
 
     // 2. Format lại ngày sinh sang dd/MM/yyyy trước khi gửi

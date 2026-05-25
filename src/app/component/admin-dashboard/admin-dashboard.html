@@ -1,3 +1,9 @@
+<style>
+  .hover-elevate { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .hover-elevate:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+  .icon-shape { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+</style>
+
 <div class="container-fluid p-4" style="animation: fadeIn 0.4s;">
   <h2 class="mb-4 fw-bold text-dark">
     <i class="bi bi-graph-up-arrow text-primary me-2"></i>Tổng quan Kinh doanh
@@ -13,31 +19,31 @@
     <div class="row g-4 mb-4">
 
       <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-elevate">
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="mb-1 text-muted fw-semibold text-uppercase" style="letter-spacing: 1px;">Tổng Doanh Thu</p>
                 <h3 class="mb-0 fw-bold text-success">{{ stats.totalRevenue | number:'1.0-0' }} đ</h3>
               </div>
-              <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+              <div class="bg-success bg-opacity-10 text-success icon-shape">
                 <i class="bi bi-wallet2 fs-4"></i>
               </div>
             </div>
-            <small class="d-block mt-3 text-muted">Chỉ tính các đơn hàng Đã Giao</small>
+            <small class="d-block mt-3 text-muted"><i class="bi bi-info-circle me-1"></i>Chỉ tính các đơn hàng Đã Giao</small>
           </div>
         </div>
       </div>
 
       <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-elevate">
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="mb-1 text-muted fw-semibold text-uppercase" style="letter-spacing: 1px;">Tổng Đơn Hàng</p>
                 <h3 class="mb-0 fw-bold text-dark">{{ stats.totalOrders }} <span class="fs-6 text-muted fw-normal">đơn</span></h3>
               </div>
-              <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+              <div class="bg-primary bg-opacity-10 text-primary icon-shape">
                 <i class="bi bi-box-seam fs-4"></i>
               </div>
             </div>
@@ -46,14 +52,14 @@
       </div>
 
       <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card border-0 shadow-sm rounded-4 h-100 hover-elevate">
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <p class="mb-1 text-muted fw-semibold text-uppercase" style="letter-spacing: 1px;">Cần Xử Lý</p>
                 <h3 class="mb-0 fw-bold text-warning">{{ stats.pendingOrders }} <span class="fs-6 text-muted fw-normal">đơn chờ duyệt</span></h3>
               </div>
-              <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+              <div class="bg-warning bg-opacity-10 text-warning icon-shape">
                 <i class="bi bi-hourglass-split fs-4"></i>
               </div>
             </div>

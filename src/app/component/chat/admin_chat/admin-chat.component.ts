@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router'; // 🚨 THÊM IMPORT NÀY
@@ -15,7 +15,7 @@ import { Stomp } from '@stomp/stompjs';
   imports: [CommonModule, FormsModule, RouterModule], // 🚨 THÊM RouterModule VÀO ĐÂY
   templateUrl: './admin-chat.component.html'
 })
-export class AdminChatComponent implements OnInit, AfterViewChecked {
+export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('chatBody') private chatBody!: ElementRef;
   users: ChatUser[] = [];
   selectedUser: ChatUser | null = null;
@@ -31,6 +31,15 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked() { this.scrollToBottom(); }
+
+  ngOnDestroy() {
+    // Dọn dẹp kết nối WebSocket khi Admin rời khỏi trang Chat để tránh tràn RAM
+    if (this.stompClient && this.stompClient.connected) {
+      this.stompClient.disconnect(() => {
+        console.log('Đã ngắt kết nối WebSocket Admin Chat');
+      });
+    }
+  }
 
   loadChattedUsers() {
     this.chatService.getChattedUsers().subscribe({
@@ -56,7 +65,11 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
         // 🚨 GIẢI MÃ DỮ LIỆU KHI TẢI LỊCH SỬ
         this.messages = res.map(msg => {
           if (msg.messageType === 'PRODUCT' && msg.content) {
-            try { msg.productData = JSON.parse(msg.content); } catch(e) {}
+            try {
+              msg.productData = JSON.parse(msg.content);
+            } catch (error) {
+              console.warn('Không thể parse dữ liệu sản phẩm trong lịch sử chat', error);
+            }
           }
           return msg;
         });
@@ -78,7 +91,11 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
 
           // 🚨 GIẢI MÃ DỮ LIỆU KHI NHẬN TIN NHẮN MỚI
           if (receivedMessage.messageType === 'PRODUCT' && receivedMessage.content) {
-            try { receivedMessage.productData = JSON.parse(receivedMessage.content); } catch(e) {}
+            try {
+              receivedMessage.productData = JSON.parse(receivedMessage.content);
+            } catch (error) {
+              console.warn('Không thể parse dữ liệu sản phẩm tin nhắn mới', error);
+            }
           }
 
           if (this.selectedUser && receivedMessage.userId === this.selectedUser.id) {
@@ -99,7 +116,9 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
         });
 
       });
-    } catch (e) {}
+    } catch (error) {
+      console.error('Lỗi khi khởi tạo WebSocket:', error);
+    }
   }
 
   sendMessage() {
@@ -108,15 +127,23 @@ export class AdminChatComponent implements OnInit, AfterViewChecked {
     const chatMsg: ChatMessage = {
       userId: this.selectedUser.id,
       content: this.newMessage,
-      adminSender: true,
+      isShopSender: true,
       messageType: 'TEXT' // Mặc định Admin gõ phím là TEXT
     };
 
     this.stompClient.send('/app/chat.send', {}, JSON.stringify(chatMsg));
+    this.messages.push(chatMsg);
+    setTimeout(() => this.scrollToBottom(), 100);
     this.newMessage = '';
   }
 
   private scrollToBottom(): void {
-    try { if (this.chatBody) this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight; } catch(err) { }
+    try {
+      if (this.chatBody) {
+        this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
+      }
+    } catch (error) {
+      console.warn('Lỗi khi cuộn khung chat:', error);
+    }
   }
 }

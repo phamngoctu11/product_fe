@@ -1,36 +1,48 @@
-<div class="modal-content shadow-lg border-0">
-  <div class="modal-header bg-primary text-white border-0 p-3">
-    <h2 mat-dialog-title class="m-0 fw-bold fs-5">
+<style>
+  .hover-elevate { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .hover-elevate:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+  .table-custom th { font-weight: 600; color: #6c757d; border-bottom-width: 1px; padding-top: 1rem; padding-bottom: 1rem; }
+  .table-custom td { vertical-align: middle; padding-top: 1rem; padding-bottom: 1rem; }
+</style>
+
+<div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+  <div class="modal-header bg-primary bg-gradient text-white border-0 p-4">
+    <h5 mat-dialog-title class="modal-title fw-bold m-0 fs-4">
       <i class="bi bi-receipt-cutoff me-2"></i>Lịch sử đơn hàng của người dùng
-    </h2>
-    <button mat-dialog-close class="btn-close btn-close-white"></button>
+    </h5>
+    <button mat-dialog-close type="button" class="btn-close btn-close-white"></button>
   </div>
 
   <mat-dialog-content class="p-4 bg-light" style="max-height: 70vh; overflow-y: auto;">
-    <div *ngIf="orders.length === 0" class="text-center py-5 text-muted">
+    <div *ngIf="orders.length === 0" class="text-center py-5 text-muted bg-white rounded-4 shadow-sm border">
       <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
       <p class="fw-medium">Người dùng này chưa có đơn hàng nào.</p>
     </div>
 
-    <div *ngFor="let order of orders" class="card border-0 mb-4 shadow-sm">
-      <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 py-3">
-        <span class="text-muted small fw-medium">
-          <i class="bi bi-calendar3 me-1"></i><strong>Ngày đặt:</strong> {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
-        </span>
-        <span class="badge rounded-pill px-3 py-2"
-              [ngClass]="{
-                'bg-light text-primary border border-primary': order.status !== 'CANCELLED' && order.status !== 'DELIVERED',
-                'bg-success': order.status === 'DELIVERED',
-                'bg-danger': order.status === 'CANCELLED'
-              }">
-          {{ order.status }}
-        </span>
+    <div *ngFor="let order of orders" class="card shadow-sm border-0 mb-4 rounded-4 hover-elevate overflow-hidden">
+      <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-3 p-4">
+        <div class="flex-grow-1">
+          <span class="fw-bold text-dark fs-6">Mã đơn hàng: #{{ order.id }}</span>
+          <span class="text-muted small d-block mt-1">
+            <i class="bi bi-calendar3 me-1"></i><strong>Ngày đặt:</strong> {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
+          </span>
+        </div>
+        <div class="text-end">
+          <span class="badge rounded-pill px-3 py-2 fs-6 shadow-sm border"
+                [ngClass]="{
+                  'bg-primary bg-opacity-10 text-primary border-primary border-opacity-25': order.status !== 'CANCELLED' && order.status !== 'DELIVERED',
+                  'bg-success bg-opacity-10 text-success border-success border-opacity-25': order.status === 'DELIVERED',
+                  'bg-danger bg-opacity-10 text-danger border-danger border-opacity-25': order.status === 'CANCELLED'
+                }">
+            {{ order.status }}
+          </span>
+        </div>
       </div>
 
       <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light text-secondary">
-            <tr>
+        <table class="table table-hover table-custom align-middle mb-0">
+          <thead class="table-light text-secondary text-uppercase small">
+            <tr class="fw-semibold">
               <th style="width:50%" class="ps-4">Sản phẩm</th>
               <th style="width:15%" class="text-center">SL</th>
               <th style="width:35%" class="text-end pe-4">Thành tiền</th>
@@ -40,29 +52,29 @@
             <tr *ngFor="let item of order.items">
               <td class="ps-4">
                 <div class="d-flex align-items-center">
-                  <div class="rounded d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden"
-                       style="width: 40px; height: 40px; background-color: #f8f9fa; flex-shrink: 0;">
+                  <div class="rounded d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden bg-light"
+                       style="width: 45px; height: 45px; flex-shrink: 0;">
                     <img *ngIf="item.image_url" [src]="item.image_url" style="width: 100%; height: 100%; object-fit: cover;">
-                    <i *ngIf="!item.image_url" class="bi bi-box-seam text-secondary"></i>
+                    <i *ngIf="!item.image_url" class="bi bi-box-seam text-secondary fs-5"></i>
                   </div>
-                  <span class="fw-medium text-dark">{{ item.productName || 'SP ID: ' + item.productId }}</span>
+                  <span class="fw-semibold text-dark">{{ item.productName || 'Sản phẩm ID: ' + item.productId }}</span>
                 </div>
               </td>
               <td class="text-center fw-bold text-dark">{{ item.quantity }}</td>
-              <td class="text-end fw-bold text-dark pe-4">{{ item.quantity * item.price | number }} đ</td>
+              <td class="text-end fw-bold text-dark pe-4">{{ item.quantity * item.price | number: '1.0-0' }} đ</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="card-footer bg-white border-top-0 text-end py-3">
-         <span class="text-muted fw-medium me-2">Tổng thanh toán:</span>
-         <span class="text-danger fw-bold fs-5">{{ order.finalPrice | number }} đ</span>
+      <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center">
+         <span class="text-muted fw-medium ms-2">Tổng thanh toán:</span>
+         <span class="text-danger fw-bold fs-5 me-2">{{ order.finalPrice | number: '1.0-0' }} đ</span>
       </div>
     </div>
   </mat-dialog-content>
 
-  <mat-dialog-actions align="end" class="p-3 bg-white border-top">
-    <button class="btn btn-secondary px-4 fw-bold shadow-sm" mat-dialog-close>Đóng</button>
+  <mat-dialog-actions align="end" class="p-4 bg-white border-top m-0">
+    <button class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm" mat-dialog-close>Đóng</button>
   </mat-dialog-actions>
 </div>

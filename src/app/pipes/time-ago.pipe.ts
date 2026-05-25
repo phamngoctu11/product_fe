@@ -10,7 +10,7 @@ export class TimeAgoPipe implements PipeTransform {
 
     const time = new Date(value).getTime();
     const now = new Date().getTime();
-    const diff = Math.floor((now - time) / 1000); // Tính ra số giây chênh lệch
+    const diff = Math.floor((now - time) / 1000);
 
     if (diff < 60) return 'Vừa xong';
 

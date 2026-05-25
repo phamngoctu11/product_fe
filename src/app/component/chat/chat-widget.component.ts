@@ -47,25 +47,18 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
       // 3. Đóng gói Thẻ Sản phẩm
       const chatMsg: ChatMessage = {
         userId: this.userId,
-        content: JSON.stringify({
-          name: productInfo.name,
-          price: productInfo.price,
-          imageUrl: productInfo.imageUrl
-        }),
-        adminSender: false,
+        content: JSON.stringify(productInfo),
+        isShopSender: false,
         messageType: 'PRODUCT',
-        productId: productInfo.id
+        productId: productInfo.id,
+        timestamp: new Date().toISOString()
       };
 
       // 4. Bắn đi cho Admin
       this.stompClient.send('/app/chat.send', {}, JSON.stringify(chatMsg));
 
       // 5. In lên màn hình của Khách
-      chatMsg.productData = {
-        name: productInfo.name,
-        price: productInfo.price,
-        imageUrl: productInfo.imageUrl
-      };
+      chatMsg.productData = productInfo;
       this.messages.push(chatMsg);
 
       setTimeout(() => this.scrollToBottom(), 100);
@@ -151,11 +144,17 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
     const chatMsg: ChatMessage = {
       userId: this.userId,
       content: this.newMessage,
-      adminSender: false,
-      messageType: 'TEXT'
+      isShopSender: false,
+      messageType: 'TEXT',
+      timestamp: new Date().toISOString()
     };
 
     this.stompClient.send('/app/chat.send', {}, JSON.stringify(chatMsg));
+
+    // 5. In ngay lên màn hình của Khách
+    this.messages.push(chatMsg);
+    setTimeout(() => this.scrollToBottom(), 100);
+
     this.newMessage = '';
   }
 

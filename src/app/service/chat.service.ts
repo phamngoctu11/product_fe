@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';// Import từ file riêng
 import { ChatMessage, ChatUser } from '../model/chat.model';
+import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,10 +24,14 @@ export class ChatService {
 
 
   getChatHistory(userId: number): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.apiUrl}/${userId}`);
+    return this.http
+      .get<ApiResponse<ChatMessage[]> | ChatMessage[]>(`${this.apiUrl}/${userId}`)
+      .pipe(map(unwrapApiResponse));
   }
 
   getChattedUsers(): Observable<ChatUser[]> {
-    return this.http.get<ChatUser[]>(`${this.apiUrl}/users`);
+    return this.http
+      .get<ApiResponse<ChatUser[]> | ChatUser[]>(`${this.apiUrl}/users`)
+      .pipe(map(unwrapApiResponse));
   }
 }

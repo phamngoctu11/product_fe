@@ -1,131 +1,161 @@
-<div class="modal-content shadow-lg border-0">
-  <div class="modal-header text-white border-0 p-3" [ngClass]="isView ? 'bg-info' : 'bg-primary'">
-    <h5 class="modal-title m-0 fw-bold">
-      <i class="bi" [ngClass]="isView ? 'bi-eye' : (isEdit ? 'bi-pencil-square' : 'bi-plus-circle')"></i>
+<style>
+  .upload-box { border: 2px dashed #dee2e6 !important; border-radius: 1rem; transition: all 0.3s ease; background-color: #f8f9fa; cursor: pointer; }
+  .upload-box:hover { border-color: #0d6efd !important; background-color: #f1f7ff; }
+  .form-control-custom { border-radius: 0.5rem; padding: 0.5rem 0.75rem; border-color: #dee2e6; }
+  .form-control-custom:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+  .tag-badge { border-radius: 50rem; padding: 0.4rem 0.8rem; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; }
+  .tag-badge:hover { transform: translateY(-1px); }
+  .variant-card { border-radius: 1rem; transition: all 0.3s; border: 1px solid #e9ecef; }
+</style>
+
+<div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+  <div class="modal-header text-white border-0 p-4" [ngClass]="isView ? 'bg-info bg-gradient' : 'bg-primary bg-gradient'">
+    <h5 class="modal-title m-0 fw-bold fs-4">
+      <i class="bi me-2" [ngClass]="isView ? 'bi-eye' : (isEdit ? 'bi-pencil-square' : 'bi-plus-circle')"></i>
       {{ isView ? 'Chi tiết Sản phẩm' : (isEdit ? 'Cập nhật Sản phẩm' : 'Thêm Sản phẩm mới') }}
     </h5>
+    <button mat-dialog-close type="button" class="btn-close btn-close-white"></button>
   </div>
 
-  <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+  <div class="modal-body p-4 bg-light" style="max-height: 75vh; overflow-y: auto;">
     <form [formGroup]="productForm">
 
-      <h6 class="fw-bold mb-3 border-bottom pb-2" [ngClass]="isView ? 'text-info' : 'text-primary'">1. Thông tin gốc</h6>
+      <!-- Khối Thông tin gốc -->
+      <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4">
+          <h6 class="fw-bold mb-4 d-flex align-items-center" [ngClass]="isView ? 'text-info' : 'text-primary'">
+            <i class="bi bi-info-circle-fill me-2 fs-5"></i> 1. Thông tin gốc
+          </h6>
 
-      <div class="row mb-4 align-items-center">
-        <div class="col-md-3 text-center">
-          <div class="border rounded bg-light d-flex justify-content-center align-items-center shadow-sm overflow-hidden"
-               style="width: 120px; height: 120px; margin: 0 auto; border: 2px dashed #dee2e6 !important;">
-            <div *ngIf="isUploadingImage" class="spinner-border text-primary" role="status"></div>
-            <i *ngIf="!uploadedImageUrl && !isUploadingImage" class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-            <img *ngIf="uploadedImageUrl && !isUploadingImage" [src]="uploadedImageUrl" style="width: 100%; height: 100%; object-fit: cover;">
+          <div class="row mb-4 align-items-center">
+            <div class="col-md-3 text-center">
+              <label class="upload-box d-flex justify-content-center align-items-center shadow-sm overflow-hidden"
+                     style="width: 130px; height: 130px; margin: 0 auto;" [title]="!isView ? 'Nhấn để đổi ảnh' : ''">
+                <div *ngIf="isUploadingImage" class="spinner-border text-primary" role="status"></div>
+                <i *ngIf="!uploadedImageUrl && !isUploadingImage" class="bi bi-image text-muted opacity-50" style="font-size: 3.5rem;"></i>
+                <img *ngIf="uploadedImageUrl && !isUploadingImage" [src]="uploadedImageUrl" style="width: 100%; height: 100%; object-fit: cover;">
+                <input *ngIf="!isView" type="file" class="d-none" (change)="onFileSelected($event)" accept="image/*" [disabled]="isUploadingImage">
+              </label>
+            </div>
+            <div class="col-md-9" *ngIf="!isView">
+              <div class="mb-2">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2"><i class="bi bi-cloud-arrow-up me-1"></i> Cloudinary Storage</span>
+              </div>
+              <p class="text-muted small mb-0">Nhấn vào ô bên trái để tải lên ảnh đại diện sản phẩm.<br> Hỗ trợ các định dạng JPG, PNG, WEBP.</p>
+            </div>
           </div>
-        </div>
-        <div class="col-md-9" *ngIf="!isView">
-          <label class="form-label fw-bold text-dark">Ảnh đại diện sản phẩm</label>
-          <div class="input-group shadow-sm">
-            <input type="file" class="form-control" (change)="onFileSelected($event)" accept="image/*" [disabled]="isUploadingImage">
-          </div>
-          <div class="form-text mt-2 text-muted">
-            <i class="bi bi-cloud-arrow-up me-1 text-success"></i> Hệ thống sử dụng Cloudinary.
-          </div>
-        </div>
-      </div>
 
-      <div class="row g-3 mb-4">
-        <div class="col-md-8">
-          <label class="form-label fw-bold">Tên sản phẩm gốc</label>
-          <input type="text" class="form-control" formControlName="product_name" />
-        </div>
-        <div class="col-md-4">
-          <label class="form-label fw-bold">Giá tham chiếu</label>
-          <input type="number" class="form-control" formControlName="price" />
-        </div>
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label fw-semibold text-secondary small text-uppercase">Tên sản phẩm gốc</label>
+              <input type="text" class="form-control form-control-custom" formControlName="product_name" placeholder="Ví dụ: Giày thể thao nam" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold text-secondary small text-uppercase">Giá tham chiếu (VND)</label>
+              <div class="input-group">
+                <input type="number" class="form-control form-control-custom border-end-0" formControlName="price" placeholder="0" />
+                <span class="input-group-text bg-white border-start-0 text-muted">đ</span>
+              </div>
+            </div>
 
-        <div class="col-md-12 mb-2 bg-light p-3 rounded border">
-          <label class="form-label fw-bold text-dark"><i class="bi bi-tags-fill me-2" [ngClass]="isView ? 'text-info' : 'text-primary'"></i>Thẻ phân loại (Tags)</label>
-          <div class="input-group mb-3 shadow-sm" style="max-width: 450px;" *ngIf="!isView">
-            <span class="input-group-text bg-white text-muted border-end-0">#</span>
-            <input type="text" class="form-control border-start-0 ps-0" placeholder="Nhập tag mới..." [(ngModel)]="newTagInput" [ngModelOptions]="{standalone: true}" (keyup.enter)="addNewTag()">
-            <button class="btn btn-primary fw-bold" type="button" (click)="addNewTag()"><i class="bi bi-plus"></i> Thêm</button>
-          </div>
-          <div class="mb-3 p-2 border rounded bg-white" style="min-height: 50px;">
-            <span class="text-muted small me-2" *ngIf="selectedTags.length === 0">Chưa có tag nào...</span>
-            <span class="badge me-2 mb-1 p-2 shadow-sm" [ngClass]="isView ? 'bg-secondary' : 'bg-primary'" style="cursor: pointer; font-size: 0.85rem;"
-                  *ngFor="let tag of selectedTags" (click)="toggleTag(tag)">
-              {{ tag }} <i class="bi bi-x ms-1" *ngIf="!isView"></i>
-            </span>
-          </div>
-          <div class="form-text mt-2 text-dark" *ngIf="!isView">
-            <strong class="text-success"><i class="bi bi-lightbulb"></i> Gợi ý:</strong>
-            <div class="d-flex flex-wrap gap-2 mt-2">
-              <span class="badge border border-success text-success bg-white" style="cursor: pointer; font-size: 0.8rem;" *ngFor="let tag of getUnselectedAvailableTags()" (click)="toggleTag(tag)">
-                <i class="bi bi-plus"></i> {{ tag }}
-              </span>
+            <div class="col-md-12 mt-4">
+              <div class="p-4 rounded-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                <label class="form-label fw-bold text-dark mb-3"><i class="bi bi-tags-fill me-2" [ngClass]="isView ? 'text-info' : 'text-primary'"></i>Thẻ phân loại (Tags)</label>
+
+                <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden" style="max-width: 450px;" *ngIf="!isView">
+                  <span class="input-group-text bg-white border-0 text-muted border-end-0 ps-4">#</span>
+                  <input type="text" class="form-control border-0 ps-0 shadow-none" placeholder="Nhập tag mới..." [(ngModel)]="newTagInput" [ngModelOptions]="{standalone: true}" (keyup.enter)="addNewTag()">
+                  <button class="btn btn-primary fw-bold px-4" type="button" (click)="addNewTag()"><i class="bi bi-plus-lg"></i> Thêm</button>
+                </div>
+
+                <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+                  <span class="text-muted small fst-italic" *ngIf="selectedTags.length === 0">Chưa có tag nào được thêm.</span>
+                  <span class="badge shadow-sm tag-badge" [ngClass]="isView ? 'bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25' : 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25'" style="cursor: pointer;"
+                        *ngFor="let tag of selectedTags" (click)="toggleTag(tag)">
+                    {{ tag }} <i class="bi bi-x-circle-fill ms-1 opacity-75" *ngIf="!isView"></i>
+                  </span>
+                </div>
+
+                <div class="form-text mt-3" *ngIf="!isView">
+                  <strong class="text-success small"><i class="bi bi-lightbulb-fill me-1"></i> Gợi ý thẻ:</strong>
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                    <span class="badge border border-success text-success bg-white rounded-pill px-2 py-1 shadow-sm" style="cursor: pointer;" *ngFor="let tag of getUnselectedAvailableTags()" (click)="toggleTag(tag)">
+                      <i class="bi bi-plus"></i> {{ tag }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-12 mt-4" *ngIf="!isView || customFields.length > 0">
+              <div class="bg-warning bg-opacity-10 p-4 rounded-4 border-0">
+                <label class="form-label fw-bold text-dark mb-3"><i class="bi bi-gear-fill text-warning me-2 fs-5"></i>Thành phần tùy chỉnh mở rộng</label>
+                <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden" style="max-width: 450px;" *ngIf="!isView">
+                  <input type="text" class="form-control border-0 ps-4 shadow-none" placeholder="VD: Dung lượng pin..." [(ngModel)]="newCustomFieldInput" [ngModelOptions]="{standalone: true}" (keyup.enter)="addCustomField()">
+                  <button class="btn btn-warning fw-bold text-dark px-4" type="button" (click)="addCustomField()"><i class="bi bi-plus-lg"></i> Thêm</button>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-2" *ngIf="customFields.length > 0">
+                  <span class="badge bg-warning text-dark border border-warning p-2 px-3 shadow-sm rounded-pill" *ngFor="let field of customFields">
+                    {{ field }} <i class="bi bi-x-circle-fill ms-2 opacity-50" style="cursor: pointer;" *ngIf="!isView" (click)="removeCustomField(field)"></i>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <div class="col-md-12 bg-white p-3 rounded border border-warning" *ngIf="!isView || customFields.length > 0">
-          <label class="form-label fw-bold text-dark"><i class="bi bi-gear-fill text-warning me-2"></i>Thành phần tùy chỉnh</label>
-          <div class="input-group mb-3 shadow-sm" style="max-width: 450px;" *ngIf="!isView">
-            <input type="text" class="form-control" placeholder="VD: Dung lượng pin..." [(ngModel)]="newCustomFieldInput" [ngModelOptions]="{standalone: true}" (keyup.enter)="addCustomField()">
-            <button class="btn btn-warning fw-bold text-dark" type="button" (click)="addCustomField()"><i class="bi bi-plus"></i> Thêm</button>
-          </div>
-          <div class="d-flex flex-wrap gap-2 mt-2" *ngIf="customFields.length > 0">
-            <span class="badge bg-warning text-dark border p-2 shadow-sm" style="font-size: 0.8rem;" *ngFor="let field of customFields">
-              {{ field }} <i class="bi bi-x-circle ms-1" style="cursor: pointer;" *ngIf="!isView" (click)="removeCustomField(field)"></i>
-            </span>
-          </div>
-        </div>
       </div>
 
-      <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 mt-4">
-        <h6 class="fw-bold m-0" [ngClass]="isView ? 'text-info' : 'text-success'">2. Danh sách phân loại (Biến thể)</h6>
-        <button type="button" class="btn btn-sm btn-outline-success" (click)="addVariant()" *ngIf="!isView">
-          <i class="bi bi-plus"></i> Thêm phân loại
+      <!-- Khối Danh sách phân loại -->
+      <div class="d-flex justify-content-between align-items-center mb-3 mt-4 px-2">
+        <h6 class="fw-bold m-0 fs-5 d-flex align-items-center" [ngClass]="isView ? 'text-info' : 'text-success'">
+          <i class="bi bi-ui-checks-grid me-2"></i> 2. Danh sách phân loại
+        </h6>
+        <button type="button" class="btn btn-success rounded-pill px-3 shadow-sm" (click)="addVariant()" *ngIf="!isView">
+          <i class="bi bi-plus-circle me-1"></i> Thêm phân loại
         </button>
       </div>
 
       <div formArrayName="variants">
-        <div *ngFor="let v of variants.controls; let i=index" [formGroupName]="i" class="card mb-3 shadow-sm" [ngClass]="isView ? 'border-secondary' : 'border-success'">
-          <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
-            <strong>Phân loại #{{i+1}}</strong>
-            <button *ngIf="variants.controls.length > 1 && !isView" type="button" class="btn btn-sm btn-danger py-0" (click)="removeVariant(i)"><i class="bi bi-trash"></i></button>
+        <div *ngFor="let v of variants.controls; let i=index" [formGroupName]="i" class="card mb-4 shadow-sm variant-card overflow-hidden bg-white">
+          <div class="card-header border-bottom-0 py-3 d-flex justify-content-between align-items-center" [ngClass]="isView ? 'bg-light' : 'bg-success bg-opacity-10'">
+            <strong class="fs-6" [ngClass]="isView ? 'text-dark' : 'text-success'">Phân loại #{{i+1}}</strong>
+            <button *ngIf="variants.controls.length > 1 && !isView" type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" (click)="removeVariant(i)"><i class="bi bi-trash me-1"></i> Xóa</button>
           </div>
-          <div class="card-body py-2">
+          <div class="card-body p-4">
 
-            <div class="d-flex align-items-center mb-3 bg-white p-2 rounded border" *ngIf="!isView || v.get('image_url')?.value">
-              <div class="border rounded d-flex justify-content-center align-items-center shadow-sm me-3 overflow-hidden"
-                   style="width: 60px; height: 60px; background-color: #f8f9fa;">
-                <div *ngIf="isUploadingVariantImage[i]" class="spinner-border spinner-border-sm text-success" role="status"></div>
-                <i *ngIf="!v.get('image_url')?.value && !isUploadingVariantImage[i]" class="bi bi-image text-muted fs-4"></i>
-                <img *ngIf="v.get('image_url')?.value && !isUploadingVariantImage[i]" [src]="v.get('image_url')?.value" style="width: 100%; height: 100%; object-fit: cover;">
+            <div class="row align-items-center mb-4" *ngIf="!isView || v.get('image_url')?.value">
+              <div class="col-auto">
+                <label class="upload-box d-flex justify-content-center align-items-center shadow-sm overflow-hidden" style="width: 80px; height: 80px; border-radius: 0.75rem;" [title]="!isView ? 'Đổi ảnh phân loại' : ''">
+                  <div *ngIf="isUploadingVariantImage[i]" class="spinner-border spinner-border-sm text-success" role="status"></div>
+                  <i *ngIf="!v.get('image_url')?.value && !isUploadingVariantImage[i]" class="bi bi-image text-muted opacity-50 fs-2"></i>
+                  <img *ngIf="v.get('image_url')?.value && !isUploadingVariantImage[i]" [src]="v.get('image_url')?.value" style="width: 100%; height: 100%; object-fit: cover;">
+                  <input *ngIf="!isView" type="file" class="d-none" (change)="onVariantFileSelected($event, i)" accept="image/*" [disabled]="isUploadingVariantImage[i]">
+                </label>
               </div>
-              <div class="flex-grow-1" *ngIf="!isView">
-                <label class="form-label small fw-bold text-success mb-1">Ảnh phân loại</label>
-                <input type="file" class="form-control form-control-sm" (change)="onVariantFileSelected($event, i)" accept="image/*" [disabled]="isUploadingVariantImage[i]">
+              <div class="col" *ngIf="!isView">
+                <span class="text-success small fw-semibold"><i class="bi bi-image me-1"></i>Ảnh riêng cho phân loại này (Tùy chọn)</span>
               </div>
             </div>
 
-            <div class="row g-2">
-              <div class="col-md-12">
-                <label class="form-label small text-muted mb-1">Tên hiển thị chi tiết</label>
-                <input type="text" class="form-control form-control-sm" formControlName="variantName" />
-              </div>
+            <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label small text-muted mb-1">Giá bán riêng</label>
-                <input type="number" class="form-control form-control-sm text-danger fw-bold" formControlName="price" />
+                <label class="form-label small fw-semibold text-secondary text-uppercase mb-1">Tên hiển thị chi tiết</label>
+                <input type="text" class="form-control form-control-custom bg-light" formControlName="variantName" placeholder="VD: Màu Đen - Size L" />
               </div>
-              <div class="col-md-6">
-                <label class="form-label small text-muted mb-1">Số lượng kho</label>
-                <input type="number" class="form-control form-control-sm" formControlName="quantity" />
+              <div class="col-md-3">
+                <label class="form-label small fw-semibold text-secondary text-uppercase mb-1">Giá bán riêng</label>
+                <input type="number" class="form-control form-control-custom text-danger fw-bold bg-light" formControlName="price" />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-semibold text-secondary text-uppercase mb-1">Số lượng kho</label>
+                <input type="number" class="form-control form-control-custom bg-light" formControlName="quantity" />
               </div>
             </div>
 
-            <div formGroupName="dynamicAttributes" class="row g-2 mt-2 pt-2 border-top border-dashed">
-              <div class="col-md-4" *ngFor="let field of dynamicFields">
-                <label class="form-label small text-primary mb-1 fw-bold text-capitalize">{{ getLabel(field) }}</label>
-                <input type="text" class="form-control form-control-sm" [formControlName]="field" />
+            <div formGroupName="dynamicAttributes" class="row g-3 mt-3 pt-3 border-top">
+              <div class="col-md-4 col-sm-6" *ngFor="let field of dynamicFields">
+                <label class="form-label small text-primary mb-1 fw-bold text-capitalize"><i class="bi bi-stars me-1"></i>{{ getLabel(field) }}</label>
+                <input type="text" class="form-control form-control-custom" [formControlName]="field" />
               </div>
             </div>
 
@@ -136,16 +166,16 @@
     </form>
   </div>
 
-  <div class="modal-footer p-3 bg-light border-0">
-    <button type="button" class="btn btn-outline-primary px-4 fw-bold me-auto"
+  <div class="modal-footer p-4 bg-white border-top">
+    <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold me-auto shadow-sm"
             *ngIf="!authService.isAdmin()"
             (click)="askAboutProduct()">
-      <i class="bi bi-chat-dots-fill me-1"></i> Tư vấn sản phẩm này
+      <i class="bi bi-chat-heart-fill me-2 fs-5 align-middle"></i> Tư vấn sản phẩm
     </button>
 
-    <button class="btn btn-secondary px-4 fw-bold" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
+    <button class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
 
-    <button class="btn btn-success px-4 fw-bold" [disabled]="productForm.invalid" (click)="save()" *ngIf="!isView">
+    <button class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" [disabled]="productForm.invalid" (click)="save()" *ngIf="!isView">
       <i class="bi bi-check-circle me-1"></i> Lưu dữ liệu
     </button>
   </div>

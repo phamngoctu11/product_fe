@@ -1,14 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserResListDTO } from '../../model/user.model';
-import { UserService } from '../../service/user.service';
-import { CartRes } from '../../model/cart.model';
-import { CartModalComponent } from '../cart/cart-modal';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Userdetail } from '../userdetail/userdetail';
 import { FormsModule } from '@angular/forms';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+
+import { Userdetail } from '../userdetail/userdetail';
+import { CartModalComponent } from '../cart/cart-modal';
+import { UserResListDTO } from '../../model/user.model';
+import { CartRes } from '../../model/cart.model';
+
+import { UserService } from '../../service/user.service';
 import { AuthService } from '../../service/auth.service';
-// Điều chỉnh đường dẫn file cho đúng
 
 @Component({
   selector: 'app-user',
@@ -25,30 +26,28 @@ export class UserComponent implements OnInit {
   pageSize: number = 10;
   totalElements: number = 0;
   totalPages: number = 0;
-  isAdmin = false;
+  isAdmin: boolean = false;
 
   constructor(
     private userService: UserService,
-    private dialog: MatDialog,
     private authService: AuthService,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
-    this.isAdmin = this.authService.isAdmin()
+    this.isAdmin = this.authService.isAdmin();
     this.loadUsers(this.currentPage, this.pageSize);
   }
 
- loadUsers(page: number, size: number) {
+  loadUsers(page: number, size: number) {
     this.userService.getAll(page, size).subscribe({
       next: (data) => {
-        // Trỏ vào data.content để lấy mảng
         this.users = data.content;
         this.filteredUsers = [...data.content];
 
-        // Lưu lại thông tin phân trang để dùng cho HTML
         this.totalElements = data.totalElements;
         this.totalPages = data.totalPages;
-        this.currentPage = data.number; // Backend Spring Boot đếm trang từ 0
+        this.currentPage = data.number;
       },
       error: (err) => {
         console.error('Lỗi khi tải danh sách User:', err);
@@ -56,7 +55,6 @@ export class UserComponent implements OnInit {
     });
   }
 
-  // Hàm mở Dialog cho cả Thêm mới (id = null) và Cập nhật (id có giá trị)
   openUserDialog(id: number | null = null) {
     const dialogRef = this.dialog.open(Userdetail, {
       width: '700px',
@@ -66,25 +64,24 @@ export class UserComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.loadUsers(this.currentPage, this.pageSize); // Load lại sẽ tự động reset cả bảng và ô tìm kiếm (nếu muốn giữ nguyên ô tìm kiếm thì gọi thêm this.filterUsers() ở loadUsers)
+        this.loadUsers(this.currentPage, this.pageSize);
       }
     });
   }
+
   filterUsers() {
     if (!this.searchTerm || this.searchTerm.trim() === '') {
-      // Nếu không nhập gì, hiển thị lại toàn bộ
       this.filteredUsers = [...this.users];
       return;
     }
 
     const term = this.searchTerm.toLowerCase().trim();
-
-    // Lọc danh sách: kiểm tra xem Họ + Tên có chứa từ khóa không
     this.filteredUsers = this.users.filter((u) => {
       const fullName = `${u.lastname} ${u.firstname}`.toLowerCase();
       return fullName.includes(term);
     });
   }
+
   viewUser(id: number) {
     this.dialog.open(Userdetail, {
       width: '700px',
@@ -92,6 +89,7 @@ export class UserComponent implements OnInit {
       disableClose: false,
     });
   }
+
   deleteUser(id: number) {
     if (confirm('Bạn có chắc muốn xóa người dùng này?')) {
       this.userService.delete(id).subscribe(() => {

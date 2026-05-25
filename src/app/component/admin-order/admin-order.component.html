@@ -1,12 +1,25 @@
-<div class="container-fluid py-4">
+<style>
+  .hover-elevate { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .hover-elevate:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+  .icon-shape { display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .table-custom th { font-weight: 600; color: #6c757d; border-bottom-width: 1px; padding-top: 1rem; padding-bottom: 1rem; }
+  .table-custom td { vertical-align: middle; padding-top: 1rem; padding-bottom: 1rem; }
+</style>
+
+<div class="container-fluid p-4" style="animation: fadeIn 0.4s;">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Quản lý Đơn hàng chờ duyệt</h2>
-    <button class="btn btn-outline-primary" (click)="loadPendingOrders()" [disabled]="isLoading">
-      <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+    <div class="d-flex align-items-center gap-3">
+      <div class="bg-primary bg-opacity-10 text-primary icon-shape shadow-sm" style="width: 56px; height: 56px;">
+        <i class="bi bi-box-seam fs-3"></i>
+      </div>
+      <h2 class="fw-bold text-dark mb-0">Đơn hàng chờ duyệt</h2>
+    </div>
+    <button class="btn btn-outline-primary rounded-pill px-4 shadow-sm" (click)="loadPendingOrders()" [disabled]="isLoading">
+      <i class="bi bi-arrow-clockwise me-2"></i> Làm mới
     </button>
   </div>
 
-  <div class="card shadow-sm border-0">
+  <div class="card shadow-sm border-0 rounded-4 overflow-hidden hover-elevate">
     <div class="card-body p-0">
 
       <div *ngIf="isLoading" class="text-center py-5">
@@ -20,8 +33,8 @@
       </div>
 
       <div class="table-responsive" *ngIf="!isLoading && pendingOrders.length > 0">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light text-muted text-uppercase small fw-bold">
+        <table class="table table-hover table-custom align-middle mb-0">
+          <thead class="table-light text-uppercase small">
             <tr>
               <th class="ps-4">Mã Đơn</th>
               <th>Khách hàng</th>
@@ -34,34 +47,34 @@
           <tbody>
             <tr *ngFor="let order of pendingOrders">
               <td class="ps-4 fw-bold">#{{ order.id }}</td>
-              <td>{{ order.lastname || 'Khách Vãng Lai' }}</td>
+              <td>{{ order.customerName || 'Khách Vãng Lai' }}</td>
 
-              <td>
-                <span class="badge"
-                      [ngClass]="order.paymentMethod === 'ONLINE' ? 'bg-success' : 'bg-warning text-dark'">
-                  {{ order.paymentMethod }}
+            <td class="text-uppercase">
+              <span class="badge rounded-pill px-3 py-2"
+                    [ngClass]="order.paymentMethod === 'ONLINE' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25'">
+                <i class="bi" [ngClass]="order.paymentMethod === 'ONLINE' ? 'bi-credit-card' : 'bi-cash-coin'"></i> {{ order.paymentMethod }}
                 </span>
               </td>
 
-              <td class="fw-bold text-danger">{{ order.finalPrice | number }}đ</td>
+            <td class="fw-bold text-danger fs-6">{{ order.totalPrice | number }}đ</td>
 
               <td>
-                <span *ngIf="order.note" class="text-danger fw-medium" title="{{ order.note }}">
+              <span *ngIf="order.note" class="text-danger fw-medium bg-danger bg-opacity-10 px-2 py-1 rounded-3" title="{{ order.note }}">
                   <i class="bi bi-exclamation-circle-fill me-1"></i> {{ order.note }}
                 </span>
-                <span *ngIf="!order.note" class="text-muted small">Không có</span>
+              <span *ngIf="!order.note" class="text-muted small fst-italic">Không có</span>
               </td>
 
               <td class="text-center pe-4">
-                <button class="btn btn-sm btn-primary me-2 shadow-sm"
+              <button class="btn btn-sm btn-primary rounded-3 px-3 me-2 shadow-sm"
                         (click)="approveOrder(order)"
                         [disabled]="isLoading" title="Duyệt đơn hàng">
-                  <i class="bi bi-check-lg"></i> Duyệt
+                <i class="bi bi-check-circle me-1"></i> Duyệt
                 </button>
-                <button class="btn btn-sm btn-outline-danger shadow-sm"
+              <button class="btn btn-sm btn-outline-danger rounded-3 px-3 shadow-sm"
                         (click)="rejectOrder(order.id)"
                         [disabled]="isLoading" title="Từ chối đơn hàng">
-                  <i class="bi bi-x-lg"></i> Từ chối
+                <i class="bi bi-x-circle me-1"></i> Từ chối
                 </button>
               </td>
             </tr>

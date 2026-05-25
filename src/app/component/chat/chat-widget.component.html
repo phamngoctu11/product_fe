@@ -1,66 +1,87 @@
 <style>
-  .chat-scrollbar::-webkit-scrollbar { width: 6px; }
-  .chat-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 10px; }
+  .chat-scrollbar::-webkit-scrollbar { width: 5px; }
+  .chat-scrollbar::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 10rem; }
+  .chat-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #adb5bd; }
   @keyframes slideUpChat { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .chat-btn-float { background: linear-gradient(135deg, #0d6efd, #0b5ed7); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .chat-btn-float:hover { transform: scale(1.1); box-shadow: 0 1rem 3rem rgba(13,110,253,0.4)!important; }
+  .message-bubble-widget { max-width: 85%; border-radius: 1.25rem; font-size: 0.9rem; line-height: 1.4; transition: transform 0.2s; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.04); }
+  .message-bubble-widget:hover { transform: translateY(-1px); }
+  .msg-client { border-bottom-right-radius: 0.25rem; background: linear-gradient(135deg, #0d6efd, #0b5ed7); color: white; border: none; }
+  .msg-admin { border-bottom-left-radius: 0.25rem; background-color: #ffffff; border: 1px solid #e9ecef; color: #212529; }
 </style>
 
 <div *ngIf="authService.isLoggedIn() && !authService.isAdmin()"
      class="position-fixed bottom-0 end-0 m-4" style="z-index: 9999;">
 
-  <div class="shadow-lg rounded-4 bg-white d-flex flex-column overflow-hidden"
+  <div class="shadow-lg rounded-4 bg-white d-flex flex-column overflow-hidden border-0"
        *ngIf="isOpen"
-       style="width: 350px; height: 480px; animation: slideUpChat 0.3s ease-out; border: 1px solid #dee2e6;">
+       style="width: 360px; height: 500px; animation: slideUpChat 0.3s ease-out; box-shadow: 0 1rem 3rem rgba(0,0,0,0.175)!important;">
 
-    <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+    <div class="bg-primary bg-gradient text-white p-3 d-flex justify-content-between align-items-center z-1 shadow-sm">
       <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-headset fs-5"></i>
-        <h6 class="mb-0 fw-bold">CSKH Trực tuyến</h6>
+        <div class="bg-white bg-opacity-25 rounded-circle d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+          <i class="bi bi-headset fs-6"></i>
+        </div>
+        <h6 class="mb-0 fw-bold letter-spacing-1">CSKH Trực tuyến</h6>
       </div>
       <button class="btn btn-sm btn-link text-white p-0" (click)="toggleChat()">
         <i class="bi bi-x-lg fs-5"></i>
       </button>
     </div>
 
-    <div class="flex-grow-1 overflow-auto bg-light p-3 chat-scrollbar" #chatBody>
-      <div *ngIf="messages.length === 0" class="text-center text-muted small my-4">
+    <div class="flex-grow-1 overflow-auto p-3 chat-scrollbar" #chatBody style="background-color: #f4f7f6;">
+      <div *ngIf="messages.length === 0" class="text-center text-muted small my-4 bg-white p-3 rounded-4 shadow-sm border">
+        <i class="bi bi-chat-heart text-primary fs-3 d-block mb-2"></i>
         Hãy gửi tin nhắn để bắt đầu trò chuyện với chúng tôi!
       </div>
 
       <div *ngFor="let msg of messages" class="mb-3 d-flex flex-column"
-           [ngClass]="msg.adminSender ? 'align-items-start' : 'align-items-end'">
+           [ngClass]="msg.isShopSender ? 'align-items-start' : 'align-items-end'">
 
-        <span class="text-muted mb-1" style="font-size: 0.7rem;">
-          {{ msg.adminSender ? 'Admin' : 'Bạn' }} • {{ msg.timestamp | date:'HH:mm' }}
+        <span class="text-muted mb-1 px-1" style="font-size: 0.7rem; font-weight: 500;">
+          {{ msg.isShopSender ? 'Admin' : 'Bạn' }} • {{ msg.timestamp | date:'HH:mm' }}
         </span>
 
         <div *ngIf="!msg.messageType || msg.messageType === 'TEXT'"
-             class="px-3 py-2 rounded-4 text-break shadow-sm"
-             style="max-width: 85%; font-size: 0.9rem; line-height: 1.4;"
-             [ngClass]="msg.adminSender ? 'bg-white text-dark border' : 'bg-primary text-white'">
+             class="px-3 py-2 text-break message-bubble-widget"
+             [ngClass]="msg.isShopSender ? 'msg-admin' : 'msg-client'">
           {{ msg.content }}
         </div>
 
         <div *ngIf="msg.messageType === 'PRODUCT' && msg.productData"
-             class="card shadow-sm border-0 rounded-4 overflow-hidden"
-             style="width: 200px; text-align: left;">
-          <img [src]="msg.productData.imageUrl" class="card-img-top border-bottom" style="height: 120px; object-fit: cover;">
-          <div class="card-body p-2 bg-white text-dark">
-            <h6 class="card-title fw-bold mb-1 text-truncate" style="font-size: 0.85rem;" [title]="msg.productData.name">
+             class="card shadow-sm border border-light rounded-4 overflow-hidden message-bubble-widget msg-client"
+             style="width: 240px; text-align: left; padding: 0;">
+          <div class="position-relative">
+            <img [src]="msg.productData.imageUrl" class="card-img-top border-bottom" style="height: 140px; object-fit: cover;">
+            <span *ngIf="msg.productData.variantsCount > 0" class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 rounded-pill shadow-sm" style="font-size: 0.7rem;">
+              {{ msg.productData.variantsCount }} phân loại
+            </span>
+          </div>
+          <div class="card-body p-3 text-dark bg-white">
+            <h6 class="card-title fw-bold mb-1 text-truncate" style="font-size: 0.9rem;" [title]="msg.productData.name">
               {{ msg.productData.name }}
             </h6>
+            <div class="mb-2 text-truncate" *ngIf="msg.productData.tags">
+              <ng-container *ngFor="let tag of msg.productData.tags.split(',')">
+                <span *ngIf="tag.trim()" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1 me-1 mb-1" style="font-size: 0.65rem;">
+                  {{ tag.trim() }}
+                </span>
+              </ng-container>
+            </div>
             <p class="card-text text-danger fw-bold mb-2" style="font-size: 0.85rem;">
               {{ msg.productData.price | number }} đ
             </p>
-            <a [routerLink]="['/product', msg.productId]" target="_blank" class="btn btn-sm btn-outline-primary w-100 rounded-pill" style="font-size: 0.8rem;">
-              Xem chi tiết
+            <a [routerLink]="['/product', msg.productData.id]" target="_blank" class="btn btn-sm btn-primary w-100 rounded-pill fw-medium shadow-sm" style="font-size: 0.8rem;">
+              <i class="bi bi-eye me-1"></i> Xem chi tiết
             </a>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="p-2 border-top bg-white d-flex align-items-center gap-2">
-      <input type="text" class="form-control rounded-pill bg-light border-0 px-3"
+    <div class="p-3 border-top bg-white d-flex align-items-center gap-2 z-1 shadow-sm">
+      <input type="text" class="form-control rounded-pill shadow-none px-3 border" style="background-color: #f8f9fa; border-color: #dee2e6;"
              placeholder="Nhập tin nhắn..." [(ngModel)]="newMessage" (keyup.enter)="sendMessage()">
       <button class="btn btn-primary rounded-circle shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
               style="width: 40px; height: 40px;" (click)="sendMessage()">
@@ -69,10 +90,9 @@
     </div>
   </div>
 
-  <button class="btn btn-primary rounded-circle shadow-lg d-flex justify-content-center align-items-center float-end mt-2"
+  <button class="btn border-0 rounded-circle shadow-lg d-flex justify-content-center align-items-center float-end mt-3 chat-btn-float text-white"
           *ngIf="!isOpen" (click)="toggleChat()"
-          style="width: 60px; height: 60px; transition: transform 0.2s;"
-          onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-    <i class="bi bi-chat-dots-fill fs-3"></i>
+          style="width: 65px; height: 65px;">
+    <i class="bi bi-chat-dots-fill fs-2"></i>
   </button>
 </div>

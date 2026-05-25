@@ -11,9 +11,9 @@ export interface ChatMessage {
   id?: number;
   userId: number;
   content: string;
-  adminSender: boolean;
-  messageType?: string;      // 🚨 'TEXT' hoặc 'PRODUCT'
-  productId?: number | null; // 🚨 ID Sản phẩm
-  productData?: any;         // 🚨 Dùng để chứa Object sản phẩm sau khi giải mã
+  isShopSender: boolean;     // 🚨 ĐÃ ĐỔI: Từ adminSender -> isShopSender
+  messageType?: string;
+  productId?: number | null;
+  productData?: any;
   timestamp?: string;
 }

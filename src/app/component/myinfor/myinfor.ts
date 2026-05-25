@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http'; // 1. BẮT BUỘC IMPORT HTTPCLIENT
+import { map } from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserService } from '../../service/user.service';
 import { UserInforDTO } from '../../model/user.model';
 import { CartModalComponent } from '../cart/cart-modal';
+import { ApiResponse, unwrapApiResponse } from '../../model/api-response.model';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -62,7 +64,10 @@ export class Myinfor implements OnInit {
       formData.append('file', file);
 
       // Gọi API tải ảnh lên Cloudinary
-      this.http.post<{url: string}>(`${environment.apiUrl}/upload/image`, formData).subscribe({
+      this.http
+        .post<ApiResponse<{ url: string }> | { url: string }>(`${environment.apiUrl}/upload/image`, formData)
+        .pipe(map(unwrapApiResponse))
+        .subscribe({
         next: (res) => {
           // Cập nhật URL ảnh trên giao diện
           this.userInfo!.avatar_url = res.url;

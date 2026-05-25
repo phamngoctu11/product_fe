@@ -159,7 +159,7 @@ isLoadingTimeline: boolean = false;
           oldstatus: '', // Trạng thái ban đầu nên không có oldstatus
           newstatus: 'PENDING_WAREHOUSE',
           updatetime: order?.startOrderTime || new Date().toISOString(),
-          changer: 'Khách hàng' // Hoặc 'HỆ THỐNG'
+          changerId: 1 // Hoặc 'HỆ THỐNG'
         };
 
         // Gộp mốc Khởi tạo (Bước 1) vào đầu mảng lịch sử nhận từ Backend

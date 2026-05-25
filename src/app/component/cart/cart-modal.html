@@ -1,8 +1,16 @@
+<style>
+  .table-custom th { font-weight: 600; color: #6c757d; border-bottom-width: 1px; padding-top: 1rem; padding-bottom: 1rem; }
+  .table-custom td { vertical-align: middle; padding-top: 1rem; padding-bottom: 1rem; }
+  .quantity-control { background: #f8f9fa; border-radius: 50rem; padding: 0.25rem; display: inline-flex; align-items: center; border: 1px solid #dee2e6; }
+  .quantity-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: none; background: white; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); transition: all 0.2s; color: #495057; font-weight: bold;}
+  .quantity-btn:hover { background: #e9ecef; }
+</style>
+
 <div class="modal fade show d-block" style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px)" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content shadow-lg border-0">
-      <div class="modal-header bg-primary text-white border-0 p-3">
-        <h5 class="modal-title fw-bold m-0">
+    <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+      <div class="modal-header bg-primary bg-gradient text-white border-0 p-4">
+        <h5 class="modal-title fw-bold m-0 fs-4">
           <i class="bi bi-cart3 me-2"></i>Giỏ hàng của tôi
         </h5>
         <button type="button" class="btn-close btn-close-white" (click)="onClose()"></button>
@@ -14,8 +22,8 @@
         </div>
 
         <div class="table-responsive" *ngIf="!isLoading">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light text-secondary text-center">
+          <table class="table table-hover table-custom align-middle mb-0">
+            <thead class="table-light text-uppercase small text-center">
               <tr>
                 <th *ngIf="isOwner" style="width: 10%"><i class="bi bi-check-square"></i> Chọn</th>
                 <th style="width: 35%" class="text-start ps-4">Sản phẩm</th>
@@ -45,10 +53,10 @@
                   </td>
                   <td class="text-center">
                     @if (isOwner) {
-                      <div class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center p-1 shadow-sm">
-                        <button class="btn btn-light btn-sm rounded-circle py-0 px-2 fw-bold text-danger border" (click)="changeQuantity(i, -1)">-</button>
+                      <div class="quantity-control shadow-sm">
+                        <button class="quantity-btn text-danger" (click)="changeQuantity(i, -1)"><i class="bi bi-dash"></i></button>
                         <span class="mx-3 fw-bold fs-6">{{ listCurQuan[i] }}</span>
-                        <button class="btn btn-light btn-sm rounded-circle py-0 px-2 fw-bold text-success border" (click)="changeQuantity(i, 1)">+</button>
+                        <button class="quantity-btn text-success" (click)="changeQuantity(i, 1)"><i class="bi bi-plus"></i></button>
                       </div>
                     } @else {
                       <span class="fw-bold fs-6">{{ listCurQuan[i] }}</span>
@@ -113,18 +121,24 @@
         </div>
       </div>
 
-      <div class="modal-footer bg-light border-0 p-3">
-        <button type="button" class="btn btn-secondary px-4 fw-bold" (click)="onClose()">Đóng</button>
-        @if (isOwner) {
-          <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" (click)="approve('ONLINE')" [disabled]="isLoading">
-            <i class="bi bi-wallet2 me-1"></i> Thanh toán MoMo
-          </button>
-
-          <button type="button" class="btn btn-danger px-4 fw-bold shadow-sm" (click)="approve('COD')" [disabled]="isLoading">
-            <i class="bi bi-truck me-1"></i> Thanh toán COD
-          </button>
-        }
-        <input placeholder = "ghi chú người mua"[(ngModel)]="note"/>
+      <div class="modal-footer bg-light border-0 p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="flex-grow-1" style="max-width: 400px;">
+          <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-white">
+            <span class="input-group-text bg-transparent border-0 text-muted ps-3"><i class="bi bi-pencil-square"></i></span>
+            <input type="text" class="form-control border-0 px-2 shadow-none" placeholder="Nhập ghi chú cho đơn hàng..." [(ngModel)]="note" />
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm" (click)="onClose()">Đóng</button>
+          @if (isOwner) {
+            <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="approve('ONLINE')" [disabled]="isLoading">
+              <i class="bi bi-wallet2 me-1"></i> Thanh toán MoMo
+            </button>
+            <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" (click)="approve('COD')" [disabled]="isLoading">
+              <i class="bi bi-truck me-1"></i> Thanh toán COD
+            </button>
+          }
+        </div>
       </div>
     </div>
   </div>

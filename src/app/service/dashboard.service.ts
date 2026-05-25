@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -13,6 +15,8 @@ export class DashboardService {
   constructor(private http: HttpClient) {}
 
   getDashboardStats(): Observable<any> {
-    return this.http.get<any>(this.apiUrl);
+    return this.http
+      .get<ApiResponse<any> | any>(this.apiUrl)
+      .pipe(map(unwrapApiResponse));
   }
 }

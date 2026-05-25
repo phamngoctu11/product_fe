@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Order, OrderStatusHistory } from '../model/order.model';
+import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -13,10 +15,15 @@ export class OrderService {
   constructor(private http: HttpClient) {}
 
   getOrdersByUserId(userId: number): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.apiUrl}/user/${userId}`);
+    return this.http
+      .get<ApiResponse<Order[]> | Order[]>(`${this.apiUrl}/user/${userId}`)
+      .pipe(map(unwrapApiResponse));
   }
+
   getPendingOrders(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/admin/pending`);
+    return this.http
+      .get<ApiResponse<any> | any>(`${this.apiUrl}/admin/pending`)
+      .pipe(map(unwrapApiResponse));
   }
 
   // Giữ nguyên tên hàm này
@@ -37,7 +44,9 @@ export class OrderService {
     });
   }
   getOrderHistory(orderId: number): Observable<OrderStatusHistory[]> {
-    return this.http.get<OrderStatusHistory[]>(`${this.apiUrl}/${orderId}/history`);
+    return this.http
+      .get<ApiResponse<OrderStatusHistory[]> | OrderStatusHistory[]>(`${this.apiUrl}/${orderId}/history`)
+      .pipe(map(unwrapApiResponse));
   }
   reviewOrder(orderId: number, approved: boolean, cancelReason: string = '', adminName?: string): Observable<any> {
     const payload = {

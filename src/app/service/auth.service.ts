@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { LoginRequest, LoginResponse } from '../model/user.model';
+import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -14,7 +16,8 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials).pipe(
+    return this.http.post<ApiResponse<LoginResponse> | LoginResponse>(`${this.apiUrl}/login`, credentials).pipe(
+      map(unwrapApiResponse),
       tap((res) => {
         localStorage.setItem('accessToken', res.accessToken);
         localStorage.setItem('user_id', res.user_id.toString());
@@ -24,7 +27,9 @@ export class AuthService {
   }
 
   register(userData: any): Observable<any> {
-    return this.http.post<any>(this.userUrl, userData);
+    return this.http
+      .post<ApiResponse<any> | any>(this.userUrl, userData)
+      .pipe(map(unwrapApiResponse));
   }
 
   logout() {
@@ -45,7 +50,6 @@ export class AuthService {
     return localStorage.getItem('accessToken');
   }
 
-  // 2. Giải mã Token để lấy Payload chứa thông tin User
   getDecodedToken(): any {
     const token = this.getToken();
     if (token) {
@@ -73,7 +77,7 @@ export class AuthService {
   // 4. Kiểm tra xem User có phải là Admin không
   isAdmin(): boolean {
     const role = this.getUserRole();
-    return role.toUpperCase() === 'ADMIN' || role.toUpperCase() === 'ROLE_ADMIN';
+    return role.toUpperCase() === 'ADMIN' || role.toUpperCase() === 'ROLE_ADMIN' || role.toUpperCase() === 'MANAGER' || role.toUpperCase() === 'ROLE_MANAGER';
   }
 
   // 5. Kiểm tra xem User đã đăng nhập chưa
