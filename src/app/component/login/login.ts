@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core'; // Thêm OnInit
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router'; // Thêm ActivatedRoute
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../service/auth.service';
+import { getApiErrorMessage } from '../../model/api-response.model';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './login.html',
+  styleUrl: './login.css',
 })
 export class LoginComponent implements OnInit {
   isLoginMode = true;
@@ -21,10 +23,11 @@ export class LoginComponent implements OnInit {
     confirmPassword: '',
     firstname: '',
     lastname: '',
-    gender: 'Nam',
+    gender: 'male',
     phone: '',
     birth: '',
-    address: ''
+    address: '',
+    email: ''
   };
 
   constructor(
@@ -50,7 +53,12 @@ export class LoginComponent implements OnInit {
     this.router.navigate([], { queryParams: {} });
   }
 
-  handleLogin() {
+  handleLogin(form?: NgForm) {
+    if (form?.invalid) {
+      form.control.markAllAsTouched();
+      return;
+    }
+
     if (!this.loginData.username || !this.loginData.password) {
       alert('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!');
       return;
@@ -61,7 +69,12 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  handleRegister() {
+  handleRegister(form?: NgForm) {
+    if (form?.invalid) {
+      form.control.markAllAsTouched();
+      return;
+    }
+
     if (this.registerData.password !== this.registerData.confirmPassword) {
       alert('Mật khẩu xác nhận không khớp!');
       return;
@@ -80,6 +93,7 @@ export class LoginComponent implements OnInit {
       phone: this.registerData.phone,
       birth: this.registerData.birth,
       address: this.registerData.address,
+      email: this.registerData.email,
       role: 'USER'
     };
 
@@ -92,7 +106,7 @@ export class LoginComponent implements OnInit {
         this.router.navigate([], { queryParams: {} }); // Xóa param signup trên url
       },
       error: (err) => {
-        alert('Đăng ký thất bại: ' + (err.error?.message || 'Tên đăng nhập hoặc SĐT có thể đã tồn tại.'));
+        alert('Đăng ký thất bại: ' + getApiErrorMessage(err, 'Tên đăng nhập hoặc SĐT có thể đã tồn tại.'));
       }
     });
   }

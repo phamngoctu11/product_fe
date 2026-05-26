@@ -19,3 +19,18 @@ export function unwrapApiResponse<T>(response: ApiResponse<T> | T): T {
 
   return response as T;
 }
+
+export function getApiErrorMessage(error: any, fallback: string = 'Đã xảy ra lỗi.'): string {
+  const rawError = error?.error ?? error;
+
+  if (typeof rawError === 'string') {
+    try {
+      const parsed = JSON.parse(rawError);
+      return parsed?.message || fallback;
+    } catch {
+      return rawError || fallback;
+    }
+  }
+
+  return rawError?.message || error?.message || fallback;
+}

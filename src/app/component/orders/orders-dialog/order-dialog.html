@@ -49,7 +49,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of order.items">
+            <tr *ngFor="let item of getOrderItems(order)">
               <td class="ps-4">
                 <div class="d-flex align-items-center">
                   <div class="rounded d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden bg-light"
@@ -63,13 +63,18 @@
               <td class="text-center fw-bold text-dark">{{ item.quantity }}</td>
               <td class="text-end fw-bold text-dark pe-4">{{ item.quantity * item.price | number: '1.0-0' }} đ</td>
             </tr>
+            <tr *ngIf="getOrderItems(order).length === 0">
+              <td colspan="3" class="text-center text-muted fst-italic py-4">
+                Chưa có dữ liệu chi tiết sản phẩm cho đơn hàng này.
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
       <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center">
          <span class="text-muted fw-medium ms-2">Tổng thanh toán:</span>
-         <span class="text-danger fw-bold fs-5 me-2">{{ order.finalPrice | number: '1.0-0' }} đ</span>
+         <span class="text-danger fw-bold fs-5 me-2">{{ getOrderFinalPrice(order) | number: '1.0-0' }} đ</span>
       </div>
     </div>
   </mat-dialog-content>

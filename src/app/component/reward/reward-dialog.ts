@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { VoucherTemplate, UserVoucher } from '../../model/voucher.model';
 import { UserService } from '../../service/user.service';
 import { VoucherService } from '../../service/voucher.service';
+import { getApiErrorMessage } from '../../model/api-response.model';
 
 @Component({
   selector: 'app-reward-dialog',
@@ -73,7 +74,7 @@ isExpiringSoon(dateString: string): boolean {
           alert(res);
           this.loadData(); // Tải lại dữ liệu ngay lập tức
         },
-        error: (err) => alert(err.error || 'Lỗi không thể đổi mã')
+        error: (err) => alert(getApiErrorMessage(err, 'Lỗi không thể đổi mã'))
       });
     }
   }

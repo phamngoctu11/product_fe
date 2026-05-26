@@ -1,12 +1,3 @@
-<style>
-  .upload-box { border: 2px dashed #dee2e6 !important; border-radius: 50%; transition: all 0.3s ease; background-color: #f8f9fa; cursor: pointer; }
-  .upload-box:hover { border-color: #0d6efd !important; background-color: #f1f7ff; }
-  .form-control-custom { border-radius: 0.75rem; padding: 0.6rem 1rem; border: 1px solid #e9ecef; background-color: #f8f9fa; transition: all 0.2s; }
-  .form-control-custom:focus { background-color: #fff; border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
-  .form-control-custom:disabled { background-color: #e9ecef; opacity: 1; }
-  .section-card { border-radius: 1.25rem; border: none; background-color: #fff; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); margin-bottom: 1.5rem; }
-</style>
-
 <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
   <div class="modal-header text-white border-0 p-4" [ngClass]="isView ? 'bg-info bg-gradient' : 'bg-primary bg-gradient'">
     <h5 class="modal-title m-0 fw-bold fs-4">
@@ -16,18 +7,19 @@
     <button mat-dialog-close type="button" class="btn-close btn-close-white"></button>
   </div>
 
-  <div class="modal-body p-4 bg-light" style="max-height: 75vh; overflow-y: auto;">
+  <form #userForm="ngForm" (ngSubmit)="saveUser(userForm)">
+  <div class="modal-body p-4 bg-light modal-scroll">
 
     <!-- Avatar Section -->
     <div class="card section-card">
       <div class="card-body p-4">
         <div class="row align-items-center">
           <div class="col-md-3 text-center">
-            <label class="upload-box d-flex justify-content-center align-items-center shadow-sm overflow-hidden mx-auto mb-3 mb-md-0"
-                   style="width: 120px; height: 120px;" [title]="!isView && !isUploadingAvatar ? 'Nhấn để đổi ảnh' : ''">
+            <label class="upload-box avatar-upload d-flex justify-content-center align-items-center shadow-sm overflow-hidden mx-auto mb-3 mb-md-0"
+                   [title]="!isView && !isUploadingAvatar ? 'Nhấn để đổi ảnh' : ''">
               <div *ngIf="isUploadingAvatar" class="spinner-border text-primary" role="status"></div>
-              <i *ngIf="!uploadedAvatarUrl && !isUploadingAvatar" class="bi bi-person text-muted opacity-50" style="font-size: 3.5rem;"></i>
-              <img *ngIf="uploadedAvatarUrl && !isUploadingAvatar" [src]="uploadedAvatarUrl" style="width: 100%; height: 100%; object-fit: cover;">
+              <i *ngIf="!uploadedAvatarUrl && !isUploadingAvatar" class="bi bi-person text-muted opacity-50 avatar-placeholder"></i>
+              <img *ngIf="uploadedAvatarUrl && !isUploadingAvatar" [src]="uploadedAvatarUrl" class="avatar-preview">
               <input *ngIf="!isView" type="file" class="d-none" (change)="onAvatarSelected($event)" accept="image/*" [disabled]="isUploadingAvatar">
             </label>
           </div>
@@ -51,27 +43,47 @@
 
         <div class="row g-4">
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Tên đăng nhập</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Tên đăng nhập</label>
             <div class="input-group shadow-sm rounded-pill overflow-hidden border">
               <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-person"></i></span>
               <input type="text" class="form-control border-0 ps-0 shadow-none bg-white fw-bold text-primary"
-                     [(ngModel)]="currentUser.username" [disabled]="isEdit || isView" placeholder="Nhập tên đăng nhập..." />
+                     name="username"
+                     #username="ngModel"
+                     [(ngModel)]="currentUser.username"
+                     [disabled]="isEdit || isView"
+                     required
+                     minlength="3"
+                     maxlength="50"
+                     placeholder="Nhập tên đăng nhập..." />
+            </div>
+            <div class="text-danger small mt-1" *ngIf="username.invalid && username.touched">
+              Tên đăng nhập là bắt buộc, dài từ 3 đến 50 ký tự.
             </div>
           </div>
 
           @if (!isEdit && !isView) {
             <div class="col-md-6">
-              <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Mật khẩu</label>
+              <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Mật khẩu</label>
               <div class="input-group shadow-sm rounded-pill overflow-hidden border">
                 <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-key"></i></span>
-                <input type="password" class="form-control border-0 ps-0 shadow-none bg-white" [(ngModel)]="currentUser.password" placeholder="Tạo mật khẩu..." />
+                <input type="password" class="form-control border-0 ps-0 shadow-none bg-white"
+                       name="password"
+                       #password="ngModel"
+                       [(ngModel)]="currentUser.password"
+                       required
+                       minlength="6"
+                       maxlength="100"
+                       placeholder="Tạo mật khẩu..." />
+              </div>
+              <div class="text-danger small mt-1" *ngIf="password.invalid && password.touched">
+                Mật khẩu là bắt buộc, dài từ 6 đến 100 ký tự.
               </div>
             </div>
           }
 
           <div class="col-md-6" *ngIf="isEdit || isView || (!isEdit && !isView)">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Vai trò</label>
-            <select class="form-select form-control-custom shadow-sm" [(ngModel)]="currentUser.role" [disabled]="isView">
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Vai trò</label>
+            <select class="form-select form-control-custom shadow-sm" name="role" [(ngModel)]="currentUser.role" [disabled]="isView">
               <option value="USER">Người dùng (USER)</option>
               <option value="ADMIN">Quản trị (ADMIN)</option>
               <option value="MANAGER">Chủ shop (MANAGER)</option>
@@ -91,48 +103,86 @@
 
         <div class="row g-4">
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Họ (Lastname)</label>
-            <input type="text" class="form-control form-control-custom shadow-sm" [(ngModel)]="currentUser.lastname" [disabled]="isView" placeholder="VD: Nguyễn Văn" />
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Họ (Lastname)</label>
+            <input type="text" class="form-control form-control-custom shadow-sm"
+                   name="lastname"
+                   #lastname="ngModel"
+                   [(ngModel)]="currentUser.lastname"
+                   [disabled]="isView"
+                   required
+                   placeholder="VD: Nguyễn Văn" />
+            <div class="text-danger small mt-1" *ngIf="lastname.invalid && lastname.touched">Lastname là bắt buộc.</div>
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Tên (Firstname)</label>
-            <input type="text" class="form-control form-control-custom shadow-sm" [(ngModel)]="currentUser.firstname" [disabled]="isView" placeholder="VD: A" />
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Tên (Firstname)</label>
+            <input type="text" class="form-control form-control-custom shadow-sm"
+                   name="firstname"
+                   #firstname="ngModel"
+                   [(ngModel)]="currentUser.firstname"
+                   [disabled]="isView"
+                   required
+                   placeholder="VD: A" />
+            <div class="text-danger small mt-1" *ngIf="firstname.invalid && firstname.touched">Firstname là bắt buộc.</div>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Giới tính</label>
-            <select class="form-select form-control-custom shadow-sm" [(ngModel)]="currentUser.gender" [disabled]="isView">
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Giới tính</label>
+            <select class="form-select form-control-custom shadow-sm"
+                    name="gender"
+                    #gender="ngModel"
+                    [(ngModel)]="currentUser.gender"
+                    [disabled]="isView"
+                    required>
               <option value="male">Nam</option>
               <option value="female">Nữ</option>
             </select>
+            <div class="text-danger small mt-1" *ngIf="gender.invalid && gender.touched">Giới tính là bắt buộc.</div>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Ngày sinh</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Ngày sinh</label>
             <input type="date" class="form-control form-control-custom shadow-sm"
+                   name="birth"
                    [ngModel]="currentUser.birth | date: 'yyyy-MM-dd'"
                    (ngModelChange)="currentUser.birth = $event" [disabled]="isView" />
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Số điện thoại</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Số điện thoại</label>
             <div class="input-group shadow-sm rounded-pill overflow-hidden border">
               <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-telephone"></i></span>
-              <input type="text" class="form-control border-0 ps-0 shadow-none bg-white" [(ngModel)]="currentUser.phone" [disabled]="isView" placeholder="VD: 0987654321" />
+              <input type="text" class="form-control border-0 ps-0 shadow-none bg-white"
+                     name="phone"
+                     #phone="ngModel"
+                     [(ngModel)]="currentUser.phone"
+                     [disabled]="isView"
+                     required
+                     maxlength="20"
+                     placeholder="VD: 0987654321" />
+            </div>
+            <div class="text-danger small mt-1" *ngIf="phone.invalid && phone.touched">
+              Số điện thoại là bắt buộc và tối đa 20 ký tự.
             </div>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Email</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Email</label>
             <div class="input-group shadow-sm rounded-pill overflow-hidden border">
               <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-envelope"></i></span>
-              <input class="form-control border-0 ps-0 shadow-none bg-white" [(ngModel)]="currentUser.email" [disabled]="isView" placeholder="Nhập Email">
+              <input type="email" class="form-control border-0 ps-0 shadow-none bg-white"
+                     name="email"
+                     #email="ngModel"
+                     [(ngModel)]="currentUser.email"
+                     [disabled]="isView"
+                     email
+                     placeholder="Nhập Email">
             </div>
+            <div class="text-danger small mt-1" *ngIf="email.invalid && email.touched">Email không đúng định dạng.</div>
           </div>
 
           <div class="col-md-12">
-            <label class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.5px;">Địa chỉ</label>
-            <textarea class="form-control form-control-custom shadow-sm" rows="2" [(ngModel)]="currentUser.address" [disabled]="isView" placeholder="Nhập địa chỉ cụ thể..."></textarea>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Địa chỉ</label>
+            <textarea class="form-control form-control-custom shadow-sm" rows="2" name="address" [(ngModel)]="currentUser.address" [disabled]="isView" placeholder="Nhập địa chỉ cụ thể..."></textarea>
           </div>
         </div>
       </div>
@@ -141,13 +191,14 @@
   </div>
 
   <div class="modal-footer p-4 bg-white border-top">
-    <button class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm me-auto" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
+    <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm me-auto" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
 
     @if (!isView) {
-      <button class="btn btn-success rounded-pill px-5 fw-bold shadow-sm d-flex align-items-center" (click)="saveUser()">
+      <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm d-flex align-items-center" [disabled]="userForm.invalid || isUploadingAvatar">
         <i class="bi me-2 fs-5" [ngClass]="isEdit ? 'bi-check-circle' : 'bi-person-plus'"></i>
         {{ isEdit ? 'Lưu thay đổi' : 'Tạo mới' }}
       </button>
     }
   </div>
+  </form>
 </div>

@@ -5,6 +5,7 @@ import { AuthService } from '../../service/auth.service';
 import { UserService } from '../../service/user.service';
 import { Order, OrderStatusHistory } from '../../model/order.model';
 import { UserInforDTO } from '../../model/user.model';
+import { getApiErrorMessage } from '../../model/api-response.model';
 
 @Component({
   selector: 'app-orders',
@@ -47,7 +48,7 @@ isLoadingTimeline: boolean = false;
     this.orderService.getOrdersByUserId(this.userId).subscribe({
       next: (data: Order[]) => {
         this.orders = data;
-        this.activeOrders = data.filter(o => o.status === 'PENDING_WAREHOUSE' || o.status === 'SHIPPING');
+        this.activeOrders = data.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED');
         this.deliveredOrders = data.filter(o => o.status === 'DELIVERED');
         this.cancelledOrders = data.filter(o => o.status === 'CANCELLED');
 
@@ -79,6 +80,7 @@ isLoadingTimeline: boolean = false;
   }
 
   getStatusName(status: string): string {
+    if (status === 'PENDING_APPROVAL') return 'Chờ duyệt';
     const statusMap: { [key: string]: string } = {
       PENDING_WAREHOUSE: 'Đang xuất kho',
       SHIPPING: 'Đang giao',
@@ -86,6 +88,30 @@ isLoadingTimeline: boolean = false;
       CANCELLED: 'Đã hủy',
     };
     return statusMap[status] || status;
+  }
+
+  getStatusBadgeClass(status: string): string {
+    const statusClassMap: { [key: string]: string } = {
+      PENDING_APPROVAL: 'order-status-pending-approval',
+      PENDING_WAREHOUSE: 'order-status-warehouse',
+      SHIPPING: 'order-status-shipping',
+      DELIVERED: 'order-status-delivered',
+      CANCELLED: 'order-status-cancelled',
+    };
+
+    return statusClassMap[status] || 'order-status-default';
+  }
+
+  getStatusIcon(status: string): string {
+    const statusIconMap: { [key: string]: string } = {
+      PENDING_APPROVAL: 'bi-hourglass-split',
+      PENDING_WAREHOUSE: 'bi-box-seam',
+      SHIPPING: 'bi-truck',
+      DELIVERED: 'bi-check-circle-fill',
+      CANCELLED: 'bi-x-circle',
+    };
+
+    return statusIconMap[status] || 'bi-info-circle';
   }
 
   getNextStatus(currentStatus: string): string | null {
@@ -101,7 +127,7 @@ isLoadingTimeline: boolean = false;
           alert('Cập nhật trạng thái thành công!');
           this.loadMyOrders();
         },
-        error: (err) => alert('Lỗi: ' + (err.error || 'Không thể cập nhật trạng thái.'))
+        error: (err) => alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể cập nhật trạng thái.'))
       });
     }
   }
@@ -113,14 +139,42 @@ isLoadingTimeline: boolean = false;
     return 5;
   }
 
+  getOrderItems(order: Order): any[] {
+    return order.items || order.orderItems || order.details || [];
+  }
+
+  getOrderTotalPrice(order: Order): number {
+    return Number(order.totalPrice || 0);
+  }
+
+  getOrderDiscountAmount(order: Order): number {
+    return Number(order.discountAmount || 0);
+  }
+
+  getOrderFinalPrice(order: Order): number {
+    const finalPrice = Number(order.finalPrice);
+    if (!Number.isNaN(finalPrice) && finalPrice > 0) return finalPrice;
+
+    return Math.max(this.getOrderTotalPrice(order) - this.getOrderDiscountAmount(order), 0);
+  }
+
+  isOrderApproved(order: Order): boolean {
+    return order.status !== 'PENDING_APPROVAL' || !!order.approvedById || !!order.approvedByFullName;
+  }
+
+  canCancelOrder(order: Order): boolean {
+    return order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && !this.isOrderApproved(order);
+  }
+
   cancelOrder(order: Order): void {
-    if (order.status !== 'PENDING_WAREHOUSE') {
-      alert('Chỉ có thể hủy đơn hàng khi đang ở trạng thái Đang xuất kho!');
+    if (!this.canCancelOrder(order)) {
+      alert('Don hang da duoc manager duyet nen khong the huy.');
       return;
     }
 
     const currentRep = this.userInfo?.reputation ?? 'Đang tải...';
-    const deduction = this.calculateExpectedDeduction(order.totalPrice);
+    const orderTotalPrice = this.getOrderTotalPrice(order);
+    const deduction = this.calculateExpectedDeduction(orderTotalPrice);
     const reason = window.prompt('Vui lòng nhập lý do bạn muốn hủy đơn hàng:');
 
     if (reason === null) return;
@@ -129,7 +183,7 @@ isLoadingTimeline: boolean = false;
       return;
     }
 
-    const confirmMsg = `⚠️ CẢNH BÁO HỦY ĐƠN ⚠️\n\nGiá trị đơn: ${order.totalPrice.toLocaleString()} đ\nTrừ uy tín: -${deduction} điểm\nĐiểm hiện tại: ${currentRep}\nLý do: ${reason}\n\nBạn có chắc chắn muốn hủy?`;
+    const confirmMsg = `⚠️ CẢNH BÁO HỦY ĐƠN ⚠️\n\nGiá trị đơn: ${orderTotalPrice.toLocaleString()} đ\nTrừ uy tín: -${deduction} điểm\nĐiểm hiện tại: ${currentRep}\nLý do: ${reason}\n\nBạn có chắc chắn muốn hủy?`;
 
     if (window.confirm(confirmMsg)) {
       // Chỉ thay đổi dòng này để gọi API Cancel
@@ -139,7 +193,7 @@ isLoadingTimeline: boolean = false;
           this.loadMyOrders();
           this.loadUserInfo();
         },
-        error: (err) => alert('Không thể hủy đơn: ' + (err.error || err.message))
+        error: (err) => alert('Không thể hủy đơn: ' + getApiErrorMessage(err, 'Không thể hủy đơn.'))
       });
     }
   }
@@ -157,7 +211,7 @@ isLoadingTimeline: boolean = false;
         const initialStep: OrderStatusHistory = {
           id: 0,
           oldstatus: '', // Trạng thái ban đầu nên không có oldstatus
-          newstatus: 'PENDING_WAREHOUSE',
+          newstatus: 'PENDING_APPROVAL',
           updatetime: order?.startOrderTime || new Date().toISOString(),
           changerId: 1 // Hoặc 'HỆ THỐNG'
         };
@@ -168,9 +222,10 @@ isLoadingTimeline: boolean = false;
         this.isLoadingTimeline = false; // Tắt cờ loading khi đã có dữ liệu
       },
       error: (err) => {
-        alert('Không thể tải lịch sử đơn hàng: ' + err.message);
+        alert('Không thể tải lịch sử đơn hàng: ' + getApiErrorMessage(err, 'Không thể tải lịch sử đơn hàng.'));
         this.isLoadingTimeline = false; // Lỗi cũng phải tắt loading
       }
     });
   }
 }
+

@@ -1,0 +1,38 @@
+.admin-order-page {
+  animation: fadeIn 0.4s;
+}
+
+.hover-elevate {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-elevate:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.icon-shape {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.page-icon {
+  width: 56px;
+  height: 56px;
+}
+
+.table-custom th {
+  font-weight: 600;
+  color: #6c757d;
+  border-bottom-width: 1px;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.table-custom td {
+  vertical-align: middle;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}

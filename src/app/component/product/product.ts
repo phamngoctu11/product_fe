@@ -9,6 +9,7 @@ import { ProductDetailComponent } from './productdetail/product-detail';
 import { AddToCartModalComponent } from './add-to-cart-modal/add-to-cart-modal';
 import { Product } from '../../model/product.model';
 import { Subscription } from 'rxjs';
+import { getApiErrorMessage } from '../../model/api-response.model';
 
 @Component({
   selector: 'app-product',
@@ -135,14 +136,15 @@ export class ProductComponent implements OnInit, OnDestroy {
   onAddToCart(variantId: number, quantity: number) {
     this.cartService.addToCart(this.currentUserId, variantId, quantity).subscribe({
       next: () => alert('Đã thêm vào giỏ hàng thành công!'),
-      error: (err) => alert('Lỗi: ' + (err.error?.message || 'Không thể thêm'))
+      error: (err) => alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể thêm'))
     });
   }
 
   delete(item: Product) {
     if (!this.isAdmin) return;
+    if (!this.currentUserId) { alert('Không tìm thấy userId!'); return; }
     if (item.id && confirm('Xác nhận xóa sản phẩm?')) {
-      this.productService.delete(item.id).subscribe({
+      this.productService.delete(item.id, this.currentUserId).subscribe({
         next: () => this.getAll(this.currentPage, this.pageSize),
         error: () => alert('Lỗi khi xóa!')
       });

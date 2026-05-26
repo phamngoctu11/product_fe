@@ -7,6 +7,7 @@ import { CartRes } from '../../model/cart.model';
 import { forkJoin, Observable, of } from 'rxjs';
 import { VoucherService } from '../../service/voucher.service';
 import { UserVoucher } from '../../model/voucher.model';
+import { getApiErrorMessage } from '../../model/api-response.model';
 
 @Component({
   selector: 'app-cart-modal',
@@ -175,14 +176,14 @@ export class CartModalComponent implements OnInit {
             }
           },
           error: (err: any) => {
-            const errorMsg = err.error?.message || err.error || err.message;
+            const errorMsg = getApiErrorMessage(err, 'Không thể thanh toán.');
             alert('Lỗi thanh toán: ' + errorMsg);
             this.isLoading = false;
           },
         });
       },
       error: (err: any) => {
-        alert('Lỗi cập nhật số lượng: ' + (err.error?.message || err.message));
+        alert('L?i c?p nh?t s? lu?ng: ' + getApiErrorMessage(err, 'Kh�ng th? c?p nh?t s? lu?ng.'));
         this.isLoading = false;
       }
     });

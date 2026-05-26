@@ -19,4 +19,23 @@ export class OrderDialogComponent implements OnInit {
   ngOnInit(): void {
     this.orderService.getOrdersByUserId(this.userId).subscribe((data) => (this.orders = data));
   }
+
+  getOrderItems(order: Order): any[] {
+    return order.items || order.orderItems || order.details || [];
+  }
+
+  getOrderTotalPrice(order: Order): number {
+    return Number(order.totalPrice || 0);
+  }
+
+  getOrderDiscountAmount(order: Order): number {
+    return Number(order.discountAmount || 0);
+  }
+
+  getOrderFinalPrice(order: Order): number {
+    const finalPrice = Number(order.finalPrice);
+    if (!Number.isNaN(finalPrice) && finalPrice > 0) return finalPrice;
+
+    return Math.max(this.getOrderTotalPrice(order) - this.getOrderDiscountAmount(order), 0);
+  }
 }

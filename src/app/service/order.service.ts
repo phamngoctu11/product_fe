@@ -48,13 +48,29 @@ export class OrderService {
       .get<ApiResponse<OrderStatusHistory[]> | OrderStatusHistory[]>(`${this.apiUrl}/${orderId}/history`)
       .pipe(map(unwrapApiResponse));
   }
-  reviewOrder(orderId: number, approved: boolean, cancelReason: string = '', adminName?: string): Observable<any> {
+  reviewOrder(orderId: number, approved: boolean, cancelReason: string = '', changerId: number): Observable<string> {
     const payload = {
       approved: approved,
       cancelReason: cancelReason,
-      changer: adminName
     };
+    const params = new HttpParams().set('changerId', changerId.toString());
 
-    return this.http.post(`${this.apiUrl}/admin/review-order/${orderId}`, payload, { responseType: 'text' as 'json' });
+    return this.http.post(`${this.apiUrl}/manager/review-order/${orderId}`, payload, {
+      params,
+      responseType: 'text' as 'json',
+    }).pipe(
+      map((response: any) => {
+        if (typeof response === 'string') {
+          try {
+            const parsed = JSON.parse(response);
+            return parsed.message || response;
+          } catch {
+            return response;
+          }
+        }
+
+        return response?.message || 'Thao tác thành công!';
+      }),
+    );
   }
 }

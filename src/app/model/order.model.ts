@@ -12,12 +12,16 @@ export interface OrderItem {
 
 export interface Order {
   id: number;
-  userId: number;
-  lastname: string;
-  items: OrderItem[];
+  userId?: number;
+  user_id?: number;
+  customerName?: string;
+  lastname?: string;
+  items?: OrderItem[];
+  orderItems?: OrderItem[];
+  details?: OrderItem[];
   totalPrice: number;
-  finalPrice: number;
-  discountAmount: number;
+  finalPrice?: number;
+  discountAmount?: number;
   voucherName?: string;
   startOrderTime: string;
   endOrderTime: string | null;
@@ -25,6 +29,8 @@ export interface Order {
   cancelReason: string | null;
   note: string | null;
   paymentMethod?: string; // Bổ sung thêm cho đầy đủ theo DTO
+  approvedById?: number | null;
+  approvedByFullName?: string | null;
 }
 
 export interface OrderStatusHistory {
@@ -40,3 +46,4 @@ export interface ItemCheckRequest {
   variantId: number;
   quantity: number;
 }
+

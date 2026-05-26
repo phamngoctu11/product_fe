@@ -1,12 +1,12 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Thêm DatePipe
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http'; // BẮT BUỘC THÊM HTTP CLIENT
 import { map } from 'rxjs/operators';
 import { UserService } from '../../service/user.service';
 import { UserCreDTO } from '../../model/user.model';
-import { ApiResponse, unwrapApiResponse } from '../../model/api-response.model';
+import { ApiResponse, getApiErrorMessage, unwrapApiResponse } from '../../model/api-response.model';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -14,6 +14,7 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './userdetail.html',
+  styleUrl: './userdetail.css',
   providers: [DatePipe], // Khai báo DatePipe
 })
 export class Userdetail implements OnInit {
@@ -84,7 +85,12 @@ export class Userdetail implements OnInit {
     }
   }
 
-  saveUser() {
+  saveUser(form?: NgForm) {
+    if (form?.invalid) {
+      form.control.markAllAsTouched();
+      alert('Vui lòng kiểm tra lại các trường bắt buộc trước khi lưu.');
+      return;
+    }
 
     const payload = { ...this.currentUser };
 
@@ -105,7 +111,7 @@ export class Userdetail implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          alert('Lỗi cập nhật: ' + (err.error?.message || 'Lỗi không xác định'));
+          alert('Lỗi cập nhật: ' + getApiErrorMessage(err, 'Lỗi không xác định'));
         },
       });
     } else {
@@ -116,7 +122,7 @@ export class Userdetail implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          alert('Lỗi tạo mới: ' + (err.error?.message || 'Lỗi không xác định'));
+          alert('Lỗi tạo mới: ' + getApiErrorMessage(err, 'Lỗi không xác định'));
         },
       });
     }

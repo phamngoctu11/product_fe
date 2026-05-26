@@ -1,0 +1,63 @@
+.auth-page {
+  animation: fadeIn 0.5s;
+}
+
+.auth-card {
+  border-radius: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card:hover {
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.auth-icon {
+  width: 70px;
+  height: 70px;
+}
+
+.form-control-custom {
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s;
+}
+
+.form-control-custom:focus {
+  background-color: #fff;
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-custom {
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+}
+
+.input-group-text-custom {
+  border-radius: 0.75rem 0 0 0.75rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-right: none;
+  color: #6c757d;
+}
+
+.form-control-custom-group {
+  border-radius: 0 0.75rem 0.75rem 0;
+  border-left: none;
+  padding-left: 0;
+}
+
+.form-control-custom-group:focus {
+  border-color: #e9ecef;
+  box-shadow: none;
+  background-color: #f8f9fa;
+}
+
+.auth-link {
+  transition: color 0.2s;
+}

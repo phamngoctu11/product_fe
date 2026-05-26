@@ -15,6 +15,7 @@ import { environment } from '../../../../environments/environment';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule],
   templateUrl: './product-detail.html',
+  styleUrl: './product-detail.css',
 })
 export class ProductDetailComponent implements OnInit {
   productForm: FormGroup;
@@ -55,7 +56,7 @@ export class ProductDetailComponent implements OnInit {
     this.availableTags = data.availableTags || [];
     this.productForm = this.fb.group({
       id: [null],
-      product_name: ['', [Validators.required, Validators.minLength(5)]],
+      product_name: ['', [Validators.required]],
       price: [0, [Validators.required, Validators.min(0)]],
       tags: [''],
       image_url: [''],
@@ -97,7 +98,7 @@ export class ProductDetailComponent implements OnInit {
 
             this.variants.push(this.fb.group({
               id: [v.id], variantName: [v.variantName, Validators.required],
-              price: [v.price, Validators.required], quantity: [v.quantity, Validators.required],
+              price: [v.price, [Validators.required, Validators.min(0)]], quantity: [v.quantity, [Validators.required, Validators.min(0)]],
               image_url: [v.image_url || ''], dynamicAttributes: dynGroup
             }));
             this.isUploadingVariantImage.push(false);
@@ -231,20 +232,39 @@ export class ProductDetailComponent implements OnInit {
 
   getLabel(key: string): string { return this.attributeDictionary[key] || key; }
 
+  isInvalid(controlName: string): boolean {
+    const control = this.productForm.get(controlName);
+    return !!control && control.invalid && (control.dirty || control.touched);
+  }
+
+  isVariantInvalid(index: number, controlName: string): boolean {
+    const control = this.variants.at(index).get(controlName);
+    return !!control && control.invalid && (control.dirty || control.touched);
+  }
+
   addVariant() {
     if (this.isView) return;
     const dynGroup = this.fb.group({});
     this.dynamicFields.forEach(f => dynGroup.addControl(f, this.fb.control('')));
     this.variants.push(this.fb.group({
-      id: [null], variantName: ['', Validators.required], price: [this.productForm.value.price || 0, Validators.required],
-      quantity: [1, Validators.min(1)], image_url: [''], dynamicAttributes: dynGroup
+      id: [null], variantName: ['', Validators.required], price: [this.productForm.value.price || 0, [Validators.required, Validators.min(0)]],
+      quantity: [1, [Validators.required, Validators.min(0)]], image_url: [''], dynamicAttributes: dynGroup
     }));
     this.isUploadingVariantImage.push(false);
   }
   removeVariant(index: number) { if (this.isView) return; this.variants.removeAt(index); this.isUploadingVariantImage.splice(index, 1); }
 
   save() {
-    if (this.productForm.invalid || this.isView) return;
+    const userId = this.authService.getUserId();
+
+    if (this.productForm.invalid || this.isView) {
+      this.productForm.markAllAsTouched();
+      return;
+    }
+    if (!userId) {
+      alert('Không tìm thấy userId!');
+      return;
+    }
     const payload = JSON.parse(JSON.stringify(this.productForm.getRawValue()));
 
     payload.variants = payload.variants.map((v: any) => {
@@ -253,7 +273,7 @@ export class ProductDetailComponent implements OnInit {
       v.attributes = JSON.stringify(attrs); delete v.dynamicAttributes; return v;
     });
 
-    const request = this.isEdit ? this.productService.update(payload.id, payload) : this.productService.create(payload);
+    const request = this.isEdit ? this.productService.update(payload.id, payload, userId) : this.productService.create(payload, userId);
     request.subscribe({
       next: () => { alert(this.isEdit ? 'Cập nhật thành công!' : 'Thêm mới thành công!'); this.dialogRef.close(true); },
       error: () => alert('Đã xảy ra lỗi!')

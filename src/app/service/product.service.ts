@@ -13,9 +13,10 @@ export class ProductService {
   private apiUrl = `${environment.apiUrl}/products`;
   constructor(private http: HttpClient) {}
 
-  create(product: Product): Observable<Product> {
+  create(product: Product, userId: number): Observable<Product> {
+    const params = new HttpParams().set('userId', userId.toString());
     return this.http
-      .post<ApiResponse<Product> | Product>(this.apiUrl, product)
+      .post<ApiResponse<Product> | Product>(this.apiUrl, product, { params })
       .pipe(map(unwrapApiResponse));
   }
 
@@ -26,9 +27,10 @@ export class ProductService {
       .pipe(map(unwrapApiResponse));
   }
 
-  update(id: number, product: Product): Observable<Product> {
+  update(id: number, product: Product, userId: number): Observable<Product> {
+    const params = new HttpParams().set('userId', userId.toString());
     return this.http
-      .put<ApiResponse<Product> | Product>(`${this.apiUrl}/${id}`, product)
+      .put<ApiResponse<Product> | Product>(`${this.apiUrl}/${id}`, product, { params })
       .pipe(map(unwrapApiResponse));
   }
 
@@ -37,7 +39,8 @@ export class ProductService {
       .get<ApiResponse<Product> | Product>(`${this.apiUrl}/${id}`)
       .pipe(map(unwrapApiResponse));
   }
-  delete(id: number): Observable<string> {
-    return this.http.delete<string>(`${this.apiUrl}/${id}`, { responseType: 'text' as 'json' });
+  delete(id: number, userId: number): Observable<string> {
+    const params = new HttpParams().set('userId', userId.toString());
+    return this.http.delete<string>(`${this.apiUrl}/${id}`, { params, responseType: 'text' as 'json' });
   }
 }

@@ -32,6 +32,13 @@
   .timeline-item.completed::before { background-color: #198754; }
   .timeline-item.cancelled::before { background-color: #dc3545; }
   .timeline-item.active::before { background-color: #0d6efd; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25); }
+  .order-status-badge { display: inline-flex; align-items: center; gap: 0.35rem; min-width: 148px; justify-content: center; border-radius: 999px; padding: 0.55rem 1rem; font-size: 0.95rem; font-weight: 700; border: 1px solid; }
+  .order-status-pending-approval { color: #b45309; background: #fffbeb; border-color: #f59e0b; }
+  .order-status-warehouse { color: #1d4ed8; background: #eff6ff; border-color: #60a5fa; }
+  .order-status-shipping { color: #0369a1; background: #f0f9ff; border-color: #38bdf8; }
+  .order-status-delivered { color: #047857; background: #ecfdf5; border-color: #10b981; }
+  .order-status-cancelled { color: #dc2626; background: #fef2f2; border-color: #f87171; }
+  .order-status-default { color: #4b5563; background: #f9fafb; border-color: #d1d5db; }
 </style>
 
 <div class="container mt-4 mb-5" style="animation: fadeIn 0.4s;">
@@ -76,19 +83,9 @@
       </div>
 
       <div class="text-end">
-        <span class="badge rounded-pill px-3 py-2 fs-6 mb-2 shadow-sm border"
-              [ngClass]="{
-                'bg-primary bg-opacity-10 text-primary border-primary border-opacity-25': order.status !== 'CANCELLED' && order.status !== 'DELIVERED',
-                'bg-success bg-opacity-10 text-success border-success border-opacity-25': order.status === 'DELIVERED',
-                'bg-danger bg-opacity-10 text-danger border-danger border-opacity-25': order.status === 'CANCELLED'
-              }">
-          <ng-container *ngIf="order.status === 'DELIVERED'">
-            <i class="bi bi-check-circle-fill me-1 text-success"></i><span class="text-dark">Đã giao</span>
-          </ng-container>
-          <ng-container *ngIf="order.status === 'CANCELLED'"><i class="bi bi-x-circle me-1"></i> Đã hủy</ng-container>
-          <ng-container *ngIf="order.status !== 'DELIVERED' && order.status !== 'CANCELLED'">
-             <i class="bi bi-box-seam me-1"></i> {{ getStatusName(order.status) || 'Đang xử lý' }}
-          </ng-container>
+        <span class="order-status-badge mb-2 shadow-sm" [ngClass]="getStatusBadgeClass(order.status)">
+          <i class="bi" [ngClass]="getStatusIcon(order.status)"></i>
+          {{ getStatusName(order.status) }}
         </span>
 
         <div class="d-flex gap-2 justify-content-end">
@@ -116,7 +113,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of order.items">
+            <tr *ngFor="let item of getOrderItems(order)">
               <td class="ps-4">
                 <div class="d-flex align-items-center">
                   <div class="rounded d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden"
@@ -131,6 +128,11 @@
               <td class="text-end text-muted">{{ item.price | number: '1.0-0' }} đ</td>
               <td class="text-end fw-bold text-dark pe-4">{{ item.quantity * item.price | number: '1.0-0' }} đ</td>
 
+            </tr>
+            <tr *ngIf="getOrderItems(order).length === 0">
+              <td colspan="4" class="text-center text-muted fst-italic py-4">
+                Chưa có dữ liệu chi tiết sản phẩm cho đơn hàng này.
+              </td>
             </tr>
           </tbody>
           <tfoot class="table-light">
@@ -151,9 +153,13 @@
     <div class="card-footer bg-white border-top-0 py-3">
       <div class="row align-items-center">
         <div class="col-md-6">
-          <ng-container *ngIf="order.status === 'PENDING_WAREHOUSE'">
-            <button class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm" (click)="cancelOrder(order)">
-              <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
+          <ng-container *ngIf="order.status !== 'DELIVERED' && order.status !== 'CANCELLED'">
+            <button
+              class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm"
+              (click)="cancelOrder(order)"
+              [disabled]="!canCancelOrder(order)"
+              [title]="canCancelOrder(order) ? 'Huy don hang' : 'Don hang da duoc manager duyet nen khong the huy'">
+              <i class="bi bi-x-circle me-1"></i> Huy don hang
             </button>
           </ng-container>
         </div>
@@ -161,17 +167,17 @@
           <div class="text-end" style="max-width: 320px; margin-left: auto;">
             <div class="d-flex justify-content-between mb-1 text-muted small">
               <span class="fw-medium">Tổng tiền hàng:</span>
-              <span>{{ order.totalPrice | number }} đ</span>
+              <span>{{ getOrderTotalPrice(order) | number }} đ</span>
             </div>
-            @if (order.voucherName && order.discountAmount > 0) {
+            @if (order.voucherName && getOrderDiscountAmount(order) > 0) {
               <div class="d-flex justify-content-between mb-2 text-success small">
                 <span class="fw-medium"><i class="bi bi-ticket-perforated me-1"></i> {{ order.voucherName }}:</span>
-                <span class="fw-bold">-{{ order.discountAmount | number }} đ</span>
+                <span class="fw-bold">-{{ getOrderDiscountAmount(order) | number }} đ</span>
               </div>
             }
             <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
               <span class="fw-bold text-dark h6 mb-0">Thành tiền:</span>
-              <span class="text-danger fw-bold fs-5">{{ order.finalPrice | number }} đ</span>
+              <span class="text-danger fw-bold fs-5">{{ getOrderFinalPrice(order) | number }} đ</span>
             </div>
           </div>
         </div>
@@ -268,3 +274,5 @@
     </div>
   </div>
 </div>
+
+
