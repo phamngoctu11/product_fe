@@ -63,7 +63,8 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.chatService.getChatHistory(user.id).subscribe({
       next: (res) => {
         // 🚨 GIẢI MÃ DỮ LIỆU KHI TẢI LỊCH SỬ
-        this.messages = res.map(msg => {
+        this.messages = res.map(message => {
+          const msg = this.normalizeMessage(message);
           if (msg.messageType === 'PRODUCT' && msg.content) {
             try {
               msg.productData = JSON.parse(msg.content);
@@ -87,7 +88,7 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
       this.stompClient.connect({}, () => {
         this.stompClient.subscribe('/topic/chat/admin', (msg: any) => {
-          const receivedMessage: ChatMessage = JSON.parse(msg.body);
+          const receivedMessage: ChatMessage = this.normalizeMessage(JSON.parse(msg.body));
 
           // 🚨 GIẢI MÃ DỮ LIỆU KHI NHẬN TIN NHẮN MỚI
           if (receivedMessage.messageType === 'PRODUCT' && receivedMessage.content) {
@@ -126,9 +127,12 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     const chatMsg: ChatMessage = {
       userId: this.selectedUser.id,
-      content: this.newMessage,
+      content: this.newMessage.trim(),
       isShopSender: true,
-      messageType: 'TEXT' // Mặc định Admin gõ phím là TEXT
+      shopSender: true,
+      adminSender: true,
+      messageType: 'TEXT', // Mặc định Admin gõ phím là TEXT
+      timestamp: new Date().toISOString()
     };
 
     this.stompClient.send('/app/chat.send', {}, JSON.stringify(chatMsg));
@@ -145,5 +149,13 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     } catch (error) {
       console.warn('Lỗi khi cuộn khung chat:', error);
     }
+  }
+
+  private normalizeMessage(message: ChatMessage): ChatMessage {
+    const rawMessage = message as ChatMessage & { shopSender?: boolean; adminSender?: boolean };
+    return {
+      ...message,
+      isShopSender: rawMessage.isShopSender ?? rawMessage.shopSender ?? rawMessage.adminSender ?? false,
+    };
   }
 }

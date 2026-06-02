@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Order } from '../../model/order.model';
+import { UserResListDTO } from '../../model/user.model';
 import { OrderService } from '../../service/order.service';
+import { UserService } from '../../service/user.service';
 import { getApiErrorMessage } from '../../model/api-response.model';
 
 @Component({
@@ -12,79 +15,196 @@ import { getApiErrorMessage } from '../../model/api-response.model';
   styleUrl: './admin-order.component.css',
 })
 export class AdminOrderComponent implements OnInit {
-  pendingOrders: any[] = [];
+  pendingOrders: Order[] = [];
+  staffs: UserResListDTO[] = [];
+  selectedStaffByOrder: { [orderId: number]: number | null } = {};
+  activeStatus: 'PENDING_KCS' | 'PENDING_APPROVAL' | null = null;
   isLoading = false;
+  isLoadingMore = false;
+  currentPage = 0;
+  pageSize = 20;
+  totalPages = 0;
   userId: number | null = null;
 
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+    private userService: UserService
+  ) {}
 
   ngOnInit(): void {
     const storedUserId = localStorage.getItem('user_id');
     this.userId = storedUserId ? Number(storedUserId) : null;
+    this.loadStaffs();
+  }
 
+  selectStatus(status: 'PENDING_KCS' | 'PENDING_APPROVAL'): void {
+    if (this.activeStatus === status && this.pendingOrders.length > 0) return;
+
+    this.activeStatus = status;
     this.loadPendingOrders();
   }
 
   loadPendingOrders(): void {
+    if (!this.activeStatus) return;
+
     this.isLoading = true;
-    this.orderService.getPendingOrders().subscribe({
+    this.currentPage = 0;
+    this.orderService.getPendingOrders(this.activeStatus, this.currentPage, this.pageSize).subscribe({
       next: (res) => {
-        this.pendingOrders = res;
+        this.pendingOrders = res.content || [];
+        this.totalPages = res.totalPages || 0;
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Loi khi tai danh sach don hang', err);
+        console.error('Lỗi khi tải danh sách đơn hàng', err);
         this.isLoading = false;
       },
     });
   }
 
-  approveOrder(order: any): void {
-    if (!this.userId) {
-      alert('Khong tim thay nguoi duyet don. Vui long dang nhap lai.');
-      return;
-    }
+  loadMorePendingOrders(): void {
+    if (!this.activeStatus || this.isLoadingMore || this.currentPage + 1 >= this.totalPages) return;
 
-    if (confirm(`Ban co chac chan muon DUYET don hang #${order.id} khong?`)) {
-      this.isLoading = true;
-      this.orderService.reviewOrder(order.id, true, '', this.userId).subscribe({
-        next: () => {
-          alert('Duyet don hang thanh cong!');
-          this.loadPendingOrders();
-        },
-        error: (err) => {
-          alert('Loi: ' + getApiErrorMessage(err, 'Khong the thuc hien thao tac.'));
-          this.isLoading = false;
-        },
-      });
-    }
+    this.isLoadingMore = true;
+    this.orderService.getPendingOrders(this.activeStatus, this.currentPage + 1, this.pageSize).subscribe({
+      next: (res) => {
+        this.pendingOrders = [...this.pendingOrders, ...(res.content || [])];
+        this.currentPage = res.number ?? this.currentPage + 1;
+        this.totalPages = res.totalPages || 0;
+        this.isLoadingMore = false;
+      },
+      error: (err) => {
+        alert('Không thể tải thêm đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.isLoadingMore = false;
+      },
+    });
   }
 
-  rejectOrder(orderId: number): void {
+  hasMoreOrders(): boolean {
+    return this.currentPage + 1 < this.totalPages;
+  }
+
+  getActivePanelTitle(): string {
+    return this.activeStatus === 'PENDING_KCS' ? 'Đơn chờ KCS' : 'Đơn chờ duyệt';
+  }
+
+  loadStaffs(): void {
+    this.userService.getAll(0, 100).subscribe({
+      next: (page) => {
+        this.staffs = (page.content || []).filter((user) => {
+          const role = (user.role || '').toUpperCase();
+          return role === 'STAFF' || role === 'ROLE_STAFF';
+        });
+      },
+      error: (err) => console.error('Lỗi khi tải danh sách staff', err),
+    });
+  }
+
+  approveOrder(order: Order): void {
     if (!this.userId) {
-      alert('Khong tim thay nguoi duyet don. Vui long dang nhap lai.');
+      alert('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
       return;
     }
 
-    const reason = prompt(`Nhap ly do TU CHOI don hang #${orderId}:`);
+    const staffId = this.selectedStaffByOrder[order.id] || undefined;
+    const confirmMessage = staffId
+      ? `Duyệt đơn hàng #${order.id} và gán cho staff đã chọn?`
+      : `Duyệt đơn hàng #${order.id} không gán staff ngay?`;
 
-    if (reason !== null) {
-      if (reason.trim() === '') {
-        alert('Vui long nhap ly do tu choi de thong bao cho khach hang!');
-        return;
-      }
+    if (!confirm(confirmMessage)) return;
 
-      this.isLoading = true;
-      this.orderService.reviewOrder(orderId, false, reason.trim(), this.userId).subscribe({
-        next: () => {
-          alert('Da tu choi don hang thanh cong!');
-          this.loadPendingOrders();
-        },
-        error: (err) => {
-          alert('Loi: ' + getApiErrorMessage(err, 'Khong the thuc hien thao tac.'));
-          this.isLoading = false;
-        },
-      });
+    this.isLoading = true;
+    this.orderService.reviewOrder(order.id, true, '', this.userId, staffId).subscribe({
+      next: (message) => {
+        alert(message || 'Duyệt đơn hàng thành công!');
+        this.loadPendingOrders();
+      },
+      error: (err) => {
+        alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể duyệt đơn hàng.'));
+        this.isLoading = false;
+      },
+    });
+  }
+
+  rejectOrder(order: Order): void {
+    if (!this.userId) {
+      alert('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
+      return;
     }
+
+    const reason = prompt(`Nhập lý do TỪ CHỐI đơn hàng #${order.id}:`);
+    if (reason === null) return;
+    if (reason.trim() === '') {
+      alert('Vui lòng nhập lý do từ chối để thông báo cho khách hàng!');
+      return;
+    }
+
+    this.isLoading = true;
+    this.orderService.reviewOrder(order.id, false, reason.trim(), this.userId).subscribe({
+      next: (message) => {
+        alert(message || 'Đã từ chối đơn hàng thành công!');
+        this.loadPendingOrders();
+      },
+      error: (err) => {
+        alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể từ chối đơn hàng.'));
+        this.isLoading = false;
+      },
+    });
+  }
+
+  assignStaff(order: Order): void {
+    const staffId = this.selectedStaffByOrder[order.id];
+    if (!staffId) {
+      alert('Vui lòng chọn staff trước khi gán đơn.');
+      return;
+    }
+
+    if (!confirm(`Gán đơn hàng #${order.id} cho staff đã chọn?`)) return;
+
+    this.isLoading = true;
+    this.orderService.assignStaff(order.id, staffId).subscribe({
+      next: (message) => {
+        alert(message || 'Gán staff thành công!');
+        this.loadPendingOrders();
+      },
+      error: (err) => {
+        alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể gán staff.'));
+        this.isLoading = false;
+      },
+    });
+  }
+
+  kcsCheck(order: Order, isPassed: boolean): void {
+    const action = isPassed ? 'duyệt KCS đạt' : 'trả về staff để xuất lại';
+    if (!confirm(`Bạn có chắc chắn muốn ${action} cho đơn hàng #${order.id}?`)) return;
+
+    this.isLoading = true;
+    this.orderService.kcsCheck(order.id, isPassed).subscribe({
+      next: (message) => {
+        alert(message);
+        this.loadPendingOrders();
+      },
+      error: (err) => {
+        alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể xử lý KCS.'));
+        this.isLoading = false;
+      },
+    });
+  }
+
+  getStatusName(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      PENDING_APPROVAL: 'Chờ duyệt',
+      PENDING_WAREHOUSE: 'Chờ gán/nhận kho',
+      WAREHOUSE_ASSIGNED: 'Đã gán staff',
+      PENDING_KCS: 'Chờ KCS',
+      SHIPPING: 'Đang giao',
+      CANCELLED: 'Đã hủy',
+    };
+
+    return statusMap[status] || status;
+  }
+
+  getOrderTotal(order: Order): number {
+    return Number(order.finalPrice || order.totalPrice || 0);
   }
 }

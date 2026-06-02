@@ -27,6 +27,10 @@
         <i class="bi bi-clipboard-check me-3 fs-5 align-middle"></i> Duyệt Đơn hàng
       </a>
 
+      <a *ngIf="authService.isStaff()" routerLink="staff-orders" routerLinkActive="bg-primary bg-opacity-10 text-primary fw-bold" class="list-group-item list-group-item-action border-0 rounded-3 text-secondary fw-medium py-3 custom-sidebar-link">
+        <i class="bi bi-box-seam-fill me-3 fs-5 align-middle"></i> Kho hàng
+      </a>
+
       <a routerLink="orders" routerLinkActive="bg-primary bg-opacity-10 text-primary fw-bold" class="list-group-item list-group-item-action border-0 rounded-3 text-secondary fw-medium py-3 custom-sidebar-link">
         <i class="bi bi-receipt me-3 fs-5 align-middle"></i> Đơn hàng của tôi
       </a>

@@ -5,7 +5,7 @@
   @keyframes slideUpChat { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   .chat-btn-float { background: linear-gradient(135deg, #0d6efd, #0b5ed7); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   .chat-btn-float:hover { transform: scale(1.1); box-shadow: 0 1rem 3rem rgba(13,110,253,0.4)!important; }
-  .message-bubble-widget { max-width: 85%; border-radius: 1.25rem; font-size: 0.9rem; line-height: 1.4; transition: transform 0.2s; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.04); }
+  .message-bubble-widget { display: inline-block; width: fit-content; max-width: 85%; min-width: 44px; border-radius: 1.25rem; font-size: 0.9rem; line-height: 1.4; transition: transform 0.2s; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.04); white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; }
   .message-bubble-widget:hover { transform: translateY(-1px); }
   .msg-client { border-bottom-right-radius: 0.25rem; background: linear-gradient(135deg, #0d6efd, #0b5ed7); color: white; border: none; }
   .msg-admin { border-bottom-left-radius: 0.25rem; background-color: #ffffff; border: 1px solid #e9ecef; color: #212529; }
@@ -44,7 +44,7 @@
         </span>
 
         <div *ngIf="!msg.messageType || msg.messageType === 'TEXT'"
-             class="px-3 py-2 text-break message-bubble-widget"
+             class="px-3 py-2 message-bubble-widget"
              [ngClass]="msg.isShopSender ? 'msg-admin' : 'msg-client'">
           {{ msg.content }}
         </div>

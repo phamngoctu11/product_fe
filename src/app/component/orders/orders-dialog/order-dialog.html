@@ -3,18 +3,24 @@
   .hover-elevate:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
   .table-custom th { font-weight: 600; color: #6c757d; border-bottom-width: 1px; padding-top: 1rem; padding-bottom: 1rem; }
   .table-custom td { vertical-align: middle; padding-top: 1rem; padding-bottom: 1rem; }
+  .order-dialog-title { min-width: 0; overflow-wrap: break-word; word-break: normal; }
 </style>
 
 <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
   <div class="modal-header bg-primary bg-gradient text-white border-0 p-4">
-    <h5 mat-dialog-title class="modal-title fw-bold m-0 fs-4">
+    <h5 mat-dialog-title class="modal-title fw-bold m-0 fs-4 order-dialog-title">
       <i class="bi bi-receipt-cutoff me-2"></i>Lịch sử đơn hàng của người dùng
     </h5>
     <button mat-dialog-close type="button" class="btn-close btn-close-white"></button>
   </div>
 
   <mat-dialog-content class="p-4 bg-light" style="max-height: 70vh; overflow-y: auto;">
-    <div *ngIf="orders.length === 0" class="text-center py-5 text-muted bg-white rounded-4 shadow-sm border">
+    <div *ngIf="isLoading" class="text-center py-5 text-muted bg-white rounded-4 shadow-sm border">
+      <div class="spinner-border text-primary mb-3" role="status"></div>
+      <p class="fw-medium">Đang tải đơn hàng...</p>
+    </div>
+
+    <div *ngIf="!isLoading && orders.length === 0" class="text-center py-5 text-muted bg-white rounded-4 shadow-sm border">
       <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
       <p class="fw-medium">Người dùng này chưa có đơn hàng nào.</p>
     </div>
@@ -73,9 +79,16 @@
       </div>
 
       <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center">
-         <span class="text-muted fw-medium ms-2">Tổng thanh toán:</span>
-         <span class="text-danger fw-bold fs-5 me-2">{{ getOrderFinalPrice(order) | number: '1.0-0' }} đ</span>
+        <span class="text-muted fw-medium ms-2">Tổng thanh toán:</span>
+        <span class="text-danger fw-bold fs-5 me-2">{{ getOrderFinalPrice(order) | number: '1.0-0' }} đ</span>
       </div>
+    </div>
+
+    <div *ngIf="hasMoreOrders()" class="text-center py-3">
+      <button class="btn btn-outline-primary rounded-pill px-4 fw-bold" (click)="loadMoreOrders()" [disabled]="isLoadingMore">
+        <span *ngIf="!isLoadingMore">Tải thêm đơn hàng</span>
+        <span *ngIf="isLoadingMore">Đang tải...</span>
+      </button>
     </div>
   </mat-dialog-content>
 

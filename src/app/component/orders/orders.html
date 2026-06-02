@@ -1,34 +1,11 @@
 <style>
   .hover-elevate { transition: transform 0.3s ease, box-shadow 0.3s ease; }
   .hover-elevate:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
-
-  /* Timeline Styles */
   .timeline { list-style: none; padding: 0; position: relative; }
-  .timeline::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 12px;
-    width: 4px;
-    background: #e9ecef;
-    border-radius: 2px;
-  }
+  .timeline::before { content: ''; position: absolute; top: 0; bottom: 0; left: 12px; width: 4px; background: #e9ecef; border-radius: 2px; }
   .timeline-item { position: relative; margin-bottom: 30px; padding-left: 40px; }
   .timeline-item:last-child { margin-bottom: 0; }
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: 4px;
-    top: 4px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background-color: #adb5bd;
-    border: 4px solid #f8f9fa;
-    z-index: 1;
-    transition: all 0.3s ease;
-  }
+  .timeline-item::before { content: ''; position: absolute; left: 4px; top: 4px; width: 18px; height: 18px; border-radius: 50%; background-color: #adb5bd; border: 4px solid #f8f9fa; z-index: 1; transition: all 0.3s ease; }
   .timeline-item.completed::before { background-color: #198754; }
   .timeline-item.cancelled::before { background-color: #dc3545; }
   .timeline-item.active::before { background-color: #0d6efd; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25); }
@@ -47,7 +24,7 @@
       <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 56px; height: 56px;">
         <i class="bi bi-receipt-cutoff fs-3"></i>
       </div>
-      <h2 class="m-0 fw-bold text-dark">Lịch sử Đơn hàng</h2>
+      <h2 class="m-0 fw-bold text-dark">Lịch sử đơn hàng</h2>
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-outline-warning rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#reputationPolicyModal">
@@ -62,7 +39,12 @@
     </div>
   </div>
 
-  <div *ngIf="activeOrders.length === 0" class="card shadow-sm border-0 rounded-4 p-5 text-center text-muted">
+  <div *ngIf="isLoadingOrders" class="card shadow-sm border-0 rounded-4 p-5 text-center text-muted">
+    <div class="spinner-border text-primary mx-auto mb-3" role="status"></div>
+    Đang tải đơn hàng...
+  </div>
+
+  <div *ngIf="!isLoadingOrders && activeOrders.length === 0" class="card shadow-sm border-0 rounded-4 p-5 text-center text-muted">
     <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
     <h5 class="fw-bold">Không có đơn hàng</h5>
     <p class="mb-0">Bạn không có đơn hàng nào đang trong quá trình xử lý.</p>
@@ -71,15 +53,23 @@
   <div *ngFor="let order of activeOrders">
     <ng-container *ngTemplateOutlet="orderCardTemplate; context: { order: order }"></ng-container>
   </div>
+
+  <div *ngIf="hasMoreOrders()" class="text-center my-4">
+    <button class="btn btn-outline-primary rounded-pill px-4 fw-bold" (click)="loadMoreOrders()" [disabled]="isLoadingMoreOrders">
+      <span *ngIf="!isLoadingMoreOrders"><i class="bi bi-arrow-down-circle me-1"></i> Tải thêm đơn hàng</span>
+      <span *ngIf="isLoadingMoreOrders">Đang tải...</span>
+    </button>
+  </div>
 </div>
 
 <ng-template #orderCardTemplate let-order="order">
   <div class="card shadow-sm border-0 mb-4 rounded-4 hover-elevate overflow-hidden">
-
     <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-3 p-4">
       <div class="flex-grow-1">
         <span class="fw-bold text-dark fs-6">Mã đơn hàng: #{{ order.id }}</span>
-        <span class="text-muted small d-block mt-1"><i class="bi bi-calendar3 me-1"></i>Ngày đặt: {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}</span>
+        <span class="text-muted small d-block mt-1">
+          <i class="bi bi-calendar3 me-1"></i>Ngày đặt: {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
+        </span>
       </div>
 
       <div class="text-end">
@@ -116,18 +106,16 @@
             <tr *ngFor="let item of getOrderItems(order)">
               <td class="ps-4">
                 <div class="d-flex align-items-center">
-                  <div class="rounded d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden"
-                       style="width: 40px; height: 40px; background-color: #f8f9fa; flex-shrink: 0;">
+                  <div class="rounded d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden" style="width: 40px; height: 40px; background-color: #f8f9fa; flex-shrink: 0;">
                     <img *ngIf="item.image_url" [src]="item.image_url" style="width: 100%; height: 100%; object-fit: cover;">
                     <i *ngIf="!item.image_url" class="bi bi-box-seam text-secondary"></i>
                   </div>
-                  <span class="fw-semibold text-dark">{{ item.productName || 'Sản phẩm ID: ' + item.productId }}</span>
+                  <span class="fw-semibold text-dark">{{ item.variantName }}</span>
                 </div>
               </td>
               <td class="text-center fw-bold text-dark">{{ item.quantity }}</td>
               <td class="text-end text-muted">{{ item.price | number: '1.0-0' }} đ</td>
               <td class="text-end fw-bold text-dark pe-4">{{ item.quantity * item.price | number: '1.0-0' }} đ</td>
-
             </tr>
             <tr *ngIf="getOrderItems(order).length === 0">
               <td colspan="4" class="text-center text-muted fst-italic py-4">
@@ -154,12 +142,11 @@
       <div class="row align-items-center">
         <div class="col-md-6">
           <ng-container *ngIf="order.status !== 'DELIVERED' && order.status !== 'CANCELLED'">
-            <button
-              class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm"
-              (click)="cancelOrder(order)"
-              [disabled]="!canCancelOrder(order)"
-              [title]="canCancelOrder(order) ? 'Huy don hang' : 'Don hang da duoc manager duyet nen khong the huy'">
-              <i class="bi bi-x-circle me-1"></i> Huy don hang
+            <button class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm"
+                    (click)="cancelOrder(order)"
+                    [disabled]="!canCancelOrder(order)"
+                    [title]="canCancelOrder(order) ? 'Hủy đơn hàng' : 'Đơn hàng đã được manager duyệt nên không thể hủy'">
+              <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
             </button>
           </ng-container>
         </div>
@@ -251,28 +238,26 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
       <div class="modal-header bg-warning bg-gradient text-dark border-0">
-        <h5 class="modal-title fw-bold"><i class="bi bi-shield-exclamation me-2"></i> Chính sách Điểm Uy Tín</h5>
+        <h5 class="modal-title fw-bold"><i class="bi bi-shield-exclamation me-2"></i> Chính sách điểm uy tín</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4">
         <h6 class="fw-bold text-danger mb-3"><i class="bi bi-dash-circle me-2"></i>Quy định trừ điểm:</h6>
         <ul class="list-group list-group-flush mb-4">
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Hoàn thành 1 đơn hàng bất kì<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2">+1 Điểm</span></li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Đơn hàng dưới 1.000.000 đ <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">-1 Điểm</span></li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Đơn hàng từ 1tr đến 5.000.000 đ <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">-2 Điểm</span></li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Đơn hàng từ 5tr đến 10.000.000 đ <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">-3 Điểm</span></li>
-          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Đơn hàng trên 10.000.000 đ <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">-5 Điểm</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Hoàn thành 1 đơn hàng bất kỳ<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2">+1 điểm</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Đơn hàng dưới 1.000.000 đ <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">-1 điểm</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Đơn hàng từ 1tr đến 5.000.000 đ <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">-2 điểm</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Đơn hàng từ 5tr đến 10.000.000 đ <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">-3 điểm</span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">Đơn hàng trên 10.000.000 đ <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">-5 điểm</span></li>
         </ul>
-        <h6 class="fw-bold text-success mb-3"><i class="bi bi-star me-2"></i>Đặc quyền & Hạn chế:</h6>
+        <h6 class="fw-bold text-success mb-3"><i class="bi bi-star me-2"></i>Đặc quyền và hạn chế:</h6>
         <div class="alert alert-danger py-2 mb-2 border-0 shadow-sm">
           <strong><i class="bi bi-x-octagon"></i> Dưới 20 điểm:</strong> Bắt buộc thanh toán Online. Từ chối hỗ trợ Ship COD.
         </div>
         <div class="alert alert-success py-2 mb-0 border-0 shadow-sm">
-          <strong><i class="bi bi-gift"></i> Trên 40 điểm:</strong> Nhận Voucher Freeship và nhiều ưu đãi.
+          <strong><i class="bi bi-gift"></i> Trên 40 điểm:</strong> Nhận voucher freeship và nhiều ưu đãi.
         </div>
       </div>
     </div>
   </div>
 </div>
-
-

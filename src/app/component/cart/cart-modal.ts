@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+﻿import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -163,7 +163,7 @@ export class CartModalComponent implements OnInit {
 
     performUpdate$.subscribe({
       next: () => {
-        // ĐÃ SỬA: Gọi đúng tên hàm, đúng thứ tự tham số
+        // Gọi đúng tên hàm, đúng thứ tự tham số.
         this.cartService.acceptCart(this.cartData!.user_id, productIdsToCheckout, voucherIdToPass, paymentMethod,this.note).subscribe({
           next: (res: any) => {
             if (res.status === 'REDIRECT') {
@@ -183,7 +183,7 @@ export class CartModalComponent implements OnInit {
         });
       },
       error: (err: any) => {
-        alert('L?i c?p nh?t s? lu?ng: ' + getApiErrorMessage(err, 'Kh�ng th? c?p nh?t s? lu?ng.'));
+        alert('Lỗi cập nhật số lượng: ' + getApiErrorMessage(err, 'Không thể cập nhật số lượng.'));
         this.isLoading = false;
       }
     });

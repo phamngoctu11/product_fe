@@ -1,13 +1,17 @@
-export interface OrderItem {
+﻿export interface OrderItem {
+  variantId?: number;
+  productVariantId?: number;
   productId: number;
   productName: string;
-  quantity: number;          // Bước 1: Số lượng khách đặt ban đầu
+  variantName?: string;
+  attributes?: string;
+  quantity: number;
   price: number;
   image_url?: string;
+  imageUrl?: string;
 
-  // 🚨 THÊM MỚI: Phục vụ UI hiển thị Đối soát 3 bước
-  exportedQuantity?: number | null; // Bước 2: Số lượng thực xuất (Staff nhập)
-  receivedQuantity?: number | null; // Bước 3: Số lượng thực nhận (Khách nhập)
+  exportedQuantity?: number | null;
+  receivedQuantity?: number | null;
 }
 
 export interface Order {
@@ -28,7 +32,7 @@ export interface Order {
   status: string;
   cancelReason: string | null;
   note: string | null;
-  paymentMethod?: string; // Bổ sung thêm cho đầy đủ theo DTO
+  paymentMethod?: string;
   approvedById?: number | null;
   approvedByFullName?: string | null;
 }
@@ -38,10 +42,9 @@ export interface OrderStatusHistory {
   oldstatus: string;
   newstatus: string;
   updatetime: string;
-  changerId?: number; // 🚨 ĐÃ ĐỔI: Khớp với Backend (Lưu ID thay vì Tên String)
+  changerId?: number;
 }
 
-// 🚨 THÊM MỚI: Dùng làm Request Body gửi lên API Xuất kho / Nhận hàng
 export interface ItemCheckRequest {
   variantId: number;
   quantity: number;

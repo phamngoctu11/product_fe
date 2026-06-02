@@ -9,6 +9,7 @@ import { AdminOrderComponent } from './component/admin-order/admin-order.compone
 import { AdminDashboard } from './component/admin-dashboard/admin-dashboard';
 import { AdminChatComponent } from './component/chat/admin_chat/admin-chat.component';
 import { ProductPageComponent } from './component/product-page/product-page.component';
+import { StaffOrdersComponent } from './component/staff-orders/staff-orders.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'product', component: ProductComponent },
   { path: 'user', component: UserComponent },
   { path: 'orders', component: Orders },
+  { path: 'staff-orders', component: StaffOrdersComponent },
   { path: 'myinfor', component: Myinfor },
    { path: 'admin-orders', component: AdminOrderComponent },
   { path: 'payment-success', component: PaymentSuccessComponent },

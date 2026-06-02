@@ -11,7 +11,9 @@ export interface ChatMessage {
   id?: number;
   userId: number;
   content: string;
-  isShopSender: boolean;     // 🚨 ĐÃ ĐỔI: Từ adminSender -> isShopSender
+  isShopSender: boolean;
+  shopSender?: boolean;
+  adminSender?: boolean;
   messageType?: string;
   productId?: number | null;
   productData?: any;

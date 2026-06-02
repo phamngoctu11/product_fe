@@ -80,6 +80,11 @@ export class AuthService {
     return role.toUpperCase() === 'ADMIN' || role.toUpperCase() === 'ROLE_ADMIN' || role.toUpperCase() === 'MANAGER' || role.toUpperCase() === 'ROLE_MANAGER';
   }
 
+  isStaff(): boolean {
+    const role = this.getUserRole();
+    return role.toUpperCase() === 'STAFF' || role.toUpperCase() === 'ROLE_STAFF';
+  }
+
   // 5. Kiểm tra xem User đã đăng nhập chưa
   isLoggedIn(): boolean {
     return this.getToken() !== null;

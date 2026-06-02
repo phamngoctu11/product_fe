@@ -12,12 +12,43 @@ import { OrderService } from '../../../service/order.service';
 })
 export class OrderDialogComponent implements OnInit {
   orders: Order[] = [];
+  isLoading = false;
+  isLoadingMore = false;
+  currentPage = 0;
+  pageSize = 20;
+  totalPages = 0;
   constructor(
     @Inject(MAT_DIALOG_DATA) public userId: number,
     private orderService: OrderService,
   ) {}
   ngOnInit(): void {
-    this.orderService.getOrdersByUserId(this.userId).subscribe((data) => (this.orders = data));
+    this.loadOrders();
+  }
+
+  loadOrders(): void {
+    this.isLoading = true;
+    this.currentPage = 0;
+    this.orderService.getOrdersByUserId(this.userId, this.currentPage, this.pageSize).subscribe((page) => {
+      this.orders = page.content || [];
+      this.totalPages = page.totalPages || 0;
+      this.isLoading = false;
+    });
+  }
+
+  loadMoreOrders(): void {
+    if (this.isLoadingMore || this.currentPage + 1 >= this.totalPages) return;
+
+    this.isLoadingMore = true;
+    this.orderService.getOrdersByUserId(this.userId, this.currentPage + 1, this.pageSize).subscribe((page) => {
+      this.orders = [...this.orders, ...(page.content || [])];
+      this.currentPage = page.number ?? this.currentPage + 1;
+      this.totalPages = page.totalPages || 0;
+      this.isLoadingMore = false;
+    });
+  }
+
+  hasMoreOrders(): boolean {
+    return this.currentPage + 1 < this.totalPages;
   }
 
   getOrderItems(order: Order): any[] {

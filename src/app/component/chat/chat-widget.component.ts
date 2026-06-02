@@ -49,6 +49,8 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
         userId: this.userId,
         content: JSON.stringify(productInfo),
         isShopSender: false,
+        shopSender: false,
+        adminSender: false,
         messageType: 'PRODUCT',
         productId: productInfo.id,
         timestamp: new Date().toISOString()
@@ -98,7 +100,8 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
     this.chatService.getChatHistory(this.userId).subscribe({
       next: (res) => {
         // 🚨 GIẢI MÃ LỊCH SỬ CHAT
-        this.messages = res.map(msg => {
+        this.messages = res.map(message => {
+          const msg = this.normalizeMessage(message);
           if (msg.messageType === 'PRODUCT' && msg.content) {
             try { msg.productData = JSON.parse(msg.content); } catch(e) {}
           }
@@ -123,7 +126,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
         console.log(">>> WebSocket Chat (Khách hàng) đã kết nối!");
 
         this.stompClient.subscribe(`/topic/chat/user/${this.userId}`, (msg: any) => {
-          const receivedMessage: ChatMessage = JSON.parse(msg.body);
+          const receivedMessage: ChatMessage = this.normalizeMessage(JSON.parse(msg.body));
 
           // 🚨 GIẢI MÃ TIN NHẮN MỚI NHẬN
           if (receivedMessage.messageType === 'PRODUCT' && receivedMessage.content) {
@@ -143,8 +146,10 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
 
     const chatMsg: ChatMessage = {
       userId: this.userId,
-      content: this.newMessage,
+      content: this.newMessage.trim(),
       isShopSender: false,
+      shopSender: false,
+      adminSender: false,
       messageType: 'TEXT',
       timestamp: new Date().toISOString()
     };
@@ -160,5 +165,13 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
 
   private scrollToBottom(): void {
     try { if (this.chatBody) this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight; } catch(err) { }
+  }
+
+  private normalizeMessage(message: ChatMessage): ChatMessage {
+    const rawMessage = message as ChatMessage & { shopSender?: boolean; adminSender?: boolean };
+    return {
+      ...message,
+      isShopSender: rawMessage.isShopSender ?? rawMessage.shopSender ?? rawMessage.adminSender ?? false,
+    };
   }
 }

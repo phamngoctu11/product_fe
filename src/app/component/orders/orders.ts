@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderService } from '../../service/order.service';
 import { AuthService } from '../../service/auth.service';
@@ -20,9 +20,14 @@ export class Orders implements OnInit {
   cancelledOrders: Order[] = [];
   selectedOrderHistory: OrderStatusHistory[] = [];
   selectedOrderId: number | null = null;
-isLoadingTimeline: boolean = false;
+  isLoadingTimeline: boolean = false;
   modalOrders: Order[] = [];
   modalTitle: string = '';
+  isLoadingOrders = false;
+  isLoadingMoreOrders = false;
+  currentPage = 0;
+  pageSize = 20;
+  totalPages = 0;
 
   userId!: number;
   userInfo?: UserInforDTO;
@@ -45,23 +50,56 @@ isLoadingTimeline: boolean = false;
   }
 
   loadMyOrders(): void {
-    this.orderService.getOrdersByUserId(this.userId).subscribe({
-      next: (data: Order[]) => {
-        this.orders = data;
-        this.activeOrders = data.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED');
-        this.deliveredOrders = data.filter(o => o.status === 'DELIVERED');
-        this.cancelledOrders = data.filter(o => o.status === 'CANCELLED');
-
-        if (this.modalTitle.includes('giao')) {
-          this.modalOrders = this.deliveredOrders;
-        } else if (this.modalTitle.includes('hủy')) {
-          this.modalOrders = this.cancelledOrders;
-        }
+    this.isLoadingOrders = true;
+    this.currentPage = 0;
+    this.orderService.getOrdersByUserId(this.userId, this.currentPage, this.pageSize).subscribe({
+      next: (page) => {
+        this.orders = page.content || [];
+        this.totalPages = page.totalPages || 0;
+        this.applyOrderBuckets();
+        this.isLoadingOrders = false;
       },
-      error: (err) => console.error('Lỗi khi tải đơn hàng:', err),
+      error: (err) => {
+        console.error('Lỗi khi tải đơn hàng:', err);
+        this.isLoadingOrders = false;
+      },
     });
   }
 
+  loadMoreOrders(): void {
+    if (this.isLoadingMoreOrders || this.currentPage + 1 >= this.totalPages) return;
+
+    this.isLoadingMoreOrders = true;
+    this.orderService.getOrdersByUserId(this.userId, this.currentPage + 1, this.pageSize).subscribe({
+      next: (page) => {
+        this.orders = [...this.orders, ...(page.content || [])];
+        this.currentPage = page.number ?? this.currentPage + 1;
+        this.totalPages = page.totalPages || 0;
+        this.applyOrderBuckets();
+        this.isLoadingMoreOrders = false;
+      },
+      error: (err) => {
+        alert('Không thể tải thêm đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.isLoadingMoreOrders = false;
+      },
+    });
+  }
+
+  hasMoreOrders(): boolean {
+    return this.currentPage + 1 < this.totalPages;
+  }
+
+  private applyOrderBuckets(): void {
+    this.activeOrders = this.orders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED');
+    this.deliveredOrders = this.orders.filter(o => o.status === 'DELIVERED');
+    this.cancelledOrders = this.orders.filter(o => o.status === 'CANCELLED');
+
+    if (this.modalTitle.includes('giao')) {
+      this.modalOrders = this.deliveredOrders;
+    } else if (this.modalTitle.includes('hủy')) {
+      this.modalOrders = this.cancelledOrders;
+    }
+  }
   loadUserInfo(): void {
     this.userService.getById(this.userId).subscribe({
       next: (res: any) => this.userInfo = res,
@@ -72,17 +110,19 @@ isLoadingTimeline: boolean = false;
   openHistoryModal(type: 'DELIVERED' | 'CANCELLED'): void {
     if (type === 'DELIVERED') {
       this.modalOrders = this.deliveredOrders;
-      this.modalTitle = '📦 Lịch sử đơn hàng đã giao';
+      this.modalTitle = 'Lịch sử đơn hàng đã giao';
     } else {
       this.modalOrders = this.cancelledOrders;
-      this.modalTitle = '❌ Lịch sử đơn hàng đã hủy';
+      this.modalTitle = 'Lịch sử đơn hàng đã hủy';
     }
   }
 
   getStatusName(status: string): string {
-    if (status === 'PENDING_APPROVAL') return 'Chờ duyệt';
     const statusMap: { [key: string]: string } = {
-      PENDING_WAREHOUSE: 'Đang xuất kho',
+      PENDING_APPROVAL: 'Chờ duyệt',
+      PENDING_WAREHOUSE: 'Chờ kho nhận',
+      WAREHOUSE_ASSIGNED: 'Kho đang xử lý',
+      PENDING_KCS: 'Chờ KCS',
       SHIPPING: 'Đang giao',
       DELIVERED: 'Đã giao',
       CANCELLED: 'Đã hủy',
@@ -94,6 +134,8 @@ isLoadingTimeline: boolean = false;
     const statusClassMap: { [key: string]: string } = {
       PENDING_APPROVAL: 'order-status-pending-approval',
       PENDING_WAREHOUSE: 'order-status-warehouse',
+      WAREHOUSE_ASSIGNED: 'order-status-warehouse',
+      PENDING_KCS: 'order-status-shipping',
       SHIPPING: 'order-status-shipping',
       DELIVERED: 'order-status-delivered',
       CANCELLED: 'order-status-cancelled',
@@ -106,6 +148,8 @@ isLoadingTimeline: boolean = false;
     const statusIconMap: { [key: string]: string } = {
       PENDING_APPROVAL: 'bi-hourglass-split',
       PENDING_WAREHOUSE: 'bi-box-seam',
+      WAREHOUSE_ASSIGNED: 'bi-person-check',
+      PENDING_KCS: 'bi-clipboard-check',
       SHIPPING: 'bi-truck',
       DELIVERED: 'bi-check-circle-fill',
       CANCELLED: 'bi-x-circle',
@@ -115,23 +159,23 @@ isLoadingTimeline: boolean = false;
   }
 
   getNextStatus(currentStatus: string): string | null {
-    if (currentStatus === 'PENDING_WAREHOUSE') return 'SHIPPING';
     if (currentStatus === 'SHIPPING') return 'DELIVERED';
     return null;
   }
 
   confirmUpdateStatus(orderId: number, nextStatus: string): void {
-    if (window.confirm(`Bạn có chắc chắn muốn chuyển trạng thái: "${this.getStatusName(nextStatus)}" không?`)) {
-      this.orderService.updateOrderStatus(orderId, nextStatus).subscribe({
+    if (nextStatus !== 'DELIVERED') return;
+
+    if (window.confirm('Bạn xác nhận đã nhận được đơn hàng này?')) {
+      this.orderService.confirmReceipt(orderId).subscribe({
         next: () => {
-          alert('Cập nhật trạng thái thành công!');
+          alert('Xác nhận nhận hàng thành công!');
           this.loadMyOrders();
         },
-        error: (err) => alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể cập nhật trạng thái.'))
+        error: (err) => alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể xác nhận nhận hàng.'))
       });
     }
   }
-
   calculateExpectedDeduction(totalPrice: number): number {
     if (totalPrice < 1000000) return 1;
     if (totalPrice <= 5000000) return 2;
@@ -168,7 +212,7 @@ isLoadingTimeline: boolean = false;
 
   cancelOrder(order: Order): void {
     if (!this.canCancelOrder(order)) {
-      alert('Don hang da duoc manager duyet nen khong the huy.');
+      alert('Đơn hàng đã được manager duyệt nên không thể hủy.');
       return;
     }
 
@@ -183,10 +227,10 @@ isLoadingTimeline: boolean = false;
       return;
     }
 
-    const confirmMsg = `⚠️ CẢNH BÁO HỦY ĐƠN ⚠️\n\nGiá trị đơn: ${orderTotalPrice.toLocaleString()} đ\nTrừ uy tín: -${deduction} điểm\nĐiểm hiện tại: ${currentRep}\nLý do: ${reason}\n\nBạn có chắc chắn muốn hủy?`;
+    const confirmMsg = `CẢNH BÁO HỦY ĐƠN\n\nGiá trị đơn: ${orderTotalPrice.toLocaleString()} đ\nTrừ uy tín: -${deduction} điểm\nĐiểm hiện tại: ${currentRep}\nLý do: ${reason}\n\nBạn có chắc chắn muốn hủy?`;
 
     if (window.confirm(confirmMsg)) {
-      // Chỉ thay đổi dòng này để gọi API Cancel
+      // Gọi API hủy đơn.
       this.orderService.cancelOrder(order.id, reason).subscribe({
         next: () => {
           alert('Hủy đơn hàng thành công!');
@@ -200,32 +244,30 @@ isLoadingTimeline: boolean = false;
   viewTimeline(orderId: number): void {
     this.selectedOrderId = orderId;
     this.selectedOrderHistory = [];
-    this.isLoadingTimeline = true; // Bật cờ loading khi bắt đầu gọi API
+    this.isLoadingTimeline = true;
 
-    // Lấy thông tin đơn hàng gốc từ danh sách đã load (để lấy thời gian chốt đơn)
     const order = this.orders.find(o => o.id === orderId);
 
     this.orderService.getOrderHistory(orderId).subscribe({
       next: (data) => {
-        // Tạo Bước 1: Mốc thời gian chốt đơn (Khởi tạo)
         const initialStep: OrderStatusHistory = {
           id: 0,
-          oldstatus: '', // Trạng thái ban đầu nên không có oldstatus
+          oldstatus: '',
           newstatus: 'PENDING_APPROVAL',
           updatetime: order?.startOrderTime || new Date().toISOString(),
-          changerId: 1 // Hoặc 'HỆ THỐNG'
+          changerId: 1
         };
 
-        // Gộp mốc Khởi tạo (Bước 1) vào đầu mảng lịch sử nhận từ Backend
         this.selectedOrderHistory = [initialStep, ...data];
 
-        this.isLoadingTimeline = false; // Tắt cờ loading khi đã có dữ liệu
+        this.isLoadingTimeline = false;
       },
       error: (err) => {
         alert('Không thể tải lịch sử đơn hàng: ' + getApiErrorMessage(err, 'Không thể tải lịch sử đơn hàng.'));
-        this.isLoadingTimeline = false; // Lỗi cũng phải tắt loading
+        this.isLoadingTimeline = false;
       }
     });
   }
 }
+
 
