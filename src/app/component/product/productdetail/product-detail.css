@@ -12,13 +12,13 @@
 }
 
 .modal-scroll {
-  max-height: 75vh;
+  max-height: min(58vh, 620px);
   overflow-y: auto;
 }
 
 .product-upload {
-  width: 130px;
-  height: 130px;
+  width: 112px;
+  height: 112px;
   margin: 0 auto;
 }
 
@@ -78,4 +78,45 @@
   border-radius: 1rem;
   transition: all 0.3s;
   border: 1px solid #e9ecef;
+}
+
+.modal-content {
+  max-height: 84vh;
+}
+
+.modal-header,
+.modal-footer {
+  min-height: 64px;
+}
+
+.card {
+  border-radius: 0.75rem !important;
+}
+
+.card-body {
+  padding: 1rem !important;
+}
+
+.form-label {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.form-control-custom,
+.input-group-text {
+  min-height: 42px;
+}
+
+.tag-panel {
+  padding: 1rem !important;
+}
+
+.tag-badge,
+.badge {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

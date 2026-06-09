@@ -1,33 +1,56 @@
-﻿import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OrderService } from '../../service/order.service';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../service/auth.service';
+import { OrderService } from '../../service/order.service';
 import { UserService } from '../../service/user.service';
-import { Order, OrderStatusHistory } from '../../model/order.model';
+import {
+  ItemCheckRequest,
+  Order,
+  OrderItem,
+  OrderListDTO,
+  OrderStatusHistory,
+  ReceiptConfirmResponse,
+} from '../../model/order.model';
 import { UserInforDTO } from '../../model/user.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
+import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-popup.component';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, OrderDetailPopupComponent],
   templateUrl: './orders.html',
 })
 export class Orders implements OnInit {
-  orders: Order[] = [];
-  activeOrders: Order[] = [];
-  deliveredOrders: Order[] = [];
-  cancelledOrders: Order[] = [];
+  orders: OrderListDTO[] = [];
+  activeOrders: OrderListDTO[] = [];
+  deliveredOrders: OrderListDTO[] = [];
+  cancelledOrders: OrderListDTO[] = [];
   selectedOrderHistory: OrderStatusHistory[] = [];
   selectedOrderId: number | null = null;
-  isLoadingTimeline: boolean = false;
-  modalOrders: Order[] = [];
-  modalTitle: string = '';
+  isLoadingTimeline = false;
+  modalOrders: OrderListDTO[] = [];
+  modalTitle = '';
   isLoadingOrders = false;
   isLoadingMoreOrders = false;
+  isLoadingCancelledOrders = false;
   currentPage = 0;
+  cancelledPage = 0;
   pageSize = 20;
   totalPages = 0;
+  cancelledTotalPages = 0;
+
+  selectedOrderDetail: Order | null = null;
+  isDetailLoading = false;
+  detailError = '';
+
+  receiptMode = false;
+  isSubmittingReceipt = false;
+  receiptError = '';
+  receivedQuantities: { [variantId: number]: number } = {};
+  receiptResponse: ReceiptConfirmResponse | null = null;
+  complaintNote = '';
 
   userId!: number;
   userInfo?: UserInforDTO;
@@ -35,7 +58,7 @@ export class Orders implements OnInit {
   constructor(
     private orderService: OrderService,
     private authService: AuthService,
-    private userService: UserService
+    private userService: UserService,
   ) {}
 
   ngOnInit(): void {
@@ -43,6 +66,7 @@ export class Orders implements OnInit {
     if (id !== null) {
       this.userId = id;
       this.loadMyOrders();
+      this.loadCancelledOrders();
       this.loadUserInfo();
     } else {
       console.error('Không tìm thấy ID người dùng. Hãy đăng nhập lại!');
@@ -90,20 +114,18 @@ export class Orders implements OnInit {
   }
 
   private applyOrderBuckets(): void {
-    this.activeOrders = this.orders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED');
-    this.deliveredOrders = this.orders.filter(o => o.status === 'DELIVERED');
-    this.cancelledOrders = this.orders.filter(o => o.status === 'CANCELLED');
+    this.activeOrders = this.orders.filter((order) => order.status !== 'DELIVERED' && order.status !== 'CANCELLED');
+    this.deliveredOrders = this.orders.filter((order) => order.status === 'DELIVERED');
 
     if (this.modalTitle.includes('giao')) {
       this.modalOrders = this.deliveredOrders;
-    } else if (this.modalTitle.includes('hủy')) {
-      this.modalOrders = this.cancelledOrders;
     }
   }
+
   loadUserInfo(): void {
     this.userService.getById(this.userId).subscribe({
       next: (res: any) => this.userInfo = res,
-      error: (err) => console.error('Lỗi tải thông tin cá nhân', err)
+      error: (err) => console.error('Lỗi tải thông tin cá nhân', err),
     });
   }
 
@@ -112,70 +134,176 @@ export class Orders implements OnInit {
       this.modalOrders = this.deliveredOrders;
       this.modalTitle = 'Lịch sử đơn hàng đã giao';
     } else {
+      this.loadCancelledOrders();
       this.modalOrders = this.cancelledOrders;
       this.modalTitle = 'Lịch sử đơn hàng đã hủy';
     }
   }
 
-  getStatusName(status: string): string {
-    const statusMap: { [key: string]: string } = {
-      PENDING_APPROVAL: 'Chờ duyệt',
-      PENDING_WAREHOUSE: 'Chờ kho nhận',
-      WAREHOUSE_ASSIGNED: 'Kho đang xử lý',
-      PENDING_KCS: 'Chờ KCS',
-      SHIPPING: 'Đang giao',
-      DELIVERED: 'Đã giao',
-      CANCELLED: 'Đã hủy',
-    };
-    return statusMap[status] || status;
+  loadCancelledOrders(): void {
+    this.isLoadingCancelledOrders = true;
+    this.cancelledPage = 0;
+    this.orderService.getCancelledOrdersByUserId(this.userId, this.cancelledPage, this.pageSize).subscribe({
+      next: (page) => {
+        this.cancelledOrders = page.content || [];
+        this.cancelledTotalPages = page.totalPages || 0;
+        if (this.modalTitle.includes('hủy')) {
+          this.modalOrders = this.cancelledOrders;
+        }
+        this.isLoadingCancelledOrders = false;
+      },
+      error: (err) => {
+        alert('Không thể tải đơn hàng đã hủy: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.isLoadingCancelledOrders = false;
+      },
+    });
   }
 
-  getStatusBadgeClass(status: string): string {
-    const statusClassMap: { [key: string]: string } = {
-      PENDING_APPROVAL: 'order-status-pending-approval',
-      PENDING_WAREHOUSE: 'order-status-warehouse',
-      WAREHOUSE_ASSIGNED: 'order-status-warehouse',
-      PENDING_KCS: 'order-status-shipping',
-      SHIPPING: 'order-status-shipping',
-      DELIVERED: 'order-status-delivered',
-      CANCELLED: 'order-status-cancelled',
-    };
+  openOrderDetail(order: OrderListDTO): void {
+    this.receiptMode = false;
+    this.resetReceiptState(false);
+    this.selectedOrderDetail = null;
+    this.detailError = '';
+    this.isDetailLoading = true;
 
-    return statusClassMap[status] || 'order-status-default';
+    this.orderService.getById(order.id).subscribe({
+      next: (detail) => {
+        this.selectedOrderDetail = {
+          ...detail,
+          staffName: detail.staffName || order.staffName || null,
+        };
+        this.isDetailLoading = false;
+      },
+      error: (err) => {
+        this.detailError = getApiErrorMessage(err, 'Không thể tải chi tiết đơn hàng.');
+        this.isDetailLoading = false;
+      },
+    });
   }
 
-  getStatusIcon(status: string): string {
-    const statusIconMap: { [key: string]: string } = {
-      PENDING_APPROVAL: 'bi-hourglass-split',
-      PENDING_WAREHOUSE: 'bi-box-seam',
-      WAREHOUSE_ASSIGNED: 'bi-person-check',
-      PENDING_KCS: 'bi-clipboard-check',
-      SHIPPING: 'bi-truck',
-      DELIVERED: 'bi-check-circle-fill',
-      CANCELLED: 'bi-x-circle',
-    };
+  openReceiptConfirm(order: OrderListDTO): void {
+    this.receiptMode = true;
+    this.resetReceiptState(false);
+    this.selectedOrderDetail = null;
+    this.detailError = '';
+    this.isDetailLoading = true;
 
-    return statusIconMap[status] || 'bi-info-circle';
+    this.orderService.getById(order.id).subscribe({
+      next: (detail) => {
+        this.selectedOrderDetail = {
+          ...detail,
+          staffName: detail.staffName || order.staffName || null,
+        };
+        (this.selectedOrderDetail.items || []).forEach((item) => {
+          const variantId = this.getReceiptVariantId(item);
+          if (variantId) {
+            this.receivedQuantities[variantId] = Number(item.exportedQuantity ?? item.quantity ?? 0);
+          }
+        });
+        this.isDetailLoading = false;
+      },
+      error: (err) => {
+        this.detailError = getApiErrorMessage(err, 'Không thể tải chi tiết đơn hàng.');
+        this.isDetailLoading = false;
+      },
+    });
   }
 
-  getNextStatus(currentStatus: string): string | null {
-    if (currentStatus === 'SHIPPING') return 'DELIVERED';
-    return null;
+  closeOrderDetail(): void {
+    this.selectedOrderDetail = null;
+    this.isDetailLoading = false;
+    this.detailError = '';
+    this.receiptMode = false;
+    this.resetReceiptState();
   }
 
-  confirmUpdateStatus(orderId: number, nextStatus: string): void {
-    if (nextStatus !== 'DELIVERED') return;
+  submitReceiptConfirm(acceptMismatch: boolean = false): void {
+    if (!this.selectedOrderDetail) return;
 
-    if (window.confirm('Bạn xác nhận đã nhận được đơn hàng này?')) {
-      this.orderService.confirmReceipt(orderId).subscribe({
-        next: () => {
-          alert('Xác nhận nhận hàng thành công!');
+    const receivedItems = this.buildReceivedItemsPayload();
+    if (receivedItems.length === 0) {
+      this.receiptError = 'Không có item hợp lệ để xác nhận nhận hàng.';
+      return;
+    }
+
+    this.isSubmittingReceipt = true;
+    this.receiptError = '';
+    this.orderService.confirmReceipt(this.selectedOrderDetail.id, { receivedItems, acceptMismatch }).subscribe({
+      next: (response) => {
+        this.receiptResponse = response;
+        this.isSubmittingReceipt = false;
+
+        if (response.confirmed) {
+          alert(response.message || 'Xác nhận nhận hàng thành công!');
+          this.closeOrderDetail();
           this.loadMyOrders();
-        },
-        error: (err) => alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể xác nhận nhận hàng.'))
-      });
+          this.loadUserInfo();
+          return;
+        }
+
+        this.receiptError = response.message || 'Số lượng thực nhận đang lệch so với số lượng xuất kho.';
+      },
+      error: (err) => {
+        this.receiptError = getApiErrorMessage(err, 'Không thể xác nhận nhận hàng.');
+        this.isSubmittingReceipt = false;
+      },
+    });
+  }
+
+  sendReceiptComplaint(): void {
+    if (!this.selectedOrderDetail) return;
+
+    const receivedItems = this.buildReceivedItemsPayload();
+    if (receivedItems.length === 0) {
+      this.receiptError = 'Không có item hợp lệ để gửi khiếu nại.';
+      return;
+    }
+
+    this.isSubmittingReceipt = true;
+    this.receiptError = '';
+    this.orderService.sendReceiptComplaint(this.selectedOrderDetail.id, {
+      receivedItems,
+      note: this.complaintNote.trim(),
+    }).subscribe({
+      next: (response) => {
+        this.receiptResponse = response;
+        this.isSubmittingReceipt = false;
+        alert(response.message || 'Đã gửi khiếu nại cho manager.');
+        this.closeOrderDetail();
+      },
+      error: (err) => {
+        this.receiptError = getApiErrorMessage(err, 'Không thể gửi khiếu nại.');
+        this.isSubmittingReceipt = false;
+      },
+    });
+  }
+
+  getReceiptVariantId(item: OrderItem): number {
+    return Number(item.variantId || item.productVariantId || 0);
+  }
+
+  private buildReceivedItemsPayload(): ItemCheckRequest[] {
+    if (!this.selectedOrderDetail?.items?.length) return [];
+
+    return this.selectedOrderDetail.items.map((item) => {
+      const variantId = this.getReceiptVariantId(item);
+      return {
+        variantId,
+        quantity: Number(this.receivedQuantities[variantId] ?? 0),
+      };
+    }).filter((item) => item.variantId > 0 && item.quantity >= 0);
+  }
+
+  private resetReceiptState(clearQuantities: boolean = true): void {
+    this.isSubmittingReceipt = false;
+    this.receiptError = '';
+    this.receiptResponse = null;
+    this.complaintNote = '';
+    if (clearQuantities) {
+      this.receivedQuantities = {};
     }
   }
+
   calculateExpectedDeduction(totalPrice: number): number {
     if (totalPrice < 1000000) return 1;
     if (totalPrice <= 5000000) return 2;
@@ -183,41 +311,18 @@ export class Orders implements OnInit {
     return 5;
   }
 
-  getOrderItems(order: Order): any[] {
-    return order.items || order.orderItems || order.details || [];
+  canCancelOrder(order: OrderListDTO): boolean {
+    return order.status === 'PENDING_PAYMENT' || order.status === 'PENDING_APPROVAL';
   }
 
-  getOrderTotalPrice(order: Order): number {
-    return Number(order.totalPrice || 0);
-  }
-
-  getOrderDiscountAmount(order: Order): number {
-    return Number(order.discountAmount || 0);
-  }
-
-  getOrderFinalPrice(order: Order): number {
-    const finalPrice = Number(order.finalPrice);
-    if (!Number.isNaN(finalPrice) && finalPrice > 0) return finalPrice;
-
-    return Math.max(this.getOrderTotalPrice(order) - this.getOrderDiscountAmount(order), 0);
-  }
-
-  isOrderApproved(order: Order): boolean {
-    return order.status !== 'PENDING_APPROVAL' || !!order.approvedById || !!order.approvedByFullName;
-  }
-
-  canCancelOrder(order: Order): boolean {
-    return order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && !this.isOrderApproved(order);
-  }
-
-  cancelOrder(order: Order): void {
+  cancelOrder(order: OrderListDTO): void {
     if (!this.canCancelOrder(order)) {
-      alert('Đơn hàng đã được manager duyệt nên không thể hủy.');
+      alert('Đơn hàng đã được xử lý nên không thể hủy.');
       return;
     }
 
     const currentRep = this.userInfo?.reputation ?? 'Đang tải...';
-    const orderTotalPrice = this.getOrderTotalPrice(order);
+    const orderTotalPrice = Number(order.finalPrice || 0);
     const deduction = this.calculateExpectedDeduction(orderTotalPrice);
     const reason = window.prompt('Vui lòng nhập lý do bạn muốn hủy đơn hàng:');
 
@@ -230,23 +335,24 @@ export class Orders implements OnInit {
     const confirmMsg = `CẢNH BÁO HỦY ĐƠN\n\nGiá trị đơn: ${orderTotalPrice.toLocaleString()} đ\nTrừ uy tín: -${deduction} điểm\nĐiểm hiện tại: ${currentRep}\nLý do: ${reason}\n\nBạn có chắc chắn muốn hủy?`;
 
     if (window.confirm(confirmMsg)) {
-      // Gọi API hủy đơn.
       this.orderService.cancelOrder(order.id, reason).subscribe({
         next: () => {
           alert('Hủy đơn hàng thành công!');
           this.loadMyOrders();
+          this.loadCancelledOrders();
           this.loadUserInfo();
         },
-        error: (err) => alert('Không thể hủy đơn: ' + getApiErrorMessage(err, 'Không thể hủy đơn.'))
+        error: (err) => alert('Không thể hủy đơn: ' + getApiErrorMessage(err, 'Không thể hủy đơn.')),
       });
     }
   }
+
   viewTimeline(orderId: number): void {
     this.selectedOrderId = orderId;
     this.selectedOrderHistory = [];
     this.isLoadingTimeline = true;
 
-    const order = this.orders.find(o => o.id === orderId);
+    const order = this.orders.find((item) => item.id === orderId);
 
     this.orderService.getOrderHistory(orderId).subscribe({
       next: (data) => {
@@ -255,19 +361,16 @@ export class Orders implements OnInit {
           oldstatus: '',
           newstatus: 'PENDING_APPROVAL',
           updatetime: order?.startOrderTime || new Date().toISOString(),
-          changerId: 1
+          changerId: 1,
         };
 
         this.selectedOrderHistory = [initialStep, ...data];
-
         this.isLoadingTimeline = false;
       },
       error: (err) => {
         alert('Không thể tải lịch sử đơn hàng: ' + getApiErrorMessage(err, 'Không thể tải lịch sử đơn hàng.'));
         this.isLoadingTimeline = false;
-      }
+      },
     });
   }
 }
-
-

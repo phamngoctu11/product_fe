@@ -12,17 +12,17 @@
 }
 
 .modal-scroll {
-  max-height: 75vh;
+  max-height: min(56vh, 560px);
   overflow-y: auto;
 }
 
 .avatar-upload {
-  width: 120px;
-  height: 120px;
+  width: 96px;
+  height: 96px;
 }
 
 .avatar-placeholder {
-  font-size: 3.5rem;
+  font-size: 2.8rem;
 }
 
 .avatar-preview {
@@ -51,13 +51,46 @@
 }
 
 .section-card {
-  border-radius: 1.25rem;
+  border-radius: 0.85rem;
   border: none;
   background-color: #fff;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .field-label {
   letter-spacing: 0.5px;
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-content {
+  max-height: 78vh;
+}
+
+.modal-header,
+.modal-footer {
+  min-height: 62px;
+}
+
+.form-control-custom,
+.form-select,
+.input-group {
+  min-height: 42px;
+}
+
+.input-group .form-control,
+.input-group .input-group-text {
+  min-height: 42px;
+}
+
+textarea.form-control-custom {
+  min-height: 76px;
+}
+
+.card-body {
+  padding: 1rem !important;
 }

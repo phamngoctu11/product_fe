@@ -8,9 +8,12 @@ export interface VoucherTemplate {
   discountPercent: number;
   maxDiscountAmount: number;
   quantity: number;
+  active?: boolean;
   expiryDate: string;
-  active: boolean;
+  isActive?: boolean
 }
+export type VoucherTemplateRequest = Omit<VoucherTemplate, 'id'> & { id?: number };
+
 export interface UserVoucher {
   id: number;
   template: VoucherTemplate;

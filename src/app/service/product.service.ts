@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Product, PageResponse } from '../model/product.model';
+import { BestSellingProduct, Product, PageResponse } from '../model/product.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
@@ -25,6 +25,21 @@ export class ProductService {
     return this.http
       .get<ApiResponse<PageResponse<Product>> | PageResponse<Product>>(this.apiUrl, { params })
       .pipe(map(unwrapApiResponse));
+  }
+
+  getBestSelling(period: string = 'day', page: number = 0, size: number = 5): Observable<BestSellingProduct[]> {
+    const params = new HttpParams()
+      .set('period', period)
+      .set('page', page.toString())
+      .set('size', size.toString());
+    return this.http
+      .get<ApiResponse<PageResponse<BestSellingProduct> | BestSellingProduct[]> | PageResponse<BestSellingProduct> | BestSellingProduct[]>(`${this.apiUrl}/best-selling`, { params })
+      .pipe(
+        map(unwrapApiResponse),
+        map((response: PageResponse<BestSellingProduct> | BestSellingProduct[]) =>
+          Array.isArray(response) ? response : response.content || []
+        )
+      );
   }
 
   update(id: number, product: Product, userId: number): Observable<Product> {

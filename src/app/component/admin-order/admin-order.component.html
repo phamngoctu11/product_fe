@@ -77,9 +77,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let order of pendingOrders">
+            <tr *ngFor="let order of pendingOrders" class="order-clickable-row" (click)="openOrderDetail(order)">
               <td class="ps-4 fw-bold">#{{ order.id }}</td>
-              <td>{{ order.customerName || order.lastname || 'Khách vãng lai' }}</td>
+              <td>{{ order.customerName || 'Khách vãng lai' }}</td>
               <td>
                 <span class="badge rounded-pill px-3 py-2"
                       [ngClass]="{
@@ -88,7 +88,7 @@
                         'text-bg-primary': order.status === 'WAREHOUSE_ASSIGNED',
                         'text-bg-secondary': order.status !== 'PENDING_APPROVAL' && order.status !== 'PENDING_WAREHOUSE' && order.status !== 'PENDING_KCS' && order.status !== 'WAREHOUSE_ASSIGNED'
                       }">
-                  {{ getStatusName(order.status) }}
+                  {{ order.status }}
                 </span>
               </td>
               <td class="text-uppercase">
@@ -98,26 +98,30 @@
                   {{ order.paymentMethod || 'COD' }}
                 </span>
               </td>
-              <td class="fw-bold text-danger">{{ getOrderTotal(order) | number: '1.0-0' }} đ</td>
+              <td class="fw-bold text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</td>
               <td style="min-width: 220px;">
-                <select class="form-select form-select-sm"
-                        [(ngModel)]="selectedStaffByOrder[order.id]"
-                        [disabled]="order.status === 'PENDING_KCS'">
-                  <option [ngValue]="null">Chưa chọn staff</option>
-                  <option *ngFor="let staff of staffs" [ngValue]="staff.id">
-                    {{ staff.lastname }} {{ staff.firstname }}
-                  </option>
-                </select>
+                @if (order.status === 'PENDING_APPROVAL') {
+                  <select class="form-select form-select-sm"
+                          [(ngModel)]="selectedStaffByOrder[order.id]"
+                          (click)="$event.stopPropagation()">
+                    <option [ngValue]="null">Chưa chọn staff</option>
+                    <option *ngFor="let staff of staffs" [ngValue]="staff.id">
+                      {{ staff.lastname }} {{ staff.firstname }}
+                    </option>
+                  </select>
+                } @else {
+                  {{ order.staffName || 'Chưa có staff' }}
+                }
               </td>
               <td class="text-center pe-4">
                 <ng-container *ngIf="order.status === 'PENDING_APPROVAL'">
                   <button class="btn btn-sm btn-primary rounded-3 px-3 me-2 shadow-sm"
-                          (click)="approveOrder(order)"
+                          (click)="$event.stopPropagation(); approveOrder(order)"
                           [disabled]="isLoading">
                     <i class="bi bi-check-circle me-1"></i> Duyệt
                   </button>
                   <button class="btn btn-sm btn-outline-danger rounded-3 px-3 shadow-sm"
-                          (click)="rejectOrder(order)"
+                          (click)="$event.stopPropagation(); rejectOrder(order)"
                           [disabled]="isLoading">
                     <i class="bi bi-x-circle me-1"></i> Từ chối
                   </button>
@@ -125,7 +129,7 @@
 
                 <ng-container *ngIf="order.status === 'PENDING_WAREHOUSE'">
                   <button class="btn btn-sm btn-outline-primary rounded-3 px-3 shadow-sm"
-                          (click)="assignStaff(order)"
+                          (click)="$event.stopPropagation(); assignStaff(order)"
                           [disabled]="isLoading || !selectedStaffByOrder[order.id]">
                     <i class="bi bi-person-plus me-1"></i> Gán staff
                   </button>
@@ -133,12 +137,12 @@
 
                 <ng-container *ngIf="order.status === 'PENDING_KCS'">
                   <button class="btn btn-sm btn-success rounded-3 px-3 me-2 shadow-sm"
-                          (click)="kcsCheck(order, true)"
+                          (click)="$event.stopPropagation(); kcsCheck(order, true)"
                           [disabled]="isLoading">
                     <i class="bi bi-check2-circle me-1"></i> KCS đạt
                   </button>
                   <button class="btn btn-sm btn-outline-warning rounded-3 px-3 shadow-sm"
-                          (click)="kcsCheck(order, false)"
+                          (click)="$event.stopPropagation(); kcsCheck(order, false)"
                           [disabled]="isLoading">
                     <i class="bi bi-arrow-counterclockwise me-1"></i> Trả về kho
                   </button>
@@ -160,3 +164,10 @@
     </div>
   </div>
 </div>
+
+<app-order-detail-popup
+  [order]="selectedOrderDetail"
+  [isLoading]="isDetailLoading"
+  [error]="detailError"
+  (close)="closeOrderDetail()">
+</app-order-detail-popup>

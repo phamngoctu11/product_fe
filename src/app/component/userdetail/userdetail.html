@@ -1,6 +1,6 @@
 <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-  <div class="modal-header text-white border-0 p-4" [ngClass]="isView ? 'bg-info bg-gradient' : 'bg-primary bg-gradient'">
-    <h5 class="modal-title m-0 fw-bold fs-4">
+  <div class="modal-header text-white border-0 px-4 py-3" [ngClass]="isView ? 'bg-info bg-gradient' : 'bg-primary bg-gradient'">
+    <h5 class="modal-title m-0 fw-bold fs-4 text-truncate">
       <i class="bi me-2" [ngClass]="isView ? 'bi-person-vcard' : (isEdit ? 'bi-pencil-square' : 'bi-person-plus-fill')"></i>
       {{ isView ? 'Chi tiết Người dùng' : (isEdit ? 'Cập nhật Thông tin' : 'Thêm Người dùng mới') }}
     </h5>
@@ -8,11 +8,11 @@
   </div>
 
   <form #userForm="ngForm" (ngSubmit)="saveUser(userForm)">
-  <div class="modal-body p-4 bg-light modal-scroll">
+  <div class="modal-body p-3 bg-light modal-scroll">
 
     <!-- Avatar Section -->
     <div class="card section-card">
-      <div class="card-body p-4">
+      <div class="card-body p-3">
         <div class="row align-items-center">
           <div class="col-md-3 text-center">
             <label class="upload-box avatar-upload d-flex justify-content-center align-items-center shadow-sm overflow-hidden mx-auto mb-3 mb-md-0"
@@ -23,8 +23,8 @@
               <input *ngIf="!isView" type="file" class="d-none" (change)="onAvatarSelected($event)" accept="image/*" [disabled]="isUploadingAvatar">
             </label>
           </div>
-          <div class="col-md-9 text-center text-md-start">
-            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-image me-2 text-primary"></i>Ảnh đại diện (Avatar)</h6>
+          <div class="col-md-9 text-center text-md-start min-w-0">
+            <h6 class="fw-bold text-dark mb-2 text-truncate" title="Ảnh đại diện"><i class="bi bi-image me-2 text-primary"></i>Ảnh đại diện</h6>
             <p class="text-muted small mb-0">Tùy chọn. Ảnh sẽ được sử dụng làm hình đại diện toàn hệ thống.</p>
             <div class="mt-2" *ngIf="!isView">
                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2"><i class="bi bi-cloud-arrow-up me-1"></i> Cloudinary Storage</span>
@@ -36,14 +36,14 @@
 
     <!-- System Info Section -->
     <div class="card section-card">
-      <div class="card-body p-4">
-        <h6 class="fw-bold mb-4 d-flex align-items-center text-primary">
+      <div class="card-body p-3">
+        <h6 class="fw-bold mb-3 d-flex align-items-center text-primary">
           <i class="bi bi-shield-lock-fill me-2 fs-5"></i> 1. Thông tin hệ thống
         </h6>
 
-        <div class="row g-4">
+        <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Tên đăng nhập</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Tên đăng nhập">Tên đăng nhập</label>
             <div class="input-group shadow-sm rounded-pill overflow-hidden border">
               <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-person"></i></span>
               <input type="text" class="form-control border-0 ps-0 shadow-none bg-white fw-bold text-primary"
@@ -63,7 +63,7 @@
 
           @if (!isEdit && !isView) {
             <div class="col-md-6">
-              <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Mật khẩu</label>
+              <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Mật khẩu">Mật khẩu</label>
               <div class="input-group shadow-sm rounded-pill overflow-hidden border">
                 <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-key"></i></span>
                 <input type="password" class="form-control border-0 ps-0 shadow-none bg-white"
@@ -82,7 +82,7 @@
           }
 
           <div class="col-md-6" *ngIf="isEdit || isView || (!isEdit && !isView)">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Vai trò</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Vai trò">Vai trò</label>
             <select class="form-select form-control-custom shadow-sm" name="role" [(ngModel)]="currentUser.role" [disabled]="isView">
               <option value="USER">Người dùng (USER)</option>
               <option value="ADMIN">Quản trị (ADMIN)</option>
@@ -96,14 +96,14 @@
 
     <!-- Personal Info Section -->
     <div class="card section-card mb-0">
-      <div class="card-body p-4">
-        <h6 class="fw-bold mb-4 d-flex align-items-center text-success">
+      <div class="card-body p-3">
+        <h6 class="fw-bold mb-3 d-flex align-items-center text-success">
           <i class="bi bi-person-lines-fill me-2 fs-5"></i> 2. Thông tin cá nhân
         </h6>
 
-        <div class="row g-4">
+        <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Họ (Lastname)</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Họ">Họ</label>
             <input type="text" class="form-control form-control-custom shadow-sm"
                    name="lastname"
                    #lastname="ngModel"
@@ -114,7 +114,7 @@
             <div class="text-danger small mt-1" *ngIf="lastname.invalid && lastname.touched">Lastname là bắt buộc.</div>
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Tên (Firstname)</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Tên">Tên</label>
             <input type="text" class="form-control form-control-custom shadow-sm"
                    name="firstname"
                    #firstname="ngModel"
@@ -126,7 +126,7 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Giới tính</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Giới tính">Giới tính</label>
             <select class="form-select form-control-custom shadow-sm"
                     name="gender"
                     #gender="ngModel"
@@ -140,7 +140,7 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Ngày sinh</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Ngày sinh">Ngày sinh</label>
             <input type="date" class="form-control form-control-custom shadow-sm"
                    name="birth"
                    [ngModel]="currentUser.birth | date: 'yyyy-MM-dd'"
@@ -148,7 +148,7 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Số điện thoại</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Số điện thoại">Số điện thoại</label>
             <div class="input-group shadow-sm rounded-pill overflow-hidden border">
               <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-telephone"></i></span>
               <input type="text" class="form-control border-0 ps-0 shadow-none bg-white"
@@ -166,7 +166,7 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Email</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Email">Email</label>
             <div class="input-group shadow-sm rounded-pill overflow-hidden border">
               <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-envelope"></i></span>
               <input type="email" class="form-control border-0 ps-0 shadow-none bg-white"
@@ -181,7 +181,7 @@
           </div>
 
           <div class="col-md-12">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label">Địa chỉ</label>
+            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Địa chỉ">Địa chỉ</label>
             <textarea class="form-control form-control-custom shadow-sm" rows="2" name="address" [(ngModel)]="currentUser.address" [disabled]="isView" placeholder="Nhập địa chỉ cụ thể..."></textarea>
           </div>
         </div>
@@ -190,7 +190,7 @@
 
   </div>
 
-  <div class="modal-footer p-4 bg-white border-top">
+  <div class="modal-footer px-4 py-3 bg-white border-top">
     <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm me-auto" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
 
     @if (!isView) {

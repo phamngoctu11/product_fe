@@ -1,5 +1,5 @@
 <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-  <div class="modal-header text-white border-0 p-4" [ngClass]="isView ? 'bg-info bg-gradient' : 'bg-primary bg-gradient'">
+  <div class="modal-header text-white border-0 px-4 py-3" [ngClass]="isView ? 'bg-info bg-gradient' : 'bg-primary bg-gradient'">
     <h5 class="modal-title m-0 fw-bold fs-4">
       <i class="bi me-2" [ngClass]="isView ? 'bi-eye' : (isEdit ? 'bi-pencil-square' : 'bi-plus-circle')"></i>
       {{ isView ? 'Chi tiết Sản phẩm' : (isEdit ? 'Cập nhật Sản phẩm' : 'Thêm Sản phẩm mới') }}
@@ -7,7 +7,7 @@
     <button mat-dialog-close type="button" class="btn-close btn-close-white"></button>
   </div>
 
-  <div class="modal-body p-4 bg-light modal-scroll">
+  <div class="modal-body p-3 bg-light modal-scroll">
     <form [formGroup]="productForm">
 
       <!-- Khối Thông tin gốc -->
@@ -149,7 +149,7 @@
 
             <div formGroupName="dynamicAttributes" class="row g-3 mt-3 pt-3 border-top">
               <div class="col-md-4 col-sm-6" *ngFor="let field of dynamicFields">
-                <label class="form-label small text-primary mb-1 fw-bold text-capitalize"><i class="bi bi-stars me-1"></i>{{ getLabel(field) }}</label>
+                <label class="form-label small text-primary mb-1 fw-bold text-capitalize" [title]="getLabel(field)"><i class="bi bi-stars me-1"></i>{{ getLabel(field) }}</label>
                 <input type="text" class="form-control form-control-custom" [formControlName]="field" />
               </div>
             </div>
@@ -161,7 +161,7 @@
     </form>
   </div>
 
-  <div class="modal-footer p-4 bg-white border-top">
+  <div class="modal-footer px-4 py-3 bg-white border-top">
     <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold me-auto shadow-sm"
             *ngIf="!authService.isAdmin()"
             (click)="askAboutProduct()">

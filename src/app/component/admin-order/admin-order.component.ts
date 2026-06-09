@@ -1,21 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Order } from '../../model/order.model';
+import { Order, OrderListDTO } from '../../model/order.model';
 import { UserResListDTO } from '../../model/user.model';
 import { OrderService } from '../../service/order.service';
 import { UserService } from '../../service/user.service';
 import { getApiErrorMessage } from '../../model/api-response.model';
+import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-popup.component';
 
 @Component({
   selector: 'app-admin-order',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrderDetailPopupComponent],
   templateUrl: './admin-order.component.html',
   styleUrl: './admin-order.component.css',
 })
 export class AdminOrderComponent implements OnInit {
-  pendingOrders: Order[] = [];
+  pendingOrders: OrderListDTO[] = [];
   staffs: UserResListDTO[] = [];
   selectedStaffByOrder: { [orderId: number]: number | null } = {};
   activeStatus: 'PENDING_KCS' | 'PENDING_APPROVAL' | null = null;
@@ -25,10 +26,13 @@ export class AdminOrderComponent implements OnInit {
   pageSize = 20;
   totalPages = 0;
   userId: number | null = null;
+  selectedOrderDetail: Order | null = null;
+  isDetailLoading = false;
+  detailError = '';
 
   constructor(
     private orderService: OrderService,
-    private userService: UserService
+    private userService: UserService,
   ) {}
 
   ngOnInit(): void {
@@ -84,6 +88,34 @@ export class AdminOrderComponent implements OnInit {
     return this.currentPage + 1 < this.totalPages;
   }
 
+  openOrderDetail(order: OrderListDTO): void {
+    this.selectedOrderDetail = null;
+    this.detailError = '';
+    this.isDetailLoading = true;
+
+    this.orderService.getById(order.id).subscribe({
+      next: (detail) => {
+        this.selectedOrderDetail = {
+          ...detail,
+          staffName: detail.staffName || order.staffName || null,
+          managerId: detail.managerId ?? detail.approvedById ?? null,
+          managerName: detail.managerName || detail.approvedByFullName || null,
+        };
+        this.isDetailLoading = false;
+      },
+      error: (err) => {
+        this.detailError = getApiErrorMessage(err, 'Không thể tải chi tiết đơn hàng.');
+        this.isDetailLoading = false;
+      },
+    });
+  }
+
+  closeOrderDetail(): void {
+    this.selectedOrderDetail = null;
+    this.isDetailLoading = false;
+    this.detailError = '';
+  }
+
   getActivePanelTitle(): string {
     return this.activeStatus === 'PENDING_KCS' ? 'Đơn chờ KCS' : 'Đơn chờ duyệt';
   }
@@ -100,7 +132,7 @@ export class AdminOrderComponent implements OnInit {
     });
   }
 
-  approveOrder(order: Order): void {
+  approveOrder(order: OrderListDTO): void {
     if (!this.userId) {
       alert('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
       return;
@@ -126,7 +158,7 @@ export class AdminOrderComponent implements OnInit {
     });
   }
 
-  rejectOrder(order: Order): void {
+  rejectOrder(order: OrderListDTO): void {
     if (!this.userId) {
       alert('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
       return;
@@ -152,7 +184,7 @@ export class AdminOrderComponent implements OnInit {
     });
   }
 
-  assignStaff(order: Order): void {
+  assignStaff(order: OrderListDTO): void {
     const staffId = this.selectedStaffByOrder[order.id];
     if (!staffId) {
       alert('Vui lòng chọn staff trước khi gán đơn.');
@@ -174,12 +206,19 @@ export class AdminOrderComponent implements OnInit {
     });
   }
 
-  kcsCheck(order: Order, isPassed: boolean): void {
+  kcsCheck(order: OrderListDTO, isPassed: boolean): void {
     const action = isPassed ? 'duyệt KCS đạt' : 'trả về staff để xuất lại';
     if (!confirm(`Bạn có chắc chắn muốn ${action} cho đơn hàng #${order.id}?`)) return;
 
+    let cancelReason = '';
+    if (!isPassed) {
+      const reason = prompt(`Nhập lý do KCS không đạt cho đơn hàng #${order.id} (không bắt buộc):`);
+      if (reason === null) return;
+      cancelReason = reason.trim();
+    }
+
     this.isLoading = true;
-    this.orderService.kcsCheck(order.id, isPassed).subscribe({
+    this.orderService.kcsCheck(order.id, isPassed, cancelReason).subscribe({
       next: (message) => {
         alert(message);
         this.loadPendingOrders();
@@ -189,22 +228,5 @@ export class AdminOrderComponent implements OnInit {
         this.isLoading = false;
       },
     });
-  }
-
-  getStatusName(status: string): string {
-    const statusMap: { [key: string]: string } = {
-      PENDING_APPROVAL: 'Chờ duyệt',
-      PENDING_WAREHOUSE: 'Chờ gán/nhận kho',
-      WAREHOUSE_ASSIGNED: 'Đã gán staff',
-      PENDING_KCS: 'Chờ KCS',
-      SHIPPING: 'Đang giao',
-      CANCELLED: 'Đã hủy',
-    };
-
-    return statusMap[status] || status;
-  }
-
-  getOrderTotal(order: Order): number {
-    return Number(order.finalPrice || order.totalPrice || 0);
   }
 }

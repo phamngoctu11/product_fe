@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Order, OrderItem } from '../../model/order.model';
+import { Order, OrderItem, OrderListDTO } from '../../model/order.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { OrderService } from '../../service/order.service';
 
@@ -12,8 +12,8 @@ import { OrderService } from '../../service/order.service';
   templateUrl: './staff-orders.component.html',
 })
 export class StaffOrdersComponent implements OnInit {
-  warehousePendingOrders: Order[] = [];
-  myOrders: Order[] = [];
+  warehousePendingOrders: OrderListDTO[] = [];
+  myOrders: OrderListDTO[] = [];
   activeTab: 'pending' | 'mine' = 'pending';
 
   isLoading = false;
@@ -111,7 +111,7 @@ export class StaffOrdersComponent implements OnInit {
     return this.minePage + 1 < this.mineTotalPages;
   }
 
-  claimOrder(order: Order): void {
+  claimOrder(order: OrderListDTO): void {
     if (!confirm(`Bạn muốn nhận xử lý đơn hàng #${order.id}?`)) return;
 
     this.isLoading = true;
@@ -128,12 +128,15 @@ export class StaffOrdersComponent implements OnInit {
     });
   }
 
-  openOrderDetail(order: Order): void {
+  openOrderDetail(order: OrderListDTO): void {
     this.selectedOrder = null;
     this.detailLoading = true;
     this.orderService.getById(order.id).subscribe({
       next: (detail) => {
-        this.selectedOrder = detail;
+        this.selectedOrder = {
+          ...detail,
+          staffName: detail.staffName || order.staffName || null,
+        };
         this.initExportQuantitiesForOrder(detail);
         this.detailLoading = false;
       },
@@ -155,7 +158,7 @@ export class StaffOrdersComponent implements OnInit {
   }
 
   exportOrder(order: Order): void {
-    const items = this.getOrderItems(order);
+    const items = order.items || [];
     const payload = items.map((item) => ({
       variantId: this.getVariantId(item),
       quantity: this.getExportQuantity(order.id, item),
@@ -193,11 +196,6 @@ export class StaffOrdersComponent implements OnInit {
     });
   }
 
-  getOrderItems(order: Order | null): OrderItem[] {
-    if (!order) return [];
-    return order.items || order.orderItems || order.details || [];
-  }
-
   getVariantId(item: OrderItem): number {
     return Number(item.variantId || item.productVariantId || 0);
   }
@@ -223,29 +221,13 @@ export class StaffOrdersComponent implements OnInit {
     this.exportQuantities[orderId][variantId] = Number(value || 0);
   }
 
-  getStatusName(status: string): string {
-    const statusMap: { [key: string]: string } = {
-      PENDING_WAREHOUSE: 'Chờ nhận kho',
-      WAREHOUSE_ASSIGNED: 'Đã nhận kho',
-      PENDING_KCS: 'Chờ KCS',
-      SHIPPING: 'Đang giao',
-    };
-
-    return statusMap[status] || status;
-  }
-
-  getOrderTotal(order: Order | null): number {
-    if (!order) return 0;
-    return Number(order.finalPrice || order.totalPrice || 0);
-  }
-
   canExport(order: Order | null): boolean {
-    return !!order && order.status === 'WAREHOUSE_ASSIGNED' && this.getOrderItems(order).length > 0;
+    return !!order && order.status === 'WAREHOUSE_ASSIGNED' && (order.items?.length || 0) > 0;
   }
 
   private initExportQuantitiesForOrder(order: Order): void {
     if (!this.exportQuantities[order.id]) this.exportQuantities[order.id] = {};
-    this.getOrderItems(order).forEach((item) => {
+    (order.items || []).forEach((item) => {
       const variantId = this.getVariantId(item);
       if (variantId && this.exportQuantities[order.id][variantId] === undefined) {
         this.exportQuantities[order.id][variantId] = Number(item.exportedQuantity ?? item.quantity ?? 0);

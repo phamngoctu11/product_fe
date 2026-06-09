@@ -96,10 +96,11 @@ export class ProductComponent implements OnInit, OnDestroy {
   // HÀM MỚI: XEM CHI TIẾT SẢN PHẨM (READ-ONLY)
   viewProduct(id: number | null | undefined) {
     this.dialog.open(ProductDetailComponent, {
-      width: '800px',
+      width: '940px',
+      maxWidth: 'calc(100vw - 48px)',
+      maxHeight: '78vh',
       data: { id: id || null, availableTags: this.getAvailableTags(), isView: true },
       disableClose: false,
-      maxHeight: '90vh'
     });
   }
 
@@ -107,10 +108,11 @@ export class ProductComponent implements OnInit, OnDestroy {
   openProductDialog(id: number | null | undefined = null) {
     if (!this.isAdmin) { alert('Bạn không có quyền thực hiện chức năng này!'); return; }
     const dialogRef = this.dialog.open(ProductDetailComponent, {
-      width: '800px',
+      width: '940px',
+      maxWidth: 'calc(100vw - 48px)',
+      maxHeight: '78vh',
       data: { id: id || null, availableTags: this.getAvailableTags(), isView: false },
       disableClose: true,
-      maxHeight: '90vh'
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -123,7 +125,9 @@ export class ProductComponent implements OnInit, OnDestroy {
     if (!product.variants || product.variants.length === 0) { alert('Sản phẩm này hiện tại chưa có phân loại hàng!'); return; }
 
     const dialogRef = this.dialog.open(AddToCartModalComponent, {
-      width: '650px',
+      width: '860px',
+      maxWidth: 'calc(100vw - 48px)',
+      maxHeight: '78vh',
       data: { product: product },
       disableClose: false
     });

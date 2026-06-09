@@ -1,33 +1,60 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './component/login/login';
-import { UserComponent } from './component/user/user';
-import { Orders } from './component/orders/orders';
-import { Myinfor } from './component/myinfor/myinfor';
-import { ProductComponent } from './component/product/product';
-import { PaymentSuccessComponent } from './component/payment-success/payment-success';
-import { AdminOrderComponent } from './component/admin-order/admin-order.component';
-import { AdminDashboard } from './component/admin-dashboard/admin-dashboard';
-import { AdminChatComponent } from './component/chat/admin_chat/admin-chat.component';
-import { ProductPageComponent } from './component/product-page/product-page.component';
-import { StaffOrdersComponent } from './component/staff-orders/staff-orders.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'product', component: ProductComponent },
-  { path: 'user', component: UserComponent },
-  { path: 'orders', component: Orders },
-  { path: 'staff-orders', component: StaffOrdersComponent },
-  { path: 'myinfor', component: Myinfor },
-   { path: 'admin-orders', component: AdminOrderComponent },
-  { path: 'payment-success', component: PaymentSuccessComponent },
-  { path: 'product/:id', component: ProductPageComponent },
   {
-  path: 'admin-dashboard',
-  component:AdminDashboard
-},
-{
-  path: 'admin-chat',
-  component:AdminChatComponent
-}
+    path: 'login',
+    loadComponent: () => import('./component/login/login').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'product',
+    loadComponent: () => import('./component/product/product').then((m) => m.ProductComponent),
+  },
+  {
+    path: 'product/:id',
+    loadComponent: () =>
+      import('./component/product-page/product-page.component').then((m) => m.ProductPageComponent),
+  },
+  {
+    path: 'user',
+    loadComponent: () => import('./component/user/user').then((m) => m.UserComponent),
+  },
+  {
+    path: 'orders',
+    loadComponent: () => import('./component/orders/orders').then((m) => m.Orders),
+  },
+  {
+    path: 'staff-orders',
+    loadComponent: () =>
+      import('./component/staff-orders/staff-orders.component').then((m) => m.StaffOrdersComponent),
+  },
+  {
+    path: 'myinfor',
+    loadComponent: () => import('./component/myinfor/myinfor').then((m) => m.Myinfor),
+  },
+  {
+    path: 'admin-orders',
+    loadComponent: () =>
+      import('./component/admin-order/admin-order.component').then((m) => m.AdminOrderComponent),
+  },
+  {
+    path: 'admin-dashboard',
+    loadComponent: () =>
+      import('./component/admin-dashboard/admin-dashboard').then((m) => m.AdminDashboard),
+  },
+  {
+    path: 'admin-chat',
+    loadComponent: () =>
+      import('./component/chat/admin_chat/admin-chat.component').then((m) => m.AdminChatComponent),
+  },
+  {
+    path: 'admin-vouchers',
+    loadComponent: () =>
+      import('./component/voucher-admin/voucher-admin.component').then((m) => m.VoucherAdminComponent),
+  },
+  {
+    path: 'payment-success',
+    loadComponent: () =>
+      import('./component/payment-success/payment-success').then((m) => m.PaymentSuccessComponent),
+  },
 ];

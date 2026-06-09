@@ -1,22 +1,27 @@
-import { Component, Inject, OnInit } from '@angular/core';
+﻿import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { Order } from '../../../model/order.model';
+import { Order, OrderListDTO } from '../../../model/order.model';
 import { OrderService } from '../../../service/order.service';
+import { getApiErrorMessage } from '../../../model/api-response.model';
+import { OrderDetailPopupComponent } from '../../order-detail-popup/order-detail-popup.component';
 
 @Component({
   selector: 'app-order-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule],
+  imports: [CommonModule, MatDialogModule, OrderDetailPopupComponent],
   templateUrl: './order-dialog.html',
 })
 export class OrderDialogComponent implements OnInit {
-  orders: Order[] = [];
+  orders: OrderListDTO[] = [];
   isLoading = false;
   isLoadingMore = false;
   currentPage = 0;
   pageSize = 20;
   totalPages = 0;
+  selectedOrderDetail: Order | null = null;
+  isDetailLoading = false;
+  detailError = '';
   constructor(
     @Inject(MAT_DIALOG_DATA) public userId: number,
     private orderService: OrderService,
@@ -51,22 +56,31 @@ export class OrderDialogComponent implements OnInit {
     return this.currentPage + 1 < this.totalPages;
   }
 
-  getOrderItems(order: Order): any[] {
-    return order.items || order.orderItems || order.details || [];
+  openOrderDetail(order: OrderListDTO): void {
+    this.selectedOrderDetail = null;
+    this.detailError = '';
+    this.isDetailLoading = true;
+
+    this.orderService.getById(order.id).subscribe({
+      next: (detail) => {
+        this.selectedOrderDetail = {
+          ...detail,
+          staffName: detail.staffName || order.staffName || null,
+        };
+        this.isDetailLoading = false;
+      },
+      error: (err) => {
+        this.detailError = getApiErrorMessage(err, 'Khong the tai chi tiet don hang.');
+        this.isDetailLoading = false;
+      },
+    });
   }
 
-  getOrderTotalPrice(order: Order): number {
-    return Number(order.totalPrice || 0);
+  closeOrderDetail(): void {
+    this.selectedOrderDetail = null;
+    this.isDetailLoading = false;
+    this.detailError = '';
   }
 
-  getOrderDiscountAmount(order: Order): number {
-    return Number(order.discountAmount || 0);
-  }
-
-  getOrderFinalPrice(order: Order): number {
-    const finalPrice = Number(order.finalPrice);
-    if (!Number.isNaN(finalPrice) && finalPrice > 0) return finalPrice;
-
-    return Math.max(this.getOrderTotalPrice(order) - this.getOrderDiscountAmount(order), 0);
-  }
 }
+

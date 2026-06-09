@@ -99,6 +99,14 @@
   padding-bottom: 1rem;
 }
 
+.order-clickable-row {
+  cursor: pointer;
+}
+
+.order-clickable-row:hover {
+  background: #f8fafc;
+}
+
 @media (max-width: 768px) {
   .admin-order-status-grid {
     grid-template-columns: 1fr;

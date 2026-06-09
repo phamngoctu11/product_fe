@@ -1,0 +1,9 @@
+.order-detail-modal {
+  max-width: 1120px;
+  max-height: 92vh;
+  min-width: 0;
+}
+
+.order-detail-body {
+  max-height: calc(92vh - 96px);
+}

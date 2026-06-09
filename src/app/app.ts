@@ -1,5 +1,5 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Component, HostListener, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './service/auth.service';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -17,7 +17,15 @@ import { TimeAgoPipe } from './pipes/time-ago.pipe';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, MatDialogModule,ChatWidgetComponent,TimeAgoPipe],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    CommonModule,
+    MatDialogModule,
+    ChatWidgetComponent,
+    TimeAgoPipe,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -27,8 +35,11 @@ export class App implements OnInit, OnDestroy {
   userService = inject(UserService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
+  private readonly mobileBreakpoint = 992;
   userLastNamee: string = '';
   userAvatarUrl: string = '';
+  isSidebarCollapsed = false;
+  isMobileSidebarOpen = false;
 
   // Kho lưu trữ thông báo
   notifications: any[] = [];
@@ -44,6 +55,38 @@ export class App implements OnInit, OnDestroy {
     return localStorage.getItem('username') || 'User';
   }
 
+  get currentRole(): string {
+    return this.authService.getUserRole() || 'Khách';
+  }
+
+  get displayName(): string {
+    return this.userLastNamee || this.userLastName;
+  }
+
+  toggleSidebar() {
+    if (this.isMobileViewport()) {
+      this.isMobileSidebarOpen = !this.isMobileSidebarOpen;
+      return;
+    }
+
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  closeMobileSidebar() {
+    this.isMobileSidebarOpen = false;
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    if (!this.isMobileViewport()) {
+      this.isMobileSidebarOpen = false;
+    }
+  }
+
+  private isMobileViewport(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth < this.mobileBreakpoint;
+  }
+
   signUp() {
     // Code xử lý signup sau
   }
@@ -51,7 +94,12 @@ export class App implements OnInit, OnDestroy {
   openCart() {
     const userId = this.authService.getUserId();
     if (userId) {
-      this.dialog.open(CartModalComponent, { data: userId, width: '800px' });
+      this.dialog.open(CartModalComponent, {
+        data: userId,
+        width: '900px',
+        maxWidth: 'calc(100vw - 48px)',
+        maxHeight: '78vh',
+      });
     }
   }
 
@@ -65,7 +113,12 @@ export class App implements OnInit, OnDestroy {
   openRewards() {
     const userId = this.authService.getUserId();
     if (userId) {
-      this.dialog.open(RewardDialogComponent, { data: userId, width: '850px' });
+      this.dialog.open(RewardDialogComponent, {
+        data: userId,
+        width: '920px',
+        maxWidth: 'calc(100vw - 48px)',
+        maxHeight: '78vh',
+      });
     }
   }
 

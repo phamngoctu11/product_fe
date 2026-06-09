@@ -43,17 +43,17 @@
         <div>
           <div class="fw-bold fs-5 text-dark">Đơn hàng #{{ order.id }}</div>
           <div class="text-muted small mt-1">
-            <i class="bi bi-person me-1"></i>{{ order.customerName || order.lastname || 'Khách hàng' }}
+            <i class="bi bi-person me-1"></i>{{ order.customerName || 'Khách hàng' }}
             <span class="mx-2">•</span>
             <i class="bi bi-calendar3 me-1"></i>{{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
             <span class="mx-2">•</span>
             {{ order.paymentMethod || 'COD' }}
           </div>
-          <span class="badge rounded-pill text-bg-warning mt-3 px-3 py-2">{{ getStatusName(order.status) }}</span>
+          <span class="badge rounded-pill text-bg-warning mt-3 px-3 py-2">{{ order.status }}</span>
         </div>
         <div class="text-end">
           <div class="text-muted small">Tổng thanh toán</div>
-          <div class="text-danger fw-bold fs-5 mb-3">{{ getOrderTotal(order) | number: '1.0-0' }} đ</div>
+          <div class="text-danger fw-bold fs-5 mb-3">{{ order.finalPrice | number: '1.0-0' }} đ</div>
           <div class="d-flex flex-wrap gap-2 justify-content-end">
             <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderDetail(order)">
               <i class="bi bi-eye me-1"></i> Xem
@@ -87,7 +87,7 @@
         <div>
           <div class="fw-bold fs-5 text-dark">Đơn hàng #{{ order.id }}</div>
           <div class="text-muted small mt-1">
-            <i class="bi bi-person me-1"></i>{{ order.customerName || order.lastname || 'Khách hàng' }}
+            <i class="bi bi-person me-1"></i>{{ order.customerName || 'Khách hàng' }}
             <span class="mx-2">•</span>
             <i class="bi bi-calendar3 me-1"></i>{{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
             <span class="mx-2">•</span>
@@ -99,12 +99,12 @@
                   'text-bg-info': order.status === 'PENDING_KCS',
                   'text-bg-success': order.status === 'SHIPPING'
                 }">
-            {{ getStatusName(order.status) }}
+            {{ order.status }}
           </span>
         </div>
         <div class="text-end">
           <div class="text-muted small">Tổng thanh toán</div>
-          <div class="text-danger fw-bold fs-5 mb-3">{{ getOrderTotal(order) | number: '1.0-0' }} đ</div>
+          <div class="text-danger fw-bold fs-5 mb-3">{{ order.finalPrice | number: '1.0-0' }} đ</div>
           <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderDetail(order)">
             <i class="bi bi-pencil-square me-1"></i> Xem / cập nhật
           </button>
@@ -149,7 +149,7 @@
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Trạng thái</div>
-            <div class="fw-bold">{{ getStatusName(selectedOrder.status) }}</div>
+            <div class="fw-bold">{{ selectedOrder.status }}</div>
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Thanh toán</div>
@@ -157,7 +157,7 @@
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Tổng tiền</div>
-            <div class="fw-bold text-danger">{{ getOrderTotal(selectedOrder) | number: '1.0-0' }} đ</div>
+            <div class="fw-bold text-danger">{{ selectedOrder.finalPrice | number: '1.0-0' }} đ</div>
           </div>
           <div class="col-12">
             <div class="text-muted small">Ghi chú</div>
@@ -176,7 +176,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of getOrderItems(selectedOrder)">
+              <tr *ngFor="let item of selectedOrder.items">
                 <td class="ps-4">
                   <div class="d-flex align-items-center gap-3">
                     <img *ngIf="getItemImage(item)" [src]="getItemImage(item)" class="rounded border" style="width: 48px; height: 48px; object-fit: cover;">
@@ -197,7 +197,7 @@
                 </td>
                 <td class="text-end pe-4">{{ item.price | number: '1.0-0' }} đ</td>
               </tr>
-              <tr *ngIf="getOrderItems(selectedOrder).length === 0">
+              <tr *ngIf="!selectedOrder.items || selectedOrder.items.length === 0">
                 <td colspan="4" class="text-center text-muted fst-italic py-4">
                   Đơn hàng chưa có danh sách variant.
                 </td>
@@ -224,3 +224,4 @@
     </div>
   </div>
 </div>
+

@@ -1,0 +1,221 @@
+<div *ngIf="isVisible"
+     class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3"
+     style="z-index: 2000;"
+     (click)="close.emit()">
+  <div class="bg-white rounded-4 shadow-lg overflow-hidden w-100 order-detail-modal"
+       (click)="$event.stopPropagation()">
+    <div class="bg-primary text-white p-4 d-flex justify-content-between align-items-center gap-3">
+      <div>
+        <h4 class="fw-bold mb-1">
+          {{ receiptMode ? 'Xác nhận nhận hàng' : 'Chi tiết đơn hàng' }} {{ order ? '#' + order.id : '' }}
+        </h4>
+        <div class="small opacity-75">
+          {{ receiptMode ? 'Kiểm tra và nhập số lượng thực nhận cho từng item' : 'Thông tin người phụ trách, người duyệt và từng item trong đơn' }}
+        </div>
+      </div>
+      <button type="button" class="btn btn-sm btn-light rounded-circle flex-shrink-0" (click)="close.emit()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="p-4 overflow-auto order-detail-body">
+      <div *ngIf="isLoading" class="text-center text-muted py-5">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <div>Đang tải chi tiết đơn hàng...</div>
+      </div>
+
+      <div *ngIf="!isLoading && error" class="alert alert-danger mb-0">
+        {{ error }}
+      </div>
+
+      <ng-container *ngIf="!isLoading && !error && order as orderDetail">
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3 h-100 bg-light">
+              <div class="text-muted small mb-1">Người phụ trách</div>
+              <div *ngIf="orderDetail.staffId || orderDetail.staffName; else noStaff">
+                <div class="fw-bold text-dark">{{ orderDetail.staffName || 'Staff #' + orderDetail.staffId }}</div>
+              </div>
+              <ng-template #noStaff>
+                <div class="fw-bold text-muted">Chưa có nhân viên phụ trách</div>
+              </ng-template>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3 h-100 bg-light">
+              <div class="text-muted small mb-1">Người duyệt đơn</div>
+              <div *ngIf="orderDetail.managerName || orderDetail.approvedByFullName || orderDetail.managerId || orderDetail.approvedById; else noManager">
+                <div class="fw-bold text-dark">
+                  {{ orderDetail.managerName || orderDetail.approvedByFullName || 'Manager #' + (orderDetail.managerId || orderDetail.approvedById) }}
+                </div>
+              </div>
+              <ng-template #noManager>
+                <div class="fw-bold text-muted">Chưa có người duyệt đơn</div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <div class="text-muted small">Khách hàng</div>
+            <div class="fw-bold">{{ orderDetail.customerName || orderDetail.lastname || 'Khách vãng lai' }}</div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-muted small">Trạng thái</div>
+            <div class="fw-bold">{{ orderDetail.status }}</div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-muted small">Thanh toán</div>
+            <div class="fw-bold">{{ orderDetail.paymentMethod || 'COD' }}</div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-muted small">Ngày đặt</div>
+            <div class="fw-bold">{{ orderDetail.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-muted small">Tổng tiền gốc</div>
+            <div class="fw-bold">{{ orderDetail.totalPrice | number: '1.0-0' }} đ</div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-muted small">Giảm giá</div>
+            <div class="fw-bold">{{ (orderDetail.discountAmount || 0) | number: '1.0-0' }} đ</div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-muted small">Tổng thanh toán</div>
+            <div class="fw-bold text-danger">{{ orderDetail.finalPrice | number: '1.0-0' }} đ</div>
+          </div>
+          <div class="col-md-3">
+            <div class="text-muted small">Voucher</div>
+            <div class="fw-bold">{{ orderDetail.voucherName || 'Không áp dụng' }}</div>
+          </div>
+          <div class="col-12">
+            <div class="text-muted small">Ghi chú</div>
+            <div class="fw-medium">{{ orderDetail.note || 'Không có ghi chú' }}</div>
+          </div>
+          <div class="col-12" *ngIf="orderDetail.cancelReason">
+            <div class="text-muted small">Lý do hủy/từ chối</div>
+            <div class="fw-medium text-danger">{{ orderDetail.cancelReason }}</div>
+          </div>
+        </div>
+
+        <div *ngIf="receiptMode && receiptError" class="alert alert-warning">
+          {{ receiptError }}
+        </div>
+
+        <div class="table-responsive border rounded-3">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Item</th>
+                <th>Hình ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th class="text-center">SL đặt</th>
+                <th class="text-center">SL xuất</th>
+                <th class="text-center">SL nhận</th>
+                <th *ngIf="receiptMode" class="text-center" style="width: 180px;">SL thực nhận</th>
+                <th class="text-end pe-4">Đơn giá</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of orderDetail.items">
+                <td class="ps-4 fw-bold">#{{ item.id || item.orderItemId || item.productId }}</td>
+                <td>
+                  <div class="d-flex align-items-center gap-3">
+                    <img *ngIf="item.imageUrl || item.image_url"
+                         [src]="item.imageUrl || item.image_url"
+                         class="rounded border flex-shrink-0"
+                         style="width: 48px; height: 48px; object-fit: cover;">
+                    <div>
+                      <div class="fw-bold text-dark">{{ item.productName }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ item.variantName || 'Chưa có tên variant' }}</div>
+                  <div class="text-muted small" *ngIf="item.attributes">{{ item.attributes }}</div>
+                </td>
+                <td class="text-center fw-bold">{{ item.quantity }}</td>
+                <td class="text-center">{{ item.exportedQuantity ?? '-' }}</td>
+                <td class="text-center">{{ item.receivedQuantity ?? '-' }}</td>
+                <td *ngIf="receiptMode" class="text-center">
+                  <input type="number"
+                         class="form-control text-center fw-bold"
+                         min="0"
+                         [ngModel]="receivedQuantities[getVariantId(item)]"
+                         (ngModelChange)="receivedQuantities[getVariantId(item)] = +$event">
+                </td>
+                <td class="text-end pe-4 fw-bold">{{ item.price | number: '1.0-0' }} đ</td>
+              </tr>
+              <tr *ngIf="!orderDetail.items || orderDetail.items.length === 0">
+                <td [attr.colspan]="receiptMode ? 8 : 7" class="text-center text-muted fst-italic py-4">
+                  Đơn hàng chưa có danh sách item.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="receiptMode && receiptResponse && !receiptResponse.confirmed && receiptResponse.mismatches?.length" class="border rounded-3 p-3 mt-4 bg-light">
+          <div class="fw-bold text-danger mb-3">Số lượng thực nhận đang lệch với số lượng xuất kho</div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Variant</th>
+                  <th class="text-center">Đặt</th>
+                  <th class="text-center">Xuất</th>
+                  <th class="text-center">Thực nhận</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let mismatch of receiptResponse.mismatches">
+                  <td>
+                    <div class="fw-semibold">{{ mismatch.variantName || 'Variant #' + mismatch.variantId }}</div>
+                    <div class="text-muted small">ID: {{ mismatch.variantId }}</div>
+                  </td>
+                  <td class="text-center">{{ mismatch.orderedQuantity }}</td>
+                  <td class="text-center">{{ mismatch.exportedQuantity }}</td>
+                  <td class="text-center text-danger fw-bold">{{ mismatch.receivedQuantity }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <label class="form-label fw-bold mt-3">Ghi chú khiếu nại</label>
+          <textarea class="form-control"
+                    rows="3"
+                    maxlength="1000"
+                    [ngModel]="complaintNote"
+                    (ngModelChange)="complaintNoteChange.emit($event)"
+                    placeholder="Ví dụ: Khách chỉ nhận được 1 sản phẩm..."></textarea>
+        </div>
+
+        <div *ngIf="receiptMode" class="d-flex flex-wrap justify-content-end gap-2 mt-4">
+          <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="close.emit()" [disabled]="isSubmittingReceipt">
+            Đóng
+          </button>
+          <button *ngIf="receiptResponse && !receiptResponse.confirmed && receiptResponse.mismatches?.length"
+                  class="btn btn-outline-danger rounded-pill px-4 fw-bold"
+                  (click)="sendComplaint.emit()"
+                  [disabled]="isSubmittingReceipt">
+            Gửi khiếu nại
+          </button>
+          <button *ngIf="receiptResponse && !receiptResponse.confirmed && receiptResponse.mismatches?.length"
+                  class="btn btn-warning rounded-pill px-4 fw-bold"
+                  (click)="submitReceipt.emit(true)"
+                  [disabled]="isSubmittingReceipt">
+            Vẫn xác nhận nhận hàng
+          </button>
+          <button class="btn btn-primary rounded-pill px-4 fw-bold"
+                  (click)="submitReceipt.emit(false)"
+                  [disabled]="isSubmittingReceipt || !orderDetail.items || orderDetail.items.length === 0">
+            <span *ngIf="!isSubmittingReceipt">Xác nhận số lượng</span>
+            <span *ngIf="isSubmittingReceipt">Đang xử lý...</span>
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

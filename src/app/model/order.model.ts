@@ -1,4 +1,6 @@
-﻿export interface OrderItem {
+export interface OrderItem {
+  id?: number;
+  orderItemId?: number;
   variantId?: number;
   productVariantId?: number;
   productId: number;
@@ -24,7 +26,7 @@ export interface Order {
   orderItems?: OrderItem[];
   details?: OrderItem[];
   totalPrice: number;
-  finalPrice?: number;
+  finalPrice: number;
   discountAmount?: number;
   voucherName?: string;
   startOrderTime: string;
@@ -35,6 +37,19 @@ export interface Order {
   paymentMethod?: string;
   approvedById?: number | null;
   approvedByFullName?: string | null;
+  managerId?: number | null;
+  managerName?: string | null;
+  staffId?: number | null;
+  staffName?: string | null;
+}
+export interface OrderListDTO {
+  id: number;
+  customerName: string;
+  finalPrice: number;
+  status: string;
+  startOrderTime: string;
+  paymentMethod: string;
+  staffName?: string | null;
 }
 
 export interface OrderStatusHistory {
@@ -49,4 +64,30 @@ export interface ItemCheckRequest {
   variantId: number;
   quantity: number;
 }
+
+export interface ReceiptConfirmRequest {
+  receivedItems: ItemCheckRequest[];
+  acceptMismatch: boolean;
+}
+
+export interface ReceiptComplaintRequest {
+  receivedItems: ItemCheckRequest[];
+  note?: string;
+}
+
+export interface ReceiptMismatchDTO {
+  variantId: number;
+  variantName: string;
+  orderedQuantity: number;
+  exportedQuantity: number;
+  receivedQuantity: number;
+}
+
+export interface ReceiptConfirmResponse {
+  matched: boolean;
+  confirmed: boolean;
+  message: string;
+  mismatches: ReceiptMismatchDTO[];
+}
+
 

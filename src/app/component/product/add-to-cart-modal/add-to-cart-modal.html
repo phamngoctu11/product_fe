@@ -1,24 +1,47 @@
-<div class="modal-content shadow-lg border-0">
-  <div class="modal-header bg-success text-white border-0 p-3">
-    <h5 class="modal-title m-0 fw-bold">
+<style>
+  .add-cart-modal { max-height: 84vh; border-radius: 1rem; overflow: hidden; }
+  .add-cart-body { max-height: min(58vh, 600px); overflow-y: auto; }
+  .product-summary { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 1rem; }
+  .product-thumb { width: 76px; height: 76px; }
+  .product-tags { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .filter-panel { border-radius: 0.75rem; }
+  .filter-title, .result-title, .quantity-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .filter-row { display: grid; grid-template-columns: minmax(96px, 132px) minmax(0, 1fr); gap: 1rem; align-items: center; }
+  .filter-label { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .filter-options { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; min-width: 0; }
+  .filter-options .form-check { margin: 0; min-width: 112px; }
+  .filter-options .form-check-label { max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+  .variant-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap: 0.75rem; }
+  .variant-option { min-width: 0; transition: all 0.2s; border-radius: 0.75rem; }
+  .variant-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .variant-attribute-badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 575.98px) {
+    .filter-row { grid-template-columns: 1fr; gap: 0.4rem; }
+    .filter-options .form-check { min-width: 0; }
+  }
+</style>
+
+<div class="modal-content shadow-lg border-0 add-cart-modal">
+  <div class="modal-header bg-success text-white border-0 px-4 py-3">
+    <h5 class="modal-title m-0 fw-bold text-truncate">
       <i class="bi bi-cart-plus me-2"></i>Chọn tùy chọn mua hàng
     </h5>
     <button type="button" class="btn-close btn-close-white" (click)="onCancel()"></button>
   </div>
 
-  <div class="modal-body p-4" style="max-height: 65vh; overflow-y: auto;">
-    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+  <div class="modal-body p-3 add-cart-body">
+    <div class="product-summary align-items-center mb-3 pb-3 border-bottom">
 
-      <div class="bg-light rounded p-1 text-center me-3 border d-flex justify-content-center align-items-center overflow-hidden shadow-sm" style="width: 80px; height: 80px; flex-shrink: 0;">
+      <div class="bg-light rounded p-1 text-center border d-flex justify-content-center align-items-center overflow-hidden shadow-sm product-thumb">
         <img *ngIf="getDisplayImage()"
              [src]="getDisplayImage()"
              style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
         <i *ngIf="!getDisplayImage()" class="bi bi-box-seam text-secondary fs-1"></i>
       </div>
 
-      <div>
-        <h5 class="fw-bold text-dark m-0">{{ product.product_name }}</h5>
-        <span class="badge bg-secondary mt-1" *ngIf="product.tags">{{ product.tags }}</span>
+      <div class="min-w-0">
+        <h5 class="fw-bold text-dark m-0 text-truncate" [title]="product.product_name">{{ product.product_name }}</h5>
+        <span class="badge bg-secondary mt-1 product-tags" *ngIf="product.tags" [title]="product.tags">{{ product.tags }}</span>
 
         <div class="text-danger fw-bold mt-1 fs-5">
            {{ selectedVariant ? (selectedVariant.price | number) : ('Từ ' + (product.price | number)) }}đ
@@ -26,35 +49,37 @@
       </div>
     </div>
 
-    <div class="mb-3 bg-light p-3 rounded" *ngIf="getObjectKeys(availableFilters).length > 0">
-      <label class="fw-bold text-dark mb-2"><i class="bi bi-funnel me-1"></i>Bộ lọc phân loại:</label>
-      <div class="mb-2 d-flex flex-wrap align-items-center" *ngFor="let key of getObjectKeys(availableFilters)">
-        <span class="text-primary small fw-bold me-3 d-inline-block" style="min-width: 90px;">{{ getLabel(key) }}:</span>
-        <div class="form-check form-check-inline" *ngFor="let val of availableFilters[key]">
+    <div class="mb-3 bg-light p-3 filter-panel" *ngIf="getObjectKeys(availableFilters).length > 0">
+      <label class="fw-bold text-dark mb-3 filter-title"><i class="bi bi-funnel me-1"></i>Bộ lọc phân loại</label>
+      <div class="filter-row mb-2" *ngFor="let key of getObjectKeys(availableFilters)">
+        <span class="text-primary small fw-bold filter-label" [title]="getLabel(key)">{{ getLabel(key) }}:</span>
+        <div class="filter-options">
+          <div class="form-check" *ngFor="let val of availableFilters[key]">
           <input class="form-check-input border-secondary" type="checkbox" [id]="key + val" [value]="val" (change)="toggleFilter(key, val, $event)">
-          <label class="form-check-label text-dark" [for]="key + val">{{ val }}</label>
+            <label class="form-check-label text-dark" [for]="key + val" [title]="val">{{ val }}</label>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="mb-4">
-      <label class="form-label fw-bold text-dark mb-3">Kết quả Phân loại hàng:</label>
-      <div class="d-flex flex-wrap gap-2">
+    <div class="mb-3">
+      <label class="form-label fw-bold text-dark mb-3 result-title">Kết quả phân loại</label>
+      <div class="variant-grid">
         @for (v of filteredVariants; track v.id) {
-          <button class="btn text-start border"
+          <button class="btn text-start border variant-option"
                   [ngClass]="{
                     'btn-outline-secondary': selectedVariant?.id !== v.id && v.quantity > 0,
                     'btn-success text-white border-success shadow-sm': selectedVariant?.id === v.id,
                     'btn-light text-muted border-dashed': v.quantity <= 0
                   }"
                   [disabled]="v.quantity <= 0"
-                  (click)="selectVariant(v)"
-                  style="min-width: 170px; transition: all 0.2s;">
-            <div class="fw-bold mb-1">{{ v.variantName }}</div>
+                  (click)="selectVariant(v)">
+            <div class="fw-bold mb-1 variant-name" [title]="v.variantName">{{ v.variantName }}</div>
 
             <div class="d-flex flex-wrap gap-1 mt-1">
               @for (key of getObjectKeys(v.parsedAttributes); track key) {
-                <span class="badge"
+                <span class="badge variant-attribute-badge"
+                      [title]="getLabel(key) + ': ' + v.parsedAttributes[key]"
                       [ngClass]="selectedVariant?.id === v.id ? 'bg-white text-success' : 'bg-light text-secondary border'">
                   {{ getLabel(key) }}: {{ v.parsedAttributes[key] }}
                 </span>
@@ -74,7 +99,7 @@
     </div>
 
     <div class="mb-2" *ngIf="selectedVariant">
-      <label class="form-label fw-bold text-dark mb-2">Chọn số lượng mua:</label>
+      <label class="form-label fw-bold text-dark mb-2 quantity-title">Chọn số lượng mua</label>
       <div class="input-group" style="width: 140px;">
         <button class="btn btn-outline-secondary" type="button" (click)="quantity = quantity > 1 ? quantity - 1 : 1">
           <i class="bi bi-dash"></i>
@@ -88,9 +113,9 @@
     </div>
   </div>
 
-  <div class="modal-footer p-3 bg-light border-0 d-flex justify-content-between">
-    <button class="btn btn-secondary px-4" (click)="onCancel()">Hủy bỏ</button>
-    <button class="btn btn-success px-4 fw-bold" [disabled]="!selectedVariant || quantity <= 0 || quantity > selectedVariant.quantity" (click)="onConfirm()">
+  <div class="modal-footer px-4 py-3 bg-light border-0 d-flex justify-content-between gap-3">
+    <button class="btn btn-secondary px-4 rounded-pill fw-bold" (click)="onCancel()">Hủy bỏ</button>
+    <button class="btn btn-success px-4 rounded-pill fw-bold" [disabled]="!selectedVariant || quantity <= 0 || quantity > selectedVariant.quantity" (click)="onConfirm()">
       <i class="bi bi-cart-plus me-1"></i> Xác nhận thêm vào giỏ
     </button>
   </div>

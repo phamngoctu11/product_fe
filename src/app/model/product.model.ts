@@ -18,6 +18,13 @@ export interface ProductVariant {
   image_url?: string; // DUY NHẤT 1 KIỂU
 }
 
+export interface BestSellingProduct {
+  productId: number;
+  productName: string;
+  soldQuantity: number;
+  imageUrl?: string;
+}
+
 export interface PageResponse<T> {
   content: T[];
   number: number;

@@ -2,7 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Order, OrderStatusHistory } from '../model/order.model';
+import {
+  Order,
+  OrderListDTO,
+  OrderStatusHistory,
+  ReceiptComplaintRequest,
+  ReceiptConfirmRequest,
+  ReceiptConfirmResponse,
+} from '../model/order.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { PageResponse } from '../model/page-response.model';
 import { environment } from '../../environments/environment';
@@ -15,10 +22,17 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  getOrdersByUserId(userId: number, page: number = 0, size: number = 20): Observable<PageResponse<Order>> {
+  getOrdersByUserId(userId: number, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http
-      .get<ApiResponse<PageResponse<Order>> | PageResponse<Order>>(`${this.apiUrl}/user/${userId}`, { params })
+      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/user/${userId}`, { params })
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getCancelledOrdersByUserId(userId: number, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http
+      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/user/${userId}/cancelled`, { params })
       .pipe(map(unwrapApiResponse));
   }
 
@@ -28,17 +42,16 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  getPendingOrders(status: string, page: number = 0, size: number = 20): Observable<PageResponse<Order>> {
+  getPendingOrders(status: string, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
     const params = new HttpParams()
       .set('status', status)
       .set('page', page.toString())
       .set('size', size.toString());
     return this.http
-      .post<ApiResponse<PageResponse<Order>> | PageResponse<Order>>(`${this.apiUrl}/admin/pending`, null, { params })
+      .post<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/admin/pending`, null, { params })
       .pipe(map(unwrapApiResponse));
   }
 
-  // Giữ nguyên tên hàm này
   updateOrderStatus(orderId: number, status: string): Observable<string> {
     const params = new HttpParams().set('status', status);
     return this.http.put(`${this.apiUrl}/${orderId}/status`, null, {
@@ -47,7 +60,6 @@ export class OrderService {
     });
   }
 
-  // Thêm mới API hủy đơn
   cancelOrder(orderId: number, reason: string): Observable<string> {
     const params = new HttpParams().set('reason', reason);
     return this.http.put(`${this.apiUrl}/${orderId}/cancel`, null, {
@@ -56,16 +68,24 @@ export class OrderService {
     });
   }
 
-  confirmReceipt(orderId: number): Observable<string> {
+  confirmReceipt(orderId: number, request: ReceiptConfirmRequest): Observable<ReceiptConfirmResponse> {
     return this.http
-      .post<ApiResponse<null> | string>(`${this.apiUrl}/customer/confirm-receipt/${orderId}`, null)
-      .pipe(map((response: any) => this.extractMessage(response, 'Xác nhận nhận hàng thành công!')));
+      .post<ApiResponse<ReceiptConfirmResponse> | ReceiptConfirmResponse>(`${this.apiUrl}/customer/confirm-receipt/${orderId}`, request)
+      .pipe(map(unwrapApiResponse));
   }
+
+  sendReceiptComplaint(orderId: number, request: ReceiptComplaintRequest): Observable<ReceiptConfirmResponse> {
+    return this.http
+      .post<ApiResponse<ReceiptConfirmResponse> | ReceiptConfirmResponse>(`${this.apiUrl}/customer/receipt-complaint/${orderId}`, request)
+      .pipe(map(unwrapApiResponse));
+  }
+
   getOrderHistory(orderId: number): Observable<OrderStatusHistory[]> {
     return this.http
       .get<ApiResponse<OrderStatusHistory[]> | OrderStatusHistory[]>(`${this.apiUrl}/${orderId}/history`)
       .pipe(map(unwrapApiResponse));
   }
+
   reviewOrder(orderId: number, approved: boolean, cancelReason: string | null = null, changerId: number, staffId?: number): Observable<string> {
     const payload = {
       approved: approved,
@@ -102,17 +122,19 @@ export class OrderService {
       .pipe(map((response: any) => this.extractMessage(response, 'Gán staff thành công!')));
   }
 
-  kcsCheck(orderId: number, isPassed: boolean): Observable<string> {
-    const params = new HttpParams().set('isPassed', String(isPassed));
+  kcsCheck(orderId: number, isPassed: boolean, cancelReason: string = ''): Observable<string> {
+    const params = new HttpParams()
+      .set('isPassed', String(isPassed))
+      .set('cancelReason', cancelReason);
     return this.http
       .post<ApiResponse<null> | string>(`${this.apiUrl}/manager/kcs-check/${orderId}`, null, { params })
       .pipe(map((response: any) => this.extractMessage(response, isPassed ? 'KCS đạt, đơn chuyển sang giao hàng!' : 'KCS không đạt, đơn đã trả về staff.')));
   }
 
-  getWarehousePendingOrders(page: number = 0, size: number = 20): Observable<PageResponse<Order>> {
+  getWarehousePendingOrders(page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http
-      .get<ApiResponse<PageResponse<Order>> | PageResponse<Order>>(`${this.apiUrl}/staff/warehouse-pending`, { params })
+      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/staff/warehouse-pending`, { params })
       .pipe(map(unwrapApiResponse));
   }
 
@@ -122,10 +144,10 @@ export class OrderService {
       .pipe(map((response: any) => this.extractMessage(response, 'Nhận đơn thành công!')));
   }
 
-  getMyStaffOrders(page: number = 0, size: number = 20): Observable<PageResponse<Order>> {
+  getMyStaffOrders(page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http
-      .get<ApiResponse<PageResponse<Order>> | PageResponse<Order>>(`${this.apiUrl}/staff/my-orders`, { params })
+      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/staff/my-orders`, { params })
       .pipe(map(unwrapApiResponse));
   }
 

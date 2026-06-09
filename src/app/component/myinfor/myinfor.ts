@@ -96,7 +96,9 @@ export class Myinfor implements OnInit {
     if (userIdStr) {
       this.dialog.open(CartModalComponent, {
         data: Number(userIdStr),
-        width: '800px',
+        width: '900px',
+        maxWidth: 'calc(100vw - 48px)',
+        maxHeight: '78vh',
         autoFocus: false
       });
     }

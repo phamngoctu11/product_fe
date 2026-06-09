@@ -57,7 +57,9 @@ export class UserComponent implements OnInit {
 
   openUserDialog(id: number | null = null) {
     const dialogRef = this.dialog.open(Userdetail, {
-      width: '700px',
+      width: '820px',
+      maxWidth: 'calc(100vw - 48px)',
+      maxHeight: '78vh',
       data: { id: id, action: 'edit' },
       disableClose: true,
     });
@@ -84,7 +86,9 @@ export class UserComponent implements OnInit {
 
   viewUser(id: number) {
     this.dialog.open(Userdetail, {
-      width: '700px',
+      width: '820px',
+      maxWidth: 'calc(100vw - 48px)',
+      maxHeight: '78vh',
       data: { id: id, action: 'view' },
       disableClose: false,
     });

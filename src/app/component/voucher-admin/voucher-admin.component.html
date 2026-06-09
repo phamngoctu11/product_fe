@@ -1,0 +1,254 @@
+<div class="container-fluid p-4 voucher-admin-page">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h2 class="fw-bold text-dark mb-1">
+        <i class="bi bi-ticket-perforated-fill text-primary me-2"></i>Cấu hình voucher
+      </h2>
+      <div class="text-muted">Tạo campaign đổi điểm và giảm giá cho toàn hệ thống</div>
+    </div>
+    <button class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm"
+            type="button"
+            (click)="loadTemplates()"
+            [disabled]="isLoadingTemplates">
+      <i class="bi bi-arrow-clockwise me-1"></i> Tải lại
+    </button>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-xl-7">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="fw-bold text-dark mb-1">Tạo voucher campaign</h5>
+          <small class="text-muted">Các trường được map theo `VoucherTemplate` ở backend.</small>
+        </div>
+
+        <div class="card-body p-4">
+          <form #voucherForm="ngForm" (ngSubmit)="saveCampaign(voucherForm)">
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label class="form-label fw-semibold">Mã voucher</label>
+                <input class="form-control shadow-sm"
+                       name="code"
+                       required
+                       maxlength="50"
+                       placeholder="VD: SUMMER20"
+                       [(ngModel)]="campaign.code">
+              </div>
+
+              <div class="col-md-7">
+                <label class="form-label fw-semibold">Tên voucher</label>
+                <input class="form-control shadow-sm"
+                       name="name"
+                       required
+                       maxlength="120"
+                       placeholder="VD: Giảm 20% mùa hè"
+                       [(ngModel)]="campaign.name">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Mô tả</label>
+                <textarea class="form-control shadow-sm"
+                          name="description"
+                          rows="3"
+                          maxlength="500"
+                          placeholder="Mô tả điều kiện và mục đích campaign"
+                          [(ngModel)]="campaign.description"></textarea>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Điểm đổi</label>
+                <input class="form-control shadow-sm"
+                       name="pointCost"
+                       type="number"
+                       min="0"
+                       required
+                       [(ngModel)]="campaign.pointCost">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Đơn tối thiểu</label>
+                <input class="form-control shadow-sm"
+                       name="minOrderValue"
+                       type="number"
+                       min="0"
+                       step="1000"
+                       required
+                       [(ngModel)]="campaign.minOrderValue">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Số lượng phát hành</label>
+                <input class="form-control shadow-sm"
+                       name="quantity"
+                       type="number"
+                       min="0"
+                       required
+                       [(ngModel)]="campaign.quantity">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Phần trăm giảm</label>
+                <div class="input-group shadow-sm">
+                  <input class="form-control"
+                         name="discountPercent"
+                         type="number"
+                         min="0"
+                         step="0.1"
+                         required
+                         [(ngModel)]="campaign.discountPercent">
+                  <span class="input-group-text">%</span>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Giảm tối đa</label>
+                <div class="input-group shadow-sm">
+                  <input class="form-control"
+                         name="maxDiscountAmount"
+                         type="number"
+                         min="0"
+                         step="1000"
+                         required
+                         [(ngModel)]="campaign.maxDiscountAmount">
+                  <span class="input-group-text">đ</span>
+                </div>
+              </div>
+
+              <div class="col-md-7">
+                <label class="form-label fw-semibold">Ngày hết hạn</label>
+                <input class="form-control shadow-sm"
+                       name="expiryDate"
+                       type="datetime-local"
+                       required
+                       [min]="getMinExpiryDate()"
+                       [(ngModel)]="campaign.expiryDate">
+              </div>
+
+              <div class="col-md-5">
+                <label class="form-label fw-semibold d-block">Trạng thái</label>
+                <div class="form-check form-switch bg-light border rounded-3 px-5 py-2 shadow-sm">
+                  <input class="form-check-input"
+                         type="checkbox"
+                         role="switch"
+                         name="active"
+                         [(ngModel)]="campaign.active">
+                  <label class="form-check-label fw-semibold">
+                    {{ campaign.active ? 'Đang kích hoạt' : 'Tạm tắt' }}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button class="btn btn-light border rounded-pill px-4 fw-bold"
+                      type="button"
+                      [disabled]="isSaving"
+                      (click)="campaign = createEmptyCampaign(); voucherForm.resetForm(campaign)">
+                Nhập lại
+              </button>
+              <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
+                      type="submit"
+                      [disabled]="voucherForm.invalid || isSaving">
+                <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1"></span>
+                <i *ngIf="!isSaving" class="bi bi-plus-circle me-1"></i>
+                Tạo campaign
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-5">
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="fw-bold text-dark mb-1">Xem trước</h5>
+          <small class="text-muted">Thông tin user sẽ thấy khi đổi voucher.</small>
+        </div>
+        <div class="card-body p-4">
+          <div class="border rounded-4 p-4 bg-primary bg-opacity-10">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <div class="badge bg-primary rounded-pill mb-2">{{ campaign.code || 'VOUCHER_CODE' }}</div>
+                <h5 class="fw-bold text-dark mb-2">{{ campaign.name || 'Tên voucher' }}</h5>
+                <p class="text-muted mb-3">{{ campaign.description || 'Mô tả voucher sẽ hiển thị tại đây.' }}</p>
+              </div>
+              <i class="bi bi-ticket-perforated-fill text-primary fs-1"></i>
+            </div>
+            <div class="row g-2 small">
+              <div class="col-6">
+                <div class="bg-white rounded-3 p-3 h-100">
+                  <div class="text-muted">Điểm đổi</div>
+                  <div class="fw-bold">{{ campaign.pointCost | number }} điểm</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="bg-white rounded-3 p-3 h-100">
+                  <div class="text-muted">Giảm</div>
+                  <div class="fw-bold">{{ campaign.discountPercent | number:'1.0-1' }}%</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="bg-white rounded-3 p-3 h-100">
+                  <div class="text-muted">Đơn từ</div>
+                  <div class="fw-bold">{{ campaign.minOrderValue | number }}đ</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="bg-white rounded-3 p-3 h-100">
+                  <div class="text-muted">Giảm tối đa</div>
+                  <div class="fw-bold">{{ campaign.maxDiscountAmount | number }}đ</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="fw-bold text-dark mb-1">Template đang phát hành</h5>
+          <small class="text-muted">Dữ liệu lấy từ `/api/vouchers/templates`.</small>
+        </div>
+        <div class="card-body p-0">
+          <div *ngIf="isLoadingTemplates" class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+          </div>
+
+          <div *ngIf="!isLoadingTemplates && templates.length === 0" class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+            Chưa có voucher active.
+          </div>
+
+          <div *ngIf="!isLoadingTemplates && templates.length > 0" class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                  <th class="ps-4">Mã</th>
+                  <th>Điểm</th>
+                  <th>Còn lại</th>
+                  <th class="text-end pe-4">Giảm</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let template of templates">
+                  <td class="ps-4">
+                    <div class="fw-bold text-dark">{{ template.code }}</div>
+                    <div class="text-muted small text-truncate" style="max-width: 220px;">{{ template.name }}</div>
+                  </td>
+                  <td>{{ template.pointCost | number }}</td>
+                  <td>{{ template.quantity | number }}</td>
+                  <td class="text-end pe-4">
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill">
+                      {{ template.discountPercent | number:'1.0-1' }}%
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
