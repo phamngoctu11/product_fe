@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core'; // Thêm OnInit
 import { FormsModule, NgForm } from '@angular/forms';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { Router, ActivatedRoute } from '@angular/router'; // Thêm ActivatedRoute
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../service/auth.service';
@@ -13,6 +15,7 @@ import { getApiErrorMessage } from '../../model/api-response.model';
   styleUrl: './login.css',
 })
 export class LoginComponent implements OnInit {
+  private readonly toast = injectToast(ToastService);
   isLoginMode = true;
 
   loginData = { username: '', password: '' };
@@ -60,12 +63,15 @@ export class LoginComponent implements OnInit {
     }
 
     if (!this.loginData.username || !this.loginData.password) {
-      alert('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!');
+      this.toast.notify('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!');
       return;
     }
     this.auth.login(this.loginData).subscribe({
       next: () => this.router.navigate(['/product']),
-      error: () => alert('Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.'),
+      error: (err) => this.toast.notify(getApiErrorMessage(
+        err,
+        'Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.',
+      )),
     });
   }
 
@@ -76,11 +82,11 @@ export class LoginComponent implements OnInit {
     }
 
     if (this.registerData.password !== this.registerData.confirmPassword) {
-      alert('Mật khẩu xác nhận không khớp!');
+      this.toast.notify('Mật khẩu xác nhận không khớp!');
       return;
     }
     if (!this.registerData.username || !this.registerData.password || !this.registerData.firstname || !this.registerData.phone) {
-      alert('Vui lòng điền các trường có dấu * bắt buộc!');
+      this.toast.notify('Vui lòng điền các trường có dấu * bắt buộc!');
       return;
     }
 
@@ -93,20 +99,19 @@ export class LoginComponent implements OnInit {
       phone: this.registerData.phone,
       birth: this.registerData.birth,
       address: this.registerData.address,
-      email: this.registerData.email,
-      role: 'USER'
+      email: this.registerData.email
     };
 
     this.auth.register(payload).subscribe({
       next: (res) => {
-        alert('Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay.');
+        this.toast.notify('Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay.');
         this.loginData.username = this.registerData.username;
         this.loginData.password = '';
         this.isLoginMode = true;
         this.router.navigate([], { queryParams: {} }); // Xóa param signup trên url
       },
       error: (err) => {
-        alert('Đăng ký thất bại: ' + getApiErrorMessage(err, 'Tên đăng nhập hoặc SĐT có thể đã tồn tại.'));
+        this.toast.notify('Đăng ký thất bại: ' + getApiErrorMessage(err, 'Tên đăng nhập hoặc SĐT có thể đã tồn tại.'));
       }
     });
   }

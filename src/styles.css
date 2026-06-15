@@ -1,5 +1,11 @@
+@import './app/component/static-pages/static-info-pages.css';
 
 html, body { height: 100%; }
+.cdk-overlay-container {
+  z-index: 11000 !important;
+}
+
+.app-action-dialog-panel .mat-mdc-dialog-surface { border-radius: 1rem; overflow: hidden; }
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
@@ -334,10 +340,13 @@ body:has(.app-shell.sidebar-collapsed) {
   padding-top: var(--topbar-height);
   min-height: 100vh;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
   transition: margin-left 0.22s ease;
 }
 
 .app-content {
+  flex: 1 0 auto;
   min-height: calc(100vh - var(--topbar-height));
   min-width: 0;
   width: 100%;
@@ -422,6 +431,22 @@ body:has(.app-shell.sidebar-collapsed) {
   .topbar-actions {
     gap: 0.45rem;
   }
+}
+
+@media (max-width: 900px) {
+  .info-layout { grid-template-columns: 1fr !important; }
+  .info-sidebar { position: static !important; }
+  .info-sidebar nav { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .info-sidebar nav a { border-right: 1px solid #eef2f7; }
+  .support-card { display: none !important; }
+}
+
+@media (max-width: 600px) {
+  .info-hero { padding-block: 2rem !important; }
+  .info-title-row { align-items: flex-start !important; }
+  .info-title-icon { width: 52px !important; height: 52px !important; flex-basis: 52px !important; font-size: 1.35rem !important; }
+  .info-sidebar nav { grid-template-columns: 1fr; }
+  .info-contact-banner { align-items: flex-start !important; flex-direction: column; }
 }
 
 @media (max-width: 575.98px) {

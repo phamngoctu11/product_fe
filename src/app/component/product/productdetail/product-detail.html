@@ -110,21 +110,29 @@
       <div formArrayName="variants">
         <div *ngFor="let v of variants.controls; let i=index" [formGroupName]="i" class="card mb-4 shadow-sm variant-card overflow-hidden bg-white">
           <div class="card-header border-bottom-0 py-3 d-flex justify-content-between align-items-center" [ngClass]="isView ? 'bg-light' : 'bg-success bg-opacity-10'">
-            <strong class="fs-6" [ngClass]="isView ? 'text-dark' : 'text-success'">Phân loại #{{i+1}}</strong>
-            <button *ngIf="variants.controls.length > 1 && !isView" type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" (click)="removeVariant(i)"><i class="bi bi-trash me-1"></i> Xóa</button>
+            <div class="d-flex align-items-center gap-2 min-w-0">
+              <strong class="fs-6 text-truncate" [ngClass]="isView ? 'text-dark' : 'text-success'">Phân loại #{{i+1}}</strong>
+              <span *ngIf="isStaffMode && isExistingVariant(i)" class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill">
+                Chỉ nhập kho
+              </span>
+              <span *ngIf="isStaffMode && !isExistingVariant(i)" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill">
+                Phân loại mới
+              </span>
+            </div>
+            <button *ngIf="canRemoveVariant(i)" type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" (click)="removeVariant(i)"><i class="bi bi-trash me-1"></i> Xóa</button>
           </div>
           <div class="card-body p-4">
 
             <div class="row align-items-center mb-4" *ngIf="!isView || v.get('image_url')?.value">
               <div class="col-auto">
-                <label class="upload-box variant-upload d-flex justify-content-center align-items-center shadow-sm overflow-hidden" [title]="!isView ? 'Đổi ảnh phân loại' : ''">
+                <label class="upload-box variant-upload d-flex justify-content-center align-items-center shadow-sm overflow-hidden" [title]="canEditVariant(i) ? 'Đổi ảnh phân loại' : ''">
                   <div *ngIf="isUploadingVariantImage[i]" class="spinner-border spinner-border-sm text-success" role="status"></div>
                   <i *ngIf="!v.get('image_url')?.value && !isUploadingVariantImage[i]" class="bi bi-image text-muted opacity-50 fs-2"></i>
                   <img *ngIf="v.get('image_url')?.value && !isUploadingVariantImage[i]" [src]="v.get('image_url')?.value" class="image-preview">
-                  <input *ngIf="!isView" type="file" class="d-none" (change)="onVariantFileSelected($event, i)" accept="image/*" [disabled]="isUploadingVariantImage[i]">
+                  <input *ngIf="canEditVariant(i)" type="file" class="d-none" (change)="onVariantFileSelected($event, i)" accept="image/*" [disabled]="isUploadingVariantImage[i]">
                 </label>
               </div>
-              <div class="col" *ngIf="!isView">
+              <div class="col" *ngIf="canEditVariant(i)">
                 <span class="text-success small fw-semibold"><i class="bi bi-image me-1"></i>Ảnh riêng cho phân loại này (Tùy chọn)</span>
               </div>
             </div>
@@ -154,6 +162,32 @@
               </div>
             </div>
 
+            <div *ngIf="isStaffMode && isExistingVariant(i)" class="staff-restock-panel mt-3 pt-3 border-top">
+              <label class="form-label small fw-bold text-success text-uppercase mb-2">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Nhập thêm tồn kho
+              </label>
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <input
+                  type="number"
+                  class="form-control form-control-custom"
+                  style="max-width: 160px;"
+                  min="1"
+                  [(ngModel)]="staffRestockQuantities[i]"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="Số lượng">
+                <button
+                  type="button"
+                  class="btn btn-success rounded-pill px-4 fw-bold"
+                  [disabled]="isRestockingVariant[i] || !staffRestockQuantities[i] || staffRestockQuantities[i] <= 0"
+                  (click)="restockVariant(i)">
+                  <span *ngIf="isRestockingVariant[i]" class="spinner-border spinner-border-sm me-2"></span>
+                  <i *ngIf="!isRestockingVariant[i]" class="bi bi-plus-circle me-1"></i>
+                  Nhập kho
+                </button>
+              </div>
+              <small class="text-muted d-block mt-2">Không chỉnh trực tiếp số lượng cũ; hệ thống sẽ cộng thêm và ghi log nhập kho.</small>
+            </div>
+
           </div>
         </div>
       </div>
@@ -163,7 +197,7 @@
 
   <div class="modal-footer px-4 py-3 bg-white border-top">
     <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold me-auto shadow-sm"
-            *ngIf="!authService.isAdmin()"
+            *ngIf="!authService.isAdmin() && !authService.isStaff()"
             (click)="askAboutProduct()">
       <i class="bi bi-chat-heart-fill me-2 fs-5 align-middle"></i> Tư vấn sản phẩm
     </button>
@@ -171,7 +205,7 @@
     <button class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
 
     <button class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" [disabled]="productForm.invalid" (click)="save()" *ngIf="!isView">
-      <i class="bi bi-check-circle me-1"></i> Lưu dữ liệu
+      <i class="bi bi-check-circle me-1"></i> {{ isStaffMode ? 'Lưu thông tin' : 'Lưu dữ liệu' }}
     </button>
   </div>
 </div>

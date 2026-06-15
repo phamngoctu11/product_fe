@@ -1,0 +1,26 @@
+<div class="static-info-page">
+  <header class="static-info-hero">
+    <div class="static-info-container">
+      <nav class="static-breadcrumb" aria-label="Đường dẫn">
+        <a routerLink="/product">Trang chủ</a><i class="bi bi-chevron-right"></i><span>{{ category }}</span>
+      </nav>
+      <div class="static-title-row">
+        <span class="static-title-icon"><i class="bi" [ngClass]="icon"></i></span>
+        <div><span class="static-eyebrow">{{ category }}</span><h1>{{ title }}</h1><p>{{ description }}</p></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="static-info-layout static-info-container">
+    <aside class="static-info-nav">
+      <h2>Trung tâm trợ giúp</h2>
+      <nav>
+        <a *ngFor="let item of navigation" [routerLink]="item.route" routerLinkActive="active">
+          <i class="bi" [ngClass]="item.icon"></i><span>{{ item.label }}</span><i class="bi bi-chevron-right"></i>
+        </a>
+      </nav>
+      <div class="static-hotline"><i class="bi bi-headset"></i><strong>Cần hỗ trợ trực tiếp?</strong><span>08:00 - 17:30, Thứ 2 - Thứ 7</span><a href="tel:19000000">1900 0000</a></div>
+    </aside>
+    <main class="static-info-content"><ng-content></ng-content></main>
+  </div>
+</div>

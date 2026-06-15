@@ -1,5 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { inject as injectActionDialog } from '@angular/core';
+import { ActionDialogService } from '../../service/action-dialog.service';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CartService } from '../../service/cart.service';
@@ -18,6 +22,8 @@ import { getApiErrorMessage } from '../../model/api-response.model';
   templateUrl: './product.html',
 })
 export class ProductComponent implements OnInit, OnDestroy {
+  private readonly actionDialog = injectActionDialog(ActionDialogService);
+  private readonly toast = injectToast(ToastService);
   plist: Product[] = [];
   filteredProducts: Product[] = [];
 
@@ -25,6 +31,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   searchPrice: number | null = null;
   currentUserId: any;
   isAdmin: boolean = false;
+  isStaff: boolean = false;
 
   currentPage: number = 0;
   pageSize: number = 10;
@@ -43,6 +50,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.currentUserId = this.authService.getUserId();
     this.isAdmin = this.authService.isAdmin();
+    this.isStaff = this.authService.isStaff();
     this.getAll(this.currentPage, this.pageSize);
 
     this.cartSubscription = this.cartService.checkoutSuccess$.subscribe(() => {
@@ -106,12 +114,20 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   // Cập nhật hàm openProductDialog
   openProductDialog(id: number | null | undefined = null) {
-    if (!this.isAdmin) { alert('Bạn không có quyền thực hiện chức năng này!'); return; }
+    if (!this.isAdmin && !(this.isStaff && id)) {
+      this.toast.notify('Bạn không có quyền thực hiện chức năng này!');
+      return;
+    }
     const dialogRef = this.dialog.open(ProductDetailComponent, {
       width: '940px',
       maxWidth: 'calc(100vw - 48px)',
       maxHeight: '78vh',
-      data: { id: id || null, availableTags: this.getAvailableTags(), isView: false },
+      data: {
+        id: id || null,
+        availableTags: this.getAvailableTags(),
+        isView: false,
+        staffMode: this.isStaff && !this.isAdmin,
+      },
       disableClose: true,
     });
 
@@ -121,8 +137,8 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   openAddToCartModal(product: Product) {
-    if (!this.currentUserId) { alert('Vui lòng đăng nhập để mua hàng!'); return; }
-    if (!product.variants || product.variants.length === 0) { alert('Sản phẩm này hiện tại chưa có phân loại hàng!'); return; }
+    if (!this.currentUserId) { this.toast.notify('Vui lòng đăng nhập để mua hàng!'); return; }
+    if (!product.variants || product.variants.length === 0) { this.toast.notify('Sản phẩm này hiện tại chưa có phân loại hàng!'); return; }
 
     const dialogRef = this.dialog.open(AddToCartModalComponent, {
       width: '860px',
@@ -139,20 +155,29 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   onAddToCart(variantId: number, quantity: number) {
     this.cartService.addToCart(this.currentUserId, variantId, quantity).subscribe({
-      next: () => alert('Đã thêm vào giỏ hàng thành công!'),
-      error: (err) => alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể thêm'))
+      next: () => this.toast.notify('Đã thêm vào giỏ hàng thành công!'),
+      error: (err) => this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể thêm'))
     });
   }
 
   delete(item: Product) {
     if (!this.isAdmin) return;
-    if (!this.currentUserId) { alert('Không tìm thấy userId!'); return; }
-    if (item.id && confirm('Xác nhận xóa sản phẩm?')) {
-      this.productService.delete(item.id, this.currentUserId).subscribe({
+    if (!this.currentUserId) { this.toast.notify('Không tìm thấy userId!'); return; }
+    if (!item.id) return;
+    const productId = item.id;
+    this.actionDialog.confirm({
+      title: 'Xóa sản phẩm',
+      message: `Bạn có chắc muốn xóa sản phẩm “${item.product_name}”?`,
+      confirmText: 'Xóa sản phẩm',
+      tone: 'danger',
+      icon: 'bi-trash3-fill',
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.productService.delete(productId, this.currentUserId).subscribe({
         next: () => this.getAll(this.currentPage, this.pageSize),
-        error: () => alert('Lỗi khi xóa!')
+        error: () => this.toast.notify('Lỗi khi xóa!')
       });
-    }
+    });
   }
 
   changePage(newPage: number) {

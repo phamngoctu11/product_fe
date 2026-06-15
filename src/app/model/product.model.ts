@@ -16,6 +16,11 @@ export interface ProductVariant {
   attributes?: string;
   parsedAttributes?: any;
   image_url?: string; // DUY NHẤT 1 KIỂU
+  restockQuantity?: number;
+}
+
+export interface StockImportRequest {
+  quantity: number;
 }
 
 export interface BestSellingProduct {

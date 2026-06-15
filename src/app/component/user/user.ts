@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject as injectActionDialog } from '@angular/core';
+import { ActionDialogService } from '../../service/action-dialog.service';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
@@ -18,6 +20,7 @@ import { AuthService } from '../../service/auth.service';
   templateUrl: './user.html',
 })
 export class UserComponent implements OnInit {
+  private readonly actionDialog = injectActionDialog(ActionDialogService);
   users: UserResListDTO[] = [];
   filteredUsers: UserResListDTO[] = [];
   cartData?: CartRes;
@@ -95,11 +98,18 @@ export class UserComponent implements OnInit {
   }
 
   deleteUser(id: number) {
-    if (confirm('Bạn có chắc muốn xóa người dùng này?')) {
+    this.actionDialog.confirm({
+      title: 'Xóa người dùng',
+      message: 'Người dùng sẽ bị xóa khỏi hệ thống. Bạn có chắc muốn tiếp tục?',
+      confirmText: 'Xóa người dùng',
+      tone: 'danger',
+      icon: 'bi-person-x-fill',
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
       this.userService.delete(id).subscribe(() => {
         this.loadUsers(this.currentPage, this.pageSize);
       });
-    }
+    });
   }
 
   openCartModal(userId: number) {

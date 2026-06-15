@@ -13,6 +13,7 @@ import { WebsocketService } from './service/websocket.service';
 import { NotificationService } from './service/notification.service';
 import { ChatWidgetComponent } from './component/chat/chat-widget.component';
 import { TimeAgoPipe } from './pipes/time-ago.pipe';
+import { ToastContainerComponent } from './component/toast-container/toast-container.component';
 
 @Component({
   selector: 'app-root',
@@ -25,12 +26,14 @@ import { TimeAgoPipe } from './pipes/time-ago.pipe';
     MatDialogModule,
     ChatWidgetComponent,
     TimeAgoPipe,
+    ToastContainerComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App implements OnInit, OnDestroy {
   protected readonly title = signal('fe_product');
+  readonly currentYear = new Date().getFullYear();
   authService = inject(AuthService);
   userService = inject(UserService);
   private dialog = inject(MatDialog);

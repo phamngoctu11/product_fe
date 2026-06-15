@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ProductService } from '../../service/product.service';
 import { ChatService } from '../../service/chat.service';
@@ -12,6 +14,7 @@ import { AuthService } from '../../service/auth.service';
   templateUrl: './product-page.component.html'
 })
 export class ProductPageComponent implements OnInit {
+  private readonly toast = injectToast(ToastService);
   product: any = null;
   isLoading = true;
 
@@ -68,7 +71,7 @@ export class ProductPageComponent implements OnInit {
 
   askAboutProduct() {
     if (!this.authService.isLoggedIn()) {
-      alert("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
+      this.toast.notify("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
       return;
     }
 

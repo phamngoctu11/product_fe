@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { FormsModule, NgForm } from '@angular/forms';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { VoucherTemplate, VoucherTemplateRequest } from '../../model/voucher.model';
@@ -12,6 +14,7 @@ import { VoucherService } from '../../service/voucher.service';
   templateUrl: './voucher-admin.component.html',
 })
 export class VoucherAdminComponent implements OnInit {
+  private readonly toast = injectToast(ToastService);
   templates: VoucherTemplate[] = [];
   isLoadingTemplates = false;
   isSaving = false;
@@ -45,26 +48,26 @@ export class VoucherAdminComponent implements OnInit {
     }
 
     if (!this.isFutureDate(this.campaign.expiryDate)) {
-      alert('Ngày hết hạn phải nằm trong tương lai.');
+      this.toast.notify('Ngày hết hạn phải nằm trong tương lai.');
       return;
     }
 
     if (this.campaign.discountPercent <= 0 && this.campaign.maxDiscountAmount <= 0) {
-      alert('Voucher cần có phần trăm giảm hoặc số tiền giảm tối đa lớn hơn 0.');
+      this.toast.notify('Voucher cần có phần trăm giảm hoặc số tiền giảm tối đa lớn hơn 0.');
       return;
     }
 
     this.isSaving = true;
     this.voucherService.createCampaign(this.buildPayload()).subscribe({
       next: () => {
-        alert('Tạo voucher campaign thành công!');
+        this.toast.notify('Tạo voucher campaign thành công!');
         this.campaign = this.createEmptyCampaign();
         form.resetForm(this.campaign);
         this.loadTemplates();
         this.isSaving = false;
       },
       error: (err) => {
-        alert('Không thể tạo voucher campaign: ' + getApiErrorMessage(err, 'Vui lòng kiểm tra lại dữ liệu.'));
+        this.toast.notify('Không thể tạo voucher campaign: ' + getApiErrorMessage(err, 'Vui lòng kiểm tra lại dữ liệu.'));
         this.isSaving = false;
       },
     });

@@ -1,5 +1,9 @@
 ﻿import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject as injectActionDialog } from '@angular/core';
+import { ActionDialogService } from '../../service/action-dialog.service';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { CartService } from '../../service/cart.service';
@@ -17,6 +21,8 @@ import * as QRCode from 'qrcode';
   templateUrl: './cart-modal.html',
 })
 export class CartModalComponent implements OnInit {
+  private readonly actionDialog = injectActionDialog(ActionDialogService);
+  private readonly toast = injectToast(ToastService);
   isLoading = false;
   deletingProductIds: number[] = [];
   listCurQuan: number[] = [];
@@ -106,10 +112,16 @@ export class CartModalComponent implements OnInit {
     const item = this.cartData?.items.find((cartItem) => this.getCartItemId(cartItem) === itemId);
     const productName = this.getCartItemName(item) || `sản phẩm ID: ${itemId}`;
 
-    if (!confirm(`Bạn có chắc chắn muốn xóa ${productName} khỏi giỏ hàng?`)) return;
-
-    this.deletingProductIds.push(itemId);
-    this.cartService.removeFromCart(this.userId, itemId).subscribe({
+    this.actionDialog.confirm({
+      title: 'Xóa khỏi giỏ hàng',
+      message: `Bạn có chắc muốn xóa ${productName} khỏi giỏ hàng?`,
+      confirmText: 'Xóa sản phẩm',
+      tone: 'danger',
+      icon: 'bi-cart-x-fill',
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.deletingProductIds.push(itemId);
+      this.cartService.removeFromCart(this.userId, itemId).subscribe({
       next: () => {
         if (this.cartData?.items) {
           const removedIndex = this.cartData.items.findIndex((cartItem) => this.getCartItemId(cartItem) === itemId);
@@ -126,8 +138,9 @@ export class CartModalComponent implements OnInit {
       },
       error: (err) => {
         this.deletingProductIds = this.deletingProductIds.filter((id) => id !== itemId);
-        alert('Không thể xóa sản phẩm khỏi giỏ hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể xóa sản phẩm khỏi giỏ hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
       },
+      });
     });
   }
 
@@ -201,7 +214,7 @@ export class CartModalComponent implements OnInit {
       : this.cartData.items.map((item: any) => this.getCartItemId(item));
 
     if (productIdsToCheckout.length === 0) {
-      alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!');
+      this.toast.notify('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!');
       return;
     }
 
@@ -219,7 +232,7 @@ export class CartModalComponent implements OnInit {
             if (res.status === 'REDIRECT' && paymentMethod === 'ONLINE') {
               this.showOnlinePayment(res);
             } else {
-              alert(res.message || 'Thanh toán thành công!');
+              this.toast.notify(res.message || 'Thanh toán thành công!');
               this.cartService.notifyCheckoutSuccess();
               this.isLoading = false;
               this.dialogRef.close(true);
@@ -227,13 +240,13 @@ export class CartModalComponent implements OnInit {
           },
           error: (err: any) => {
             const errorMsg = getApiErrorMessage(err, 'Không thể thanh toán.');
-            alert('Lỗi thanh toán: ' + errorMsg);
+            this.toast.notify('Lỗi thanh toán: ' + errorMsg);
             this.isLoading = false;
           },
         });
       },
       error: (err: any) => {
-        alert('Lỗi cập nhật số lượng: ' + getApiErrorMessage(err, 'Không thể cập nhật số lượng.'));
+        this.toast.notify('Lỗi cập nhật số lượng: ' + getApiErrorMessage(err, 'Không thể cập nhật số lượng.'));
         this.isLoading = false;
       }
     });
@@ -251,7 +264,7 @@ export class CartModalComponent implements OnInit {
     if (!qrSource) {
       this.paymentQrDataUrl = '';
       this.isGeneratingPaymentQr = false;
-      alert('Không tìm thấy dữ liệu QR thanh toán từ MoMo.');
+      this.toast.notify('Không tìm thấy dữ liệu QR thanh toán từ MoMo.');
       return;
     }
 
@@ -264,7 +277,7 @@ export class CartModalComponent implements OnInit {
     } catch (error) {
       console.error('Lỗi khi tạo QR thanh toán:', error);
       this.paymentQrDataUrl = '';
-      alert('Không thể tạo mã QR thanh toán. Bạn có thể mở trang thanh toán bằng nút bên dưới.');
+      this.toast.notify('Không thể tạo mã QR thanh toán. Bạn có thể mở trang thanh toán bằng nút bên dưới.');
     } finally {
       this.isGeneratingPaymentQr = false;
     }
@@ -290,7 +303,18 @@ export class CartModalComponent implements OnInit {
   onClose(): void {
     const updates = this.getUpdateRequests();
     if (updates.length > 0) {
-      if (confirm('Bạn có thay đổi số lượng, bạn có muốn lưu lại trước khi thoát không?')) {
+      this.actionDialog.confirm({
+        title: 'Lưu thay đổi giỏ hàng',
+        message: 'Bạn đã thay đổi số lượng sản phẩm. Bạn có muốn lưu trước khi đóng giỏ hàng không?',
+        confirmText: 'Lưu và đóng',
+        cancelText: 'Đóng không lưu',
+        tone: 'warning',
+        icon: 'bi-floppy-fill',
+      }).subscribe((confirmed) => {
+        if (!confirmed) {
+          this.dialogRef.close();
+          return;
+        }
         this.isLoading = true;
         forkJoin(updates).subscribe({
           next: () => {
@@ -302,8 +326,8 @@ export class CartModalComponent implements OnInit {
             this.dialogRef.close();
           },
         });
-        return;
-      }
+      });
+      return;
     }
     this.dialogRef.close();
   }

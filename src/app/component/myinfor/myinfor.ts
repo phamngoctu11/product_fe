@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { HttpClient } from '@angular/common/http'; // 1. BẮT BUỘC IMPORT HTTPCLIENT
 import { map } from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -16,6 +18,7 @@ import { environment } from '../../../environments/environment';
   templateUrl: './myinfor.html',
 })
 export class Myinfor implements OnInit {
+  private readonly toast = injectToast(ToastService);
   userInfo?: UserInforDTO;
   isLoading = true;
   isUploadingAvatar: boolean = false;
@@ -76,15 +79,15 @@ export class Myinfor implements OnInit {
           // Tự động lưu xuống Database bằng ID của user hiện tại
           this.userService.update(this.userInfo!.id, this.userInfo!).subscribe({
               next: () => {
-                  alert('Cập nhật ảnh đại diện thành công!');
+                  this.toast.notify('Cập nhật ảnh đại diện thành công!');
                   // Cập nhật localStorage để thanh Navbar có thể lấy ảnh mới ngay lập tức
                   localStorage.setItem('user_avatar', res.url);
               },
-              error: () => alert('Lỗi khi lưu thông tin user xuống hệ thống!')
+              error: () => this.toast.notify('Lỗi khi lưu thông tin user xuống hệ thống!')
           });
         },
         error: (err) => {
-          alert('Lỗi tải ảnh lên Cloudinary!');
+          this.toast.notify('Lỗi tải ảnh lên Cloudinary!');
           this.isUploadingAvatar = false;
         }
       });

@@ -1,5 +1,9 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject as injectActionDialog } from '@angular/core';
+import { ActionDialogService } from '../../service/action-dialog.service';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { VoucherTemplate, UserVoucher } from '../../model/voucher.model';
 import { UserService } from '../../service/user.service';
@@ -12,6 +16,8 @@ import { getApiErrorMessage } from '../../model/api-response.model';
   imports: [CommonModule, MatDialogModule],
   templateUrl: './reward-dialog.html'})
 export class RewardDialogComponent implements OnInit {
+  private readonly actionDialog = injectActionDialog(ActionDialogService);
+  private readonly toast = injectToast(ToastService);
   templates: VoucherTemplate[] = [];
   myWallet: UserVoucher[] = [];
   currentReputation: number = 0;
@@ -55,7 +61,7 @@ isExpiringSoon(dateString: string): boolean {
   redeem(template: VoucherTemplate) {
     // 1. Kiểm tra nếu mã đã bị đổi hết
     if (template.quantity <= 0) {
-      alert('Rất tiếc! Mã giảm giá này đã được đổi hết lượt.');
+      this.toast.notify('Rất tiếc! Mã giảm giá này đã được đổi hết lượt.');
       return;
     }
 
@@ -63,19 +69,30 @@ isExpiringSoon(dateString: string): boolean {
     const available = this.getAvailablePoints();
     if (available < template.pointCost) {
       const missingPoints = template.pointCost - available;
-      alert(`Đổi thất bại!\n\nQuỹ điểm khả dụng của bạn hiện tại là ${available} điểm.\nBạn cần tích lũy thêm ${missingPoints} điểm nữa để đổi mã này (Hệ thống luôn yêu cầu giữ lại 40 điểm an toàn).`);
+      this.toast.notify(`Đổi thất bại!\n\nQuỹ điểm khả dụng của bạn hiện tại là ${available} điểm.\nBạn cần tích lũy thêm ${missingPoints} điểm nữa để đổi mã này (Hệ thống luôn yêu cầu giữ lại 40 điểm an toàn).`);
       return;
     }
 
     // 3. Nếu vượt qua hết các kiểm tra thì hỏi xác nhận
-    if (confirm(`Bạn có chắc chắn muốn dùng ${template.pointCost} điểm để đổi mã ${template.name}?`)) {
+    this.actionDialog.confirm({
+      title: 'Xác nhận đổi voucher',
+      message: `Bạn muốn dùng ${template.pointCost} điểm để đổi mã ${template.name}?`,
+      confirmText: 'Đổi voucher',
+      tone: 'warning',
+      icon: 'bi-gift-fill',
+      details: [
+        { label: 'Điểm sử dụng', value: `${template.pointCost} điểm` },
+        { label: 'Điểm khả dụng', value: `${available} điểm` },
+      ],
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
       this.voucherService.redeemVoucher(this.userId, template.id).subscribe({
         next: (res) => {
-          alert(res);
+          this.toast.notify(res);
           this.loadData(); // Tải lại dữ liệu ngay lập tức
         },
-        error: (err) => alert(getApiErrorMessage(err, 'Lỗi không thể đổi mã'))
+        error: (err) => this.toast.notify(getApiErrorMessage(err, 'Lỗi không thể đổi mã'))
       });
-    }
+    });
   }
 }

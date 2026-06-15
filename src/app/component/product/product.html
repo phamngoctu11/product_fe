@@ -86,10 +86,13 @@
                 <i class="bi bi-cart-plus me-1"></i> Chọn Mua
               </button>
 
-              <ng-container *ngIf="isAdmin">
+              <ng-container *ngIf="isAdmin || isStaff">
                 <button class="btn btn-light border text-warning rounded-circle shadow-sm d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;" (click)="openProductDialog(p.id); $event.stopPropagation()" title="Chỉnh sửa">
                   <i class="bi bi-pencil-square"></i>
                 </button>
+              </ng-container>
+
+              <ng-container *ngIf="isAdmin">
                 <button class="btn btn-light border text-danger rounded-circle shadow-sm d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;" (click)="delete(p); $event.stopPropagation()" title="Xóa">
                   <i class="bi bi-trash"></i>
                 </button>

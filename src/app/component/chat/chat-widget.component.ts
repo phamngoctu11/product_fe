@@ -1,5 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, DoCheck } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router'; // 🚨 THÊM IMPORT NÀY
 import { ChatService } from '../../service/chat.service';
@@ -17,6 +19,7 @@ declare var Stomp: any;
   templateUrl: './chat-widget.component.html'
 })
 export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
+  private readonly toast = injectToast(ToastService);
   @ViewChild('chatBody') private chatBody!: ElementRef;
 
   isOpen = false;
@@ -39,7 +42,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
 
       // 2. Kiểm tra WebSocket
       if (!this.stompClient || !this.stompClient.connected) {
-        alert("Đang kết nối lại với máy chủ Chat. Vui lòng thử lại sau 2 giây!");
+        this.toast.notify("Đang kết nối lại với máy chủ Chat. Vui lòng thử lại sau 2 giây!");
         this.connectWebSocket(); // Thử gọi lại kết nối
         return;
       }

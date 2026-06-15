@@ -1,5 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject as injectActionDialog } from '@angular/core';
+import { ActionDialogService } from '../../service/action-dialog.service';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { FormsModule } from '@angular/forms';
 import { Order, OrderListDTO } from '../../model/order.model';
 import { UserResListDTO } from '../../model/user.model';
@@ -16,6 +20,8 @@ import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-po
   styleUrl: './admin-order.component.css',
 })
 export class AdminOrderComponent implements OnInit {
+  private readonly actionDialog = injectActionDialog(ActionDialogService);
+  private readonly toast = injectToast(ToastService);
   pendingOrders: OrderListDTO[] = [];
   staffs: UserResListDTO[] = [];
   selectedStaffByOrder: { [orderId: number]: number | null } = {};
@@ -78,7 +84,7 @@ export class AdminOrderComponent implements OnInit {
         this.isLoadingMore = false;
       },
       error: (err) => {
-        alert('Không thể tải thêm đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải thêm đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.isLoadingMore = false;
       },
     });
@@ -134,7 +140,7 @@ export class AdminOrderComponent implements OnInit {
 
   approveOrder(order: OrderListDTO): void {
     if (!this.userId) {
-      alert('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
+      this.toast.notify('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
       return;
     }
 
@@ -143,90 +149,129 @@ export class AdminOrderComponent implements OnInit {
       ? `Duyệt đơn hàng #${order.id} và gán cho staff đã chọn?`
       : `Duyệt đơn hàng #${order.id} không gán staff ngay?`;
 
-    if (!confirm(confirmMessage)) return;
-
-    this.isLoading = true;
-    this.orderService.reviewOrder(order.id, true, '', this.userId, staffId).subscribe({
+    this.actionDialog.confirm({
+      title: 'Duyệt đơn hàng',
+      message: confirmMessage,
+      confirmText: 'Duyệt đơn',
+      icon: 'bi-check-circle-fill',
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.isLoading = true;
+      this.orderService.reviewOrder(order.id, true, '', this.userId!, staffId).subscribe({
       next: (message) => {
-        alert(message || 'Duyệt đơn hàng thành công!');
+        this.toast.notify(message || 'Duyệt đơn hàng thành công!');
         this.loadPendingOrders();
       },
       error: (err) => {
-        alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể duyệt đơn hàng.'));
+        this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể duyệt đơn hàng.'));
         this.isLoading = false;
       },
+      });
     });
   }
 
   rejectOrder(order: OrderListDTO): void {
     if (!this.userId) {
-      alert('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
+      this.toast.notify('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
       return;
     }
 
-    const reason = prompt(`Nhập lý do TỪ CHỐI đơn hàng #${order.id}:`);
-    if (reason === null) return;
-    if (reason.trim() === '') {
-      alert('Vui lòng nhập lý do từ chối để thông báo cho khách hàng!');
-      return;
-    }
-
-    this.isLoading = true;
-    this.orderService.reviewOrder(order.id, false, reason.trim(), this.userId).subscribe({
+    this.actionDialog.prompt({
+      title: 'Từ chối đơn hàng',
+      message: `Nhập lý do từ chối đơn hàng #${order.id}. Nội dung này sẽ được gửi cho khách hàng.`,
+      confirmText: 'Từ chối đơn',
+      tone: 'danger',
+      icon: 'bi-x-circle-fill',
+      input: {
+        label: 'Lý do từ chối',
+        placeholder: 'Ví dụ: Sản phẩm hiện không đủ điều kiện xử lý...',
+        required: true,
+        minLength: 5,
+        maxLength: 500,
+      },
+    }).subscribe((reason) => {
+      if (reason === null) return;
+      this.isLoading = true;
+      this.orderService.reviewOrder(order.id, false, reason, this.userId!).subscribe({
       next: (message) => {
-        alert(message || 'Đã từ chối đơn hàng thành công!');
+        this.toast.notify(message || 'Đã từ chối đơn hàng thành công!');
         this.loadPendingOrders();
       },
       error: (err) => {
-        alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể từ chối đơn hàng.'));
+        this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể từ chối đơn hàng.'));
         this.isLoading = false;
       },
+      });
     });
   }
 
   assignStaff(order: OrderListDTO): void {
     const staffId = this.selectedStaffByOrder[order.id];
     if (!staffId) {
-      alert('Vui lòng chọn staff trước khi gán đơn.');
+      this.toast.notify('Vui lòng chọn staff trước khi gán đơn.');
       return;
     }
 
-    if (!confirm(`Gán đơn hàng #${order.id} cho staff đã chọn?`)) return;
-
-    this.isLoading = true;
-    this.orderService.assignStaff(order.id, staffId).subscribe({
+    this.actionDialog.confirm({
+      title: 'Gán nhân viên xử lý',
+      message: `Gán đơn hàng #${order.id} cho nhân viên đã chọn?`,
+      confirmText: 'Gán nhân viên',
+      icon: 'bi-person-check-fill',
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.isLoading = true;
+      this.orderService.assignStaff(order.id, staffId).subscribe({
       next: (message) => {
-        alert(message || 'Gán staff thành công!');
+        this.toast.notify(message || 'Gán staff thành công!');
         this.loadPendingOrders();
       },
       error: (err) => {
-        alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể gán staff.'));
+        this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể gán staff.'));
         this.isLoading = false;
       },
+      });
     });
   }
 
   kcsCheck(order: OrderListDTO, isPassed: boolean): void {
     const action = isPassed ? 'duyệt KCS đạt' : 'trả về staff để xuất lại';
-    if (!confirm(`Bạn có chắc chắn muốn ${action} cho đơn hàng #${order.id}?`)) return;
+    const dialogData = {
+      title: isPassed ? 'Xác nhận KCS đạt' : 'KCS không đạt',
+      message: `Bạn có chắc muốn ${action} cho đơn hàng #${order.id}?`,
+      confirmText: isPassed ? 'Duyệt KCS' : 'Trả về staff',
+      tone: (isPassed ? 'primary' : 'warning') as 'primary' | 'warning',
+      icon: isPassed ? 'bi-shield-check' : 'bi-shield-exclamation',
+      input: isPassed ? undefined : {
+        label: 'Lý do KCS không đạt',
+        placeholder: 'Mô tả vấn đề cần staff kiểm tra lại...',
+        required: false,
+        maxLength: 500,
+      },
+    };
 
-    let cancelReason = '';
-    if (!isPassed) {
-      const reason = prompt(`Nhập lý do KCS không đạt cho đơn hàng #${order.id} (không bắt buộc):`);
-      if (reason === null) return;
-      cancelReason = reason.trim();
-    }
-
-    this.isLoading = true;
-    this.orderService.kcsCheck(order.id, isPassed, cancelReason).subscribe({
+    const submitKcs = (cancelReason: string) => {
+      this.isLoading = true;
+      this.orderService.kcsCheck(order.id, isPassed, cancelReason).subscribe({
       next: (message) => {
-        alert(message);
+        this.toast.notify(message);
         this.loadPendingOrders();
       },
       error: (err) => {
-        alert('Lỗi: ' + getApiErrorMessage(err, 'Không thể xử lý KCS.'));
+        this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể xử lý KCS.'));
         this.isLoading = false;
       },
+      });
+    };
+
+    if (isPassed) {
+      this.actionDialog.confirm(dialogData).subscribe((confirmed) => {
+        if (confirmed) submitKcs('');
+      });
+      return;
+    }
+
+    this.actionDialog.prompt(dialogData).subscribe((reason) => {
+      if (reason !== null) submitKcs(reason);
     });
   }
 }

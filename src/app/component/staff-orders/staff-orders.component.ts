@@ -1,5 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { inject as injectActionDialog } from '@angular/core';
+import { ActionDialogService } from '../../service/action-dialog.service';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { FormsModule } from '@angular/forms';
 import { Order, OrderItem, OrderListDTO } from '../../model/order.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
@@ -12,6 +16,8 @@ import { OrderService } from '../../service/order.service';
   templateUrl: './staff-orders.component.html',
 })
 export class StaffOrdersComponent implements OnInit {
+  private readonly actionDialog = injectActionDialog(ActionDialogService);
+  private readonly toast = injectToast(ToastService);
   warehousePendingOrders: OrderListDTO[] = [];
   myOrders: OrderListDTO[] = [];
   activeTab: 'pending' | 'mine' = 'pending';
@@ -47,7 +53,7 @@ export class StaffOrdersComponent implements OnInit {
         this.loadMyOrders();
       },
       error: (err) => {
-        alert('Không thể tải hàng đợi kho: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải hàng đợi kho: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.isLoading = false;
       },
     });
@@ -61,7 +67,7 @@ export class StaffOrdersComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        alert('Không thể tải đơn phụ trách: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải đơn phụ trách: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.isLoading = false;
       },
     });
@@ -79,7 +85,7 @@ export class StaffOrdersComponent implements OnInit {
         this.isLoadingMorePending = false;
       },
       error: (err) => {
-        alert('Không thể tải thêm đơn chờ nhận: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải thêm đơn chờ nhận: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.isLoadingMorePending = false;
       },
     });
@@ -97,7 +103,7 @@ export class StaffOrdersComponent implements OnInit {
         this.isLoadingMoreMine = false;
       },
       error: (err) => {
-        alert('Không thể tải thêm đơn phụ trách: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải thêm đơn phụ trách: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.isLoadingMoreMine = false;
       },
     });
@@ -112,19 +118,25 @@ export class StaffOrdersComponent implements OnInit {
   }
 
   claimOrder(order: OrderListDTO): void {
-    if (!confirm(`Bạn muốn nhận xử lý đơn hàng #${order.id}?`)) return;
-
-    this.isLoading = true;
-    this.orderService.claimWarehouseOrder(order.id).subscribe({
-      next: (message) => {
-        alert(message);
-        this.activeTab = 'mine';
-        this.loadData();
-      },
-      error: (err) => {
-        alert('Không thể nhận đơn: ' + getApiErrorMessage(err, 'Đơn có thể đã được staff khác nhận.'));
-        this.isLoading = false;
-      },
+    this.actionDialog.confirm({
+      title: 'Nhận xử lý đơn hàng',
+      message: `Bạn muốn nhận phụ trách đơn hàng #${order.id}?`,
+      confirmText: 'Nhận đơn',
+      icon: 'bi-box-arrow-in-down',
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.isLoading = true;
+      this.orderService.claimWarehouseOrder(order.id).subscribe({
+        next: (message) => {
+          this.toast.notify(message);
+          this.activeTab = 'mine';
+          this.loadData();
+        },
+        error: (err) => {
+          this.toast.notify('Không thể nhận đơn: ' + getApiErrorMessage(err, 'Đơn có thể đã được staff khác nhận.'));
+          this.isLoading = false;
+        },
+      });
     });
   }
 
@@ -141,7 +153,7 @@ export class StaffOrdersComponent implements OnInit {
         this.detailLoading = false;
       },
       error: (err) => {
-        alert('Không thể tải chi tiết đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải chi tiết đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.detailLoading = false;
       },
     });
@@ -165,34 +177,41 @@ export class StaffOrdersComponent implements OnInit {
     }));
 
     if (items.length === 0) {
-      alert('Đơn hàng chưa có danh sách variant để xuất kho.');
+      this.toast.notify('Đơn hàng chưa có danh sách variant để xuất kho.');
       return;
     }
 
     if (payload.some((item) => !item.variantId)) {
-      alert('Không thể xuất kho vì dữ liệu variant thiếu variantId.');
+      this.toast.notify('Không thể xuất kho vì dữ liệu variant thiếu variantId.');
       return;
     }
 
     if (payload.some((item) => item.quantity < 0)) {
-      alert('Số lượng xuất kho không được âm.');
+      this.toast.notify('Số lượng xuất kho không được âm.');
       return;
     }
 
-    if (!confirm(`Xác nhận xuất kho đơn hàng #${order.id}?`)) return;
-
-    this.exportingOrderId = order.id;
-    this.orderService.exportWarehouseOrder(order.id, payload as { variantId: number; quantity: number }[]).subscribe({
-      next: (message) => {
-        alert(message);
-        this.exportingOrderId = null;
-        this.closeOrderDetail();
-        this.loadData();
-      },
-      error: (err) => {
-        alert('Không thể xuất kho: ' + getApiErrorMessage(err, 'Vui lòng kiểm tra lại số lượng.'));
-        this.exportingOrderId = null;
-      },
+    this.actionDialog.confirm({
+      title: 'Xác nhận xuất kho',
+      message: `Kiểm tra lại số lượng trước khi xuất kho đơn hàng #${order.id}.`,
+      confirmText: 'Xuất kho',
+      tone: 'warning',
+      icon: 'bi-box-seam-fill',
+    }).subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.exportingOrderId = order.id;
+      this.orderService.exportWarehouseOrder(order.id, payload as { variantId: number; quantity: number }[]).subscribe({
+        next: (message) => {
+          this.toast.notify(message);
+          this.exportingOrderId = null;
+          this.closeOrderDetail();
+          this.loadData();
+        },
+        error: (err) => {
+          this.toast.notify('Không thể xuất kho: ' + getApiErrorMessage(err, 'Vui lòng kiểm tra lại số lượng.'));
+          this.exportingOrderId = null;
+        },
+      });
     });
   }
 

@@ -52,8 +52,12 @@
             </div>
             <p class="card-text text-muted small mb-2 reward-description" [title]="t.description">{{ t.description }}</p>
             <p class="card-text small mb-3">
+              <span class="fw-bold">Mã giảm:</span>
+              <span class="text-dark"> {{ t.discountPercent | number }}% (Tối đa {{t.maxDiscountAmount | number}}Đ)</span>
+            </p>
+            <p class="card-text small mb-3">
               <span class="fw-bold">Đơn tối thiểu:</span>
-              <span class="text-dark">{{ t.minOrderValue | number }}đ</span>
+              <span class="text-dark"> {{ t.minOrderValue | number }}đ</span>
             </p>
             <div class="reward-meta mt-3 pt-2 border-top">
               <span class="text-warning fw-bold fs-5 d-flex align-items-center gap-2">
@@ -96,7 +100,7 @@
 
             <div class="small text-muted d-flex align-items-center gap-2 text-truncate">
               <i class="bi bi-clock flex-shrink-0"></i> Hạn:
-              <span class="fw-bold text-dark">{{ uv.expiryDate | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="fw-bold text-dark">{{ uv.template.expiryDate | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
 
 

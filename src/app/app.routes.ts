@@ -57,4 +57,36 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./component/payment-success/payment-success').then((m) => m.PaymentSuccessComponent),
   },
+  {
+    path: 'help/shopping-guide',
+    loadComponent: () => import('./component/static-pages/shopping-guide-page.component').then((m) => m.ShoppingGuidePageComponent),
+  },
+  {
+    path: 'help/order-tracking',
+    loadComponent: () => import('./component/static-pages/order-tracking-page.component').then((m) => m.OrderTrackingPageComponent),
+  },
+  {
+    path: 'help/payment-methods',
+    loadComponent: () => import('./component/static-pages/payment-methods-page.component').then((m) => m.PaymentMethodsPageComponent),
+  },
+  {
+    path: 'help/contact-support',
+    loadComponent: () => import('./component/static-pages/contact-support-page.component').then((m) => m.ContactSupportPageComponent),
+  },
+  {
+    path: 'policies/shipping',
+    loadComponent: () => import('./component/static-pages/shipping-policy-page.component').then((m) => m.ShippingPolicyPageComponent),
+  },
+  {
+    path: 'policies/returns-refunds',
+    loadComponent: () => import('./component/static-pages/returns-refunds-page.component').then((m) => m.ReturnsRefundsPageComponent),
+  },
+  {
+    path: 'policies/warranty',
+    loadComponent: () => import('./component/static-pages/warranty-policy-page.component').then((m) => m.WarrantyPolicyPageComponent),
+  },
+  {
+    path: 'policies/privacy',
+    loadComponent: () => import('./component/static-pages/privacy-policy-page.component').then((m) => m.PrivacyPolicyPageComponent),
+  },
 ];

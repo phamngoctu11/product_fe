@@ -1,13 +1,31 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { clearAuthStorage, decodeJwtPayload, isJwtExpired } from '../service/auth-token.util';
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = localStorage.getItem('accessToken');
-  if (token) {
-    const cloned = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return next(cloned);
+  const isBackendRequest = req.url.startsWith(environment.apiUrl);
+  const hasValidToken = !!token && !isJwtExpired(decodeJwtPayload(token));
+
+  if (token && !hasValidToken) {
+    clearAuthStorage();
   }
-  return next(req);
+
+  const request = isBackendRequest && hasValidToken
+    ? req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    : req;
+
+  return next(request).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (isBackendRequest && error.status === 401 && token) {
+        clearAuthStorage();
+      }
+      return throwError(() => error);
+    }),
+  );
 };

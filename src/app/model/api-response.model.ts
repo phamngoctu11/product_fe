@@ -5,19 +5,19 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export function isApiResponse<T>(response: unknown): response is ApiResponse<T> {
+  return !!response && typeof response === 'object' &&
+    'success' in response && 'status' in response && 'message' in response && 'data' in response;
+}
+
 export function unwrapApiResponse<T>(response: ApiResponse<T> | T): T {
-  if (
-    response &&
-    typeof response === 'object' &&
-    'success' in response &&
-    'status' in response &&
-    'message' in response &&
-    'data' in response
-  ) {
-    return (response as ApiResponse<T>).data;
-  }
+  if (isApiResponse<T>(response)) return response.data;
 
   return response as T;
+}
+
+export function getApiResponseMessage<T>(response: ApiResponse<T> | T, fallback: string): string {
+  return isApiResponse<T>(response) && response.message ? response.message : fallback;
 }
 
 export function getApiErrorMessage(error: any, fallback: string = 'Đã xảy ra lỗi.'): string {
@@ -32,5 +32,9 @@ export function getApiErrorMessage(error: any, fallback: string = 'Đã xảy ra
     }
   }
 
-  return rawError?.message || error?.message || fallback;
+  const validationMessage = rawError?.errors && typeof rawError.errors === 'object'
+    ? Object.values(rawError.errors).flat().join('\n')
+    : '';
+
+  return rawError?.message || validationMessage || error?.message || fallback;
 }

@@ -1,0 +1,54 @@
+<div class="action-dialog" [class]="'action-dialog action-dialog--' + tone">
+  <button type="button" class="dialog-close" aria-label="Đóng" (click)="cancel()">
+    <i class="bi bi-x-lg"></i>
+  </button>
+
+  <div class="dialog-heading">
+    <span class="dialog-icon">
+      <i class="bi" [ngClass]="data.icon || (tone === 'danger' ? 'bi-exclamation-triangle-fill' : tone === 'warning' ? 'bi-question-circle-fill' : 'bi-check-circle-fill')"></i>
+    </span>
+    <div>
+      <h2>{{ data.title }}</h2>
+      <p>{{ data.message }}</p>
+    </div>
+  </div>
+
+  <dl class="dialog-details" *ngIf="data.details?.length">
+    <div *ngFor="let detail of data.details">
+      <dt>{{ detail.label }}</dt>
+      <dd>{{ detail.value }}</dd>
+    </div>
+  </dl>
+
+  <div class="dialog-field" *ngIf="data.input as input">
+    <label for="actionDialogInput">
+      {{ input.label }} <span *ngIf="input.required">*</span>
+    </label>
+    <textarea
+      id="actionDialogInput"
+      [(ngModel)]="inputValue"
+      (blur)="touched = true"
+      [placeholder]="input.placeholder || ''"
+      [attr.maxlength]="input.maxLength || 500"
+      rows="4"
+      autofocus></textarea>
+    <div class="field-meta">
+      <small [class.field-error]="touched && isInputInvalid">
+        <ng-container *ngIf="touched && isInputInvalid; else inputHint">
+          {{ input.required && !inputValue.trim() ? 'Vui lòng nhập nội dung bắt buộc.' : 'Nội dung chưa đủ độ dài yêu cầu.' }}
+        </ng-container>
+        <ng-template #inputHint>{{ input.hint || 'Vui lòng nhập thông tin rõ ràng để thuận tiện xử lý.' }}</ng-template>
+      </small>
+      <small>{{ inputValue.length }}/{{ input.maxLength || 500 }}</small>
+    </div>
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" class="btn-cancel" (click)="cancel()">
+      {{ data.cancelText || 'Quay lại' }}
+    </button>
+    <button type="button" class="btn-confirm" [disabled]="isInputInvalid" (click)="submit()">
+      {{ data.confirmText || 'Xác nhận' }}
+    </button>
+  </div>
+</div>

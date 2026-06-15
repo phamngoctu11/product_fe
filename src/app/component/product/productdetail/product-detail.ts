@@ -1,10 +1,13 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../../service/toast.service';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { ProductService } from '../../../service/product.service';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../service/auth.service';
 import { ChatService } from '../../../service/chat.service';
 import { ApiResponse, unwrapApiResponse } from '../../../model/api-response.model';
@@ -18,10 +21,12 @@ import { environment } from '../../../../environments/environment';
   styleUrl: './product-detail.css',
 })
 export class ProductDetailComponent implements OnInit {
+  private readonly toast = injectToast(ToastService);
   productForm: FormGroup;
   isEdit = false;
   isView = false;
   dynamicFields: string[] = [];
+  isStaffMode = false;
 
   availableTags: string[] = [];
   selectedTags: string[] = [];
@@ -42,17 +47,20 @@ export class ProductDetailComponent implements OnInit {
   isUploadingImage: boolean = false;
   uploadedImageUrl: string = '';
   isUploadingVariantImage: boolean[] = [];
+  staffRestockQuantities: number[] = [];
+  isRestockingVariant: boolean[] = [];
 
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<ProductDetailComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { id: number | null, availableTags: string[], isView?: boolean },
+    @Inject(MAT_DIALOG_DATA) public data: { id: number | null, availableTags: string[], isView?: boolean, staffMode?: boolean },
     private productService: ProductService,
     private http: HttpClient,
     private chatService: ChatService,
     public authService: AuthService // 🚨 Đổi thành public để dùng trong HTML
   ) {
     this.isView = data.isView || false;
+    this.isStaffMode = !!data.staffMode;
     this.availableTags = data.availableTags || [];
     this.productForm = this.fb.group({
       id: [null],
@@ -96,12 +104,20 @@ export class ProductDetailComponent implements OnInit {
             const dynGroup = this.fb.group({});
             Object.keys(parsed).forEach(k => dynGroup.addControl(k, this.fb.control(parsed[k])));
 
-            this.variants.push(this.fb.group({
+            const variantGroup = this.fb.group({
               id: [v.id], variantName: [v.variantName, Validators.required],
               price: [v.price, [Validators.required, Validators.min(0)]], quantity: [v.quantity, [Validators.required, Validators.min(0)]],
               image_url: [v.image_url || ''], dynamicAttributes: dynGroup
-            }));
+            });
+
+            if (this.isStaffMode) {
+              variantGroup.disable({ emitEvent: false });
+            }
+
+            this.variants.push(variantGroup);
             this.isUploadingVariantImage.push(false);
+            this.staffRestockQuantities.push(0);
+            this.isRestockingVariant.push(false);
           });
           this.refreshDynamicFields();
 
@@ -116,7 +132,7 @@ export class ProductDetailComponent implements OnInit {
   // 🚨 HÀM TƯ VẤN ĐÃ ĐƯỢC FIX CHUẨN
   askAboutProduct() {
     if (!this.authService.isLoggedIn()) {
-      alert("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
+      this.toast.notify("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
       return;
     }
 
@@ -124,7 +140,7 @@ export class ProductDetailComponent implements OnInit {
     const formValue = this.productForm.getRawValue();
 
     if (!formValue.id) {
-      alert("Sản phẩm chưa có trên hệ thống!");
+      this.toast.notify("Sản phẩm chưa có trên hệ thống!");
       return;
     }
 
@@ -155,13 +171,13 @@ export class ProductDetailComponent implements OnInit {
         .pipe(map(unwrapApiResponse))
         .subscribe({
         next: (res) => { this.uploadedImageUrl = res.url; this.productForm.patchValue({ image_url: res.url }); this.isUploadingImage = false; },
-        error: () => { alert('Lỗi tải ảnh lên!'); this.isUploadingImage = false; }
+        error: () => { this.toast.notify('Lỗi tải ảnh lên!'); this.isUploadingImage = false; }
       });
     }
   }
 
   onVariantFileSelected(event: any, index: number) {
-    if (this.isView) return;
+    if (!this.canEditVariant(index)) return;
     const file: File = event.target.files[0];
     if (file) {
       this.isUploadingVariantImage[index] = true;
@@ -171,7 +187,7 @@ export class ProductDetailComponent implements OnInit {
         .pipe(map(unwrapApiResponse))
         .subscribe({
         next: (res) => { (this.variants.at(index) as FormGroup).patchValue({ image_url: res.url }); this.isUploadingVariantImage[index] = false; },
-        error: () => { alert('Lỗi tải ảnh biến thể!'); this.isUploadingVariantImage[index] = false; }
+        error: () => { this.toast.notify('Lỗi tải ảnh biến thể!'); this.isUploadingVariantImage[index] = false; }
       });
     }
   }
@@ -226,11 +242,31 @@ export class ProductDetailComponent implements OnInit {
     this.dynamicFields = Array.from(newFieldsSet);
     this.variants.controls.forEach(control => {
       const dynGroup = control.get('dynamicAttributes') as FormGroup;
-      this.dynamicFields.forEach(f => { if (!dynGroup.contains(f)) dynGroup.addControl(f, this.fb.control({ value: '', disabled: this.isView })); });
+      const lockExistingVariant = this.isStaffMode && !!control.get('id')?.value;
+      this.dynamicFields.forEach(f => {
+        if (!dynGroup.contains(f)) {
+          dynGroup.addControl(f, this.fb.control({ value: '', disabled: this.isView || lockExistingVariant }));
+        }
+      });
+      if (lockExistingVariant) {
+        control.disable({ emitEvent: false });
+      }
     });
   }
 
   getLabel(key: string): string { return this.attributeDictionary[key] || key; }
+
+  isExistingVariant(index: number): boolean {
+    return !!this.variants.at(index)?.get('id')?.value;
+  }
+
+  canEditVariant(index: number): boolean {
+    return !this.isView && (!this.isStaffMode || !this.isExistingVariant(index));
+  }
+
+  canRemoveVariant(index: number): boolean {
+    return !this.isView && (!this.isStaffMode || !this.isExistingVariant(index));
+  }
 
   isInvalid(controlName: string): boolean {
     const control = this.productForm.get(controlName);
@@ -251,8 +287,58 @@ export class ProductDetailComponent implements OnInit {
       quantity: [1, [Validators.required, Validators.min(0)]], image_url: [''], dynamicAttributes: dynGroup
     }));
     this.isUploadingVariantImage.push(false);
+    this.staffRestockQuantities.push(0);
+    this.isRestockingVariant.push(false);
   }
-  removeVariant(index: number) { if (this.isView) return; this.variants.removeAt(index); this.isUploadingVariantImage.splice(index, 1); }
+
+  restockVariant(index: number) {
+    if (!this.isStaffMode || this.isView) return;
+
+    const variantId = this.variants.at(index)?.get('id')?.value;
+    const quantity = Number(this.staffRestockQuantities[index] || 0);
+    const userId = this.authService.getUserId();
+
+    if (!variantId) {
+      this.toast.notify('Chỉ có thể nhập kho cho phân loại đã tồn tại.');
+      return;
+    }
+
+    if (!userId) {
+      this.toast.notify('Không tìm thấy userId!');
+      return;
+    }
+
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      this.toast.notify('Số lượng nhập kho phải lớn hơn 0.');
+      return;
+    }
+
+    this.isRestockingVariant[index] = true;
+    this.productService.restockVariant(variantId, { quantity }, userId).subscribe({
+      next: (updatedVariant) => {
+        const currentQuantity = Number(this.variants.at(index)?.get('quantity')?.value || 0);
+        this.variants.at(index)?.patchValue(
+          { quantity: updatedVariant?.quantity ?? currentQuantity + quantity },
+          { emitEvent: false }
+        );
+        this.staffRestockQuantities[index] = 0;
+        this.isRestockingVariant[index] = false;
+        this.toast.notify('Nhập kho thành công!');
+      },
+      error: () => {
+        this.isRestockingVariant[index] = false;
+        this.toast.notify('Không thể nhập kho cho phân loại này.');
+      },
+    });
+  }
+
+  removeVariant(index: number) {
+    if (!this.canRemoveVariant(index)) return;
+    this.variants.removeAt(index);
+    this.isUploadingVariantImage.splice(index, 1);
+    this.staffRestockQuantities.splice(index, 1);
+    this.isRestockingVariant.splice(index, 1);
+  }
 
   save() {
     const userId = this.authService.getUserId();
@@ -262,7 +348,7 @@ export class ProductDetailComponent implements OnInit {
       return;
     }
     if (!userId) {
-      alert('Không tìm thấy userId!');
+      this.toast.notify('Không tìm thấy userId!');
       return;
     }
     const payload = JSON.parse(JSON.stringify(this.productForm.getRawValue()));
@@ -273,10 +359,51 @@ export class ProductDetailComponent implements OnInit {
       v.attributes = JSON.stringify(attrs); delete v.dynamicAttributes; return v;
     });
 
+    if (this.isStaffMode) {
+      this.saveStaffProductChanges(payload, userId);
+      return;
+    }
+
     const request = this.isEdit ? this.productService.update(payload.id, payload, userId) : this.productService.create(payload, userId);
     request.subscribe({
-      next: () => { alert(this.isEdit ? 'Cập nhật thành công!' : 'Thêm mới thành công!'); this.dialogRef.close(true); },
-      error: () => alert('Đã xảy ra lỗi!')
+      next: () => { this.toast.notify(this.isEdit ? 'Cập nhật thành công!' : 'Thêm mới thành công!'); this.dialogRef.close(true); },
+      error: () => this.toast.notify('Đã xảy ra lỗi!')
+    });
+  }
+
+  private saveStaffProductChanges(payload: any, userId: number) {
+    if (!payload.id) {
+      this.toast.notify('Staff chỉ được cập nhật sản phẩm đã tồn tại.');
+      return;
+    }
+
+    const basicInfo = {
+      product_name: payload.product_name,
+      price: payload.price,
+      tags: payload.tags,
+      image_url: payload.image_url,
+    };
+
+    const newVariants = (payload.variants || [])
+      .filter((variant: any) => !variant.id)
+      .map((variant: any) => {
+        delete variant.id;
+        delete variant.parsedAttributes;
+        delete variant.restockQuantity;
+        return variant;
+      });
+
+    const requests = [
+      this.productService.updateStaffInfo(payload.id, basicInfo),
+      ...newVariants.map((variant: any) => this.productService.addVariant(payload.id, variant, userId)),
+    ];
+
+    forkJoin(requests).subscribe({
+      next: () => {
+        this.toast.notify(newVariants.length > 0 ? 'Đã cập nhật thông tin và thêm phân loại mới!' : 'Đã cập nhật thông tin sản phẩm!');
+        this.dialogRef.close(true);
+      },
+      error: () => this.toast.notify('Không thể cập nhật sản phẩm bằng quyền staff.'),
     });
   }
 

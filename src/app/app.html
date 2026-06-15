@@ -269,5 +269,100 @@
       <router-outlet></router-outlet>
       <app-chat-widget></app-chat-widget>
     </div>
+
+    <footer class="app-footer">
+      <div class="footer-highlight">
+        <div class="footer-highlight-item">
+          <span class="footer-highlight-icon"><i class="bi bi-truck"></i></span>
+          <div>
+            <strong>Giao hàng thuận tiện</strong>
+            <span>Theo dõi trạng thái đơn hàng dễ dàng</span>
+          </div>
+        </div>
+        <div class="footer-highlight-item">
+          <span class="footer-highlight-icon"><i class="bi bi-shield-check"></i></span>
+          <div>
+            <strong>Mua sắm an tâm</strong>
+            <span>Thông tin và giao dịch được bảo vệ</span>
+          </div>
+        </div>
+        <div class="footer-highlight-item">
+          <span class="footer-highlight-icon"><i class="bi bi-headset"></i></span>
+          <div>
+            <strong>Hỗ trợ khách hàng</strong>
+            <span>Tiếp nhận yêu cầu trong giờ làm việc</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-main">
+        <section class="footer-brand" aria-labelledby="footer-brand-title">
+          <a class="footer-logo" routerLink="/product" id="footer-brand-title">
+            <span class="footer-logo-mark"><i class="bi bi-hexagon-fill"></i></span>
+            <span>My App</span>
+          </a>
+          <p>
+            Nền tảng mua sắm trực tuyến giúp bạn tìm kiếm sản phẩm, quản lý đơn hàng
+            và nhận hỗ trợ nhanh chóng trên cùng một hệ thống.
+          </p>
+          <div class="footer-socials" aria-label="Mạng xã hội">
+            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <i class="bi bi-facebook"></i>
+            </a>
+            <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <i class="bi bi-youtube"></i>
+            </a>
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <i class="bi bi-instagram"></i>
+            </a>
+            <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+              <i class="bi bi-tiktok"></i>
+            </a>
+          </div>
+        </section>
+
+        <nav class="footer-column" aria-labelledby="footer-support-title">
+          <h2 id="footer-support-title">Chăm sóc khách hàng</h2>
+          <a routerLink="/help/shopping-guide"><i class="bi bi-chevron-right"></i>Hướng dẫn mua hàng</a>
+          <a routerLink="/help/order-tracking"><i class="bi bi-chevron-right"></i>Kiểm tra đơn hàng</a>
+          <a routerLink="/help/payment-methods"><i class="bi bi-chevron-right"></i>Phương thức thanh toán</a>
+          <a routerLink="/help/contact-support"><i class="bi bi-chevron-right"></i>Gửi yêu cầu hỗ trợ</a>
+        </nav>
+
+        <nav class="footer-column" aria-labelledby="footer-policy-title">
+          <h2 id="footer-policy-title">Chính sách mua sắm</h2>
+          <a routerLink="/policies/shipping"><i class="bi bi-chevron-right"></i>Chính sách giao hàng</a>
+          <a routerLink="/policies/returns-refunds"><i class="bi bi-chevron-right"></i>Đổi trả và hoàn tiền</a>
+          <a routerLink="/policies/warranty"><i class="bi bi-chevron-right"></i>Bảo hành sản phẩm</a>
+          <a routerLink="/policies/privacy"><i class="bi bi-chevron-right"></i>Bảo mật thông tin</a>
+        </nav>
+
+        <section class="footer-column footer-contact" aria-labelledby="footer-contact-title">
+          <h2 id="footer-contact-title">Liên hệ chúng tôi</h2>
+          <a href="tel:19000000">
+            <i class="bi bi-telephone-fill"></i>
+            <span><small>Hotline hỗ trợ</small>1900 0000</span>
+          </a>
+          <a href="mailto:support@myapp.vn">
+            <i class="bi bi-envelope-fill"></i>
+            <span><small>Email</small>support@myapp.vn</span>
+          </a>
+          <p>
+            <i class="bi bi-clock-fill"></i>
+            <span><small>Thời gian làm việc</small>08:00 - 17:30, Thứ 2 - Thứ 7</span>
+          </p>
+        </section>
+      </div>
+
+      <div class="footer-bottom" id="payment-methods">
+        <p>© {{ currentYear }} My App. Đã đăng ký bản quyền.</p>
+        <div class="footer-payments" aria-label="Phương thức thanh toán được hỗ trợ">
+          <span><i class="bi bi-cash-coin"></i>Tiền mặt</span>
+          <span><i class="bi bi-credit-card"></i>Thẻ ngân hàng</span>
+          <span><i class="bi bi-qr-code"></i>Thanh toán QR</span>
+        </div>
+      </div>
+    </footer>
   </main>
 </div>
+<app-toast-container></app-toast-container>

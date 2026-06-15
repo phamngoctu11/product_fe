@@ -1,5 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Thêm DatePipe
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { FormsModule, NgForm } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http'; // BẮT BUỘC THÊM HTTP CLIENT
@@ -18,6 +20,7 @@ import { environment } from '../../../environments/environment';
   providers: [DatePipe], // Khai báo DatePipe
 })
 export class Userdetail implements OnInit {
+  private readonly toast = injectToast(ToastService);
   currentUser: UserCreDTO = {
     firstname: '',
     lastname: '',
@@ -78,7 +81,7 @@ export class Userdetail implements OnInit {
           this.isUploadingAvatar = false;
         },
         error: (err) => {
-          alert('Lỗi tải ảnh lên Cloudinary!');
+          this.toast.notify('Lỗi tải ảnh lên Cloudinary!');
           this.isUploadingAvatar = false;
         }
       });
@@ -88,7 +91,7 @@ export class Userdetail implements OnInit {
   saveUser(form?: NgForm) {
     if (form?.invalid) {
       form.control.markAllAsTouched();
-      alert('Vui lòng kiểm tra lại các trường bắt buộc trước khi lưu.');
+      this.toast.notify('Vui lòng kiểm tra lại các trường bắt buộc trước khi lưu.');
       return;
     }
 
@@ -106,23 +109,23 @@ export class Userdetail implements OnInit {
     if (this.isEdit && payload.id) {
       this.userService.update(payload.id, payload).subscribe({
         next: () => {
-          alert('Cập nhật user thành công!!');
+          this.toast.notify('Cập nhật user thành công!!');
           this.dialogRef.close(true);
         },
         error: (err) => {
           console.error(err);
-          alert('Lỗi cập nhật: ' + getApiErrorMessage(err, 'Lỗi không xác định'));
+          this.toast.notify('Lỗi cập nhật: ' + getApiErrorMessage(err, 'Lỗi không xác định'));
         },
       });
     } else {
       this.userService.create(payload).subscribe({
         next: () => {
-          alert('Tạo mới user thành công!!');
+          this.toast.notify('Tạo mới user thành công!!');
           this.dialogRef.close(true);
         },
         error: (err) => {
           console.error(err);
-          alert('Lỗi tạo mới: ' + getApiErrorMessage(err, 'Lỗi không xác định'));
+          this.toast.notify('Lỗi tạo mới: ' + getApiErrorMessage(err, 'Lỗi không xác định'));
         },
       });
     }

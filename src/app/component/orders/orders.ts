@@ -1,5 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { inject as injectActionDialog } from '@angular/core';
+import { ActionDialogService } from '../../service/action-dialog.service';
+import { inject as injectToast } from '@angular/core';
+import { ToastService } from '../../service/toast.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../service/auth.service';
 import { OrderService } from '../../service/order.service';
@@ -23,6 +27,8 @@ import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-po
   templateUrl: './orders.html',
 })
 export class Orders implements OnInit {
+  private readonly actionDialog = injectActionDialog(ActionDialogService);
+  private readonly toast = injectToast(ToastService);
   orders: OrderListDTO[] = [];
   activeOrders: OrderListDTO[] = [];
   deliveredOrders: OrderListDTO[] = [];
@@ -103,7 +109,7 @@ export class Orders implements OnInit {
         this.isLoadingMoreOrders = false;
       },
       error: (err) => {
-        alert('Không thể tải thêm đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải thêm đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.isLoadingMoreOrders = false;
       },
     });
@@ -153,7 +159,7 @@ export class Orders implements OnInit {
         this.isLoadingCancelledOrders = false;
       },
       error: (err) => {
-        alert('Không thể tải đơn hàng đã hủy: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải đơn hàng đã hủy: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.isLoadingCancelledOrders = false;
       },
     });
@@ -234,7 +240,7 @@ export class Orders implements OnInit {
         this.isSubmittingReceipt = false;
 
         if (response.confirmed) {
-          alert(response.message || 'Xác nhận nhận hàng thành công!');
+          this.toast.notify(response.message || 'Xác nhận nhận hàng thành công!');
           this.closeOrderDetail();
           this.loadMyOrders();
           this.loadUserInfo();
@@ -268,7 +274,7 @@ export class Orders implements OnInit {
       next: (response) => {
         this.receiptResponse = response;
         this.isSubmittingReceipt = false;
-        alert(response.message || 'Đã gửi khiếu nại cho manager.');
+        this.toast.notify(response.message || 'Đã gửi khiếu nại cho manager.');
         this.closeOrderDetail();
       },
       error: (err) => {
@@ -317,34 +323,45 @@ export class Orders implements OnInit {
 
   cancelOrder(order: OrderListDTO): void {
     if (!this.canCancelOrder(order)) {
-      alert('Đơn hàng đã được xử lý nên không thể hủy.');
+      this.toast.notify('Đơn hàng đã được xử lý nên không thể hủy.');
       return;
     }
 
-    const currentRep = this.userInfo?.reputation ?? 'Đang tải...';
+    const currentRep = this.userInfo?.reputation ?? 0;
     const orderTotalPrice = Number(order.finalPrice || 0);
     const deduction = this.calculateExpectedDeduction(orderTotalPrice);
-    const reason = window.prompt('Vui lòng nhập lý do bạn muốn hủy đơn hàng:');
-
-    if (reason === null) return;
-    if (reason.trim() === '') {
-      alert('Hủy đơn thất bại. Bạn bắt buộc phải nhập lý do hủy đơn!');
-      return;
-    }
-
-    const confirmMsg = `CẢNH BÁO HỦY ĐƠN\n\nGiá trị đơn: ${orderTotalPrice.toLocaleString()} đ\nTrừ uy tín: -${deduction} điểm\nĐiểm hiện tại: ${currentRep}\nLý do: ${reason}\n\nBạn có chắc chắn muốn hủy?`;
-
-    if (window.confirm(confirmMsg)) {
+    this.actionDialog.prompt({
+      title: 'Hủy đơn hàng',
+      message: `Bạn đang yêu cầu hủy đơn hàng #${order.id}. Thao tác này có thể ảnh hưởng đến điểm uy tín.`,
+      confirmText: 'Xác nhận hủy đơn',
+      tone: 'danger',
+      icon: 'bi-x-octagon-fill',
+      details: [
+        { label: 'Giá trị đơn', value: `${orderTotalPrice.toLocaleString('vi-VN')} đ` },
+        { label: 'Điểm uy tín hiện tại', value: `${currentRep} điểm` },
+        { label: 'Điểm dự kiến bị trừ', value: `-${deduction} điểm` },
+        { label: 'Điểm còn lại dự kiến', value: `${Math.max(0, Number(currentRep) - deduction)} điểm` },
+      ],
+      input: {
+        label: 'Lý do hủy đơn',
+        placeholder: 'Nhập lý do cụ thể để chúng tôi cải thiện dịch vụ...',
+        required: true,
+        minLength: 5,
+        maxLength: 500,
+        hint: 'Lý do hủy đơn là bắt buộc và sẽ được lưu trong lịch sử đơn hàng.',
+      },
+    }).subscribe((reason) => {
+      if (reason === null) return;
       this.orderService.cancelOrder(order.id, reason).subscribe({
         next: () => {
-          alert('Hủy đơn hàng thành công!');
+          this.toast.notify('Hủy đơn hàng thành công!');
           this.loadMyOrders();
           this.loadCancelledOrders();
           this.loadUserInfo();
         },
-        error: (err) => alert('Không thể hủy đơn: ' + getApiErrorMessage(err, 'Không thể hủy đơn.')),
+        error: (err) => this.toast.notify('Không thể hủy đơn: ' + getApiErrorMessage(err, 'Không thể hủy đơn.')),
       });
-    }
+    });
   }
 
   viewTimeline(orderId: number): void {
@@ -368,7 +385,7 @@ export class Orders implements OnInit {
         this.isLoadingTimeline = false;
       },
       error: (err) => {
-        alert('Không thể tải lịch sử đơn hàng: ' + getApiErrorMessage(err, 'Không thể tải lịch sử đơn hàng.'));
+        this.toast.notify('Không thể tải lịch sử đơn hàng: ' + getApiErrorMessage(err, 'Không thể tải lịch sử đơn hàng.'));
         this.isLoadingTimeline = false;
       },
     });
