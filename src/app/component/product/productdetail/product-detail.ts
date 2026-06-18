@@ -10,6 +10,7 @@ import { map } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../service/auth.service';
 import { ChatService } from '../../../service/chat.service';
+import { ConsultationService } from '../../../service/consultation.service';
 import { ApiResponse, unwrapApiResponse } from '../../../model/api-response.model';
 import { environment } from '../../../../environments/environment';
 
@@ -57,6 +58,7 @@ export class ProductDetailComponent implements OnInit {
     private productService: ProductService,
     private http: HttpClient,
     private chatService: ChatService,
+    private consultationService: ConsultationService,
     public authService: AuthService // 🚨 Đổi thành public để dùng trong HTML
   ) {
     this.isView = data.isView || false;
@@ -153,11 +155,17 @@ export class ProductDetailComponent implements OnInit {
       variantsCount: formValue.variants ? formValue.variants.length : 0
     };
 
-    // Bắn tín hiệu sang Khung Chat
-    this.chatService.triggerProductQuery(productInfo);
-
-    // Tự động đóng Modal chi tiết sản phẩm lại để khách nhìn thấy Khung chat rõ hơn
-    this.dialogRef.close();
+    this.consultationService.createRequest({
+      productId: productInfo.id,
+      firstMessage: `Tôi cần tư vấn thêm về sản phẩm ${productInfo.name}.`,
+    }).subscribe({
+      next: (consultation) => {
+        this.chatService.openConsultation(consultation, productInfo);
+        this.toast.notify('Đã gửi yêu cầu tư vấn. Nhân viên sẽ phản hồi trong khung chat.');
+        this.dialogRef.close();
+      },
+      error: () => this.toast.notify('Không thể tạo yêu cầu tư vấn lúc này. Vui lòng thử lại sau.'),
+    });
   }
 
   onFileSelected(event: any) {

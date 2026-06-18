@@ -26,7 +26,10 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   messages: ChatMessage[] = [];
   newMessage = '';
   userId: number = 0;
+  activeConsultationRequestId: number | null = null;
+  activeProductId: number | null = null;
   private stompClient: any;
+  private pendingProductMessage: any = null;
 
   constructor(private chatService: ChatService, public authService: AuthService) {}
 
@@ -68,6 +71,18 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
 
       setTimeout(() => this.scrollToBottom(), 100);
     });
+
+    this.chatService.consultation$.subscribe(({ consultation, productData }) => {
+      this.activeConsultationRequestId = consultation.id;
+      this.activeProductId = consultation.productId ?? productData?.id ?? null;
+      this.isOpen = true;
+      this.userId = this.authService.getUserId() ?? this.userId;
+      this.pendingProductMessage = productData ?? null;
+      if (this.userId > 0) {
+        this.connectWebSocket();
+        this.loadChatHistory(() => this.flushPendingProductMessage());
+      }
+    });
   }
   ngDoCheck() {
     const storedId = localStorage.getItem('user_id');
@@ -92,15 +107,22 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   disconnectChat() {
     this.userId = 0;
     this.messages = [];
+    this.activeConsultationRequestId = null;
+    this.activeProductId = null;
+    this.pendingProductMessage = null;
     this.isOpen = false;
     if (this.stompClient && this.stompClient.connected) {
       this.stompClient.disconnect();
     }
   }
 
-  loadChatHistory() {
+  loadChatHistory(afterLoad?: () => void) {
     if (this.userId === 0) return;
-    this.chatService.getChatHistory(this.userId).subscribe({
+    const history$ = this.activeConsultationRequestId
+      ? this.chatService.getConsultationChatHistory(this.activeConsultationRequestId, this.activeProductId)
+      : this.chatService.getChatHistory(this.userId);
+
+    history$.subscribe({
       next: (res) => {
         // 🚨 GIẢI MÃ LỊCH SỬ CHAT
         this.messages = res.map(message => {
@@ -110,6 +132,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
           }
           return msg;
         });
+        afterLoad?.();
       },
       error: (err) => console.error("Lỗi:", err)
     });
@@ -128,6 +151,8 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
       this.stompClient.connect(headers, () => {
         console.log(">>> WebSocket Chat (Khách hàng) đã kết nối!");
 
+        this.flushPendingProductMessage();
+
         this.stompClient.subscribe(`/topic/chat/user/${this.userId}`, (msg: any) => {
           const receivedMessage: ChatMessage = this.normalizeMessage(JSON.parse(msg.body));
 
@@ -136,7 +161,9 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
             try { receivedMessage.productData = JSON.parse(receivedMessage.content); } catch(e) {}
           }
 
-          this.messages.push(receivedMessage);
+          if (this.shouldShowReceivedMessage(receivedMessage)) {
+            this.messages.push(receivedMessage);
+          }
         });
       });
     } catch (e) {
@@ -154,6 +181,8 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
       shopSender: false,
       adminSender: false,
       messageType: 'TEXT',
+      consultationRequestId: this.activeConsultationRequestId,
+      productId: this.activeProductId,
       timestamp: new Date().toISOString()
     };
 
@@ -166,6 +195,13 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
     this.newMessage = '';
   }
 
+  getSenderLabel(message: ChatMessage): string {
+    if (!message.isShopSender) {
+      return 'Ban';
+    }
+    return message.senderName || message.assignedStaffName || 'Nhan vien tu van';
+  }
+
   private scrollToBottom(): void {
     try { if (this.chatBody) this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight; } catch(err) { }
   }
@@ -176,5 +212,45 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
       ...message,
       isShopSender: rawMessage.isShopSender ?? rawMessage.shopSender ?? rawMessage.adminSender ?? false,
     };
+  }
+
+  private flushPendingProductMessage() {
+    if (!this.pendingProductMessage || !this.stompClient?.connected || this.userId === 0) return;
+
+    const productInfo = this.pendingProductMessage;
+    const alreadySentProductCard = this.messages.some((message) =>
+      message.messageType === 'PRODUCT'
+      && message.consultationRequestId === this.activeConsultationRequestId
+      && (message.productId === productInfo.id || message.productData?.id === productInfo.id)
+    );
+    if (alreadySentProductCard) {
+      this.pendingProductMessage = null;
+      return;
+    }
+
+    const chatMsg: ChatMessage = {
+      userId: this.userId,
+      content: JSON.stringify(productInfo),
+      isShopSender: false,
+      shopSender: false,
+      adminSender: false,
+      messageType: 'PRODUCT',
+      productId: productInfo.id,
+      consultationRequestId: this.activeConsultationRequestId,
+      timestamp: new Date().toISOString()
+    };
+
+    this.stompClient.send('/app/chat.send', {}, JSON.stringify(chatMsg));
+    chatMsg.productData = productInfo;
+    this.messages.push(chatMsg);
+    this.pendingProductMessage = null;
+    setTimeout(() => this.scrollToBottom(), 100);
+  }
+
+  private shouldShowReceivedMessage(message: ChatMessage): boolean {
+    if (this.activeConsultationRequestId) {
+      return message.consultationRequestId === this.activeConsultationRequestId;
+    }
+    return !message.consultationRequestId;
   }
 }

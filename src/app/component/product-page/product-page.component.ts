@@ -6,6 +6,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ProductService } from '../../service/product.service';
 import { ChatService } from '../../service/chat.service';
 import { AuthService } from '../../service/auth.service';
+import { ConsultationService } from '../../service/consultation.service';
 
 @Component({
   selector: 'app-product-page',
@@ -30,6 +31,7 @@ export class ProductPageComponent implements OnInit {
     private route: ActivatedRoute,
     private productService: ProductService,
     private chatService: ChatService,
+    private consultationService: ConsultationService,
     public authService: AuthService
   ) {}
 
@@ -89,7 +91,15 @@ export class ProductPageComponent implements OnInit {
       })) : []
     };
 
-    // Bắn tín hiệu sang Khung Chat (Đường dây nóng)
-    this.chatService.triggerProductQuery(productInfo);
+    this.consultationService.createRequest({
+      productId: productInfo.id,
+      firstMessage: `Tôi cần tư vấn thêm về sản phẩm ${productInfo.name}.`,
+    }).subscribe({
+      next: (consultation) => {
+        this.chatService.openConsultation(consultation, productInfo);
+        this.toast.notify('Đã gửi yêu cầu tư vấn. Nhân viên sẽ phản hồi trong khung chat.');
+      },
+      error: () => this.toast.notify('Không thể tạo yêu cầu tư vấn lúc này. Vui lòng thử lại sau.'),
+    });
   }
 }

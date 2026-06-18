@@ -30,7 +30,7 @@
       </a>
 
       <a
-        *ngIf="authService.isAdmin()"
+        *ngIf="authService.isAdmin() || authService.isStaff()"
         routerLink="/admin-chat"
         routerLinkActive="active"
         class="custom-sidebar-link"
@@ -102,6 +102,17 @@
         (click)="closeMobileSidebar()">
         <i class="bi bi-receipt"></i>
         <span class="nav-label">Đơn hàng của tôi</span>
+      </a>
+
+      <a
+        *ngIf="authService.isLoggedIn() && !authService.isAdmin() && !authService.isStaff()"
+        routerLink="/consultations"
+        routerLinkActive="active"
+        class="custom-sidebar-link"
+        title="Tư vấn sản phẩm"
+        (click)="closeMobileSidebar()">
+        <i class="bi bi-chat-dots"></i>
+        <span class="nav-label">Tư vấn sản phẩm</span>
       </a>
 
       <a
@@ -267,7 +278,6 @@
   <main class="app-main">
     <div class="app-content">
       <router-outlet></router-outlet>
-      <app-chat-widget></app-chat-widget>
     </div>
 
     <footer class="app-footer">

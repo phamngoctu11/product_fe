@@ -11,7 +11,6 @@ import { ThemeService } from './service/theme.service';
 import { UserService } from './service/user.service';
 import { WebsocketService } from './service/websocket.service';
 import { NotificationService } from './service/notification.service';
-import { ChatWidgetComponent } from './component/chat/chat-widget.component';
 import { TimeAgoPipe } from './pipes/time-ago.pipe';
 import { ToastContainerComponent } from './component/toast-container/toast-container.component';
 
@@ -24,7 +23,6 @@ import { ToastContainerComponent } from './component/toast-container/toast-conta
     RouterLinkActive,
     CommonModule,
     MatDialogModule,
-    ChatWidgetComponent,
     TimeAgoPipe,
     ToastContainerComponent,
   ],

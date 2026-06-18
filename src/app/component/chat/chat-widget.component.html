@@ -11,7 +11,7 @@
   .msg-admin { border-bottom-left-radius: 0.25rem; background-color: #ffffff; border: 1px solid #e9ecef; color: #212529; }
 </style>
 
-<div *ngIf="authService.isLoggedIn() && !authService.isAdmin()"
+<div *ngIf="authService.isLoggedIn() && !authService.isAdmin() && !authService.isStaff()"
      class="position-fixed bottom-0 end-0 m-4" style="z-index: 9999;">
 
   <div class="shadow-lg rounded-4 bg-white d-flex flex-column overflow-hidden border-0"
@@ -40,7 +40,7 @@
            [ngClass]="msg.isShopSender ? 'align-items-start' : 'align-items-end'">
 
         <span class="text-muted mb-1 px-1" style="font-size: 0.7rem; font-weight: 500;">
-          {{ msg.isShopSender ? 'Admin' : 'Bạn' }} • {{ msg.timestamp | date:'HH:mm' }}
+          {{ getSenderLabel(msg) }} - {{ msg.timestamp | date:'HH:mm' }}
         </span>
 
         <div *ngIf="!msg.messageType || msg.messageType === 'TEXT'"
