@@ -3,7 +3,10 @@
 .action-dialog--danger { --action-color: #dc2626; }
 .dialog-close { position: absolute; top: .8rem; right: .8rem; width: 34px; height: 34px; border: 0; border-radius: 50%; background: #f1f5f9; color: #64748b; }
 .dialog-heading { display: flex; align-items: flex-start; gap: 1rem; padding-right: 2rem; }
-.dialog-icon { display: inline-flex; width: 48px; height: 48px; flex: 0 0 48px; align-items: center; justify-content: center; border-radius: .8rem; background: color-mix(in srgb, var(--action-color) 12%, white); color: var(--action-color); font-size: 1.35rem; }
+.dialog-icon { display: inline-flex; width: 48px; height: 48px; flex: 0 0 48px; align-items: center; justify-content: center; border-radius: .8rem; background: var(--action-color-gradient, linear-gradient(135deg, #2563eb, #1d4ed8)); color: #fff; font-size: 1.35rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.30); }
+
+.action-dialog--warning .dialog-icon { background: linear-gradient(135deg, #d97706, #b45309); box-shadow: 0 4px 12px rgba(217, 119, 6, 0.30); }
+.action-dialog--danger .dialog-icon { background: linear-gradient(135deg, #dc2626, #b91c1c); box-shadow: 0 4px 12px rgba(220, 38, 38, 0.30); }
 .dialog-heading h2 { margin: .15rem 0 .35rem; color: #0f172a; font-size: 1.2rem; font-weight: 800; }
 .dialog-heading p { margin: 0; color: #64748b; line-height: 1.55; white-space: pre-line; }
 .dialog-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin: 1.25rem 0 0; padding: 1rem; border-radius: .75rem; background: #f8fafc; }

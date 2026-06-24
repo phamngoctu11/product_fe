@@ -16,7 +16,7 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './userdetail.html',
-  styleUrl: './userdetail.css',
+  styleUrls: ['../../app.css', './userdetail.css'],
   providers: [DatePipe], // Khai báo DatePipe
 })
 export class Userdetail implements OnInit {

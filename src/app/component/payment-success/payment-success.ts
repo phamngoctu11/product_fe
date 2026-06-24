@@ -7,6 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './payment-success.html',
+  styleUrls: ['../../app.css'],
 })
 export class PaymentSuccessComponent implements OnInit {
   isSuccess: boolean = false;

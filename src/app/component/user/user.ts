@@ -18,6 +18,7 @@ import { AuthService } from '../../service/auth.service';
   standalone: true,
   imports: [CommonModule, MatDialogModule, FormsModule],
   templateUrl: './user.html',
+  styleUrls: ['../../app.css'],
 })
 export class UserComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);

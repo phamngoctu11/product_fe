@@ -1,212 +1,221 @@
-<style>
-  .table-custom th { font-weight: 600; color: #6c757d; border-bottom-width: 1px; padding-top: 1rem; padding-bottom: 1rem; }
-  .table-custom td { vertical-align: middle; padding-top: 1rem; padding-bottom: 1rem; }
-  .quantity-control { background: #f8f9fa; border-radius: 50rem; padding: 0.25rem; display: inline-flex; align-items: center; border: 1px solid #dee2e6; }
-  .quantity-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: none; background: white; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); transition: all 0.2s; color: #495057; font-weight: bold;}
-  .quantity-btn:hover { background: #e9ecef; }
-</style>
+<div class="cart-backdrop" tabindex="-1">
+  <div class="cart-modal">
 
-<div class="modal fade show d-block" style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px)" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-      <div class="modal-header bg-primary bg-gradient text-white border-0 p-4">
-        <h5 class="modal-title fw-bold m-0 fs-4">
-          <i class="bi bi-cart3 me-2"></i>Giỏ hàng của tôi
-        </h5>
-        <button type="button" class="btn-close btn-close-white" (click)="onClose()"></button>
+    <!-- Header -->
+    <div class="cart-header">
+      <div class="cart-header-title">
+        <div class="cart-header-icon">
+          <i class="bi bi-bag-check-fill"></i>
+        </div>
+        <div>
+          <h5>Giỏ hàng của tôi</h5>
+          <p class="cart-header-sub">Xem lại và xác nhận đơn hàng</p>
+        </div>
       </div>
-      <div class="modal-body p-0">
-        <div *ngIf="isLoading" class="text-center py-5">
-          <div class="spinner-border text-primary"></div>
-          <p class="mt-2 text-muted fw-medium">Đang tải dữ liệu...</p>
+      <button type="button" class="cart-close-btn" (click)="onClose()" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="cart-body">
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="cart-loading">
+        <div class="cart-spinner"></div>
+        <p style="color:#7c85b0;font-size:0.875rem;">Đang tải giỏ hàng...</p>
+      </div>
+
+      <!-- Items -->
+      <div class="cart-items" *ngIf="!isLoading">
+
+        <!-- Empty -->
+        <div *ngIf="!cartData?.items || (cartData?.items?.length ?? 0) === 0" class="cart-empty">
+          <div class="cart-empty-icon">
+            <i class="bi bi-bag-x"></i>
+          </div>
+          <h6 style="color:#c7cbee;font-weight:700;">Giỏ hàng trống</h6>
+          <p style="color:#7c85b0;font-size:0.85rem;">Thêm sản phẩm vào giỏ hàng để tiến hành đặt hàng.</p>
         </div>
 
-        <div class="table-responsive" *ngIf="!isLoading">
-          <table class="table table-hover table-custom align-middle mb-0">
-            <thead class="table-light text-uppercase small text-center">
-              <tr>
-                <th *ngIf="isOwner" style="width: 10%"><i class="bi bi-check-square"></i> Chọn</th>
-                <th style="width: 35%" class="text-start ps-4">Sản phẩm</th>
-                <th style="width: 20%">Số lượng</th>
-                <th style="width: 15%" class="text-end">Đơn giá</th>
-                <th style="width: 20%" class="text-end pe-4">Thành tiền</th>
-                <th *ngIf="isOwner" style="width: 5%" class="text-center pe-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of cartData?.items; track getCartItemId(item); let i = $index) {
-                <tr>
-                  <td *ngIf="isOwner" class="text-center">
-                    <input class="form-check-input border-secondary" type="checkbox"
-                           [checked]="selectedProductIds.includes(getCartItemId(item))"
-                           (change)="toggleSelection(getCartItemId(item))"
-                           style="cursor: pointer; transform: scale(1.3);">
-                  </td>
-                  <td class="ps-4 fw-bold text-dark">
-                    <div class="d-flex align-items-center">
-                      <div class="rounded d-flex justify-content-center align-items-center me-3 border shadow-sm overflow-hidden"
-                           style="width: 45px; height: 45px; background-color: #f8f9fa; flex-shrink: 0;">
-                        <img *ngIf="item.image_url" [src]="item.image_url" style="width: 100%; height: 100%; object-fit: cover;">
-                        <i *ngIf="!item.image_url" class="bi bi-box-seam text-secondary fs-5"></i>
-                      </div>
-                      {{ getCartItemName(item) || 'Sản phẩm ID: ' + getCartItemId(item) }}
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    @if (isOwner) {
-                      <div class="quantity-control shadow-sm">
-                        <button class="quantity-btn text-danger" (click)="changeQuantity(i, -1)"><i class="bi bi-dash"></i></button>
-                        <span class="mx-3 fw-bold fs-6">{{ listCurQuan[i] }}</span>
-                        <button class="quantity-btn text-success" (click)="changeQuantity(i, 1)"><i class="bi bi-plus"></i></button>
-                      </div>
-                    } @else {
-                      <span class="fw-bold fs-6">{{ listCurQuan[i] }}</span>
-                    }
-                  </td>
-                  <td class="text-end text-muted">{{ item.price | number }}đ</td>
-                  <td class="text-end fw-bold text-dark pe-4">
-                    {{ listCurQuan[i] * item.price | number }}đ
-                  </td>
-                  <td *ngIf="isOwner" class="text-center pe-4">
-                    <button type="button"
-                            class="btn btn-outline-danger btn-sm rounded-circle shadow-sm"
-                            style="width: 34px; height: 34px;"
-                            [disabled]="isDeleting(getCartItemId(item))"
-                            title="Xóa khỏi giỏ hàng"
-                            (click)="removeItem(getCartItemId(item))">
-                      @if (isDeleting(getCartItemId(item))) {
-                        <span class="spinner-border spinner-border-sm"></span>
-                      } @else {
-                        <i class="bi bi-trash3"></i>
-                      }
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
+        <!-- Product rows -->
+        @for (item of cartData?.items; track getCartItemId(item); let i = $index) {
+          <div class="cart-item">
+            <!-- Checkbox -->
+            <input
+              *ngIf="isOwner"
+              type="checkbox"
+              class="cart-checkbox"
+              [checked]="selectedProductIds.includes(getCartItemId(item))"
+              (change)="toggleSelection(getCartItemId(item))" />
 
-            <tfoot>
-              <tr class="table-light border-top border-2">
-                <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-3 text-uppercase small fw-bold text-muted border-0">
-                  Tạm tính:
-                </td>
-                <td class="text-end py-3 border-0 pe-4">
-                  <span class="fs-6 fw-bold text-dark">{{ tempTotalPrice | number }}đ</span>
-                </td>
-                <td *ngIf="isOwner" class="border-0"></td>
-              </tr>
+            <!-- Product info -->
+            <div class="cart-product-info">
+              <div class="cart-product-thumb">
+                <img *ngIf="item.image_url" [src]="item.image_url" [alt]="getCartItemName(item)">
+                <i *ngIf="!item.image_url" class="bi bi-box-seam"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="cart-product-name">
+                  {{ getCartItemName(item) || 'Sản phẩm #' + getCartItemId(item) }}
+                </div>
+                <div class="cart-product-id">#{{ getCartItemId(item) }}</div>
+              </div>
+            </div>
 
+            <!-- Quantity -->
+            <div>
               @if (isOwner) {
-              <tr class="table-light border-0">
-                <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-2 align-middle border-0">
-                  <div class="d-flex justify-content-end align-items-center">
-                    <i class="bi bi-ticket-perforated text-danger me-2"></i>
-                    <span class="me-2 fw-semibold">Mã giảm giá:</span>
-                    <select class="form-select form-select-sm border-danger shadow-sm" style="width: auto; min-width: 250px;"
-                            [(ngModel)]="selectedVoucherId"
-                            (ngModelChange)="onVoucherChange()">
-                      <option [ngValue]="0">-- Không sử dụng mã giảm giá --</option>
-                      @for (uv of myWallet; track uv.id) {
-                        <option [ngValue]="uv.id" [disabled]="tempTotalPrice < uv.template.minOrderValue">
-                          {{ uv.template.name }} (Đơn từ {{ uv.template.minOrderValue | number }}đ)
-                        </option>
-                      }
-                    </select>
-                  </div>
-                </td>
-                <td class="text-end py-2 align-middle border-0 pe-4">
-                    @if (tempDiscountAmount > 0) {
-                      <span class="fw-bold text-success">-{{ tempDiscountAmount | number }}đ</span>
-                    } @else {
-                      <span class="text-muted">0đ</span>
-                    }
-                </td>
-                <td class="border-0"></td>
-              </tr>
+                <div class="cart-qty">
+                  <button class="cart-qty-btn minus" (click)="changeQuantity(i, -1)">
+                    <i class="bi bi-dash-lg"></i>
+                  </button>
+                  <span class="cart-qty-val">{{ listCurQuan[i] }}</span>
+                  <button class="cart-qty-btn plus" (click)="changeQuantity(i, 1)">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              } @else {
+                <span style="font-weight:800;color:#c7cbee;font-size:0.95rem;">{{ listCurQuan[i] }}</span>
               }
-
-              <tr class="bg-white border-top border-2">
-                <td [attr.colspan]="isOwner ? 4 : 3" class="text-end py-4 text-uppercase small fw-bold text-dark border-0">
-                  Tổng thanh toán:
-                </td>
-                <td class="text-end py-4 border-0 pe-4">
-                  <span class="fs-4 fw-bold text-danger">{{ tempFinalPrice | number }}đ</span>
-                </td>
-                <td *ngIf="isOwner" class="border-0"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <div *ngIf="onlinePaymentData" class="border-top bg-white p-4">
-          <div class="row g-4 align-items-center">
-            <div class="col-md-4 text-center">
-              <div class="border rounded-4 p-3 bg-light d-inline-flex align-items-center justify-content-center shadow-sm"
-                   style="width: 280px; height: 280px; max-width: 100%;">
-                @if (isGeneratingPaymentQr) {
-                  <div>
-                    <div class="spinner-border text-primary mb-2"></div>
-                    <div class="text-muted small">Đang tạo mã QR...</div>
-                  </div>
-                } @else if (paymentQrDataUrl) {
-                  <img [src]="paymentQrDataUrl" alt="QR thanh toán MoMo" style="width: 240px; height: 240px;">
-                } @else {
-                  <div class="text-muted small">Không có dữ liệu QR.</div>
-                }
-              </div>
             </div>
 
-            <div class="col-md-8">
-              <div class="d-flex align-items-center gap-2 mb-2">
-                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
-                  {{ onlinePaymentData.provider || 'MOMO' }}
-                </span>
-                <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">
-                  Chờ thanh toán
-                </span>
-              </div>
-              <h5 class="fw-bold text-dark mb-2">Thanh toán online qua MoMo</h5>
-              <p class="text-muted mb-3">
-                {{ onlinePaymentData.message || 'Quét mã QR hoặc mở trang thanh toán để hoàn tất đơn hàng.' }}
-              </p>
-              <div class="d-flex flex-wrap gap-2">
-                <button type="button"
-                        class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
-                        [disabled]="!getPaymentUrl()"
-                        (click)="openPaymentUrl()">
-                  <i class="bi bi-box-arrow-up-right me-1"></i> Mở trang thanh toán
-                </button>
-                <button type="button"
-                        class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm"
-                        *ngIf="onlinePaymentData.deeplink"
-                        (click)="openDeeplink()">
-                  <i class="bi bi-phone me-1"></i> Mở app MoMo
-                </button>
-              </div>
-            </div>
+            <!-- Unit price -->
+            <div class="cart-unit-price">{{ item.price | number }}đ</div>
+
+            <!-- Subtotal -->
+            <div class="cart-total-price">{{ listCurQuan[i] * item.price | number }}đ</div>
+
+            <!-- Delete -->
+            <button
+              *ngIf="isOwner"
+              type="button"
+              class="cart-del-btn"
+              [disabled]="isDeleting(getCartItemId(item))"
+              title="Xóa khỏi giỏ hàng"
+              (click)="removeItem(getCartItemId(item))">
+              @if (isDeleting(getCartItemId(item))) {
+                <span class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;color:#f87171;"></span>
+              } @else {
+                <i class="bi bi-trash3-fill cart-trash-icon"></i>
+              }
+            </button>
           </div>
-        </div>
+        }
       </div>
 
-      <div class="modal-footer bg-light border-0 p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div class="flex-grow-1" style="max-width: 400px;">
-          <div class="input-group shadow-sm rounded-pill overflow-hidden border bg-white">
-            <span class="input-group-text bg-transparent border-0 text-muted ps-3"><i class="bi bi-pencil-square"></i></span>
-            <input type="text" class="form-control border-0 px-2 shadow-none" placeholder="Nhập ghi chú cho đơn hàng..." [(ngModel)]="note" />
+      <!-- QR Payment Panel -->
+      <div *ngIf="onlinePaymentData" class="cart-qr-panel">
+        <div class="d-flex gap-4 align-items-start flex-wrap">
+          <div class="cart-qr-box">
+            @if (isGeneratingPaymentQr) {
+              <div class="text-center">
+                <div class="cart-spinner"></div>
+                <div style="color:#7c85b0;font-size:0.75rem;">Đang tạo QR...</div>
+              </div>
+            } @else if (paymentQrDataUrl) {
+              <img [src]="paymentQrDataUrl" alt="QR thanh toán">
+            } @else {
+              <span style="color:#3d4b6e;font-size:0.8rem;">Không có dữ liệu QR.</span>
+            }
           </div>
-        </div>
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm" (click)="onClose()">Đóng</button>
-          @if (isOwner) {
-            <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="approve('ONLINE')" [disabled]="isLoading || !!onlinePaymentData">
-              <i class="bi bi-wallet2 me-1"></i> Thanh toán MoMo
-            </button>
-            <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" (click)="approve('COD')" [disabled]="isLoading || !!onlinePaymentData">
-              <i class="bi bi-truck me-1"></i> Thanh toán COD
-            </button>
-          }
+          <div class="flex-grow-1 min-w-0">
+            <div class="cart-provider-badge">
+              <i class="bi bi-wallet2 me-1"></i>{{ onlinePaymentData.provider || 'MOMO' }}
+            </div>
+            <div class="cart-qr-title">Thanh toán online qua MoMo</div>
+            <p class="cart-qr-desc">{{ onlinePaymentData.message || 'Quét mã QR hoặc mở trang thanh toán để hoàn tất đơn hàng.' }}</p>
+            <div class="cart-qr-actions">
+              <button
+                type="button"
+                class="cart-qr-btn-main"
+                [disabled]="!getPaymentUrl()"
+                (click)="openPaymentUrl()">
+                <i class="bi bi-box-arrow-up-right"></i> Mở trang thanh toán
+              </button>
+              <button
+                type="button"
+                class="cart-qr-btn-outline"
+                *ngIf="onlinePaymentData.deeplink"
+                (click)="openDeeplink()">
+                <i class="bi bi-phone"></i> Mở app MoMo
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Summary -->
+    <div class="cart-summary" *ngIf="!isLoading && cartData?.items && (cartData?.items?.length ?? 0) > 0">
+      <div class="cart-summary-row">
+        <span class="cart-summary-label">Tạm tính</span>
+        <span class="cart-summary-val">{{ tempTotalPrice | number }}đ</span>
+      </div>
+
+      @if (isOwner) {
+        <div class="cart-voucher-row">
+          <span class="cart-voucher-label">
+            <i class="bi bi-ticket-perforated-fill"></i> Mã giảm giá:
+          </span>
+          <select
+            class="cart-voucher-select"
+            [(ngModel)]="selectedVoucherId"
+            (ngModelChange)="onVoucherChange()">
+            <option [ngValue]="0">-- Không sử dụng mã giảm giá --</option>
+            @for (uv of myWallet; track uv.id) {
+              <option [ngValue]="uv.id" [disabled]="tempTotalPrice < uv.template.minOrderValue">
+                {{ uv.template.name }} (Đơn từ {{ uv.template.minOrderValue | number }}đ)
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="cart-summary-row" *ngIf="tempDiscountAmount > 0">
+          <span class="cart-summary-label">Giảm giá</span>
+          <span class="cart-summary-val discount">-{{ tempDiscountAmount | number }}đ</span>
+        </div>
+      }
+
+      <hr class="cart-divider">
+
+      <div class="cart-total-row">
+        <span class="cart-total-label">Tổng thanh toán</span>
+        <span class="cart-total-final">{{ tempFinalPrice | number }}đ</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="cart-footer">
+      <div class="cart-note-wrap">
+        <i class="bi bi-pencil-square cart-note-icon"></i>
+        <input
+          type="text"
+          class="cart-note-input"
+          placeholder="Ghi chú cho đơn hàng..."
+          [(ngModel)]="note" />
+      </div>
+
+      <div class="cart-footer-actions">
+        <button type="button" class="cart-btn cart-btn-close" (click)="onClose()">Đóng</button>
+        @if (isOwner) {
+          <button
+            type="button"
+            class="cart-btn cart-btn-momo"
+            (click)="approve('ONLINE')"
+            [disabled]="isLoading || !!onlinePaymentData">
+            <i class="bi bi-wallet2"></i> Thanh toán MoMo
+          </button>
+          <button
+            type="button"
+            class="cart-btn cart-btn-cod"
+            (click)="approve('COD')"
+            [disabled]="isLoading || !!onlinePaymentData">
+            <i class="bi bi-truck-front-fill"></i> Thanh toán COD
+          </button>
+        }
+      </div>
+    </div>
+
   </div>
 </div>

@@ -12,7 +12,7 @@ import { getApiErrorMessage } from '../../model/api-response.model';
   standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './login.html',
-  styleUrl: './login.css',
+  styleUrls: ['../../app.css', './login.css'],
 })
 export class LoginComponent implements OnInit {
   private readonly toast = injectToast(ToastService);

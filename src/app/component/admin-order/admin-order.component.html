@@ -1,8 +1,8 @@
 <div class="container-fluid p-4 admin-order-page">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex align-items-center gap-3">
-      <div class="bg-primary bg-opacity-10 text-primary icon-shape page-icon shadow-sm">
-        <i class="bi bi-clipboard-check fs-3"></i>
+      <div class="icon-container-primary icon-container-lg">
+        <i class="bi bi-clipboard-check"></i>
       </div>
       <div>
         <h2 class="fw-bold text-dark mb-0">Quản lý luồng đơn hàng</h2>
@@ -20,30 +20,36 @@
     <div class="card-body p-0">
       <div class="admin-order-status-grid border-bottom">
         <button type="button"
-                class="admin-order-status-panel"
+                class="admin-order-status-panel status-kcs"
                 [class.active]="activeStatus === 'PENDING_KCS'"
                 (click)="selectStatus('PENDING_KCS')"
                 [disabled]="isLoading">
           <span class="status-icon text-bg-info">
             <i class="bi bi-shield-check"></i>
           </span>
-          <span>
+          <span class="min-w-0">
             <span class="status-title">Đơn chờ KCS</span>
             <span class="status-subtitle">Kiểm tra chất lượng sau khi staff xuất kho</span>
+          </span>
+          <span class="admin-order-status-meta">
+            <i class="bi bi-filter-circle"></i>KCS
           </span>
         </button>
 
         <button type="button"
-                class="admin-order-status-panel"
+                class="admin-order-status-panel status-approval"
                 [class.active]="activeStatus === 'PENDING_APPROVAL'"
                 (click)="selectStatus('PENDING_APPROVAL')"
                 [disabled]="isLoading">
           <span class="status-icon text-bg-warning">
             <i class="bi bi-hourglass-split"></i>
           </span>
-          <span>
+          <span class="min-w-0">
             <span class="status-title">Đơn chờ duyệt</span>
             <span class="status-subtitle">Duyệt hoặc từ chối đơn hàng mới</span>
+          </span>
+          <span class="admin-order-status-meta">
+            <i class="bi bi-filter-circle"></i>Duyệt
           </span>
         </button>
       </div>

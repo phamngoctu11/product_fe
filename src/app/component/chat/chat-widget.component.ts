@@ -16,7 +16,8 @@ declare var Stomp: any;
   selector: 'app-chat-widget',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule], // 🚨 THÊM RouterModule
-  templateUrl: './chat-widget.component.html'
+  templateUrl: './chat-widget.component.html',
+  styleUrls: ['../../app.css', './chat-widget.component.css'],
 })
 export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   private readonly toast = injectToast(ToastService);

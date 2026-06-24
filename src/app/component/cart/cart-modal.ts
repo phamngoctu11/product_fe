@@ -19,6 +19,7 @@ import * as QRCode from 'qrcode';
   standalone: true,
   imports: [CommonModule, MatDialogModule, FormsModule],
   templateUrl: './cart-modal.html',
+  styleUrls: ['../../app.css', './cart-modal.css'],
 })
 export class CartModalComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);

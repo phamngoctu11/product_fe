@@ -14,7 +14,9 @@ import { getApiErrorMessage } from '../../model/api-response.model';
   selector: 'app-reward-dialog',
   standalone: true,
   imports: [CommonModule, MatDialogModule],
-  templateUrl: './reward-dialog.html'})
+  templateUrl: './reward-dialog.html',
+  styleUrls: ['../../app.css', './reward-dialog.css'],
+})
 export class RewardDialogComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
   private readonly toast = injectToast(ToastService);

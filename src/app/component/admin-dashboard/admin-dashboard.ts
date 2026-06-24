@@ -35,6 +35,7 @@ interface StatusSummary {
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
   templateUrl: './admin-dashboard.html',
+  styleUrls: ['../../app.css', './admin-dashboard.css'],
 })
 export class AdminDashboard implements OnInit {
   private readonly emptyStats: DashboardStats = {

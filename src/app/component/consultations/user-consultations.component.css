@@ -1,6 +1,6 @@
 .consultation-page {
   padding: 24px;
-  color: #1f2937;
+  color: var(--app-text);
   height: calc(100vh - 96px);
   min-height: 0;
   display: flex;
@@ -24,7 +24,7 @@
 
 .consultation-header p {
   margin: 2px 0 0;
-  color: #64748b;
+  color: var(--app-muted-text);
 }
 
 .consultation-shell {
@@ -32,21 +32,21 @@
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: #0d1427;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.18);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .thread-list {
   min-height: 0;
-  border-right: 1px solid #e5e7eb;
-  background: #f8fafc;
+  border-right: 1px solid rgba(var(--app-primary-rgb), 0.16);
+  background: #0a1022;
   overflow: auto;
 }
 
 .thread-list::-webkit-scrollbar, .chat-body::-webkit-scrollbar { width: 6px; }
-.thread-list::-webkit-scrollbar-thumb, .chat-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+.thread-list::-webkit-scrollbar-thumb, .chat-body::-webkit-scrollbar-thumb { background: rgba(var(--app-primary-rgb), 0.38); border-radius: 999px; }
 
 .thread-list-header {
   height: 58px;
@@ -55,9 +55,9 @@
   justify-content: space-between;
   padding: 0 18px;
   font-weight: 800;
-  color: #475569;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  color: #cbd5e1;
+  background: #10172b;
+  border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.16);
 }
 
 .thread-item {
@@ -68,16 +68,17 @@
   gap: 12px;
   padding: 14px 18px;
   border: 0;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.12);
   border-left: 3px solid transparent;
-  background: #fff;
+  background: transparent;
+  color: var(--app-text);
   text-align: left;
 }
 
 .thread-item:hover,
 .thread-item.active {
-  background: #eef5ff;
-  border-left-color: #0d6efd;
+  background: rgba(var(--app-primary-rgb), 0.12);
+  border-left-color: var(--app-primary);
 }
 
 .thread-image,
@@ -94,8 +95,8 @@
 .chat-product-fallback {
   display: grid;
   place-items: center;
-  background: #e2e8f0;
-  color: #475569;
+  background: #1e293b;
+  color: #cbd5e1;
 }
 
 .thread-copy {
@@ -111,7 +112,7 @@
 }
 
 .thread-copy small, .chat-header p, .empty-state, .chat-empty p, .message-meta {
-  color: #64748b;
+  color: var(--app-muted-text);
 }
 
 .chat-panel {
@@ -119,7 +120,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: #f4f7f6;
+  background: #070b19;
 }
 
 .chat-header {
@@ -129,8 +130,8 @@
   align-items: center;
   gap: 12px;
   padding: 0 18px;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  background: #10172b;
+  border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.16);
 }
 
 .chat-header h2 {
@@ -179,9 +180,9 @@
   max-width: 100%;
   padding: 10px 16px;
   border-radius: 18px 18px 4px 18px;
-  background: #0d6efd;
+  background: var(--app-gradient);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-sm);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   line-height: 1.45;
@@ -189,17 +190,17 @@
 
 .message-row.from-shop .message-bubble {
   border-radius: 18px 18px 18px 4px;
-  background: #fff;
-  color: #1f2937;
-  border: 1px solid #e5e7eb;
+  background: #111a31;
+  color: var(--app-text);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.18);
 }
 
 .product-card {
   width: 260px;
   max-width: min(260px, 100%);
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.18);
   border-radius: 8px;
-  background: #fff;
+  background: #111a31;
   overflow: hidden;
 }
 
@@ -211,7 +212,7 @@
   width: 100%;
   height: 150px;
   object-fit: cover;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.14);
 }
 
 .product-variant-badge {
@@ -228,7 +229,7 @@
 
 .product-card-body {
   padding: 12px;
-  color: #1f2937;
+  color: var(--app-text);
 }
 
 .product-card strong {
@@ -250,10 +251,10 @@
 .product-tags span {
   max-width: 100%;
   padding: 3px 8px;
-  border: 1px solid rgba(13, 110, 253, 0.25);
+  border: 1px solid rgba(var(--app-primary-rgb), 0.25);
   border-radius: 999px;
-  background: rgba(13, 110, 253, 0.1);
-  color: #0d6efd;
+  background: rgba(var(--app-primary-rgb), 0.1);
+  color: var(--app-primary-light);
   font-size: 0.7rem;
   font-weight: 700;
 }
@@ -276,8 +277,8 @@
   display: flex;
   gap: 10px;
   padding: 16px 18px;
-  background: #fff;
-  border-top: 1px solid #e5e7eb;
+  background: #10172b;
+  border-top: 1px solid rgba(var(--app-primary-rgb), 0.16);
 }
 
 .chat-input input {

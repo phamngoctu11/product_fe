@@ -1,148 +1,134 @@
-<style>
-  .hover-elevate {
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  .hover-elevate:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 0.5rem 1rem rgba(15, 23, 42, 0.12) !important;
-  }
-
-  .icon-shape {
-    width: 52px;
-    height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .chart-shell {
-    width: 100%;
-    height: 340px;
-    min-height: 300px;
-  }
-
-  .status-row {
-    border-radius: 0.5rem;
-  }
-</style>
-
 <div class="container-fluid p-4" style="animation: fadeIn 0.4s;">
-  <h2 class="mb-4 fw-bold text-dark">
-    <i class="bi bi-graph-up-arrow text-primary me-2"></i>Tổng quan kinh doanh
-  </h2>
 
-  <div *ngIf="isLoading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Đang tải...</span>
+  <!-- Page Title -->
+  <div class="d-flex align-items-center gap-3 mb-4">
+      <i class="bi bi-bar-chart-line-fill"></i>
+    <div>
+      <h1 class="m-0 page-section-title" style="font-size: 1.35rem;">Tổng quan kinh doanh</h1>
+      <p class="m-0 text-muted" style="font-size: 0.8rem;">Thống kê hiệu suất và dữ liệu vận hành</p>
     </div>
   </div>
 
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border" role="status" style="color: #6366f1; width: 2.5rem; height: 2.5rem;">
+      <span class="visually-hidden">Đang tải...</span>
+    </div>
+    <p class="mt-3 text-muted small">Đang tải dữ liệu...</p>
+  </div>
+
   <div *ngIf="!isLoading">
+    <!-- Top 3 Stat Cards -->
     <div class="row g-4 mb-4">
       <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-3 h-100 hover-elevate">
+        <div class="card border-0 shadow-sm stat-card h-100">
           <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center gap-3">
-              <div>
-                <p class="mb-1 text-muted fw-semibold text-uppercase" style="letter-spacing: 1px;">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div class="min-w-0">
+                <p class="mb-1 text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing: 0.8px;">
                   Tổng doanh thu
                 </p>
-                <h3 class="mb-0 fw-bold text-success">
-                  {{ stats.totalRevenue | number:'1.0-0' }} đ
+                <h3 class="mb-0 fw-bold stat-value-revenue" style="letter-spacing: -0.5px;">
+                  {{ stats.totalRevenue | number:'1.0-0' }} <span style="font-size:0.9rem;">đ</span>
                 </h3>
               </div>
-              <div class="bg-success bg-opacity-10 text-success icon-shape">
-                <i class="bi bi-wallet2 fs-4"></i>
+              <div class="stat-icon stat-icon-revenue">
+                <i class="bi bi-wallet2"></i>
               </div>
             </div>
-            <small class="d-block mt-3 text-muted">
-              <i class="bi bi-info-circle me-1"></i>Chỉ tính các đơn đã giao
-            </small>
+            <div class="mt-3 pt-3 border-top" style="border-top-color: #f0f2ff !important;">
+              <small class="text-muted" style="font-size:0.78rem;">
+                <i class="bi bi-info-circle me-1 text-primary"></i>Chỉ tính các đơn đã giao
+              </small>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-3 h-100 hover-elevate">
+        <div class="card border-0 shadow-sm stat-card h-100">
           <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center gap-3">
-              <div>
-                <p class="mb-1 text-muted fw-semibold text-uppercase" style="letter-spacing: 1px;">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div class="min-w-0">
+                <p class="mb-1 text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing: 0.8px;">
                   Tổng đơn hàng
                 </p>
-                <h3 class="mb-0 fw-bold text-dark">
+                <h3 class="mb-0 fw-bold stat-value-orders" style="letter-spacing: -0.5px;">
                   {{ stats.totalOrders | number }}
-                  <span class="fs-6 text-muted fw-normal">đơn</span>
+                  <span class="text-muted fw-normal" style="font-size:0.85rem;">đơn</span>
                 </h3>
               </div>
-              <div class="bg-primary bg-opacity-10 text-primary icon-shape">
-                <i class="bi bi-box-seam fs-4"></i>
+              <div class="stat-icon stat-icon-orders">
+                <i class="bi bi-bag-check-fill"></i>
               </div>
+            </div>
+            <div class="mt-3 pt-3 border-top" style="border-top-color: #f0f2ff !important;">
+              <small class="text-muted" style="font-size:0.78rem;">
+                <i class="bi bi-check-circle me-1 text-success"></i>Tổng số đơn hàng hệ thống
+              </small>
             </div>
           </div>
         </div>
       </div>
 
       <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-3 h-100 hover-elevate">
+        <div class="card border-0 shadow-sm stat-card h-100">
           <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center gap-3">
-              <div>
-                <p class="mb-1 text-muted fw-semibold text-uppercase" style="letter-spacing: 1px;">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div class="min-w-0">
+                <p class="mb-1 text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing: 0.8px;">
                   Đang chờ xử lý
                 </p>
-                <h3 class="mb-0 fw-bold text-warning">
+                <h3 class="mb-0 fw-bold stat-value-pending" style="letter-spacing: -0.5px;">
                   {{ pendingProcessingOrders | number }}
-                  <span class="fs-6 text-muted fw-normal">đơn</span>
+                  <span class="text-muted fw-normal" style="font-size:0.85rem;">đơn</span>
                 </h3>
               </div>
-              <div class="bg-warning bg-opacity-10 text-warning icon-shape">
-                <i class="bi bi-hourglass-split fs-4"></i>
+              <div class="stat-icon stat-icon-pending">
+                <i class="bi bi-hourglass-split"></i>
               </div>
             </div>
-            <small class="d-block mt-3 text-muted">
-              Bao gồm chờ thanh toán, duyệt, kho và KCS
-            </small>
+            <div class="mt-3 pt-3 border-top" style="border-top-color: #f0f2ff !important;">
+              <small class="text-muted" style="font-size:0.78rem;">
+                <i class="bi bi-clock me-1 text-warning"></i>Bao gồm chờ thanh toán, duyệt, kho, KCS
+              </small>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Mini Status Cards -->
     <div class="row g-3 mb-4">
       <div class="col-xl-3 col-md-6" *ngFor="let status of pendingStatuses">
-        <div class="card border-0 shadow-sm rounded-3 h-100">
-          <div class="card-body p-3">
-            <div class="d-flex justify-content-between align-items-start gap-3">
-              <div>
-                <p class="mb-1 fw-semibold text-dark">{{ status.label }}</p>
-                <small class="text-muted">{{ status.description }}</small>
-              </div>
-              <div class="icon-shape" [ngClass]="status.bgClass">
-                <i class="bi fs-4" [ngClass]="[status.icon, status.textClass]"></i>
-              </div>
+        <div class="mini-stat-card shadow-sm">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+            <div class="min-w-0">
+              <p class="mb-0 fw-semibold text-dark" style="font-size:0.875rem;">{{ status.label }}</p>
+              <small class="text-muted" style="font-size:0.75rem;">{{ status.description }}</small>
             </div>
-            <div class="d-flex align-items-end justify-content-between mt-3">
-              <h4 class="mb-0 fw-bold" [ngClass]="status.textClass">
-                {{ getStatusValue(status.key) | number }}
-              </h4>
-              <span class="badge rounded-pill px-3 py-2" [ngClass]="status.badgeClass">
-                {{ getPercent(getStatusValue(status.key)) | number:'1.0-1' }}%
-              </span>
+            <div class="mini-stat-icon" [ngClass]="status.bgClass">
+              <i class="bi" [ngClass]="[status.icon, status.textClass]"></i>
             </div>
+          </div>
+          <div class="d-flex align-items-end justify-content-between">
+            <h4 class="mb-0 fw-bold" [ngClass]="status.textClass">
+              {{ getStatusValue(status.key) | number }}
+            </h4>
+            <span class="badge rounded-pill px-2" style="font-size:0.72rem;" [ngClass]="status.badgeClass">
+              {{ getPercent(getStatusValue(status.key)) | number:'1.0-1' }}%
+            </span>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Charts Row -->
     <div class="row g-4">
       <div class="col-lg-6">
-        <div class="card border-0 shadow-sm rounded-3 h-100">
-          <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-            <h5 class="fw-bold text-dark mb-1">Biểu đồ trạng thái đơn hàng</h5>
-            <small class="text-muted">Tách riêng từng trạng thái chờ xử lý theo response mới</small>
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 1.1rem; border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;">
+          <div class="card-header border-0 pt-4 pb-0 px-4" style="border-radius: 1.1rem 1.1rem 0 0;">
+            <h5 class="fw-bold mb-1" style="color: #0f172a; font-size: 0.95rem;">Biểu đồ trạng thái đơn hàng</h5>
+            <small class="text-muted" style="font-size:0.78rem;">Tách riêng từng trạng thái chờ xử lý</small>
           </div>
           <div class="card-body p-4">
             <div class="chart-shell">
@@ -158,28 +144,28 @@
       </div>
 
       <div class="col-lg-6">
-        <div class="card border-0 shadow-sm rounded-3 h-100">
-          <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-            <h5 class="fw-bold text-dark mb-1">Chi tiết vận hành</h5>
-            <small class="text-muted">Số lượng và tỷ lệ theo tổng đơn hàng</small>
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 1.1rem; border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;">
+          <div class="card-header border-0 pt-4 pb-0 px-4" style="border-radius: 1.1rem 1.1rem 0 0;">
+            <h5 class="fw-bold mb-1" style="color: #0f172a; font-size: 0.95rem;">Chi tiết vận hành</h5>
+            <small class="text-muted" style="font-size:0.78rem;">Số lượng và tỷ lệ theo tổng đơn hàng</small>
           </div>
           <div class="card-body p-4">
             <div
-              class="d-flex justify-content-between align-items-center gap-3 mb-3 p-3 status-row"
+              class="detail-row"
               *ngFor="let status of operationStatuses"
               [ngClass]="status.bgClass">
               <div class="d-flex align-items-center gap-3 min-w-0">
-                <i class="bi fs-3" [ngClass]="[status.icon, status.textClass]"></i>
+                <i class="bi fs-4" [ngClass]="[status.icon, status.textClass]"></i>
                 <div class="min-w-0">
-                  <h6 class="mb-0 fw-bold text-dark">{{ status.label }}</h6>
-                  <small class="text-muted">{{ status.description }}</small>
+                  <h6 class="mb-0 fw-bold text-dark" style="font-size:0.875rem;">{{ status.label }}</h6>
+                  <small class="text-muted" style="font-size:0.75rem;">{{ status.description }}</small>
                 </div>
               </div>
               <div class="text-end flex-shrink-0">
-                <h4 class="mb-0 fw-bold" [ngClass]="status.textClass">
+                <h4 class="mb-0 fw-bold" [ngClass]="status.textClass" style="font-size:1.1rem;">
                   {{ getStatusValue(status.key) | number }}
                 </h4>
-                <span class="badge rounded-pill shadow-sm" [ngClass]="status.badgeClass">
+                <span class="badge rounded-pill" style="font-size:0.7rem;" [ngClass]="status.badgeClass">
                   {{ getPercent(getStatusValue(status.key)) | number:'1.0-1' }}%
                 </span>
               </div>
@@ -189,19 +175,20 @@
       </div>
     </div>
 
+    <!-- Best Sellers -->
     <div class="row g-4 mt-1">
       <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-3">
-          <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+        <div class="card border-0 shadow-sm" style="border-radius: 1.1rem; border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;">
+          <div class="card-header border-0 pt-4 pb-0 px-4" style="border-radius: 1.1rem 1.1rem 0 0;">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div>
-                <h5 class="fw-bold text-dark mb-1">
-                  <i class="bi bi-fire text-danger me-2"></i>Sản phẩm bán chạy
+                <h5 class="fw-bold mb-1" style="color: #0f172a; font-size: 0.95rem; display:flex; align-items:center; gap:0.5rem;">
+                  <i class="bi bi-fire text-danger"></i>Sản phẩm bán chạy
                 </h5>
-                <small class="text-muted">Top sản phẩm theo các đơn đã giao thành công</small>
+                <small class="text-muted" style="font-size:0.78rem;">Top sản phẩm theo đơn đã giao thành công</small>
               </div>
               <div class="d-flex align-items-center gap-2 flex-wrap">
-                <div class="btn-group btn-group-sm shadow-sm" role="group" aria-label="Lọc sản phẩm bán chạy">
+                <div class="btn-group btn-group-sm period-btn-group shadow-sm" role="group">
                   <button
                     *ngFor="let period of bestSellingPeriods"
                     type="button"
@@ -213,7 +200,8 @@
                     {{ period.label }}
                   </button>
                 </div>
-                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2">
+                <span class="badge rounded-pill px-3 py-2"
+                      style="background: rgba(239,68,68,0.08); color: #ef4444; font-size:0.75rem; font-weight:700;">
                   Top {{ bestSellingProducts.length || 5 }}
                 </span>
               </div>
@@ -222,28 +210,28 @@
 
           <div class="card-body p-4">
             <div *ngIf="isLoadingBestSelling" class="text-center py-4">
-              <div class="spinner-border text-danger spinner-border-sm" role="status"></div>
-              <span class="ms-2 text-muted fw-medium">Đang tải sản phẩm bán chạy...</span>
+              <div class="spinner-border spinner-border-sm" role="status" style="color:#6366f1;"></div>
+              <span class="ms-2 text-muted fw-medium" style="font-size:0.875rem;">Đang tải sản phẩm bán chạy...</span>
             </div>
 
-            <div *ngIf="!isLoadingBestSelling && bestSellingError" class="alert alert-warning border-0 rounded-3 mb-0">
+            <div *ngIf="!isLoadingBestSelling && bestSellingError"
+                 class="alert border-0 rounded-3 mb-0"
+                 style="background: rgba(245,158,11,0.08); color: #92400e; border-left: 3px solid #f59e0b !important; border-left-style: solid !important;">
               <i class="bi bi-exclamation-triangle me-2"></i>{{ bestSellingError }}
             </div>
 
-            <div
-              *ngIf="!isLoadingBestSelling && !bestSellingError && bestSellingProducts.length === 0"
-              class="text-center py-4 text-muted">
-              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-              Chưa có dữ liệu sản phẩm bán chạy.
+            <div *ngIf="!isLoadingBestSelling && !bestSellingError && bestSellingProducts.length === 0"
+                 class="text-center py-4 text-muted">
+              <i class="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
+              <span style="font-size:0.875rem;">Chưa có dữ liệu sản phẩm bán chạy.</span>
             </div>
 
-            <div
-              *ngIf="!isLoadingBestSelling && !bestSellingError && bestSellingProducts.length > 0"
-              class="table-responsive">
-              <table class="table align-middle mb-0">
-                <thead class="table-light text-uppercase small text-muted">
+            <div *ngIf="!isLoadingBestSelling && !bestSellingError && bestSellingProducts.length > 0"
+                 class="table-responsive">
+              <table class="table align-middle mb-0 best-seller-table">
+                <thead>
                   <tr>
-                    <th style="width: 72px;" class="text-center">Hạng</th>
+                    <th style="width: 64px;" class="text-center">Hạng</th>
                     <th>Sản phẩm</th>
                     <th class="text-center">Mã SP</th>
                     <th class="text-end">Đã bán</th>
@@ -253,40 +241,40 @@
                   <tr *ngFor="let product of bestSellingProducts; let i = index">
                     <td class="text-center">
                       <span
-                        class="badge rounded-pill px-3 py-2"
-                        [ngClass]="i === 0 ? 'bg-warning text-dark' : (i === 1 ? 'bg-secondary' : (i === 2 ? 'bg-danger' : 'bg-primary'))">
+                        class="rank-badge"
+                        [style.background]="i === 0 ? 'linear-gradient(135deg,#f59e0b,#d97706)' : (i === 1 ? 'linear-gradient(135deg,#94a3b8,#64748b)' : (i === 2 ? 'linear-gradient(135deg,#f97316,#ea580c)' : 'rgba(99,102,241,0.1)'))"
+                        [style.color]="i < 3 ? '#fff' : '#6366f1'"
+                        [style.box-shadow]="i < 3 ? '0 4px 10px rgba(0,0,0,0.15)' : 'none'">
                         #{{ i + 1 }}
                       </span>
                     </td>
                     <td>
                       <div class="d-flex align-items-center gap-3">
                         <div
-                          class="rounded border bg-light d-flex align-items-center justify-content-center overflow-hidden"
-                          style="width: 54px; height: 54px; flex-shrink: 0;">
+                          class="rounded-3 border d-flex align-items-center justify-content-center overflow-hidden"
+                          style="width: 50px; height: 50px; flex-shrink: 0; background: #f8f9ff;">
                           <img
                             *ngIf="product.imageUrl"
                             [src]="product.imageUrl"
                             style="width: 100%; height: 100%; object-fit: cover;"
-                            alt="Product">
-                          <i *ngIf="!product.imageUrl" class="bi bi-image text-muted fs-4"></i>
+                            [alt]="product.productName">
+                          <i *ngIf="!product.imageUrl" class="bi bi-image text-muted fs-5"></i>
                         </div>
                         <div class="min-w-0">
-                          <div
-                            class="fw-bold text-dark text-truncate"
-                            style="max-width: 520px;"
-                            [title]="product.productName">
+                          <div class="fw-bold text-truncate" style="max-width: 480px; font-size:0.88rem; color:#0f172a;">
                             {{ product.productName }}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td class="text-center">
-                      <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
+                      <span class="badge rounded-pill px-3"
+                            style="background: rgba(99,102,241,0.08); color: #6366f1; font-size:0.75rem; font-weight:700;">
                         #{{ product.productId }}
                       </span>
                     </td>
                     <td class="text-end">
-                      <span class="fw-bold text-success fs-6">{{ product.soldQuantity | number }}</span>
+                      <span class="fw-bold" style="color: #10b981; font-size:0.95rem;">{{ product.soldQuantity | number }}</span>
                     </td>
                   </tr>
                 </tbody>

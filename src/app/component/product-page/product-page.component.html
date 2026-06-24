@@ -1,106 +1,108 @@
-<style>
-  .product-img-main { transition: transform 0.4s ease; }
-  .product-img-main:hover { transform: scale(1.08); }
-  .variant-card { transition: all 0.3s ease; border: 1px solid #e9ecef; }
-  .variant-card:hover { border-color: #0d6efd; transform: translateY(-4px); box-shadow: 0 1rem 2rem rgba(0,0,0,.1)!important; }
-  .attr-badge { font-size: 0.8rem; background-color: #fff; border: 1px solid #dee2e6; color: #495057; }
-</style>
+<div class="container py-5 pd-wrapper">
 
-<div class="container py-5" style="min-height: 80vh; animation: fadeIn 0.5s;">
-  <div *ngIf="isLoading" class="text-center py-5 text-muted">
-    <div class="spinner-border text-primary mb-3" role="status"></div>
-    <h5>Đang tải thông tin sản phẩm...</h5>
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="pd-loading">
+    <div class="pd-spinner"></div>
+    <p style="color: #7c85b0; font-size: 0.9rem;">Đang tải thông tin sản phẩm...</p>
   </div>
 
-  <div *ngIf="!isLoading && product" class="bg-white p-4 p-lg-5 rounded-4 shadow-lg border-0">
+  <!-- Product Card -->
+  <div *ngIf="!isLoading && product" class="pd-card p-4 p-lg-5">
     <div class="row g-5">
 
-      <!-- Phần Hình Ảnh (Bên Trái) -->
-      <div class="col-lg-5 text-center mb-4 mb-lg-0">
-        <div class="position-sticky" style="top: 20px;">
-          <div class="border rounded-4 overflow-hidden shadow-sm d-flex align-items-center justify-content-center bg-light" style="height: 450px;">
-            <img *ngIf="product.image_url" [src]="product.image_url" class="product-img-main" style="width: 100%; height: 100%; object-fit: contain;" alt="Product">
-            <i *ngIf="!product.image_url" class="bi bi-image text-muted opacity-25" style="font-size: 6rem;"></i>
+      <!-- LEFT: Image + Consult -->
+      <div class="col-lg-5">
+        <div class="position-sticky" style="top: 24px;">
+          <div class="pd-img-box">
+            <img *ngIf="product.image_url" [src]="product.image_url" class="pd-img" alt="Ảnh sản phẩm">
+            <i *ngIf="!product.image_url" class="bi bi-image icon-3xl icon-color-muted-darker"></i>
           </div>
 
-          <!-- Nút Tư vấn (Chỉ hiện cho Khách) -->
-          <button class="btn btn-outline-primary btn-lg w-100 fw-bold rounded-pill shadow-sm mt-4 d-flex justify-content-center align-items-center gap-2"
-                  *ngIf="!authService.isAdmin()"
-                  (click)="askAboutProduct()">
-            <i class="bi bi-chat-heart-fill fs-5"></i> Cần tư vấn thêm về sản phẩm?
+          <button class="pd-consult-btn" *ngIf="!authService.isAdmin()" (click)="askAboutProduct()">
+            <i class="bi bi-chat-heart-fill"></i> Cần tư vấn thêm về sản phẩm?
           </button>
         </div>
       </div>
 
-      <!-- Phần Thông Tin Chi Tiết (Bên Phải) -->
+      <!-- RIGHT: Info -->
       <div class="col-lg-7 d-flex flex-column">
 
-        <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-          <span class="badge bg-danger rounded-pill px-3 py-2 fw-bold shadow-sm"><i class="bi bi-fire me-1"></i> SẢN PHẨM HOT</span>
+        <!-- Tags Row -->
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <span class="pd-tag-hot"><i class="bi bi-fire"></i> SẢN PHẨM HOT</span>
           <ng-container *ngIf="product.tags">
-            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 shadow-sm" *ngFor="let tag of product.tags.split(',')">
+            <span class="pd-tag-label" *ngFor="let tag of product.tags.split(',')">
               {{ tag.trim() }}
             </span>
           </ng-container>
         </div>
 
-        <h2 class="fw-bold text-dark mb-3 lh-base">{{ product.product_name }}</h2>
+        <!-- Name -->
+        <h1 class="pd-name">{{ product.product_name }}</h1>
 
-        <!-- Khối Giá Tóm tắt -->
-        <div class="bg-light p-4 rounded-4 mb-4 border border-light shadow-sm">
-          <p class="text-muted small fw-bold text-uppercase mb-1" style="letter-spacing: 1px;">Giá tham khảo</p>
-          <h2 class="text-danger fw-bold m-0 d-flex align-items-center">
-            {{ product.price | number }} ₫
-          </h2>
+        <!-- Price -->
+        <div class="pd-price-block">
+          <div class="pd-price-label">Giá tham khảo</div>
+          <div class="pd-price-value">{{ product.price | number }} ₫</div>
         </div>
 
-        <!-- Danh sách Phân loại (Biến thể) -->
-        <div *ngIf="product.variants && product.variants.length > 0" class="mb-5">
-          <h5 class="fw-bold text-dark mb-3"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Các phân loại đang bán:</h5>
+        <!-- Variants -->
+        <div *ngIf="product.variants && product.variants.length > 0" class="mb-4">
+          <div class="pd-section-title">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Các phân loại đang bán
+          </div>
           <div class="row g-3">
             <div class="col-md-6" *ngFor="let v of product.variants">
-              <div class="card h-100 bg-white shadow-sm rounded-4 variant-card">
-                <div class="d-flex p-3">
-                  <div class="me-3 rounded-3 overflow-hidden border shadow-sm d-flex align-items-center justify-content-center bg-light" style="width: 75px; height: 75px; flex-shrink: 0;">
-                    <img *ngIf="v.image_url" [src]="v.image_url" style="width: 100%; height: 100%; object-fit: cover;">
-                    <i *ngIf="!v.image_url" class="bi bi-box-seam text-secondary fs-3"></i>
+              <div class="pd-variant-card p-3">
+                <div class="d-flex gap-3 align-items-center mb-2">
+                  <div class="pd-variant-img">
+                    <img *ngIf="v.image_url" [src]="v.image_url" style="width:100%;height:100%;object-fit:cover;">
+                    <i *ngIf="!v.image_url" class="bi bi-box-seam icon-variant-lg icon-color-muted-dark"></i>
                   </div>
-                  <div class="d-flex flex-column justify-content-center">
-                    <h6 class="fw-bold text-dark mb-1">{{ v.variantName }}</h6>
-                    <div class="text-danger fw-bold mb-1">{{ v.price | number }} ₫</div>
-                    <div>
-                      <span class="badge rounded-pill" [ngClass]="v.quantity > 0 ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger'">
-                        {{ v.quantity > 0 ? 'Kho: ' + v.quantity : 'Hết hàng' }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <!-- Thuộc tính động của biến thể -->
-                <div class="card-footer bg-transparent border-top-0 pt-0 pb-3 px-3" *ngIf="v.parsedAttributes">
-                  <div class="d-flex flex-wrap gap-2">
-                    <span class="badge attr-badge rounded-pill px-2 py-1 shadow-sm" *ngFor="let attr of v.parsedAttributes | keyvalue">
-                      {{ getLabel($any(attr.key)) }}: <span class="text-primary fw-bold">{{ attr.value }}</span>
+                  <div class="min-w-0">
+                    <div class="pd-variant-name text-truncate">{{ v.variantName }}</div>
+                    <div class="pd-variant-price">{{ v.price | number }} ₫</div>
+                    <span [class]="v.quantity > 0 ? 'pd-variant-stock-ok' : 'pd-variant-stock-out'">
+                      {{ v.quantity > 0 ? 'Còn ' + v.quantity + ' sản phẩm' : 'Hết hàng' }}
                     </span>
                   </div>
+                </div>
+                <div class="d-flex flex-wrap gap-1 mt-1" *ngIf="v.parsedAttributes">
+                  <span class="pd-attr-badge" *ngFor="let attr of v.parsedAttributes | keyvalue">
+                    {{ getLabel($any(attr.key)) }}: <span class="pd-attr-val">{{ attr.value }}</span>
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Mô tả chung -->
-        <div class="mt-auto pt-4 border-top">
-          <h5 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Mô tả chi tiết:</h5>
-          <p class="text-muted lh-lg">Sản phẩm chính hãng chất lượng cao. Khách hàng vui lòng kiểm tra kỹ thông tin phân loại, màu sắc, kích cỡ (nếu có) trước khi đặt hàng. Để biết thêm thông tin chi tiết hoặc có bất kỳ thắc mắc nào, vui lòng nhấn nút "Cần tư vấn thêm" bên dưới ảnh sản phẩm để chat trực tiếp với đội ngũ hỗ trợ của chúng tôi.</p>
+        <!-- Description -->
+        <div class="mt-auto">
+          <div class="pd-divider"></div>
+          <div class="pd-section-title">
+            <i class="bi bi-info-circle-fill"></i> Mô tả chi tiết
+          </div>
+          <p class="pd-desc">
+            Sản phẩm chính hãng chất lượng cao. Khách hàng vui lòng kiểm tra kỹ thông tin phân loại, màu sắc, kích cỡ (nếu có) trước khi đặt hàng. Để biết thêm thông tin chi tiết hoặc có bất kỳ thắc mắc nào, vui lòng nhấn nút "Cần tư vấn thêm" bên dưới ảnh sản phẩm để chat trực tiếp với đội ngũ hỗ trợ của chúng tôi.
+          </p>
         </div>
       </div>
 
     </div>
   </div>
 
-  <div *ngIf="!isLoading && !product" class="text-center py-5 text-muted">
-    <i class="bi bi-box-seam" style="font-size: 4rem;"></i>
-    <h4 class="mt-3">Sản phẩm không tồn tại hoặc đã bị xóa.</h4>
-    <a routerLink="/" class="btn btn-primary mt-3 rounded-pill">Quay lại trang chủ</a>
+  <!-- Not Found -->
+  <div *ngIf="!isLoading && !product" class="text-center py-5" style="animation: fadeIn 0.4s;">
+    <div class="pd-empty-icon-wrap">
+      <i class="bi bi-box-seam icon-xl icon-color-primary"></i>
+    </div>
+    <h4 style="color:#c7cbee;font-weight:800;">Sản phẩm không tồn tại hoặc đã bị xóa.</h4>
+    <p style="color:#7c85b0;font-size:0.9rem;">Vui lòng quay lại trang chủ để xem các sản phẩm khác.</p>
+    <a routerLink="/" class="btn mt-2 rounded-pill px-4 fw-bold text-white"
+       style="background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 4px 16px rgba(99,102,241,0.35);">
+      Quay lại trang chủ
+    </a>
   </div>
+
 </div>

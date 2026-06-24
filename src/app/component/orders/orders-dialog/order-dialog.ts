@@ -11,6 +11,7 @@ import { OrderDetailPopupComponent } from '../../order-detail-popup/order-detail
   standalone: true,
   imports: [CommonModule, MatDialogModule, OrderDetailPopupComponent],
   templateUrl: './order-dialog.html',
+  styleUrls: ['../../../app.css', './order-dialog.css'],
 })
 export class OrderDialogComponent implements OnInit {
   orders: OrderListDTO[] = [];

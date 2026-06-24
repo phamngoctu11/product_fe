@@ -12,7 +12,8 @@ import { ConsultationService } from '../../service/consultation.service';
   selector: 'app-product-page',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './product-page.component.html'
+  templateUrl: './product-page.component.html',
+  styleUrls: ['../../app.css', './product-page.component.css'],
 })
 export class ProductPageComponent implements OnInit {
   private readonly toast = injectToast(ToastService);

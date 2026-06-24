@@ -1,24 +1,25 @@
 <div class="consultation-page">
   <section class="consultation-header">
     <div>
-      <h1>Tu van san pham</h1>
-      <p>Theo doi rieng tung doan chat theo san pham dang can ho tro.</p>
+      <h1>Tư vấn sản phẩm</h1>
+      <p>Theo dõi riêng từng đoạn chat theo sản phẩm đang cần hỗ trợ.</p>
     </div>
     <button class="btn btn-light border rounded-circle ms-auto" (click)="loadThreads()" title="Tai lai">
-      <i class="bi bi-arrow-clockwise"></i>
+      <div class="page-section-icon">
+      <i class="bi bi-arrow-clockwise"></i></div>
     </button>
   </section>
 
   <section class="consultation-shell">
     <aside class="thread-list">
       <div class="thread-list-header">
-        <span>Doan chat dang mo</span>
+        <span>Đoạn chat đang mở</span>
         <span class="badge text-bg-primary rounded-pill">{{ threads.length }}</span>
       </div>
 
-      <div *ngIf="isLoadingThreads" class="empty-state">Dang tai danh sach...</div>
+      <div *ngIf="isLoadingThreads" class="empty-state">Đang tải danh sách...</div>
       <div *ngIf="!isLoadingThreads && threads.length === 0" class="empty-state">
-        Ban chua co yeu cau tu van nao dang mo.
+        Bạn chưa có yêu cầu tư vấn nào đang mở.
       </div>
 
       <button *ngFor="let thread of threads"
@@ -29,7 +30,7 @@
         <span *ngIf="!thread.productImageUrl" class="thread-fallback"><i class="bi bi-box-seam"></i></span>
         <span class="thread-copy">
           <strong>{{ thread.productName || getThreadTitle(thread) }}</strong>
-          <small>{{ thread.assignedStaffName ? 'Staff: ' + thread.assignedStaffName : 'Dang cho staff phu trach' }}</small>
+          <small>{{ thread.assignedStaffName ? 'Staff: ' + thread.assignedStaffName : 'Đang chờ staff phụ trách' }}</small>
         </span>
       </button>
     </aside>
@@ -37,8 +38,8 @@
     <main class="chat-panel">
       <div *ngIf="!selectedThread" class="chat-empty">
         <i class="bi bi-chat-square-text"></i>
-        <h2>Chon mot yeu cau tu van</h2>
-        <p>Moi san pham can tu van se co mot thread rieng.</p>
+        <h2>Chọn một yêu cầu tư vấn</h2>
+        <p> Mỗi sản phẩm cần tư vấn sẽ có một thread riêng. </p>
       </div>
 
       <ng-container *ngIf="selectedThread">
@@ -47,18 +48,18 @@
           <span *ngIf="!selectedThread.productImageUrl" class="chat-product-fallback"><i class="bi bi-box-seam"></i></span>
           <div class="min-w-0">
             <h2>{{ selectedThread.productName || getThreadTitle(selectedThread) }}</h2>
-            <p>{{ selectedThread.assignedStaffName ? 'Staff: ' + selectedThread.assignedStaffName : 'Dang cho staff phu trach' }}</p>
+            <p>{{ selectedThread.assignedStaffName ? 'Staff: ' + selectedThread.assignedStaffName : 'Đang chờ staff phụ trách' }}</p>
           </div>
           <a *ngIf="selectedThread.productId" [routerLink]="['/product', selectedThread.productId]" class="btn btn-sm btn-outline-primary ms-auto">
-            <i class="bi bi-eye me-1"></i> San pham
+            <i class="bi bi-eye me-1"></i> Sản phẩm
           </a>
           <button class="btn btn-sm btn-outline-danger" (click)="closeThread()">
-            <i class="bi bi-x-circle me-1"></i> Dong
+            <i class="bi bi-x-circle me-1"></i> Đóng
           </button>
         </header>
 
         <div class="chat-body" #chatBody>
-          <div *ngIf="isLoadingMessages" class="empty-state">Dang tai lich su...</div>
+          <div *ngIf="isLoadingMessages" class="empty-state">Đang tải lịch sử...</div>
 
           <div *ngFor="let msg of messages" class="message-row" [class.from-shop]="msg.isShopSender">
             <span class="message-meta">{{ getSenderLabel(msg) }} - {{ msg.timestamp | date:'HH:mm' }}</span>
@@ -81,7 +82,7 @@
                 </div>
                 <p>{{ msg.productData.price | number }} d</p>
                 <a [routerLink]="['/product', msg.productData.id]" class="btn btn-sm btn-primary">
-                  <i class="bi bi-eye me-1"></i> Xem chi tiet
+                  <i class="bi bi-eye me-1"></i> Xem chi tiết
                 </a>
               </div>
             </div>
@@ -91,11 +92,11 @@
         <footer class="chat-input">
           <input type="text"
                  class="form-control"
-                 placeholder="Nhap tin nhan..."
+                 placeholder="Nhập tin nhắn..."
                  [(ngModel)]="newMessage"
                  (keyup.enter)="sendMessage()">
           <button class="btn btn-primary" (click)="sendMessage()">
-            <span>Gui</span>
+            <span>Gửi</span>
             <i class="bi bi-send-fill"></i>
           </button>
         </footer>

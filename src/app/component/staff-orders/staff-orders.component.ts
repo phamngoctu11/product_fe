@@ -14,6 +14,7 @@ import { OrderService } from '../../service/order.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './staff-orders.component.html',
+  styleUrls: ['../../app.css'],
 })
 export class StaffOrdersComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);

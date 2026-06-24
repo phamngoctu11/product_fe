@@ -19,7 +19,7 @@ import { environment } from '../../../../environments/environment';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule],
   templateUrl: './product-detail.html',
-  styleUrl: './product-detail.css',
+  styleUrls: ['../../../app.css', './product-detail.css'],
 })
 export class ProductDetailComponent implements OnInit {
   private readonly toast = injectToast(ToastService);
@@ -75,6 +75,41 @@ export class ProductDetailComponent implements OnInit {
   }
 
   get variants(): FormArray { return this.productForm.get('variants') as FormArray; }
+
+  get rawProduct(): any {
+    return this.productForm.getRawValue();
+  }
+
+  get totalStock(): number {
+    return (this.rawProduct.variants || []).reduce((sum: number, variant: any) => sum + Number(variant.quantity || 0), 0);
+  }
+
+  get priceRangeLabel(): string {
+    const prices = (this.rawProduct.variants || [])
+      .map((variant: any) => Number(variant.price || 0))
+      .filter((price: number) => Number.isFinite(price) && price > 0);
+
+    if (prices.length === 0) return `${Number(this.rawProduct.price || 0).toLocaleString('vi-VN')} đ`;
+
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return min === max
+      ? `${min.toLocaleString('vi-VN')} đ`
+      : `${min.toLocaleString('vi-VN')} - ${max.toLocaleString('vi-VN')} đ`;
+  }
+
+  get primaryImageUrl(): string {
+    const variantImage = (this.rawProduct.variants || []).find((variant: any) => variant.image_url)?.image_url;
+    return this.uploadedImageUrl || this.rawProduct.image_url || variantImage || '';
+  }
+
+  getVariantAttributes(index: number): { label: string; value: string }[] {
+    const group = this.variants.at(index)?.get('dynamicAttributes') as FormGroup | null;
+    const value = group?.getRawValue?.() || {};
+    return Object.keys(value)
+      .filter((key) => value[key])
+      .map((key) => ({ label: this.getLabel(key), value: value[key] }));
+  }
 
   ngOnInit() {
     this.productForm.get('tags')?.valueChanges.subscribe(() => this.refreshDynamicFields());

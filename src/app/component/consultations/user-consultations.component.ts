@@ -16,7 +16,7 @@ import { ToastService } from '../../service/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './user-consultations.component.html',
-  styleUrl: './user-consultations.component.css',
+  styleUrls: ['../../app.css', './user-consultations.component.css'],
 })
 export class UserConsultationsComponent implements OnInit, AfterViewChecked, OnDestroy {
   private readonly toast = injectToast(ToastService);
@@ -124,7 +124,7 @@ export class UserConsultationsComponent implements OnInit, AfterViewChecked, OnD
 
   getThreadTitle(thread: ChatUser | null): string {
     if (!thread) return '';
-    return thread.chatTitle || thread.productName || 'Tu van san pham';
+    return thread.chatTitle || thread.productName || 'Tư vấn sản phẩm';
   }
 
   getCustomerName(thread: ChatUser | null): string {

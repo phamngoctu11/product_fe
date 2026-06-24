@@ -8,7 +8,7 @@ import { Order, OrderItem, ReceiptConfirmResponse } from '../../model/order.mode
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './order-detail-popup.component.html',
-  styleUrl: './order-detail-popup.component.css',
+  styleUrls: ['../../app.css', './order-detail-popup.component.css'],
 })
 export class OrderDetailPopupComponent {
   @Input() order: Order | null = null;

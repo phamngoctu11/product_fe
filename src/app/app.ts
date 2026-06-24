@@ -27,7 +27,7 @@ import { ToastContainerComponent } from './component/toast-container/toast-conta
     ToastContainerComponent,
   ],
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  styleUrls: ['./app.css', './app-shell.css'],
 })
 export class App implements OnInit, OnDestroy {
   protected readonly title = signal('fe_product');

@@ -16,6 +16,7 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [CommonModule, MatDialogModule],
   templateUrl: './myinfor.html',
+  styleUrls: ['../../app.css'],
 })
 export class Myinfor implements OnInit {
   private readonly toast = injectToast(ToastService);

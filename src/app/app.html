@@ -2,12 +2,12 @@
   class="app-shell"
   [class.sidebar-collapsed]="isSidebarCollapsed"
   [class.mobile-sidebar-open]="isMobileSidebarOpen">
-  <aside class="app-sidebar shadow-sm" aria-label="Điều hướng chính">
+  <aside class="app-sidebar" aria-label="Điều hướng chính">
     <div class="sidebar-heading">
       <div class="brand-mark">
-        <i class="bi bi-hexagon-fill"></i>
+        <i class="bi bi-bag-heart-fill"></i>
       </div>
-      <span class="brand-title">My App</span>
+      <span class="brand-title">ShopVN</span>
       <button
         type="button"
         class="sidebar-toggle"
@@ -25,7 +25,7 @@
         class="custom-sidebar-link"
         title="Bảng thống kê"
         (click)="closeMobileSidebar()">
-        <i class="bi bi-bar-chart-fill"></i>
+        <i class="bi bi-bar-chart-line-fill"></i>
         <span class="nav-label">Bảng thống kê</span>
       </a>
 
@@ -36,7 +36,7 @@
         class="custom-sidebar-link"
         title="Quản lý chat"
         (click)="closeMobileSidebar()">
-        <i class="bi bi-chat-square-text-fill"></i>
+        <i class="bi bi-chat-square-dots-fill"></i>
         <span class="nav-label">Quản lý chat</span>
       </a>
 
@@ -46,7 +46,7 @@
         class="custom-sidebar-link"
         title="Quản lý sản phẩm"
         (click)="closeMobileSidebar()">
-        <i class="bi bi-box-seam"></i>
+        <i class="bi bi-grid-fill"></i>
         <span class="nav-label">Quản lý sản phẩm</span>
       </a>
 
@@ -57,7 +57,7 @@
         class="custom-sidebar-link"
         title="Quản lý người dùng"
         (click)="closeMobileSidebar()">
-        <i class="bi bi-people"></i>
+        <i class="bi bi-people-fill"></i>
         <span class="nav-label">Quản lý người dùng</span>
       </a>
 
@@ -68,7 +68,7 @@
         class="custom-sidebar-link"
         title="Duyệt đơn hàng"
         (click)="closeMobileSidebar()">
-        <i class="bi bi-clipboard-check"></i>
+        <i class="bi bi-clipboard2-check-fill"></i>
         <span class="nav-label">Duyệt đơn hàng</span>
       </a>
 
@@ -100,7 +100,7 @@
         class="custom-sidebar-link"
         title="Đơn hàng của tôi"
         (click)="closeMobileSidebar()">
-        <i class="bi bi-receipt"></i>
+        <i class="bi bi-receipt-cutoff"></i>
         <span class="nav-label">Đơn hàng của tôi</span>
       </a>
 
@@ -111,7 +111,7 @@
         class="custom-sidebar-link"
         title="Tư vấn sản phẩm"
         (click)="closeMobileSidebar()">
-        <i class="bi bi-chat-dots"></i>
+        <i class="bi bi-chat-heart-fill"></i>
         <span class="nav-label">Tư vấn sản phẩm</span>
       </a>
 
@@ -121,7 +121,7 @@
         class="custom-sidebar-link"
         title="Hồ sơ cá nhân"
         (click)="closeMobileSidebar()">
-        <i class="bi bi-person-vcard"></i>
+        <i class="bi bi-person-badge-fill"></i>
         <span class="nav-label">Hồ sơ cá nhân</span>
       </a>
     </nav>
@@ -134,8 +134,17 @@
     (click)="closeMobileSidebar()">
   </button>
 
-  <header class="app-topbar shadow-sm">
+  <header class="app-topbar">
     <div class="topbar-left">
+      <!-- Mobile hamburger -->
+      <button
+        type="button"
+        class="topbar-hamburger"
+        aria-label="Mở menu"
+        (click)="isMobileSidebarOpen = true">
+        <i class="bi bi-list fs-5"></i>
+      </button>
+
       <div class="topbar-heading">
         <span class="topbar-title">Bảng điều khiển</span>
         <span class="topbar-subtitle">Quản lý đơn hàng, sản phẩm và thông báo</span>
@@ -145,13 +154,15 @@
     <div class="topbar-actions">
       <ng-container *ngIf="!authService.isLoggedIn(); else loggedInToolbar">
         <button
-          class="btn btn-light border fw-bold text-secondary shadow-sm px-4 rounded-pill"
+          class="btn btn-light border fw-semibold text-secondary px-4 rounded-pill"
+          style="font-size:0.875rem;"
           routerLink="/login">
           Đăng nhập
         </button>
 
         <button
-          class="btn btn-primary fw-bold shadow-sm px-4 rounded-pill"
+          class="btn fw-semibold px-4 rounded-pill text-white"
+          style="background: var(--app-gradient); font-size:0.875rem; box-shadow: var(--shadow-primary);"
           [routerLink]="['/login']"
           [queryParams]="{ mode: 'signup' }">
           Đăng ký ngay
@@ -165,7 +176,7 @@
           title="Giỏ hàng"
           aria-label="Giỏ hàng"
           (click)="openCart()">
-          <i class="bi bi-cart3"></i>
+          <i class="bi bi-bag-check"></i>
         </button>
 
         <div class="dropdown">
@@ -181,21 +192,22 @@
 
             <span
               *ngIf="unreadCount > 0"
-              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm notification-badge">
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge"
+              style="font-size:0.6rem;">
               {{ unreadCount > 99 ? '99+' : unreadCount }}
             </span>
           </button>
 
           <ul
-            class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 p-0 notification-menu"
+            class="dropdown-menu dropdown-menu-end mt-2 p-0 notification-menu"
             aria-labelledby="notificationMenu">
             <li class="dropdown-header notification-header">
-              <span>Thông báo mới</span>
-              <span class="badge bg-primary rounded-pill">{{ notifications.length }}</span>
+              <span>Thông báo</span>
+              <span class="badge rounded-pill text-white" style="background: var(--app-gradient);">{{ notifications.length }}</span>
             </li>
 
             <li *ngIf="notifications.length === 0" class="text-center py-5 text-muted small">
-              <i class="bi bi-bell-slash fs-1 d-block mb-3 text-light"></i>
+              <i class="bi bi-bell-slash fs-2 d-block mb-3 opacity-25"></i>
               Bạn không có thông báo nào.
             </li>
 
@@ -205,12 +217,12 @@
                 routerLink="/orders"
                 style="white-space: normal; cursor: pointer;">
                 <div class="notification-icon">
-                  <i class="bi bi-box-seam"></i>
+                  <i class="bi bi-box-seam-fill"></i>
                 </div>
                 <div class="min-w-0">
                   <h6 class="mb-1 fw-bold text-dark fs-6">{{ notif.title }}</h6>
                   <p class="mb-0 text-muted small">{{ notif.content }}</p>
-                  <small class="text-primary fw-medium mt-1 d-block">
+                  <small class="fw-semibold mt-1 d-block" style="color: var(--app-primary);">
                     {{ notif.createdAt | timeAgo }}
                   </small>
                 </div>
@@ -237,7 +249,7 @@
             <i class="bi bi-chevron-down user-chevron"></i>
           </button>
 
-          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 p-2 user-dropdown" aria-labelledby="userMenu">
+          <ul class="dropdown-menu dropdown-menu-end mt-2 user-dropdown" aria-labelledby="userMenu">
             <li>
               <a class="dropdown-item custom-hover" routerLink="/myinfor" style="cursor: pointer">
                 <i class="bi bi-person-badge text-primary"></i>Thông tin cá nhân
@@ -250,20 +262,20 @@
             </li>
             <li>
               <a class="dropdown-item custom-hover" (click)="openOrders()" style="cursor: pointer">
-                <i class="bi bi-box-seam text-info"></i>Đơn hàng của tôi
+                <i class="bi bi-bag-heart text-primary"></i>Đơn hàng của tôi
               </a>
             </li>
             <li>
               <a class="dropdown-item custom-hover" (click)="openCart()" style="cursor: pointer">
-                <i class="bi bi-cart3 text-success"></i>Giỏ hàng của tôi
+                <i class="bi bi-bag-check-fill text-success"></i>Giỏ hàng của tôi
               </a>
             </li>
             <li>
               <a class="dropdown-item custom-hover" (click)="openSettings()" style="cursor: pointer">
-                <i class="bi bi-palette text-secondary"></i>Cài đặt giao diện
+                <i class="bi bi-palette2 text-secondary"></i>Cài đặt giao diện
               </a>
             </li>
-            <li><hr class="dropdown-divider opacity-25 my-2" /></li>
+            <li><hr class="dropdown-divider opacity-25 my-1" /></li>
             <li>
               <a class="dropdown-item custom-hover-danger" (click)="logout()" style="cursor: pointer">
                 <i class="bi bi-box-arrow-right"></i>Đăng xuất
@@ -283,14 +295,14 @@
     <footer class="app-footer">
       <div class="footer-highlight">
         <div class="footer-highlight-item">
-          <span class="footer-highlight-icon"><i class="bi bi-truck"></i></span>
+          <span class="footer-highlight-icon"><i class="bi bi-truck-front-fill"></i></span>
           <div>
             <strong>Giao hàng thuận tiện</strong>
             <span>Theo dõi trạng thái đơn hàng dễ dàng</span>
           </div>
         </div>
         <div class="footer-highlight-item">
-          <span class="footer-highlight-icon"><i class="bi bi-shield-check"></i></span>
+          <span class="footer-highlight-icon"><i class="bi bi-shield-fill-check"></i></span>
           <div>
             <strong>Mua sắm an tâm</strong>
             <span>Thông tin và giao dịch được bảo vệ</span>
@@ -308,8 +320,8 @@
       <div class="footer-main">
         <section class="footer-brand" aria-labelledby="footer-brand-title">
           <a class="footer-logo" routerLink="/product" id="footer-brand-title">
-            <span class="footer-logo-mark"><i class="bi bi-hexagon-fill"></i></span>
-            <span>My App</span>
+            <span class="footer-logo-mark"><i class="bi bi-bag-heart-fill"></i></span>
+            <span>ShopVN</span>
           </a>
           <p>
             Nền tảng mua sắm trực tuyến giúp bạn tìm kiếm sản phẩm, quản lý đơn hàng
@@ -353,9 +365,9 @@
             <i class="bi bi-telephone-fill"></i>
             <span><small>Hotline hỗ trợ</small>1900 0000</span>
           </a>
-          <a href="mailto:support@myapp.vn">
+          <a href="mailto:support@shopvn.vn">
             <i class="bi bi-envelope-fill"></i>
-            <span><small>Email</small>support@myapp.vn</span>
+            <span><small>Email</small>support@shopvn.vn</span>
           </a>
           <p>
             <i class="bi bi-clock-fill"></i>
@@ -365,11 +377,11 @@
       </div>
 
       <div class="footer-bottom" id="payment-methods">
-        <p>© {{ currentYear }} My App. Đã đăng ký bản quyền.</p>
+        <p>© {{ currentYear }} ShopVN. Đã đăng ký bản quyền.</p>
         <div class="footer-payments" aria-label="Phương thức thanh toán được hỗ trợ">
           <span><i class="bi bi-cash-coin"></i>Tiền mặt</span>
-          <span><i class="bi bi-credit-card"></i>Thẻ ngân hàng</span>
-          <span><i class="bi bi-qr-code"></i>Thanh toán QR</span>
+          <span><i class="bi bi-credit-card-2-front"></i>Thẻ ngân hàng</span>
+          <span><i class="bi bi-qr-code-scan"></i>Thanh toán QR</span>
         </div>
       </div>
     </footer>

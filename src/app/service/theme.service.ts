@@ -7,7 +7,7 @@ import { Inject, Injectable } from '@angular/core';
 export class ThemeService {
   private readonly THEME_KEY = 'app_custom_theme_color';
   private readonly DEFAULT_COLOR = '#f4f5f7';
-  private readonly DEFAULT_PRIMARY = '#0d6efd';
+  private readonly DEFAULT_PRIMARY = '#6366f1';
 
   constructor(@Inject(DOCUMENT) private readonly document: Document) {
     this.loadSavedTheme();
@@ -36,20 +36,11 @@ export class ThemeService {
     const isDark = this.isDarkColor(color);
     const primary = isDark ? this.DEFAULT_PRIMARY : this.getAccentColor(color);
     const primaryRgb = this.hexToRgb(primary);
-    const shellBg = isDark ? '#000000' : color;
 
-    this.document.body.style.backgroundColor = shellBg;
     root.dataset['appTheme'] = isDark ? 'dark' : 'light';
-    root.style.setProperty('--app-theme-color', color);
-    root.style.setProperty('--app-shell-bg', shellBg);
-    root.style.setProperty('--app-surface', isDark ? '#111827' : '#ffffff');
-    root.style.setProperty('--app-surface-muted', isDark ? '#1f2937' : '#f8fafc');
-    root.style.setProperty('--app-text', isDark ? '#f8fafc' : '#111827');
-    root.style.setProperty('--app-muted-text', isDark ? '#cbd5e1' : '#64748b');
-    root.style.setProperty('--app-border', isDark ? '#374151' : '#e5e7eb');
-    root.style.setProperty('--app-hover-bg', isDark ? '#1e293b' : '#f1f5f9');
-    root.style.setProperty('--app-primary', primary);
-    root.style.setProperty('--app-primary-rgb', primaryRgb);
+    root.style.setProperty('--app-theme-color', isDark ? '#000000' : color);
+    root.style.setProperty('--app-theme-primary', primary);
+    root.style.setProperty('--app-theme-primary-rgb', primaryRgb);
     root.style.setProperty('--bs-primary', primary);
     root.style.setProperty('--bs-primary-rgb', primaryRgb);
     root.style.setProperty('--bs-link-color', primary);

@@ -1,42 +1,45 @@
-<style>
-  .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; border-radius: 1.25rem; overflow: hidden; border: none; }
-  .product-card:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,.12)!important; }
-  .product-img-wrapper { position: relative; padding-top: 100%; overflow: hidden; background-color: #f8f9fa; }
-  .product-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
-  .product-card:hover .product-img { transform: scale(1.05); }
-  .tag-badge { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; border: 1px solid rgba(13, 110, 253, 0.2); font-weight: 600; }
-</style>
-
-<div class="container mt-4 mb-5" style="animation: fadeIn 0.4s;">
+<div class="container-fluid product-page mt-4 mb-5" style="animation: fadeIn 0.4s;">
+  <!-- Page Header -->
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
     <div class="d-flex align-items-center gap-3">
-      <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 56px; height: 56px;">
-        <i class="bi bi-shop fs-3"></i>
+      <div class="page-section-icon">
+        <i class="bi bi-grid-fill"></i>
       </div>
-      <h2 class="m-0 fw-bold text-dark">Cửa Hàng</h2>
+      <div>
+        <h1 class="m-0 fw-bold" style="font-size: 1.5rem; color: var(--app-text); letter-spacing: -0.4px;">Cửa hàng</h1>
+        <p class="m-0 text-muted" style="font-size: 0.82rem;">Khám phá các sản phẩm chất lượng</p>
+      </div>
     </div>
-    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center" (click)="openProductDialog()" *ngIf="isAdmin">
-      <i class="bi bi-plus-circle me-2 fs-5"></i> Thêm Sản Phẩm
+    <button class="btn-add-product" (click)="openProductDialog()" *ngIf="isAdmin">
+      <i class="bi bi-plus-circle-fill fs-6"></i> Thêm sản phẩm
     </button>
   </div>
 
   <!-- Filter Section -->
-  <div class="card shadow-sm border-0 rounded-4 mb-4">
-    <div class="card-body p-4">
-      <div class="row g-3">
-        <div class="col-md-4 col-lg-3">
-          <label class="form-label small fw-bold text-muted text-uppercase" style="letter-spacing: 0.5px;">Mức giá tối đa</label>
-          <div class="input-group shadow-sm rounded-pill overflow-hidden border">
-            <span class="input-group-text bg-light border-0"><i class="bi bi-cash-coin text-muted"></i></span>
-            <input type="number" class="form-control border-0 bg-light shadow-none" placeholder="VD: 500000" [(ngModel)]="searchPrice" (ngModelChange)="filterProducts()" />
-          </div>
+  <div class="filter-card">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-4 col-lg-3">
+        <label class="form-label small fw-bold text-muted text-uppercase mb-1" style="font-size:0.7rem; letter-spacing: 0.8px;">Mức giá tối đa</label>
+        <div class="filter-input-wrap">
+          <i class="bi bi-currency-exchange filter-input-icon"></i>
+          <input
+            type="number"
+            class="form-control filter-input"
+            placeholder="VD: 500.000"
+            [(ngModel)]="searchPrice"
+            (ngModelChange)="filterProducts()" />
         </div>
-        <div class="col-md-8 col-lg-9">
-          <label class="form-label small fw-bold text-muted text-uppercase" style="letter-spacing: 0.5px;">Tìm kiếm sản phẩm</label>
-          <div class="input-group shadow-sm rounded-pill overflow-hidden border" title="Gợi ý: Thêm '#' vào đầu để lọc theo Thẻ. VD: #quanao">
-            <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
-            <input type="text" class="form-control border-0 bg-light shadow-none" placeholder="Nhập tên sản phẩm hoặc '#hastag'..." [(ngModel)]="searchTerm" (ngModelChange)="filterProducts()" />
-          </div>
+      </div>
+      <div class="col-md-8 col-lg-9">
+        <label class="form-label small fw-bold text-muted text-uppercase mb-1" style="font-size:0.7rem; letter-spacing: 0.8px;" title="Gợi ý: Thêm '#' vào đầu để lọc theo Thẻ. VD: #quanao">Tìm kiếm sản phẩm</label>
+        <div class="filter-input-wrap">
+          <i class="bi bi-search filter-input-icon"></i>
+          <input
+            type="text"
+            class="form-control filter-input"
+            placeholder="Nhập tên sản phẩm hoặc '#hastag'..."
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="filterProducts()" />
         </div>
       </div>
     </div>
@@ -45,56 +48,73 @@
   <!-- Product Grid -->
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4" *ngIf="filteredProducts.length > 0">
     @for (p of filteredProducts; track p.id) {
-      <div class="col">
-        <div class="card shadow-sm product-card h-100" (click)="viewProduct(p.id)" style="cursor: pointer;">
-          <div class="product-img-wrapper border-bottom">
-            <img *ngIf="p.image_url" [src]="p.image_url" class="product-img">
-            <div *ngIf="!p.image_url" class="product-img d-flex justify-content-center align-items-center">
-              <i class="bi bi-box-fill text-secondary opacity-25" style="font-size: 5rem;"></i>
-            </div>
+      <div class="col product-grid-enter">
+        <div class="card shadow-sm product-card h-100" (click)="viewProduct(p.id)">
 
-            <!-- Badge: Out of stock -->
-            <div *ngIf="!p.quantity || p.quantity <= 0" class="position-absolute top-0 end-0 m-3 z-1">
-              <span class="badge bg-danger rounded-pill shadow px-3 py-2">Hết hàng</span>
+          <div class="product-img-wrapper">
+            <img *ngIf="p.image_url" [src]="p.image_url" class="product-img" [alt]="p.product_name">
+            <div *ngIf="!p.image_url" class="product-img d-flex justify-content-center align-items-center">
+              <i class="bi bi-box-fill text-secondary opacity-25 icon-2xl"></i>
+            </div>
+            <div class="product-overlay"></div>
+
+            <!-- Out of stock badge -->
+            <div *ngIf="!p.quantity || p.quantity <= 0" class="position-absolute top-0 end-0 m-2 z-1">
+              <span class="badge-oos">Hết hàng</span>
             </div>
           </div>
 
-          <div class="card-body d-flex flex-column p-4">
-            <h5 class="card-title fw-bold text-dark mb-2 text-truncate" [title]="p.product_name">{{ p.product_name }}</h5>
+          <div class="card-body d-flex flex-column p-3">
+            <h5 class="card-title fw-bold mb-2 text-truncate"
+                style="font-size: 0.92rem; color: var(--app-text);"
+                [title]="p.product_name">
+              {{ p.product_name }}
+            </h5>
 
-            <div class="mb-3 d-flex flex-wrap gap-2">
-              <span class="badge tag-badge rounded-pill px-2 py-1" *ngIf="p.tags">{{ p.tags }}</span>
-              <span class="badge bg-light text-secondary border rounded-pill px-2 py-1" *ngIf="p.variants && p.variants.length > 0">
+            <div class="mb-2 d-flex flex-wrap gap-1">
+              <span class="badge tag-badge rounded-pill" *ngIf="p.tags">{{ p.tags }}</span>
+              <span class="badge rounded-pill px-2 py-1"
+                    class="meta-badge"
+                    *ngIf="p.variants && p.variants.length > 0">
                 <i class="bi bi-tags me-1"></i>{{ p.variants.length }} loại
               </span>
             </div>
 
-            <div class="mt-auto d-flex justify-content-between align-items-end">
+            <div class="mt-auto pt-2 d-flex justify-content-between align-items-end">
               <div>
-                <small class="text-muted d-block mb-1">Giá tham khảo</small>
-                <h5 class="text-danger fw-bold mb-0">{{ p.price | number }}đ</h5>
+                <small class="text-muted d-block mb-0" style="font-size:0.72rem;">Giá tham khảo</small>
+                <span class="product-price">{{ p.price | number }}đ</span>
               </div>
-              <small class="text-muted fw-medium" *ngIf="p.quantity && p.quantity > 0">Kho: {{ p.quantity }}</small>
+              <small class="text-muted fw-medium" style="font-size:0.75rem;" *ngIf="p.quantity && p.quantity > 0">
+                Kho: {{ p.quantity }}
+              </small>
             </div>
           </div>
 
-          <div class="card-footer bg-white border-top-0 p-4 pt-0">
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-primary fw-bold rounded-pill flex-grow-1 shadow-sm"
-                      (click)="openAddToCartModal(p); $event.stopPropagation()"
-                      [disabled]="!p.quantity || p.quantity <= 0">
-                <i class="bi bi-cart-plus me-1"></i> Chọn Mua
+          <div class="card-footer border-top p-3" style="border-top-color: rgba(var(--app-primary-rgb), 0.16) !important;">
+            <div class="d-flex gap-2 align-items-center">
+              <button
+                class="btn-add-cart flex-grow-1"
+                (click)="openAddToCartModal(p); $event.stopPropagation()"
+                [disabled]="!p.quantity || p.quantity <= 0">
+                <i class="bi bi-cart-plus-fill"></i> Chọn mua
               </button>
 
               <ng-container *ngIf="isAdmin || isStaff">
-                <button class="btn btn-light border text-warning rounded-circle shadow-sm d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;" (click)="openProductDialog(p.id); $event.stopPropagation()" title="Chỉnh sửa">
-                  <i class="bi bi-pencil-square"></i>
+                <button
+                  class="btn-icon-action edit"
+                  (click)="openProductDialog(p.id); $event.stopPropagation()"
+                  title="Chỉnh sửa">
+                  <i class="bi bi-pencil-fill text-warning icon-sm"></i>
                 </button>
               </ng-container>
 
               <ng-container *ngIf="isAdmin">
-                <button class="btn btn-light border text-danger rounded-circle shadow-sm d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; flex-shrink: 0;" (click)="delete(p); $event.stopPropagation()" title="Xóa">
-                  <i class="bi bi-trash"></i>
+                <button
+                  class="btn-icon-action delete"
+                  (click)="delete(p); $event.stopPropagation()"
+                  title="Xóa">
+                  <i class="bi bi-trash3-fill text-danger icon-sm"></i>
                 </button>
               </ng-container>
             </div>
@@ -105,13 +125,16 @@
   </div>
 
   <!-- Empty State -->
-  <div *ngIf="filteredProducts.length === 0" class="text-center py-5 my-5">
-    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex justify-content-center align-items-center mb-4" style="width: 100px; height: 100px;">
-      <i class="bi bi-search text-primary fs-1"></i>
+  <div *ngIf="filteredProducts.length === 0" class="text-center py-5 my-4" style="animation: fadeIn 0.4s;">
+    <div class="empty-state-icon">
+      <i class="bi bi-search icon-xl icon-color-primary-dark"></i>
     </div>
-    <h4 class="fw-bold text-dark">Không tìm thấy sản phẩm</h4>
+    <h4 class="fw-bold" style="color: var(--app-text);">Không tìm thấy sản phẩm</h4>
     <p class="text-muted">Rất tiếc, không có sản phẩm nào khớp với điều kiện lọc của bạn.</p>
-    <button class="btn btn-outline-primary rounded-pill px-4 mt-2 fw-bold" (click)="searchTerm = ''; searchPrice = null; filterProducts()">
+    <button
+      class="btn rounded-pill px-4 mt-1 fw-bold"
+      style="border: 1.5px solid #6366f1; color: #6366f1; font-size:0.875rem;"
+      (click)="searchTerm = ''; searchPrice = null; filterProducts()">
       <i class="bi bi-arrow-clockwise me-2"></i> Xóa bộ lọc
     </button>
   </div>

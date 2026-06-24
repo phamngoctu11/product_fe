@@ -1,34 +1,20 @@
-<style>
-  .admin-scrollbar::-webkit-scrollbar { width: 5px; }
-  .admin-scrollbar::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 10rem; }
-  .admin-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #adb5bd; }
-  .chat-contact-item { transition: all 0.2s ease; border-left: 3px solid transparent !important; }
-  .chat-contact-item:hover { background-color: #f8f9fa; }
-  .chat-contact-item.active { border-left-color: #0d6efd !important; background-color: #f1f7ff; }
-  .message-row-content { max-width: min(75%, 720px); min-width: 0; }
-  .message-bubble { display: inline-block; width: fit-content; max-width: 100%; min-width: 44px; border-radius: 1.25rem; transition: transform 0.2s; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.04); white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; }
-  .message-bubble:hover { transform: translateY(-1px); }
-  .message-staff { border-bottom-right-radius: 0.25rem; background: linear-gradient(135deg, #0d6efd, #0b5ed7); color: white; border: none; }
-  .message-client { border-bottom-left-radius: 0.25rem; background-color: #ffffff; border: 1px solid #e9ecef; color: #212529; }
-</style>
-
 <div class="container-fluid p-4" style="height: 88vh; animation: fadeIn 0.4s;">
   <div class="row h-100 bg-white rounded-4 shadow overflow-hidden border-0">
     <div class="col-md-4 col-lg-3 p-0 border-end d-flex flex-column h-100 bg-light">
       <div class="p-4 bg-white border-bottom shadow-sm z-1 d-flex align-items-center gap-3">
-        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
-          <i class="bi bi-chat-dots-fill fs-5"></i>
+        <div class="icon-container-primary icon-container-sm">
+          <i class="bi bi-chat-dots-fill"></i>
         </div>
         <div>
-          <h5 class="mb-0 fw-bold text-dark">Tu van san pham</h5>
-          <small class="text-muted">{{ isConversationObserver() ? 'Che do quan sat' : 'Ho tro khach hang' }}</small>
+          <h5 class="mb-0 fw-bold text-dark">Tư vấn sản phẩm</h5>
+          <small class="text-muted">{{ isConversationObserver() ? 'Chế độ quan sát' : 'Hỗ trợ khách hàng' }}</small>
         </div>
       </div>
 
       <div class="p-3 bg-white border-bottom">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <span class="fw-bold small text-uppercase text-muted">Yeu cau tu van</span>
-          <button class="btn btn-sm btn-light border rounded-pill" (click)="loadConsultations()" title="Tai lai">
+          <span class="fw-bold small text-uppercase text-muted">Yêu cầu tư vấn</span>
+          <button class="btn btn-sm btn-light border rounded-pill" (click)="loadConsultations()" title="Tải lại">
             <i class="bi bi-arrow-clockwise"></i>
           </button>
         </div>
@@ -38,7 +24,7 @@
                   class="btn"
                   [ngClass]="consultationTab === 'waiting' ? 'btn-primary' : 'btn-outline-primary'"
                   (click)="consultationTab = 'waiting'">
-            Dang cho
+            Đang chờ
             <span class="badge text-bg-light ms-1">{{ waitingConsultations.length }}</span>
           </button>
           <button type="button"
@@ -54,7 +40,7 @@
         <div class="d-flex flex-column gap-2" style="max-height: 260px; overflow: auto;">
           <ng-container *ngIf="consultationTab === 'waiting'">
             <div *ngIf="waitingConsultations.length === 0" class="text-muted small text-center py-2">
-              Chua co yeu cau dang cho.
+              Chưa có yêu cầu đang chờ.
             </div>
 
             <div *ngFor="let request of waitingConsultations" class="border rounded-3 p-2 bg-light">
@@ -65,19 +51,19 @@
 
               <div class="input-group input-group-sm mt-2" *ngIf="canAssignConsultations()">
                 <select class="form-select" [(ngModel)]="selectedStaffByRequest[request.id]">
-                  <option [ngValue]="null">Chon staff</option>
+                  <option [ngValue]="null">Chọn staff</option>
                   <option *ngFor="let staff of staffUsers" [ngValue]="staff.id">
                     {{ staff.lastname }} {{ staff.firstname }}
                   </option>
                 </select>
-                <button class="btn btn-primary" (click)="assignConsultation(request)">Gan</button>
+                <button class="btn btn-primary" (click)="assignConsultation(request)">Gán</button>
               </div>
             </div>
           </ng-container>
 
           <ng-container *ngIf="consultationTab === 'mine'">
             <div *ngIf="myConsultations.length === 0" class="text-muted small text-center py-2">
-              Ban chua co yeu cau nao.
+              Bạn chưa có yêu cầu nào
             </div>
 
             <button *ngFor="let request of myConsultations"
@@ -122,12 +108,12 @@
     </div>
 
     <div class="col-md-8 col-lg-9 p-0 d-flex flex-column h-100 position-relative">
-      <div *ngIf="!selectedUser" class="d-flex flex-column justify-content-center align-items-center h-100 text-muted" style="background-color: #f4f7f6;">
+      <div *ngIf="!selectedUser" class="d-flex flex-column justify-content-center align-items-center h-100 text-muted" style="background-color: #070b19;">
         <div class="bg-white p-4 rounded-circle shadow-sm mb-3">
           <i class="bi bi-chat-heart fs-1 text-primary"></i>
         </div>
-        <h5 class="fw-medium text-dark">Chon mot doan chat</h5>
-        <p class="small text-muted">Admin va manager chi theo doi noi dung, staff phu trach se phan hoi khach.</p>
+        <h5 class="fw-medium text-dark">Chọn một đoạn chat</h5>
+        <p class="small text-muted">Admin và manager chỉ theo dõi nội dung, staff phụ trách sẽ phản hồi khách.</p>
       </div>
 
       <ng-container *ngIf="selectedUser">
@@ -152,7 +138,7 @@
           </span>
         </div>
 
-        <div class="flex-grow-1 p-4 overflow-auto admin-scrollbar" #chatBody style="scroll-behavior: smooth; background-color: #f4f7f6;">
+        <div class="flex-grow-1 p-4 overflow-auto admin-scrollbar" #chatBody style="scroll-behavior: smooth; background-color: #070b19;">
           <div *ngFor="let msg of messages" class="mb-3 d-flex gap-2"
                [ngClass]="msg.isShopSender ? 'flex-row-reverse' : 'flex-row'">
             <ng-container *ngIf="!msg.isShopSender">
@@ -179,7 +165,7 @@
                 <div class="position-relative">
                   <img [src]="msg.productData.imageUrl" class="card-img-top border-bottom" style="height: 150px; object-fit: cover;">
                   <span *ngIf="msg.productData.variantsCount > 0" class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 rounded-pill shadow-sm" style="font-size: 0.7rem;">
-                    {{ msg.productData.variantsCount }} phan loai
+                    {{ msg.productData.variantsCount }} phân loại
                   </span>
                 </div>
                 <div class="card-body p-3 text-dark">
@@ -197,7 +183,7 @@
                     {{ msg.productData.price | number }} d
                   </p>
                   <a [routerLink]="['/product', msg.productData.id]" target="_blank" class="btn btn-sm btn-primary w-100 rounded-pill fw-medium shadow-sm">
-                    <i class="bi bi-eye me-1"></i> Xem chi tiet
+                    <i class="bi bi-eye me-1"></i> Xem chi tiết
                   </a>
                 </div>
               </div>
@@ -207,7 +193,7 @@
 
         <div class="p-3 px-4 bg-white border-top z-1 shadow-sm" *ngIf="canReplyInSelectedChat(); else observerFooter">
           <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
-            <input type="text" class="form-control border-0 px-4 shadow-none" style="background-color: #f8f9fa;" placeholder="Nhap phan hoi cua staff..." [(ngModel)]="newMessage" (keyup.enter)="sendMessage()">
+            <input type="text" class="form-control border-0 px-4 shadow-none" style="background-color: #0a0e20;" placeholder="Nhập phản hồi của staff..." [(ngModel)]="newMessage" (keyup.enter)="sendMessage()">
             <button class="btn btn-primary px-4 d-flex align-items-center gap-2 fw-medium" (click)="sendMessage()">
               <span>Gui</span> <i class="bi bi-send-fill"></i>
             </button>
@@ -217,7 +203,7 @@
         <ng-template #observerFooter>
           <div class="p-3 px-4 bg-white border-top z-1 shadow-sm text-muted small d-flex align-items-center gap-2">
             <i class="bi bi-eye"></i>
-            <span>Ban dang xem noi dung doan chat va khong the gui tin nhan trong cuoc hoi thoai nay.</span>
+            <span>Bạn đang xem nội dung đoạn chat và không thể gửi tin nhắn trong cuộc trò chuyện này.</span>
           </div>
         </ng-template>
       </ng-container>

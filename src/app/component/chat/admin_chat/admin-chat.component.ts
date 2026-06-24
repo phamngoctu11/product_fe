@@ -19,6 +19,7 @@ import { UserResListDTO } from '../../../model/user.model';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './admin-chat.component.html',
+  styleUrls: ['../../../app.css', './admin-chat.component.css'],
 })
 export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   private readonly toast = injectToast(ToastService);

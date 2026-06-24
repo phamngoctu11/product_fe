@@ -1,16 +1,3 @@
-<style>
-  .chat-scrollbar::-webkit-scrollbar { width: 5px; }
-  .chat-scrollbar::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 10rem; }
-  .chat-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #adb5bd; }
-  @keyframes slideUpChat { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .chat-btn-float { background: linear-gradient(135deg, #0d6efd, #0b5ed7); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  .chat-btn-float:hover { transform: scale(1.1); box-shadow: 0 1rem 3rem rgba(13,110,253,0.4)!important; }
-  .message-bubble-widget { display: inline-block; width: fit-content; max-width: 85%; min-width: 44px; border-radius: 1.25rem; font-size: 0.9rem; line-height: 1.4; transition: transform 0.2s; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.04); white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; }
-  .message-bubble-widget:hover { transform: translateY(-1px); }
-  .msg-client { border-bottom-right-radius: 0.25rem; background: linear-gradient(135deg, #0d6efd, #0b5ed7); color: white; border: none; }
-  .msg-admin { border-bottom-left-radius: 0.25rem; background-color: #ffffff; border: 1px solid #e9ecef; color: #212529; }
-</style>
-
 <div *ngIf="authService.isLoggedIn() && !authService.isAdmin() && !authService.isStaff()"
      class="position-fixed bottom-0 end-0 m-4" style="z-index: 9999;">
 

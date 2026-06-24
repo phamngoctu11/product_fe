@@ -20,6 +20,7 @@ import { getApiErrorMessage } from '../../model/api-response.model';
   standalone: true,
   imports: [FormsModule, CommonModule, ReactiveFormsModule, MatDialogModule],
   templateUrl: './product.html',
+  styleUrls: ['../../app.css', './product.css'],
 })
 export class ProductComponent implements OnInit, OnDestroy {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
@@ -106,7 +107,7 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.dialog.open(ProductDetailComponent, {
       width: '940px',
       maxWidth: 'calc(100vw - 48px)',
-      maxHeight: '78vh',
+      panelClass: 'product-detail-dialog-panel',
       data: { id: id || null, availableTags: this.getAvailableTags(), isView: true },
       disableClose: false,
     });
@@ -121,7 +122,7 @@ export class ProductComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ProductDetailComponent, {
       width: '940px',
       maxWidth: 'calc(100vw - 48px)',
-      maxHeight: '78vh',
+      panelClass: 'product-detail-dialog-panel',
       data: {
         id: id || null,
         availableTags: this.getAvailableTags(),

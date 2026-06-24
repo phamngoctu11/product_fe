@@ -17,7 +17,7 @@ import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-po
   standalone: true,
   imports: [CommonModule, FormsModule, OrderDetailPopupComponent],
   templateUrl: './admin-order.component.html',
-  styleUrl: './admin-order.component.css',
+  styleUrls: ['../../app.css', './admin-order.component.css'],
 })
 export class AdminOrderComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);

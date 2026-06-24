@@ -29,7 +29,7 @@ export interface ActionDialogData {
   standalone: true,
   imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './action-dialog.component.html',
-  styleUrl: './action-dialog.component.css',
+  styleUrls: ['../../app.css', './action-dialog.component.css'],
 })
 export class ActionDialogComponent {
   inputValue = '';

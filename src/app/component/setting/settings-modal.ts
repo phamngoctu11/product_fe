@@ -9,6 +9,7 @@ import { ThemeService } from '../../service/theme.service'; // Đổi đường 
   standalone: true,
   imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './settings-modal.html',
+  styleUrls: ['../../app.css', './settings-modal.css'],
 })
 export class SettingsModalComponent implements OnInit {
   selectedColor: string = '#f4f5f7';

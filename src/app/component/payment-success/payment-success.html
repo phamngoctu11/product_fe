@@ -1,21 +1,13 @@
-<style>
-  .success-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-  .success-card:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,.15)!important; }
-  .icon-container { width: 110px; height: 110px; margin: 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-  @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
-  .pop-in { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-</style>
-
 <div class="container mt-5 pt-5 mb-5 d-flex justify-content-center">
   <div class="card shadow-lg border-0 rounded-4 success-card pop-in" style="max-width: 500px; width: 100%;">
     <div class="card-body p-5 text-center">
 
       <div class="mb-4">
-        <div *ngIf="isSuccess" class="icon-container bg-success bg-opacity-10 text-success mb-4 shadow-sm">
-          <i class="bi bi-check-lg" style="font-size: 4rem;"></i>
+        <div *ngIf="isSuccess" class="icon-container success mb-4 shadow-sm">
+          <i class="bi bi-check-lg"></i>
         </div>
-        <div *ngIf="!isSuccess" class="icon-container bg-danger bg-opacity-10 text-danger mb-4 shadow-sm">
-          <i class="bi bi-x-lg" style="font-size: 4rem;"></i>
+        <div *ngIf="!isSuccess" class="icon-container danger mb-4 shadow-sm">
+          <i class="bi bi-x-lg"></i>
         </div>
       </div>
 
