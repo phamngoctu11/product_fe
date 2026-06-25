@@ -162,16 +162,101 @@
   align-items: center;
   gap: 0.65rem;
   color: var(--app-text);
-  font-size: 1.4rem;
+  font-size: 1.55rem;
   font-weight: 800;
   letter-spacing: -0.4px;
 }
 
 .page-section-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 0.85rem;
+  font-size: 1.35rem;
+}
+
+.app-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.app-page-heading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.app-page-heading-text {
+  min-width: 0;
+}
+
+.app-page-title {
+  margin: 0;
+  color: var(--app-text);
+  font-size: clamp(1.45rem, 2.1vw, 1.75rem);
+  font-weight: 900;
+  letter-spacing: -0.45px;
+  line-height: 1.12;
+}
+
+.app-page-subtitle {
+  margin: 0.28rem 0 0;
+  color: var(--app-muted-text);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.app-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.36);
+  border-radius: 0.85rem;
+  background: var(--app-gradient);
+  color: #fff;
+  font-size: 1.35rem;
+  box-shadow: var(--shadow-primary);
+}
+
+.app-title-icon i,
+.page-section-icon i,
+.page-heading-icon i,
+.icon-container-primary i {
+  color: #fff !important;
+}
+
+.app-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   width: 40px;
   height: 40px;
-  border-radius: 0.65rem;
-  font-size: 1rem;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.26);
+  border-radius: 0.75rem;
+  background: rgba(var(--app-primary-rgb), 0.12);
+  color: var(--app-primary-light);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.app-icon-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(var(--app-primary-rgb), 0.44);
+  background: var(--app-gradient);
+  color: #fff;
+}
+
+.app-soft-panel {
+  border: 1px solid rgba(var(--app-primary-rgb), 0.18);
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #10172b 0%, #0d1427 100%);
+  box-shadow: var(--shadow-md);
 }
 
 .mini-stat-icon {
@@ -191,6 +276,97 @@
 .info-icon-box {
   width: 42px;
   height: 42px;
+}
+
+.profile-page {
+  padding-inline: clamp(1rem, 2vw, 2rem);
+}
+
+.profile-page .app-page-header {
+  justify-content: center;
+}
+
+.profile-shell-card {
+  border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;
+  border-radius: 1.1rem !important;
+  background: linear-gradient(180deg, #10172b 0%, #0d1427 100%) !important;
+}
+
+.profile-avatar {
+  width: 104px;
+  height: 104px;
+  margin: 0 auto;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.32);
+  border-radius: 50%;
+  background: var(--app-gradient);
+  color: #fff;
+  font-size: 2rem;
+}
+
+.profile-camera-button {
+  right: 0;
+  bottom: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 0.75rem !important;
+  cursor: pointer;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.profile-info-item {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.14);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.profile-info-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 0.7rem;
+  background: var(--app-gradient);
+  color: #fff;
+  font-size: 1rem;
+  box-shadow: var(--shadow-primary);
+}
+
+.profile-info-label {
+  display: block;
+  color: var(--app-muted-text);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.profile-info-value {
+  margin: 0.2rem 0 0;
+  color: var(--app-text);
+  font-size: 0.98rem;
+  font-weight: 850;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+  .app-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-info-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .empty-state-icon {

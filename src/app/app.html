@@ -41,6 +41,17 @@
       </a>
 
       <a
+        *ngIf="authService.isAdmin() || authService.isStaff()"
+        routerLink="/commissions"
+        routerLinkActive="active"
+        class="custom-sidebar-link"
+        title="Hoa hồng tư vấn"
+        (click)="closeMobileSidebar()">
+        <i class="bi bi-cash-stack"></i>
+        <span class="nav-label">Hoa hồng tư vấn</span>
+      </a>
+
+      <a
         routerLink="/product"
         routerLinkActive="active"
         class="custom-sidebar-link"

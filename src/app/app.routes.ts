@@ -34,6 +34,11 @@ export const routes: Routes = [
       import('./component/staff-orders/staff-orders.component').then((m) => m.StaffOrdersComponent),
   },
   {
+    path: 'commissions',
+    loadComponent: () =>
+      import('./component/commissions/consultation-commissions.component').then((m) => m.ConsultationCommissionsComponent),
+  },
+  {
     path: 'myinfor',
     loadComponent: () => import('./component/myinfor/myinfor').then((m) => m.Myinfor),
   },

@@ -52,6 +52,17 @@
   opacity: 0.75;
 }
 
+.admin-order-status-panel .status-icon {
+  border-color: rgba(var(--app-primary-rgb), 0.36) !important;
+  background: var(--app-gradient) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-primary);
+}
+
+.admin-order-status-panel .status-icon i {
+  color: #fff !important;
+}
+
 .status-title,
 .status-subtitle {
   display: block;

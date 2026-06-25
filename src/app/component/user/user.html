@@ -1,10 +1,13 @@
 <div class="container mt-4 mb-5" style="animation: fadeIn 0.4s;">
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-    <div class="d-flex align-items-center gap-3">
-      <div class="page-section-icon">
+  <div class="app-page-header flex-wrap">
+    <div class="app-page-heading">
+      <div class="app-title-icon">
         <i class="bi bi-people"></i>
       </div>
-      <h2 class="m-0 fw-bold text-dark">Quản lý Người dùng</h2>
+      <div class="app-page-heading-text">
+        <h1 class="app-page-title">Quản lý người dùng</h1>
+        <p class="app-page-subtitle">Quản lý tài khoản, vai trò và giỏ hàng của người dùng</p>
+      </div>
     </div>
     <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center" (click)="openUserDialog()">
       <i class="bi bi-person-plus-fill me-2 fs-5"></i> Thêm Người Dùng
@@ -75,7 +78,7 @@
                   <div class="d-flex gap-2 justify-content-center">
                     <button
                       (click)="openCartModal(u.id); $event.stopPropagation()"
-                      class="btn btn-outline-info rounded-pill px-3 fw-bold shadow-sm"
+                      class="btn-add-cart"
                       title="Xem giỏ hàng"
                     >
                       <i class="bi bi-cart3 me-1"></i> Giỏ hàng
@@ -84,14 +87,14 @@
                     @if(isAdmin){
                       <div class="d-flex gap-2">
                         <button
-                          class="btn btn-light border text-warning rounded-circle shadow-sm d-flex justify-content-center align-items-center" style="width: 36px; height: 36px;"
+                          class="btn-icon-action edit"
                           (click)="openUserDialog(u.id); $event.stopPropagation()"
                           title="Chỉnh sửa"
                         >
                           <i class="bi bi-pencil-square"></i>
                         </button>
                         <button
-                          class="btn btn-light border text-danger rounded-circle shadow-sm d-flex justify-content-center align-items-center" style="width: 36px; height: 36px;"
+                          class="btn-icon-action delete"
                           (click)="deleteUser(u.id); $event.stopPropagation()"
                           title="Xóa"
                         >

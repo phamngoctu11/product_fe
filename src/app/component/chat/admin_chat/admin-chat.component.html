@@ -73,6 +73,7 @@
               <div class="fw-bold text-truncate">{{ request.customerName }}</div>
               <div class="small text-muted text-truncate">{{ request.productName }}</div>
               <span class="badge rounded-pill text-bg-info mt-1">{{ request.status }}</span>
+
             </button>
           </ng-container>
         </div>
@@ -134,8 +135,11 @@
             <small class="text-primary fw-medium text-truncate d-block">Staff: {{ getStaffDisplayName() }}</small>
           </div>
           <span class="badge rounded-pill ms-auto" [ngClass]="isConversationObserver() ? 'text-bg-secondary' : 'text-bg-success'">
-            {{ isConversationObserver() ? 'Chi xem' : 'Dang ho tro' }}
+            {{ isConversationObserver() ? 'Chỉ xem' : 'Đang hỗ trợ' }}
           </span>
+          <a *ngIf="selectedConsultation?.productId" [routerLink]="['/product', selectedConsultation?.productId]" class="btn btn-sm btn-outline-primary ms-auto">
+            <i class="bi bi-eye me-1"></i> Sản phẩm
+          </a>
         </div>
 
         <div class="flex-grow-1 p-4 overflow-auto admin-scrollbar" #chatBody style="scroll-behavior: smooth; background-color: #070b19;">

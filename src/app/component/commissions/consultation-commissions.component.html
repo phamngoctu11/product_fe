@@ -1,0 +1,373 @@
+<div class="container-fluid commission-page py-4 app-fade-in">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <div class="page-section-icon">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div>
+        <h1 class="m-0 fw-bold">Hoa hồng tư vấn</h1>
+        <p class="m-0 text-muted">Thống kê hoa hồng theo staff, kỳ thời gian và trạng thái attribution</p>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-outline-primary rounded-pill px-4 fw-bold" type="button" (click)="loadData()">
+        <i class="bi bi-arrow-clockwise"></i> Làm mới
+      </button>
+      <button
+        *ngIf="isAdminView"
+        class="btn btn-warning rounded-pill px-4 fw-bold"
+        type="button"
+        [disabled]="isRebuilding"
+        (click)="rebuildSummaries()">
+        <span *ngIf="!isRebuilding"><i class="bi bi-arrow-repeat"></i> Rebuild summary</span>
+        <span *ngIf="isRebuilding">Đang rebuild...</span>
+      </button>
+    </div>
+  </div>
+
+  <section class="commission-toolbar mb-4">
+    <div>
+      <label>Kỳ thống kê</label>
+      <div class="period-switch">
+        <button
+          *ngFor="let item of periods"
+          type="button"
+          class="period-option"
+          [class.active]="period === item.value"
+          (click)="changePeriod(item.value)">
+          {{ item.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="date-filter">
+      <label>Từ ngày</label>
+      <input type="date" class="form-control" [(ngModel)]="from">
+    </div>
+
+    <div class="date-filter">
+      <label>Đến ngày</label>
+      <input type="date" class="form-control" [(ngModel)]="to">
+    </div>
+
+    <div class="date-filter">
+      <label>Kích thước trang</label>
+      <input type="number" class="form-control" min="1" [max]="maxPageSize" [(ngModel)]="pageSize">
+    </div>
+
+    <div class="toolbar-actions">
+      <button class="btn btn-primary rounded-pill px-4 fw-bold" type="button" (click)="applyDateFilter()">
+        <i class="bi bi-filter-circle"></i> Áp dụng
+      </button>
+      <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" type="button" (click)="clearDateFilter()">
+        <i class="bi bi-x-circle"></i> Xóa ngày
+      </button>
+    </div>
+  </section>
+
+  <div *ngIf="!canViewCommission" class="permission-panel">
+    <i class="bi bi-shield-lock"></i>
+    <h3>Không có quyền xem thống kê hoa hồng</h3>
+    <p>Luồng này chỉ dành cho STAFF, MANAGER và ADMIN.</p>
+  </div>
+
+  <ng-container *ngIf="canViewCommission">
+    <section *ngIf="isAdminView" class="admin-total-grid mb-4">
+      <div class="commission-stat-card">
+        <span class="stat-label">Hoa hồng đã chốt</span>
+        <strong class="stat-money success">{{ totalConfirmedCommission | number:'1.0-0' }} đ</strong>
+        <small>Tổng trên danh sách staff đang tải</small>
+      </div>
+      <div class="commission-stat-card">
+        <span class="stat-label">Doanh thu attribution</span>
+        <strong class="stat-money primary">{{ totalConfirmedRevenue | number:'1.0-0' }} đ</strong>
+        <small>{{ totalConfirmedOrders | number }} đơn đã ghi nhận</small>
+      </div>
+      <div class="commission-stat-card">
+        <span class="stat-label">Hoa hồng đang chờ</span>
+        <strong class="stat-money warning">{{ totalPendingCommission | number:'1.0-0' }} đ</strong>
+        <small>Chưa mở chi tiết order item</small>
+      </div>
+    </section>
+
+    <section *ngIf="isAdminView" class="staff-table-card">
+      <div class="staff-table-header">
+        <div>
+          <span class="hero-kicker">Manager/Admin</span>
+          <h2>Bảng tổng hoa hồng staff</h2>
+          <p>Click một staff để lazy load chi tiết attribution theo trạng thái.</p>
+        </div>
+        <span class="staff-count-pill">{{ staffSummaries.length | number }} staff</span>
+      </div>
+
+      <div *ngIf="isLoadingStaffs" class="panel-loading big">
+        <div class="spinner-border text-primary" role="status"></div>
+        <span>Đang tải summary staff...</span>
+      </div>
+
+      <div *ngIf="!isLoadingStaffs && staffSummaries.length === 0" class="panel-empty big">
+        <i class="bi bi-inbox"></i>
+        <h3>Chưa có dữ liệu hoa hồng</h3>
+        <p>Hãy thử đổi kỳ thống kê hoặc rebuild summary sau khi deploy backend.</p>
+      </div>
+
+      <div *ngIf="!isLoadingStaffs && staffSummaries.length > 0" class="table-responsive">
+        <table class="table align-middle mb-0 commission-table staff-main-table">
+          <thead>
+            <tr>
+              <th>Staff</th>
+              <th>Kỳ</th>
+              <th class="text-end">Hoa hồng đã chốt</th>
+              <th class="text-end">Doanh thu attribution</th>
+              <th class="text-center">Đơn</th>
+              <th class="text-center">Sản phẩm/attribution</th>
+              <th class="text-end">Đang chờ</th>
+              <th class="text-center">Đã hủy</th>
+              <th class="text-center">Chi tiết</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let staff of staffSummaries; trackBy: trackStaff" class="staff-row" (click)="selectStaff(staff)">
+              <td>
+                <div class="staff-cell">
+                  <span class="staff-avatar">
+                    <img *ngIf="staff.avatarUrl" [src]="staff.avatarUrl" [alt]="staff.staffName">
+                    <span *ngIf="!staff.avatarUrl">{{ getInitials(staff.staffName) }}</span>
+                  </span>
+                  <div>
+                    <strong>{{ staff.staffName || ('Staff #' + staff.staffId) }}</strong>
+                    <small>ID #{{ staff.staffId }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <strong>{{ formatDateOnly(staff.periodStart) }}</strong>
+                <small>đến {{ formatDateOnly(staff.periodEnd) }}</small>
+              </td>
+              <td class="text-end">
+                <strong class="bonus-amount">{{ staff.confirmedCommissionAmount | number:'1.0-0' }} đ</strong>
+              </td>
+              <td class="text-end fw-bold">{{ staff.confirmedRevenueAmount | number:'1.0-0' }} đ</td>
+              <td class="text-center">
+                <span class="quantity-pill">{{ staff.confirmedOrderCount | number }}</span>
+              </td>
+              <td class="text-center">
+                <span class="quantity-pill">{{ staff.confirmedAttributionCount | number }}</span>
+              </td>
+              <td class="text-end">
+                <strong class="stat-money-inline warning">{{ staff.pendingCommissionAmount | number:'1.0-0' }} đ</strong>
+                <small>{{ staff.pendingAttributionCount | number }} attribution</small>
+              </td>
+              <td class="text-center">
+                <span class="quantity-pill danger">{{ staff.cancelledAttributionCount | number }}</span>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-primary rounded-pill px-3" type="button" (click)="$event.stopPropagation(); selectStaff(staff)">
+                  <i class="bi bi-eye"></i> Mở
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!isLoadingStaffs && hasMoreStaffs()" class="text-center p-4 border-top">
+        <button
+          type="button"
+          class="btn btn-outline-primary rounded-pill px-4 fw-bold"
+          [disabled]="isLoadingMoreStaffs"
+          (click)="loadMoreStaffs()">
+          {{ isLoadingMoreStaffs ? 'Đang tải...' : 'Tải thêm staff summary' }}
+        </button>
+      </div>
+    </section>
+
+    <section *ngIf="!isAdminView" class="staff-self-card">
+      <div *ngIf="isLoadingSummary" class="panel-loading big">
+        <div class="spinner-border text-primary" role="status"></div>
+        <span>Đang tải hoa hồng của bạn...</span>
+      </div>
+
+      <ng-container *ngIf="!isLoadingSummary && summary as current">
+        <div class="staff-hero">
+          <div class="d-flex align-items-center gap-3 min-w-0">
+            <span class="staff-avatar hero-avatar">
+              <img *ngIf="current.avatarUrl" [src]="current.avatarUrl" [alt]="current.staffName">
+              <span *ngIf="!current.avatarUrl">{{ getInitials(current.staffName) }}</span>
+            </span>
+            <div class="min-w-0">
+              <span class="hero-kicker">Hoa hồng của tôi</span>
+              <h2>{{ current.staffName || ('Staff #' + current.staffId) }}</h2>
+              <p>{{ currentPeriodLabel }}</p>
+            </div>
+          </div>
+          <button class="btn btn-primary rounded-pill px-4 fw-bold" type="button" (click)="openMyDetails()">
+            <i class="bi bi-list-check"></i> Xem chi tiết
+          </button>
+        </div>
+
+        <div class="summary-grid">
+          <div class="commission-stat-card">
+            <span class="stat-label">Hoa hồng đã chốt</span>
+            <strong class="stat-money success">{{ current.confirmedCommissionAmount | number:'1.0-0' }} đ</strong>
+            <small>{{ current.confirmedOrderCount | number }} đơn, {{ current.confirmedAttributionCount | number }} attribution</small>
+          </div>
+          <div class="commission-stat-card">
+            <span class="stat-label">Doanh thu attribution</span>
+            <strong class="stat-money primary">{{ current.confirmedRevenueAmount | number:'1.0-0' }} đ</strong>
+            <small>Doanh thu item có tư vấn</small>
+          </div>
+          <div class="commission-stat-card">
+            <span class="stat-label">Hoa hồng đang chờ</span>
+            <strong class="stat-money warning">{{ current.pendingCommissionAmount | number:'1.0-0' }} đ</strong>
+            <small>{{ current.pendingOrderCount | number }} đơn, {{ current.pendingAttributionCount | number }} attribution</small>
+          </div>
+          <div class="commission-stat-card">
+            <span class="stat-label">Attribution đã hủy</span>
+            <strong class="stat-money danger">{{ current.cancelledAttributionCount | number }}</strong>
+            <small>Không tính vào hoa hồng đã chốt</small>
+          </div>
+        </div>
+      </ng-container>
+
+      <div *ngIf="!isLoadingSummary && !summary" class="panel-empty big">
+        <i class="bi bi-inbox"></i>
+        <h3>Chưa có dữ liệu hoa hồng</h3>
+        <p>Hãy thử đổi kỳ thống kê.</p>
+      </div>
+    </section>
+  </ng-container>
+</div>
+
+<div *ngIf="isDetailOpen" class="commission-detail-backdrop" (click)="closeDetail()">
+  <aside class="commission-detail-drawer" (click)="$event.stopPropagation()">
+    <div class="detail-drawer-header">
+      <div *ngIf="activeSummary as current" class="d-flex align-items-center gap-3 min-w-0">
+        <span class="staff-avatar">
+          <img *ngIf="current.avatarUrl" [src]="current.avatarUrl" [alt]="current.staffName">
+          <span *ngIf="!current.avatarUrl">{{ getInitials(current.staffName) }}</span>
+        </span>
+        <div class="min-w-0">
+          <span class="hero-kicker">Chi tiết hoa hồng</span>
+          <h2>{{ current.staffName || ('Staff #' + current.staffId) }}</h2>
+          <p>{{ currentPeriodLabel }}</p>
+        </div>
+      </div>
+      <button class="btn btn-outline-secondary rounded-circle" type="button" aria-label="Đóng" (click)="closeDetail()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div *ngIf="activeSummary as current" class="drawer-summary-strip">
+      <div>
+        <span>Đã chốt</span>
+        <strong class="success">{{ current.confirmedCommissionAmount | number:'1.0-0' }} đ</strong>
+      </div>
+      <div>
+        <span>Đang chờ</span>
+        <strong class="warning">{{ current.pendingCommissionAmount | number:'1.0-0' }} đ</strong>
+      </div>
+      <div>
+        <span>Doanh thu</span>
+        <strong>{{ current.confirmedRevenueAmount | number:'1.0-0' }} đ</strong>
+      </div>
+    </div>
+
+    <div class="detail-card drawer-detail-card">
+      <div class="detail-card-header">
+        <div>
+          <span class="hero-kicker">Lazy detail</span>
+          <h3>Attribution theo trạng thái</h3>
+        </div>
+        <div class="status-switch">
+          <button
+            *ngFor="let item of statuses"
+            type="button"
+            [class.active]="status === item.value"
+            (click)="changeStatus(item.value)">
+            <i class="bi" [ngClass]="item.icon"></i>
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="isLoadingDetails" class="panel-loading detail-loading">
+        <div class="spinner-border text-primary" role="status"></div>
+        <span>Đang tải trang chi tiết đầu tiên...</span>
+      </div>
+
+      <div *ngIf="!isLoadingDetails && details.length === 0" class="panel-empty py-5">
+        <i class="bi bi-inbox"></i>
+        <span>Không có attribution {{ getStatusLabel(status) | lowercase }} trong kỳ này.</span>
+      </div>
+
+      <div *ngIf="!isLoadingDetails && details.length > 0" class="table-responsive drawer-table-wrap thin-scrollbar">
+        <table class="table align-middle mb-0 commission-table">
+          <thead>
+            <tr>
+              <th>Attribution</th>
+              <th>Khách hàng</th>
+              <th>Sản phẩm</th>
+              <th class="text-center">SL xuất</th>
+              <th class="text-center">SL thực nhận</th>
+              <th class="text-end">Doanh thu item</th>
+              <th class="text-end">Hoa hồng</th>
+              <th>Trạng thái</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of details; trackBy: trackDetail">
+              <td>
+                <strong>#{{ item.attributionId }}</strong>
+                <small>Request #{{ item.consultationRequestId }}</small>
+              </td>
+              <td>
+                <strong>{{ item.customerName || ('User #' + item.customerId) }}</strong>
+                <small>Order #{{ item.orderId }}</small>
+              </td>
+              <td>
+                <strong>{{ item.productName }}</strong>
+                <small>{{ item.productVariantName || ('Variant #' + item.productVariantId) }}</small>
+              </td>
+              <td class="text-center">
+                <span class="quantity-pill quantity-pill-exported">{{ getExportedQuantity(item) | number }}</span>
+              </td>
+              <td class="text-center">
+                <span class="quantity-pill quantity-pill-received">{{ item.receivedQuantity | number }}</span>
+              </td>
+              <td class="text-end fw-bold">{{ item.itemAmount | number:'1.0-0' }} đ</td>
+              <td class="text-end">
+                <strong class="bonus-amount">{{ item.bonusAmount | number:'1.0-0' }} đ</strong>
+                <small>{{ item.bonusPercent | number:'1.0-2' }}%</small>
+              </td>
+              <td>
+                <span class="badge rounded-pill px-3 py-2" [ngClass]="getStatusClass(item.status)">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+                <small class="reviewed-flag" *ngIf="item.reviewed">
+                  <i class="bi bi-check2-circle"></i> reviewed
+                </small>
+              </td>
+              <td>
+                <strong>{{ formatDateTime(item.confirmedAt || item.cancelledAt || item.orderCreatedAt) }}</strong>
+                <small>Reply: {{ formatDateTime(item.firstStaffReplyAt) }}</small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!isLoadingDetails && hasMoreDetails()" class="text-center p-4 border-top">
+        <button
+          class="btn btn-outline-primary rounded-pill px-4 fw-bold"
+          type="button"
+          [disabled]="isLoadingMoreDetails"
+          (click)="loadMoreDetails()">
+          {{ isLoadingMoreDetails ? 'Đang tải...' : 'Tải trang tiếp theo' }}
+        </button>
+      </div>
+    </div>
+  </aside>
+</div>

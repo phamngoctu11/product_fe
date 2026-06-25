@@ -1,17 +1,20 @@
-<div class="container mt-4 mb-5" style="animation: fadeIn 0.4s;">
-  <div class="d-flex justify-content-center mb-4">
-    <div class="d-flex align-items-center gap-3">
-      <div class="icon-container-primary icon-container-lg">
+<div class="container profile-page mt-4 mb-5" style="animation: fadeIn 0.4s;">
+  <div class="app-page-header">
+    <div class="app-page-heading">
+      <div class="app-title-icon">
         <i class="bi bi-person-badge"></i>
       </div>
-      <h2 class="m-0 fw-bold text-dark">Hồ sơ Cá nhân</h2>
+      <div class="app-page-heading-text">
+        <h1 class="app-page-title">Hồ sơ cá nhân</h1>
+        <p class="app-page-subtitle">Thông tin tài khoản và liên hệ của bạn</p>
+      </div>
     </div>
   </div>
 
   <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
-      <div class="card shadow border-0 rounded-4 profile-card overflow-hidden">
-        <div class="card-body p-5">
+      <div class="card shadow border-0 profile-card profile-shell-card overflow-hidden">
+        <div class="card-body p-4 p-lg-5">
           @if (isLoading) {
             <div class="text-center py-5">
               <div class="spinner-border text-primary" role="status"></div>
@@ -26,8 +29,7 @@
             <div class="d-flex flex-column align-items-center text-center mb-4">
 
               <div class="position-relative d-inline-block mb-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm border overflow-hidden"
-                     style="width: 120px; height: 120px; margin: 0 auto; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 2.5rem;">
+                <div class="profile-avatar d-flex align-items-center justify-content-center shadow-sm overflow-hidden">
 
                   <div *ngIf="isUploadingAvatar" class="spinner-border text-white" role="status"></div>
 
@@ -38,8 +40,8 @@
                   </span>
                 </div>
 
-                <label class="btn btn-primary rounded-circle position-absolute d-flex justify-content-center align-items-center"
-                       style="bottom: 0; right: 0; width: 38px; height: 38px; cursor: pointer; box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.15); transition: transform 0.2s;" title="Đổi ảnh đại diện" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <label class="btn btn-primary position-absolute d-flex justify-content-center align-items-center profile-camera-button"
+                       title="Đổi ảnh đại diện">
                   <i class="bi bi-camera-fill fs-6"></i>
                   <input type="file" class="d-none" (change)="onAvatarSelected($event)" accept="image/*" [disabled]="isUploadingAvatar">
                 </label>
@@ -60,39 +62,45 @@
 
             <hr class="text-muted opacity-10 my-4" />
 
-            <div class="row g-4 px-3">
-              <div class="col-6">
-                <div class="d-flex align-items-center mb-1">
-                  <div class="icon-container-info-inline icon-container-info-inline-info me-3"><i class="bi bi-gender-ambiguous"></i></div>
-                  <small class="text-muted fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Giới tính</small>
+            <div class="profile-info-grid">
+              <div class="profile-info-item">
+                <div class="profile-info-icon d-flex align-items-center justify-content-center">
+                  <i class="bi bi-gender-ambiguous"></i>
                 </div>
-                <p class="fw-bold fs-6 mb-0 text-dark" style="margin-left: 58px;">{{ userInfo.gender || 'Chưa cập nhật' }}</p>
+                <div>
+                  <span class="profile-info-label">Giới tính</span>
+                  <p class="profile-info-value">{{ userInfo.gender || 'Chưa cập nhật' }}</p>
+                </div>
               </div>
 
-              <div class="col-6">
-                <div class="d-flex align-items-center mb-1">
-                  <div class="icon-container-info-inline icon-container-info-inline-success me-3"><i class="bi bi-calendar-date"></i></div>
-                  <small class="text-muted fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Ngày sinh</small>
+              <div class="profile-info-item">
+                <div class="profile-info-icon d-flex align-items-center justify-content-center">
+                  <i class="bi bi-calendar-date"></i>
                 </div>
-                <p class="fw-bold fs-6 mb-0 text-dark" style="margin-left: 58px;">
-                  {{ (userInfo.birth | date: 'dd/MM/yyyy') || 'Chưa cập nhật' }}
-                </p>
+                <div>
+                  <span class="profile-info-label">Ngày sinh</span>
+                  <p class="profile-info-value">{{ (userInfo.birth | date: 'dd/MM/yyyy') || 'Chưa cập nhật' }}</p>
+                </div>
               </div>
 
-              <div class="col-6">
-                <div class="d-flex align-items-center mb-1">
-                  <div class="icon-container-info-inline icon-container-info-inline-primary me-3"><i class="bi bi-telephone"></i></div>
-                  <small class="text-muted fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Số điện thoại</small>
+              <div class="profile-info-item">
+                <div class="profile-info-icon d-flex align-items-center justify-content-center">
+                  <i class="bi bi-telephone"></i>
                 </div>
-                <p class="fw-bold fs-6 mb-0 text-dark" style="margin-left: 58px;">{{ userInfo.phone || 'Chưa cập nhật' }}</p>
+                <div>
+                  <span class="profile-info-label">Số điện thoại</span>
+                  <p class="profile-info-value">{{ userInfo.phone || 'Chưa cập nhật' }}</p>
+                </div>
               </div>
 
-              <div class="col-6">
-                <div class="d-flex align-items-center mb-1">
-                  <div class="icon-container-info-inline icon-container-info-inline-danger me-3"><i class="bi bi-geo-alt"></i></div>
-                  <small class="text-muted fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Địa chỉ</small>
+              <div class="profile-info-item">
+                <div class="profile-info-icon d-flex align-items-center justify-content-center">
+                  <i class="bi bi-geo-alt"></i>
                 </div>
-                <p class="fw-bold fs-6 mb-0 text-dark" style="margin-left: 58px;">{{ userInfo.address || 'Chưa cập nhật' }}</p>
+                <div>
+                  <span class="profile-info-label">Địa chỉ</span>
+                  <p class="profile-info-value">{{ userInfo.address || 'Chưa cập nhật' }}</p>
+                </div>
               </div>
             </div>
           }

@@ -12,6 +12,7 @@ import { VoucherService } from '../../service/voucher.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './voucher-admin.component.html',
+  styleUrls: ['../../app.css'],
 })
 export class VoucherAdminComponent implements OnInit {
   private readonly toast = injectToast(ToastService);

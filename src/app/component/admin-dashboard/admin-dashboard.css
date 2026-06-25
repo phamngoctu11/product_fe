@@ -86,6 +86,22 @@
     line-height: 1;
   }
 
+  .mini-stat-card .mini-stat-icon {
+    border-color: rgba(var(--app-primary-rgb), 0.36);
+    background: var(--app-gradient) !important;
+    color: #fff !important;
+    box-shadow: var(--shadow-primary);
+  }
+
+  .mini-stat-card .mini-stat-icon i {
+    color: #fff !important;
+    opacity: 1;
+  }
+
+  .mini-stat-card .text-secondary {
+    color: #a5b4fc !important;
+  }
+
   /* Best seller table */
   .best-seller-table thead th {
     font-size: 0.72rem;
