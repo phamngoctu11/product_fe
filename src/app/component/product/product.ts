@@ -14,11 +14,12 @@ import { AddToCartModalComponent } from './add-to-cart-modal/add-to-cart-modal';
 import { Product } from '../../model/product.model';
 import { Subscription } from 'rxjs';
 import { getApiErrorMessage } from '../../model/api-response.model';
+import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
 
 @Component({
   selector: 'app-product',
   standalone: true,
-  imports: [FormsModule, CommonModule, ReactiveFormsModule, MatDialogModule],
+  imports: [FormsModule, CommonModule, ReactiveFormsModule, MatDialogModule, AppPaginationComponent],
   templateUrl: './product.html',
   styleUrls: ['../../app.css', './product.css'],
 })
@@ -38,6 +39,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   pageSize: number = 10;
   totalPages: number = 0;
   totalElements: number = 0;
+  pageSizeOptions = [10, 20, 50, 100];
 
   private cartSubscription!: Subscription;
 
@@ -71,6 +73,7 @@ export class ProductComponent implements OnInit, OnDestroy {
         this.currentPage = res.number || 0;
         this.pageSize = res.size || 10;
         this.totalPages = res.totalPages || 0;
+        this.totalElements = res.totalElements || 0;
         this.filterProducts();
       },
       error: (err) => console.error('Lỗi khi lấy danh sách sản phẩm:', err)
@@ -183,5 +186,10 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   changePage(newPage: number) {
     if (newPage >= 0 && newPage < this.totalPages) this.getAll(newPage, this.pageSize);
+  }
+
+  changePageSize(size: number) {
+    this.pageSize = size;
+    this.getAll(0, this.pageSize);
   }
 }

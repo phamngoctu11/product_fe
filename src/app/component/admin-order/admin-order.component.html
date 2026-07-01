@@ -159,13 +159,17 @@
         </table>
       </div>
 
-      <div *ngIf="!isLoading && hasMoreOrders()" class="text-center p-4 border-top">
-        <button class="btn btn-outline-primary rounded-pill px-4 fw-bold"
-                (click)="loadMorePendingOrders()"
-                [disabled]="isLoadingMore">
-          <span *ngIf="!isLoadingMore"><i class="bi bi-arrow-down-circle me-1"></i> Tải thêm đơn hàng</span>
-          <span *ngIf="isLoadingMore">Đang tải...</span>
-        </button>
+      <div *ngIf="activeStatus && !isLoading && pendingOrders.length > 0" class="p-4 border-top">
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          [totalElements]="totalElements"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="isLoading"
+          (pageChange)="changePage($event)"
+          (pageSizeChange)="changePageSize($event)">
+        </app-pagination>
       </div>
     </div>
   </div>

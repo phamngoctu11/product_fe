@@ -35,6 +35,6 @@ export class PaymentSuccessComponent implements OnInit {
 
   goHome() {
     // Điều hướng về trang chủ
-    this.router.navigate(['/']);
+    this.router.navigate(['/orders']);
   }
 }

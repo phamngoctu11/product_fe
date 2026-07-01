@@ -12,11 +12,12 @@ import { CartRes } from '../../model/cart.model';
 
 import { UserService } from '../../service/user.service';
 import { AuthService } from '../../service/auth.service';
+import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, FormsModule],
+  imports: [CommonModule, MatDialogModule, FormsModule, AppPaginationComponent],
   templateUrl: './user.html',
   styleUrls: ['../../app.css'],
 })
@@ -30,6 +31,7 @@ export class UserComponent implements OnInit {
   pageSize: number = 10;
   totalElements: number = 0;
   totalPages: number = 0;
+  pageSizeOptions = [10, 20, 50, 100];
   isAdmin: boolean = false;
 
   constructor(
@@ -51,6 +53,7 @@ export class UserComponent implements OnInit {
 
         this.totalElements = data.totalElements;
         this.totalPages = data.totalPages;
+        this.pageSize = data.size || size;
         this.currentPage = data.number;
       },
       error: (err) => {
@@ -86,6 +89,16 @@ export class UserComponent implements OnInit {
       const fullName = `${u.lastname} ${u.firstname}`.toLowerCase();
       return fullName.includes(term);
     });
+  }
+
+  changePage(page: number) {
+    if (page < 0 || page >= this.totalPages) return;
+    this.loadUsers(page, this.pageSize);
+  }
+
+  changePageSize(size: number) {
+    this.pageSize = size;
+    this.loadUsers(0, this.pageSize);
   }
 
   viewUser(id: number) {

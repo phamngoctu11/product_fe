@@ -66,14 +66,17 @@
       </div>
     </div>
 
-    <div *ngIf="hasMorePendingOrders()" class="text-center my-4">
-      <button class="btn btn-outline-primary rounded-pill px-4 fw-bold"
-              (click)="loadMorePendingOrders()"
-              [disabled]="isLoadingMorePending">
-        <span *ngIf="!isLoadingMorePending">Tải thêm đơn chờ nhận</span>
-        <span *ngIf="isLoadingMorePending">Đang tải...</span>
-      </button>
-    </div>
+    <app-pagination
+      *ngIf="warehousePendingOrders.length > 0"
+      [currentPage]="pendingPage"
+      [totalPages]="pendingTotalPages"
+      [totalElements]="pendingTotalElements"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [disabled]="isLoading"
+      (pageChange)="changePendingPage($event)"
+      (pageSizeChange)="changePageSize($event)">
+    </app-pagination>
   </ng-container>
 
   <ng-container *ngIf="!isLoading && activeTab === 'mine'">
@@ -112,14 +115,17 @@
       </div>
     </div>
 
-    <div *ngIf="hasMoreMyOrders()" class="text-center my-4">
-      <button class="btn btn-outline-primary rounded-pill px-4 fw-bold"
-              (click)="loadMoreMyOrders()"
-              [disabled]="isLoadingMoreMine">
-        <span *ngIf="!isLoadingMoreMine">Tải thêm đơn phụ trách</span>
-        <span *ngIf="isLoadingMoreMine">Đang tải...</span>
-      </button>
-    </div>
+    <app-pagination
+      *ngIf="myOrders.length > 0"
+      [currentPage]="minePage"
+      [totalPages]="mineTotalPages"
+      [totalElements]="mineTotalElements"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [disabled]="isLoading"
+      (pageChange)="changeMyOrdersPage($event)"
+      (pageSizeChange)="changePageSize($event)">
+    </app-pagination>
   </ng-container>
 </div>
 

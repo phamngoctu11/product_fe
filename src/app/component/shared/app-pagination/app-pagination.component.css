@@ -1,0 +1,107 @@
+.app-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.18);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #10172b 0%, #0d1427 100%);
+  color: var(--app-text);
+  box-shadow: var(--shadow-md);
+}
+
+.pagination-summary,
+.pagination-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--app-muted-text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.pagination-summary strong {
+  color: var(--app-text);
+  font-weight: 900;
+}
+
+.pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.pagination-page,
+.pagination-arrow {
+  min-width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.2);
+  border-radius: 0.72rem;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--app-muted-text);
+  font-weight: 900;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.pagination-page:hover:not(:disabled),
+.pagination-arrow:hover:not(:disabled),
+.pagination-page.active {
+  transform: translateY(-1px);
+  border-color: rgba(var(--app-primary-rgb), 0.42);
+  background: var(--app-gradient);
+  color: #fff;
+}
+
+.pagination-page.active {
+  box-shadow: var(--shadow-primary);
+}
+
+.pagination-page:disabled,
+.pagination-arrow:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
+.pagination-gap {
+  min-width: 24px;
+  text-align: center;
+  color: var(--app-muted-text);
+  font-weight: 900;
+}
+
+.pagination-size .form-select {
+  width: 82px;
+  min-height: 38px;
+  padding-right: 2rem;
+  border-radius: 0.72rem;
+  font-weight: 850;
+}
+
+.app-pagination.compact {
+  padding: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .app-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pagination-summary,
+  .pagination-size,
+  .pagination-controls {
+    justify-content: center;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+  }
+}

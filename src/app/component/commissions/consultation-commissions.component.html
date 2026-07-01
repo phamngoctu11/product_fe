@@ -172,14 +172,17 @@
         </table>
       </div>
 
-      <div *ngIf="!isLoadingStaffs && hasMoreStaffs()" class="text-center p-4 border-top">
-        <button
-          type="button"
-          class="btn btn-outline-primary rounded-pill px-4 fw-bold"
-          [disabled]="isLoadingMoreStaffs"
-          (click)="loadMoreStaffs()">
-          {{ isLoadingMoreStaffs ? 'Đang tải...' : 'Tải thêm staff summary' }}
-        </button>
+      <div *ngIf="!isLoadingStaffs && staffSummaries.length > 0" class="p-4 border-top">
+        <app-pagination
+          [currentPage]="staffPage"
+          [totalPages]="staffTotalPages"
+          [totalElements]="staffTotalElements"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="isLoadingStaffs"
+          (pageChange)="changeStaffPage($event)"
+          (pageSizeChange)="changePageSize($event)">
+        </app-pagination>
       </div>
     </section>
 
@@ -359,14 +362,18 @@
         </table>
       </div>
 
-      <div *ngIf="!isLoadingDetails && hasMoreDetails()" class="text-center p-4 border-top">
-        <button
-          class="btn btn-outline-primary rounded-pill px-4 fw-bold"
-          type="button"
-          [disabled]="isLoadingMoreDetails"
-          (click)="loadMoreDetails()">
-          {{ isLoadingMoreDetails ? 'Đang tải...' : 'Tải trang tiếp theo' }}
-        </button>
+      <div *ngIf="!isLoadingDetails && details.length > 0" class="p-4 border-top">
+        <app-pagination
+          [currentPage]="detailPage"
+          [totalPages]="detailTotalPages"
+          [totalElements]="detailTotalElements"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="isLoadingDetails"
+          [compact]="true"
+          (pageChange)="changeDetailPage($event)"
+          (pageSizeChange)="changePageSize($event)">
+        </app-pagination>
       </div>
     </div>
   </aside>

@@ -15,6 +15,7 @@ interface DashboardStats {
   pendingAP: number;
   pendingPM: number;
   pendingKCS: number;
+  warehouseAssigned:number;
   shippingOrders: number;
   deliveredOrders: number;
   cancelledOrders: number;
@@ -48,6 +49,7 @@ export class AdminDashboard implements OnInit {
     shippingOrders: 0,
     deliveredOrders: 0,
     cancelledOrders: 0,
+    warehouseAssigned: 0,
   };
 
   stats: DashboardStats = { ...this.emptyStats };
@@ -79,6 +81,15 @@ export class AdminDashboard implements OnInit {
       bgClass: 'bg-info bg-opacity-10',
       textClass: 'text-info',
       badgeClass: 'bg-info text-dark',
+    },
+     {
+      key: 'warehouseAssigned',
+      label: 'Đang xuất kho',
+      description: 'Đơn hàng đã được giao cho kho',
+      icon: 'bi-box-seam',
+      bgClass: 'bg-warning bg-opacity-10',
+      textClass: 'text-warning',
+      badgeClass: 'bg-warning text-dark',
     },
     {
       key: 'pendingKCS',
@@ -156,18 +167,20 @@ export class AdminDashboard implements OnInit {
       'Chờ duyệt',
       'Chờ kho',
       'Chờ KCS',
+      'Đang xuất kho',
       'Đang giao',
       'Đã giao',
       'Đã hủy',
     ],
     datasets: [
       {
-        data: [0, 0, 0, 0, 0, 0, 0],
+        data: [0, 0, 0,0, 0, 0, 0, 0],
         backgroundColor: [
           '#f59e0b',
           '#2563eb',
           '#06b6d4',
           '#64748b',
+          '#f97316',
           '#0ea5e9',
           '#16a34a',
           '#dc2626',
@@ -177,6 +190,7 @@ export class AdminDashboard implements OnInit {
           '#1d4ed8',
           '#0891b2',
           '#475569',
+          '#f97316',
           '#0284c7',
           '#15803d',
           '#b91c1c',
@@ -204,7 +218,8 @@ export class AdminDashboard implements OnInit {
       this.stats.pendingWH +
       this.stats.pendingAP +
       this.stats.pendingPM +
-      this.stats.pendingKCS
+      this.stats.pendingKCS +
+      this.stats.warehouseAssigned
     );
   }
 
@@ -263,6 +278,7 @@ export class AdminDashboard implements OnInit {
       pendingAP: Number(source.pendingAP ?? 0),
       pendingPM: Number(source.pendingPM ?? 0),
       pendingKCS: Number(source.pendingKCS ?? 0),
+      warehouseAssigned: Number(source.warehouseAssigned ?? 0),
       shippingOrders: Number(source.shippingOrders ?? 0),
       deliveredOrders: Number(source.deliveredOrders ?? 0),
       cancelledOrders: Number(source.cancelledOrders ?? 0),
@@ -280,9 +296,11 @@ export class AdminDashboard implements OnInit {
             this.stats.pendingAP,
             this.stats.pendingWH,
             this.stats.pendingKCS,
+            this.stats.warehouseAssigned,
             this.stats.shippingOrders,
             this.stats.deliveredOrders,
             this.stats.cancelledOrders,
+
           ],
         },
       ],

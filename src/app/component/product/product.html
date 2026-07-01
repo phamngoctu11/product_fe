@@ -124,6 +124,16 @@
     }
   </div>
 
+  <app-pagination
+    [currentPage]="currentPage"
+    [totalPages]="totalPages"
+    [totalElements]="totalElements"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    (pageChange)="changePage($event)"
+    (pageSizeChange)="changePageSize($event)">
+  </app-pagination>
+
   <!-- Empty State -->
   <div *ngIf="filteredProducts.length === 0" class="text-center py-5 my-4" style="animation: fadeIn 0.4s;">
     <div class="empty-state-icon">

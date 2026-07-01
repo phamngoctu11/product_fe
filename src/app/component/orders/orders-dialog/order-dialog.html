@@ -64,12 +64,18 @@
       </div>
     </div>
 
-    <div *ngIf="hasMoreOrders()" class="text-center py-3">
-      <button class="btn btn-outline-primary rounded-pill px-4 fw-bold" (click)="loadMoreOrders()" [disabled]="isLoadingMore">
-        <span *ngIf="!isLoadingMore">Tải thêm đơn hàng</span>
-        <span *ngIf="isLoadingMore">Đang tải...</span>
-      </button>
-    </div>
+    <app-pagination
+      *ngIf="!isLoading && orders.length > 0"
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalElements]="totalElements"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [disabled]="isLoading"
+      [compact]="true"
+      (pageChange)="changePage($event)"
+      (pageSizeChange)="changePageSize($event)">
+    </app-pagination>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="p-4 bg-white border-top m-0">

@@ -5,11 +5,12 @@ import { Order, OrderListDTO } from '../../../model/order.model';
 import { OrderService } from '../../../service/order.service';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../../order-detail-popup/order-detail-popup.component';
+import { AppPaginationComponent } from '../../shared/app-pagination/app-pagination.component';
 
 @Component({
   selector: 'app-order-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, OrderDetailPopupComponent],
+  imports: [CommonModule, MatDialogModule, OrderDetailPopupComponent, AppPaginationComponent],
   templateUrl: './order-dialog.html',
   styleUrls: ['../../../app.css', './order-dialog.css'],
 })
@@ -20,6 +21,8 @@ export class OrderDialogComponent implements OnInit {
   currentPage = 0;
   pageSize = 20;
   totalPages = 0;
+  totalElements = 0;
+  pageSizeOptions = [10, 20, 50, 100];
   selectedOrderDetail: Order | null = null;
   isDetailLoading = false;
   detailError = '';
@@ -31,12 +34,15 @@ export class OrderDialogComponent implements OnInit {
     this.loadOrders();
   }
 
-  loadOrders(): void {
+  loadOrders(pageNumber: number = 0): void {
     this.isLoading = true;
-    this.currentPage = 0;
+    this.currentPage = pageNumber;
     this.orderService.getOrdersByUserId(this.userId, this.currentPage, this.pageSize).subscribe((page) => {
       this.orders = page.content || [];
+      this.currentPage = page.number ?? pageNumber;
+      this.pageSize = page.size || this.pageSize;
       this.totalPages = page.totalPages || 0;
+      this.totalElements = page.totalElements || 0;
       this.isLoading = false;
     });
   }
@@ -55,6 +61,16 @@ export class OrderDialogComponent implements OnInit {
 
   hasMoreOrders(): boolean {
     return this.currentPage + 1 < this.totalPages;
+  }
+
+  changePage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.loadOrders(page);
+  }
+
+  changePageSize(size: number): void {
+    this.pageSize = size;
+    this.loadOrders(0);
   }
 
   openOrderDetail(order: OrderListDTO): void {
@@ -84,4 +100,3 @@ export class OrderDialogComponent implements OnInit {
   }
 
 }
-

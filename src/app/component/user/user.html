@@ -121,4 +121,14 @@
       </div>
     </div>
   </div>
+
+  <app-pagination
+    [currentPage]="currentPage"
+    [totalPages]="totalPages"
+    [totalElements]="totalElements"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    (pageChange)="changePage($event)"
+    (pageSizeChange)="changePageSize($event)">
+  </app-pagination>
 </div>

@@ -13,11 +13,12 @@ import { AuthService } from '../../service/auth.service';
 import { ConsultationCommissionService } from '../../service/consultation-commission.service';
 import { ActionDialogService } from '../../service/action-dialog.service';
 import { ToastService } from '../../service/toast.service';
+import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
 
 @Component({
   selector: 'app-consultation-commissions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppPaginationComponent],
   templateUrl: './consultation-commissions.component.html',
   styleUrls: ['../../app.css', './consultation-commissions.component.css'],
 })
@@ -35,6 +36,7 @@ export class ConsultationCommissionsComponent implements OnInit {
   ];
 
   readonly maxPageSize = 100;
+  readonly pageSizeOptions = [10, 20, 50, 100];
 
   period: CommissionPeriod = 'MONTH';
   status: CommissionStatus = 'CONFIRMED';
@@ -49,8 +51,10 @@ export class ConsultationCommissionsComponent implements OnInit {
 
   staffPage = 0;
   staffTotalPages = 0;
+  staffTotalElements = 0;
   detailPage = 0;
   detailTotalPages = 0;
+  detailTotalElements = 0;
 
   isLoadingSummary = false;
   isLoadingDetails = false;
@@ -113,7 +117,7 @@ export class ConsultationCommissionsComponent implements OnInit {
 
     this.closeDetail();
     if (this.isAdminView) {
-      this.loadStaffSummaries();
+      this.loadStaffSummaries(0);
       return;
     }
 
@@ -158,6 +162,7 @@ export class ConsultationCommissionsComponent implements OnInit {
     this.details = [];
     this.detailPage = 0;
     this.detailTotalPages = 0;
+    this.detailTotalElements = 0;
     this.loadDetails(0);
   }
 
@@ -167,6 +172,7 @@ export class ConsultationCommissionsComponent implements OnInit {
     this.details = [];
     this.detailPage = 0;
     this.detailTotalPages = 0;
+    this.detailTotalElements = 0;
     this.isLoadingDetails = false;
     this.isLoadingMoreDetails = false;
   }
@@ -245,6 +251,26 @@ export class ConsultationCommissionsComponent implements OnInit {
     return this.detailPage + 1 < this.detailTotalPages;
   }
 
+  changeStaffPage(page: number): void {
+    if (page < 0 || page >= this.staffTotalPages) return;
+    this.loadStaffSummaries(page);
+  }
+
+  changeDetailPage(page: number): void {
+    if (page < 0 || page >= this.detailTotalPages) return;
+    this.loadDetails(page);
+  }
+
+  changePageSize(size: number): void {
+    this.pageSize = size;
+    if (this.isAdminView) {
+      this.loadStaffSummaries(0);
+    }
+    if (this.isDetailOpen) {
+      this.loadDetails(0);
+    }
+  }
+
   getStatusLabel(status: CommissionStatus | string): string {
     return this.statuses.find((item) => item.value === status)?.label || status || 'N/A';
   }
@@ -309,9 +335,9 @@ export class ConsultationCommissionsComponent implements OnInit {
     });
   }
 
-  private loadStaffSummaries(): void {
+  private loadStaffSummaries(pageNumber: number = 0): void {
     this.isLoadingStaffs = true;
-    this.staffPage = 0;
+    this.staffPage = pageNumber;
 
     this.commissionService.getStaffSummaries({
       ...this.baseQuery(),
@@ -320,13 +346,15 @@ export class ConsultationCommissionsComponent implements OnInit {
     }).subscribe({
       next: (page) => {
         this.staffSummaries = page.content || [];
-        this.staffPage = page.number || 0;
+        this.staffPage = page.number ?? pageNumber;
         this.staffTotalPages = page.totalPages || 0;
+        this.staffTotalElements = page.totalElements || 0;
         this.isLoadingStaffs = false;
       },
       error: (err) => {
         this.toast.error('Khong the tai danh sach hoa hong staff: ' + getApiErrorMessage(err, 'Vui long thu lai.'));
         this.staffSummaries = [];
+        this.staffTotalElements = 0;
         this.isLoadingStaffs = false;
       },
     });
@@ -339,13 +367,15 @@ export class ConsultationCommissionsComponent implements OnInit {
     this.detailsRequest(pageNumber).subscribe({
       next: (page) => {
         this.details = page.content || [];
-        this.detailPage = page.number || 0;
+        this.detailPage = page.number ?? pageNumber;
         this.detailTotalPages = page.totalPages || 0;
+        this.detailTotalElements = page.totalElements || 0;
         this.isLoadingDetails = false;
       },
       error: (err) => {
         this.toast.error('Khong the tai chi tiet hoa hong: ' + getApiErrorMessage(err, 'Vui long thu lai.'));
         this.details = [];
+        this.detailTotalElements = 0;
         this.isLoadingDetails = false;
       },
     });

@@ -11,11 +11,12 @@ import { OrderService } from '../../service/order.service';
 import { UserService } from '../../service/user.service';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-popup.component';
+import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
 
 @Component({
   selector: 'app-admin-order',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrderDetailPopupComponent],
+  imports: [CommonModule, FormsModule, OrderDetailPopupComponent, AppPaginationComponent],
   templateUrl: './admin-order.component.html',
   styleUrls: ['../../app.css', './admin-order.component.css'],
 })
@@ -31,6 +32,8 @@ export class AdminOrderComponent implements OnInit {
   currentPage = 0;
   pageSize = 20;
   totalPages = 0;
+  totalElements = 0;
+  pageSizeOptions = [10, 20, 50, 100];
   userId: number | null = null;
   selectedOrderDetail: Order | null = null;
   isDetailLoading = false;
@@ -51,18 +54,21 @@ export class AdminOrderComponent implements OnInit {
     if (this.activeStatus === status && this.pendingOrders.length > 0) return;
 
     this.activeStatus = status;
-    this.loadPendingOrders();
+    this.loadPendingOrders(0);
   }
 
-  loadPendingOrders(): void {
+  loadPendingOrders(page: number = 0): void {
     if (!this.activeStatus) return;
 
     this.isLoading = true;
-    this.currentPage = 0;
+    this.currentPage = page;
     this.orderService.getPendingOrders(this.activeStatus, this.currentPage, this.pageSize).subscribe({
       next: (res) => {
         this.pendingOrders = res.content || [];
+        this.currentPage = res.number ?? page;
+        this.pageSize = res.size || this.pageSize;
         this.totalPages = res.totalPages || 0;
+        this.totalElements = res.totalElements || 0;
         this.isLoading = false;
       },
       error: (err) => {
@@ -92,6 +98,16 @@ export class AdminOrderComponent implements OnInit {
 
   hasMoreOrders(): boolean {
     return this.currentPage + 1 < this.totalPages;
+  }
+
+  changePage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.loadPendingOrders(page);
+  }
+
+  changePageSize(size: number): void {
+    this.pageSize = size;
+    this.loadPendingOrders(0);
   }
 
   openOrderDetail(order: OrderListDTO): void {

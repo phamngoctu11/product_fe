@@ -8,11 +8,12 @@ import { FormsModule } from '@angular/forms';
 import { Order, OrderItem, OrderListDTO } from '../../model/order.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { OrderService } from '../../service/order.service';
+import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
 
 @Component({
   selector: 'app-staff-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppPaginationComponent],
   templateUrl: './staff-orders.component.html',
   styleUrls: ['../../app.css'],
 })
@@ -31,6 +32,9 @@ export class StaffOrdersComponent implements OnInit {
   pageSize = 20;
   pendingTotalPages = 0;
   mineTotalPages = 0;
+  pendingTotalElements = 0;
+  mineTotalElements = 0;
+  pageSizeOptions = [10, 20, 50, 100];
 
   selectedOrder: Order | null = null;
   detailLoading = false;
@@ -50,7 +54,10 @@ export class StaffOrdersComponent implements OnInit {
     this.orderService.getWarehousePendingOrders(this.pendingPage, this.pageSize).subscribe({
       next: (page) => {
         this.warehousePendingOrders = page.content || [];
+        this.pendingPage = page.number || 0;
+        this.pageSize = page.size || this.pageSize;
         this.pendingTotalPages = page.totalPages || 0;
+        this.pendingTotalElements = page.totalElements || 0;
         this.loadMyOrders();
       },
       error: (err) => {
@@ -64,7 +71,10 @@ export class StaffOrdersComponent implements OnInit {
     this.orderService.getMyStaffOrders(this.minePage, this.pageSize).subscribe({
       next: (page) => {
         this.myOrders = page.content || [];
+        this.minePage = page.number || 0;
+        this.pageSize = page.size || this.pageSize;
         this.mineTotalPages = page.totalPages || 0;
+        this.mineTotalElements = page.totalElements || 0;
         this.isLoading = false;
       },
       error: (err) => {
@@ -116,6 +126,51 @@ export class StaffOrdersComponent implements OnInit {
 
   hasMoreMyOrders(): boolean {
     return this.minePage + 1 < this.mineTotalPages;
+  }
+
+  changePendingPage(page: number): void {
+    if (page < 0 || page >= this.pendingTotalPages) return;
+
+    this.isLoading = true;
+    this.pendingPage = page;
+    this.orderService.getWarehousePendingOrders(this.pendingPage, this.pageSize).subscribe({
+      next: (res) => {
+        this.warehousePendingOrders = res.content || [];
+        this.pendingPage = res.number ?? page;
+        this.pendingTotalPages = res.totalPages || 0;
+        this.pendingTotalElements = res.totalElements || 0;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.toast.notify('Không thể tải trang đơn chờ nhận: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.isLoading = false;
+      },
+    });
+  }
+
+  changeMyOrdersPage(page: number): void {
+    if (page < 0 || page >= this.mineTotalPages) return;
+
+    this.isLoading = true;
+    this.minePage = page;
+    this.orderService.getMyStaffOrders(this.minePage, this.pageSize).subscribe({
+      next: (res) => {
+        this.myOrders = res.content || [];
+        this.minePage = res.number ?? page;
+        this.mineTotalPages = res.totalPages || 0;
+        this.mineTotalElements = res.totalElements || 0;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.toast.notify('Không thể tải trang đơn phụ trách: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.isLoading = false;
+      },
+    });
+  }
+
+  changePageSize(size: number): void {
+    this.pageSize = size;
+    this.loadData();
   }
 
   claimOrder(order: OrderListDTO): void {

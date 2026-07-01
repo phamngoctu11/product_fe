@@ -37,12 +37,17 @@
     <ng-container *ngTemplateOutlet="orderCardTemplate; context: { order: order }"></ng-container>
   </div>
 
-  <div *ngIf="hasMoreOrders()" class="text-center my-4">
-    <button class="btn btn-outline-primary rounded-pill px-4 fw-bold" (click)="loadMoreOrders()" [disabled]="isLoadingMoreOrders">
-      <span *ngIf="!isLoadingMoreOrders"><i class="bi bi-arrow-down-circle me-1"></i> Tải thêm đơn hàng</span>
-      <span *ngIf="isLoadingMoreOrders">Đang tải...</span>
-    </button>
-  </div>
+  <app-pagination
+    *ngIf="!isLoadingOrders && orders.length > 0"
+    [currentPage]="currentPage"
+    [totalPages]="totalPages"
+    [totalElements]="totalElements"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="pageSizeOptions"
+    [disabled]="isLoadingOrders"
+    (pageChange)="changeOrdersPage($event)"
+    (pageSizeChange)="changePageSize($event)">
+  </app-pagination>
 </div>
 
 <ng-template #orderCardTemplate let-order="order">
@@ -153,6 +158,18 @@
         <div *ngFor="let order of modalOrders">
           <ng-container *ngTemplateOutlet="orderCardTemplate; context: { order: order }"></ng-container>
         </div>
+        <app-pagination
+          *ngIf="modalTitle.includes('hủy') && cancelledOrders.length > 0"
+          [currentPage]="cancelledPage"
+          [totalPages]="cancelledTotalPages"
+          [totalElements]="cancelledTotalElements"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="isLoadingCancelledOrders"
+          [compact]="true"
+          (pageChange)="changeCancelledPage($event)"
+          (pageSizeChange)="changePageSize($event)">
+        </app-pagination>
       </div>
       <div class="modal-footer bg-white border-0">
         <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>

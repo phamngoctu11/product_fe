@@ -19,11 +19,12 @@ import {
 import { UserInforDTO } from '../../model/user.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-popup.component';
+import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrderDetailPopupComponent],
+  imports: [CommonModule, FormsModule, OrderDetailPopupComponent, AppPaginationComponent],
   templateUrl: './orders.html',
   styleUrls: ['../../app.css', './orders.css'],
 })
@@ -47,6 +48,9 @@ export class Orders implements OnInit {
   pageSize = 20;
   totalPages = 0;
   cancelledTotalPages = 0;
+  totalElements = 0;
+  cancelledTotalElements = 0;
+  pageSizeOptions = [10, 20, 50, 100];
 
   selectedOrderDetail: Order | null = null;
   isDetailLoading = false;
@@ -80,13 +84,16 @@ export class Orders implements OnInit {
     }
   }
 
-  loadMyOrders(): void {
+  loadMyOrders(pageNumber: number = 0): void {
     this.isLoadingOrders = true;
-    this.currentPage = 0;
+    this.currentPage = pageNumber;
     this.orderService.getOrdersByUserId(this.userId, this.currentPage, this.pageSize).subscribe({
       next: (page) => {
         this.orders = page.content || [];
+        this.currentPage = page.number ?? pageNumber;
+        this.pageSize = page.size || this.pageSize;
         this.totalPages = page.totalPages || 0;
+        this.totalElements = page.totalElements || 0;
         this.applyOrderBuckets();
         this.isLoadingOrders = false;
       },
@@ -120,6 +127,17 @@ export class Orders implements OnInit {
     return this.currentPage + 1 < this.totalPages;
   }
 
+  changeOrdersPage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.loadMyOrders(page);
+  }
+
+  changePageSize(size: number): void {
+    this.pageSize = size;
+    this.loadMyOrders(0);
+    this.loadCancelledOrders(0);
+  }
+
   private applyOrderBuckets(): void {
     this.activeOrders = this.orders.filter((order) => order.status !== 'DELIVERED' && order.status !== 'CANCELLED');
     this.deliveredOrders = this.orders.filter((order) => order.status === 'DELIVERED');
@@ -147,13 +165,16 @@ export class Orders implements OnInit {
     }
   }
 
-  loadCancelledOrders(): void {
+  loadCancelledOrders(pageNumber: number = 0): void {
     this.isLoadingCancelledOrders = true;
-    this.cancelledPage = 0;
+    this.cancelledPage = pageNumber;
     this.orderService.getCancelledOrdersByUserId(this.userId, this.cancelledPage, this.pageSize).subscribe({
       next: (page) => {
         this.cancelledOrders = page.content || [];
+        this.cancelledPage = page.number ?? pageNumber;
+        this.pageSize = page.size || this.pageSize;
         this.cancelledTotalPages = page.totalPages || 0;
+        this.cancelledTotalElements = page.totalElements || 0;
         if (this.modalTitle.includes('hủy')) {
           this.modalOrders = this.cancelledOrders;
         }
@@ -164,6 +185,11 @@ export class Orders implements OnInit {
         this.isLoadingCancelledOrders = false;
       },
     });
+  }
+
+  changeCancelledPage(page: number): void {
+    if (page < 0 || page >= this.cancelledTotalPages) return;
+    this.loadCancelledOrders(page);
   }
 
   openOrderDetail(order: OrderListDTO): void {

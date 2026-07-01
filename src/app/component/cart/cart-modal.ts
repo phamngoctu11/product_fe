@@ -13,6 +13,8 @@ import { VoucherService } from '../../service/voucher.service';
 import { UserVoucher } from '../../model/voucher.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import * as QRCode from 'qrcode';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-cart-modal',
@@ -25,6 +27,8 @@ export class CartModalComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
   private readonly toast = injectToast(ToastService);
   isLoading = false;
+  http = inject(HttpClient);
+  router = inject(Router);
   deletingProductIds: number[] = [];
   listCurQuan: number[] = [];
   public cartData?: CartRes;
@@ -228,23 +232,36 @@ export class CartModalComponent implements OnInit {
     performUpdate$.subscribe({
       next: () => {
         // Gọi đúng tên hàm, đúng thứ tự tham số.
-        this.cartService.acceptCart(this.cartData!.user_id, productIdsToCheckout, voucherIdToPass, paymentMethod,this.note).subscribe({
-          next: (res: any) => {
-            if (res.status === 'REDIRECT' && paymentMethod === 'ONLINE') {
-              this.showOnlinePayment(res);
-            } else {
-              this.toast.notify(res.message || 'Thanh toán thành công!');
-              this.cartService.notifyCheckoutSuccess();
-              this.isLoading = false;
-              this.dialogRef.close(true);
-            }
-          },
-          error: (err: any) => {
-            const errorMsg = getApiErrorMessage(err, 'Không thể thanh toán.');
-            this.toast.notify('Lỗi thanh toán: ' + errorMsg);
-            this.isLoading = false;
-          },
-        });
+        this.cartService.acceptCart(this.userId, productIdsToCheckout, this.selectedVoucherId, paymentMethod, this.note).subscribe({
+  next: (res: any) => {
+    if (res && res.status === 'REDIRECT' && res.payUrl) {
+      this.toast.notify('Đang xử lý thanh toán online...');
+
+      // Gọi ngầm endpoint Auto-Duyệt của Backend
+      this.http.get(res.payUrl).subscribe({
+        next: () => {
+          this.cartService.notifyCheckoutSuccess();
+          this.dialogRef.close();
+
+          // Trích xuất orderId từ cái payUrl mà backend trả về
+          const urlObj = new URL(res.payUrl);
+          const orderIdStr = urlObj.searchParams.get('orderId');
+
+          // Chủ động route sang component payment-success
+          this.router.navigate(['/payment-success'], {
+            queryParams: { resultCode: '0', orderId: orderIdStr }
+          });
+        },
+        error: () => this.toast.notify('Xử lý auto-duyệt thất bại!')
+      });
+    } else {
+      // Xử lý luồng COD như bình thường
+      this.cartService.notifyCheckoutSuccess();
+      this.dialogRef.close();
+      this.router.navigate(['/orders']);
+    }
+  }
+});
       },
       error: (err: any) => {
         this.toast.notify('Lỗi cập nhật số lượng: ' + getApiErrorMessage(err, 'Không thể cập nhật số lượng.'));
@@ -252,7 +269,9 @@ export class CartModalComponent implements OnInit {
       }
     });
   }
-
+openModal(data:any){
+this.dialogRef.close(data);
+}
   async showOnlinePayment(paymentData: CartPaymentData) {
     this.onlinePaymentData = paymentData;
     this.isLoading = false;
