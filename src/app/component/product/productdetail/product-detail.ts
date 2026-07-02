@@ -414,7 +414,7 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  private saveStaffProductChanges(payload: any, userId: number) {
+  private saveStaffProductChanges(payload: any, userId: string) {
     if (!payload.id) {
       this.toast.notify('Staff chỉ được cập nhật sản phẩm đã tồn tại.');
       return;

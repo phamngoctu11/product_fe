@@ -1,6 +1,5 @@
 export const environment = {
   production: true,
-  // Sau này khi có Tên miền/IP VPS thực tế, chúng ta sẽ đổi ở đây
-  apiUrl: '/api',
-  wsUrl: '/ws'
+  keycloakUrl: 'http://165.245.188.101:8180',
+  apiUrl: 'http://165.245.188.101/api'
 };

@@ -27,7 +27,7 @@ export class OrderDialogComponent implements OnInit {
   isDetailLoading = false;
   detailError = '';
   constructor(
-    @Inject(MAT_DIALOG_DATA) public userId: number,
+    @Inject(MAT_DIALOG_DATA) public userId: string,
     private orderService: OrderService,
   ) {}
   ngOnInit(): void {

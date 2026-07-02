@@ -25,7 +25,7 @@ export class AdminOrderComponent implements OnInit {
   private readonly toast = injectToast(ToastService);
   pendingOrders: OrderListDTO[] = [];
   staffs: UserResListDTO[] = [];
-  selectedStaffByOrder: { [orderId: number]: number | null } = {};
+  selectedStaffByOrder: { [orderId: number]: string | null } = {};
   activeStatus: 'PENDING_KCS' | 'PENDING_APPROVAL' | null = null;
   isLoading = false;
   isLoadingMore = false;
@@ -34,7 +34,7 @@ export class AdminOrderComponent implements OnInit {
   totalPages = 0;
   totalElements = 0;
   pageSizeOptions = [10, 20, 50, 100];
-  userId: number | null = null;
+  userId: string | null = null;
   selectedOrderDetail: Order | null = null;
   isDetailLoading = false;
   detailError = '';
@@ -46,7 +46,7 @@ export class AdminOrderComponent implements OnInit {
 
   ngOnInit(): void {
     const storedUserId = localStorage.getItem('user_id');
-    this.userId = storedUserId ? Number(storedUserId) : null;
+    this.userId = storedUserId ? storedUserId : null;
     this.loadStaffs();
   }
 

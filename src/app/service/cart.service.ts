@@ -21,13 +21,13 @@ export class CartService {
     this.checkoutSuccessSource.next();
   }
 
-  getCartByUserId(userId: number): Observable<CartRes> {
+  getCartByUserId(userId: string): Observable<CartRes> {
     return this.http
       .get<ApiResponse<CartRes> | CartRes>(`${this.apiUrl}/${userId}`)
       .pipe(map(unwrapApiResponse));
   }
 
-  addToCart(userId: number, variantId: number, quantity: number): Observable<any> {
+  addToCart(userId: string, variantId: number, quantity: number): Observable<any> {
     const params = new HttpParams()
       .set('userId', userId.toString())
       .set('variantId', variantId.toString())
@@ -36,7 +36,7 @@ export class CartService {
     return this.http.post(`${this.apiUrl}/add`, null, { params, responseType: 'text' as 'json' });
   }
 
-  updateQuantity(userId: number, variantId: number, quantity: number): Observable<any> {
+  updateQuantity(userId: string, variantId: number, quantity: number): Observable<any> {
     const params = new HttpParams()
       .set('userId', userId.toString())
       .set('variantId', variantId.toString())
@@ -45,7 +45,7 @@ export class CartService {
     return this.http.put(`${this.apiUrl}/update`, null, { params, responseType: 'text' as 'json' });
   }
 
-  removeFromCart(userId: number, variantId: number): Observable<any> {
+  removeFromCart(userId: string, variantId: number): Observable<any> {
     const params = new HttpParams()
       .set('userId', userId.toString())
       .set('variantId', variantId.toString());
@@ -54,7 +54,7 @@ export class CartService {
   }
 
   // ĐÃ SỬA: Giữ nguyên tên hàm acceptCart, thêm paymentMethod vào cuối cùng để không gây lỗi các file khác
-  acceptCart(userId: number, productIds: number[], userVoucherId?: number, paymentMethod: string = 'COD', note:string = ''): Observable<any> {
+  acceptCart(userId: string, productIds: number[], userVoucherId?: number, paymentMethod: string = 'COD', note:string = ''): Observable<any> {
     let params = new HttpParams().set('paymentMethod', paymentMethod)
     if(note)
       params = params.set('note',note)

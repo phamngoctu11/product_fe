@@ -1,6 +1,6 @@
 import { CartRes } from './cart.model';
 export interface UserResListDTO {
-  id: number;
+  id: string;
   firstname: string;
   lastname: string;
   role: string;
@@ -8,7 +8,7 @@ export interface UserResListDTO {
   avatar_url?: string;
 }
 export interface UserCreDTO {
-  id?: number;
+  id?: string;
   firstname: string;
   lastname: string;
   username: string;
@@ -23,7 +23,7 @@ export interface UserCreDTO {
 }
 export interface LoginResponse {
   accessToken: string;
-  user_id: number;
+  user_id: string;
   username: string;
 }
 export interface LoginRequest {
@@ -31,7 +31,7 @@ export interface LoginRequest {
   password?: string;
 }
 export interface UserInforDTO {
-  id: number;
+  id: string;
   username: string;
   firstname: string;
   lastname: string;

@@ -26,7 +26,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   isOpen = false;
   messages: ChatMessage[] = [];
   newMessage = '';
-  userId: number = 0;
+  userId: string = '';
   activeConsultationRequestId: number | null = null;
   activeProductId: number | null = null;
   private stompClient: any;
@@ -79,7 +79,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
       this.isOpen = true;
       this.userId = this.authService.getUserId() ?? this.userId;
       this.pendingProductMessage = productData ?? null;
-      if (this.userId > 0) {
+      if (this.userId!=null) {
         this.connectWebSocket();
         this.loadChatHistory(() => this.flushPendingProductMessage());
       }
@@ -87,15 +87,15 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   }
   ngDoCheck() {
     const storedId = localStorage.getItem('user_id');
-    const currentId = storedId ? Number(storedId) : 0;
+    const currentId = storedId ;
 
     if (this.authService.isLoggedIn() && !this.authService.isAdmin() && currentId !== this.userId) {
-      this.userId = currentId;
-      if (this.userId > 0) {
+      this.userId = currentId || '';
+      if (this.userId!=null) {
         this.loadChatHistory();
         this.connectWebSocket();
       }
-    } else if (!this.authService.isLoggedIn() && this.userId !== 0) {
+    } else if (!this.authService.isLoggedIn() && this.userId !== '') {
       this.disconnectChat();
     }
   }
@@ -106,7 +106,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
    this.isOpen = !this.isOpen; }
 
   disconnectChat() {
-    this.userId = 0;
+    this.userId = '';
     this.messages = [];
     this.activeConsultationRequestId = null;
     this.activeProductId = null;
@@ -118,7 +118,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   }
 
   loadChatHistory(afterLoad?: () => void) {
-    if (this.userId === 0) return;
+    if (this.userId === '') return;
     const history$ = this.activeConsultationRequestId
       ? this.chatService.getConsultationChatHistory(this.activeConsultationRequestId, this.activeProductId)
       : this.chatService.getChatHistory(this.userId);
@@ -173,7 +173,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   }
 
   sendMessage() {
-    if (this.userId === 0 || !this.stompClient || !this.stompClient.connected || this.newMessage.trim() === '') return;
+    if (this.userId === '' || !this.stompClient || !this.stompClient.connected || this.newMessage.trim() === '') return;
 
     const chatMsg: ChatMessage = {
       userId: this.userId,
@@ -216,7 +216,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   }
 
   private flushPendingProductMessage() {
-    if (!this.pendingProductMessage || !this.stompClient?.connected || this.userId === 0) return;
+    if (!this.pendingProductMessage || !this.stompClient?.connected || this.userId === '') return;
 
     const productInfo = this.pendingProductMessage;
     const alreadySentProductCard = this.messages.some((message) =>

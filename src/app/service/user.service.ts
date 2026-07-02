@@ -24,7 +24,7 @@ export class UserService {
       .pipe(map(unwrapApiResponse));
   }
 
-  getById(id: number): Observable<UserInforDTO> {
+  getById(id: string): Observable<UserInforDTO> {
     return this.http
       .get<ApiResponse<UserInforDTO> | UserInforDTO>(`${this.apiUrl}/${id}`)
       .pipe(map(unwrapApiResponse));
@@ -36,13 +36,13 @@ export class UserService {
       .pipe(map(unwrapApiResponse));
   }
 
-  update(id: number, user: UserCreDTO | UserInforDTO): Observable<UserResListDTO> {
+  update(id: string, user: UserCreDTO | UserInforDTO): Observable<UserResListDTO> {
     return this.http
       .put<ApiResponse<UserResListDTO> | UserResListDTO>(`${this.apiUrl}/${id}`, user)
       .pipe(map(unwrapApiResponse));
   }
 
-  delete(id: number): Observable<string> {
+  delete(id: string): Observable<string> {
     return this.http.delete<string>(`${this.apiUrl}/${id}`, { responseType: 'text' as 'json' });
   }
 }

@@ -13,7 +13,7 @@ export interface ConsultationCreateRequest {
 
 export interface ConsultationRequest {
   id: number;
-  userId: number;
+  userId: string;
   customerName: string;
   productId: number;
   productName: string;

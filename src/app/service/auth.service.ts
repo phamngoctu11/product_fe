@@ -44,9 +44,9 @@ export class AuthService {
     clearAuthStorage();
   }
 
-  getUserId(): number | null {
+  getUserId(): string | null {
     const id = localStorage.getItem('user_id');
-    return id ? Number.parseInt(id, 10) : null;
+    return id ? id : null;
   }
 
   getToken(): string | null {

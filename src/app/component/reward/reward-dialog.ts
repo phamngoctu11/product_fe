@@ -25,7 +25,7 @@ export class RewardDialogComponent implements OnInit {
   currentReputation: number = 0;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public userId: number,
+    @Inject(MAT_DIALOG_DATA) public userId: string,
     private voucherService: VoucherService,
     private userService: UserService
   ) {}

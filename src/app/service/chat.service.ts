@@ -35,7 +35,7 @@ export class ChatService {
   }
 
 
-  getChatHistory(userId: number): Observable<ChatMessage[]> {
+  getChatHistory(userId: string): Observable<ChatMessage[]> {
     return this.http
       .get<ApiResponse<ChatMessage[]> | ChatMessage[]>(`${this.apiUrl}/${userId}`)
       .pipe(map(unwrapApiResponse));

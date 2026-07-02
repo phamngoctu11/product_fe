@@ -13,7 +13,7 @@ export class ProductService {
   private apiUrl = `${environment.apiUrl}/products`;
   constructor(private http: HttpClient) {}
 
-  create(product: Product, userId: number): Observable<Product> {
+  create(product: Product, userId: string): Observable<Product> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http
       .post<ApiResponse<Product> | Product>(this.apiUrl, product, { params })
@@ -42,7 +42,7 @@ export class ProductService {
       );
   }
 
-  update(id: number, product: Product, userId: number): Observable<Product> {
+  update(id: number, product: Product, userId: string): Observable<Product> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http
       .put<ApiResponse<Product> | Product>(`${this.apiUrl}/${id}`, product, { params })
@@ -55,14 +55,14 @@ export class ProductService {
       .pipe(map(unwrapApiResponse));
   }
 
-  addVariant(productId: number, variant: ProductVariant, userId: number): Observable<Product> {
+  addVariant(productId: number, variant: ProductVariant, userId: string): Observable<Product> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http
       .post<ApiResponse<Product> | Product>(`${this.apiUrl}/${productId}/variants`, variant, { params })
       .pipe(map(unwrapApiResponse));
   }
 
-  restockVariant(variantId: number, request: StockImportRequest, userId: number): Observable<ProductVariant> {
+  restockVariant(variantId: number, request: StockImportRequest, userId: string): Observable<ProductVariant> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http
       .post<ApiResponse<ProductVariant> | ProductVariant>(`${this.apiUrl}/variants/${variantId}/restock`, request, { params })
@@ -74,7 +74,7 @@ export class ProductService {
       .get<ApiResponse<Product> | Product>(`${this.apiUrl}/${id}`)
       .pipe(map(unwrapApiResponse));
   }
-  delete(id: number, userId: number): Observable<string> {
+  delete(id: number, userId: string): Observable<string> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http.delete<string>(`${this.apiUrl}/${id}`, { params, responseType: 'text' as 'json' });
   }

@@ -1,5 +1,5 @@
 export interface ChatUser {
-  id: number;
+  id: string;
   chatThreadId?: number | null;
   firstname: string;
   lastname: string;
@@ -19,7 +19,7 @@ export interface ChatUser {
 
 export interface ChatMessage {
   id?: string;
-  userId: number;
+  userId: string;
   content: string;
   isShopSender: boolean;
   shopSender?: boolean;

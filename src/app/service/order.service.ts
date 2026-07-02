@@ -22,14 +22,14 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  getOrdersByUserId(userId: number, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
+  getOrdersByUserId(userId: string, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http
       .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/user/${userId}`, { params })
       .pipe(map(unwrapApiResponse));
   }
 
-  getCancelledOrdersByUserId(userId: number, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
+  getCancelledOrdersByUserId(userId: string, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http
       .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/user/${userId}/cancelled`, { params })
@@ -86,7 +86,7 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  reviewOrder(orderId: number, approved: boolean, cancelReason: string | null = null, changerId: number, staffId?: number): Observable<string> {
+  reviewOrder(orderId: number, approved: boolean, cancelReason: string | null = null, changerId: string, staffId?: string): Observable<string> {
     const payload = {
       approved: approved,
       cancelReason: cancelReason,
@@ -115,7 +115,7 @@ export class OrderService {
     );
   }
 
-  assignStaff(orderId: number, staffId: number): Observable<string> {
+  assignStaff(orderId: number, staffId: string): Observable<string> {
     const params = new HttpParams().set('staffId', staffId.toString());
     return this.http
       .post<ApiResponse<null> | string>(`${this.apiUrl}/manager/assign-staff/${orderId}`, null, { params })

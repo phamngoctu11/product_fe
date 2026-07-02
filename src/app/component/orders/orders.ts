@@ -63,7 +63,7 @@ export class Orders implements OnInit {
   receiptResponse: ReceiptConfirmResponse | null = null;
   complaintNote = '';
 
-  userId!: number;
+  userId!: string;
   userInfo?: UserInforDTO;
 
   constructor(

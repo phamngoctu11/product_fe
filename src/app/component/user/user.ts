@@ -62,7 +62,7 @@ export class UserComponent implements OnInit {
     });
   }
 
-  openUserDialog(id: number | null = null) {
+  openUserDialog(id: string | null = null) {
     const dialogRef = this.dialog.open(Userdetail, {
       width: '820px',
       maxWidth: 'calc(100vw - 48px)',
@@ -70,6 +70,7 @@ export class UserComponent implements OnInit {
       data: { id: id, action: 'edit' },
       disableClose: true,
     });
+
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
@@ -101,7 +102,7 @@ export class UserComponent implements OnInit {
     this.loadUsers(0, this.pageSize);
   }
 
-  viewUser(id: number) {
+  viewUser(id: string) {
     this.dialog.open(Userdetail, {
       width: '820px',
       maxWidth: 'calc(100vw - 48px)',
@@ -111,7 +112,7 @@ export class UserComponent implements OnInit {
     });
   }
 
-  deleteUser(id: number) {
+  deleteUser(id: string) {
     this.actionDialog.confirm({
       title: 'Xóa người dùng',
       message: 'Người dùng sẽ bị xóa khỏi hệ thống. Bạn có chắc muốn tiếp tục?',
@@ -126,7 +127,7 @@ export class UserComponent implements OnInit {
     });
   }
 
-  openCartModal(userId: number) {
+  openCartModal(userId: string) {
     this.dialog.open(CartModalComponent, {
       width: '300px',
       data: userId,

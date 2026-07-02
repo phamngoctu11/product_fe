@@ -43,7 +43,7 @@ export class Myinfor implements OnInit {
       return;
     }
 
-    const userId = Number(userIdStr);
+    const userId = userIdStr;
 
     this.userService.getById(userId).subscribe({
       next: (res: any) => {

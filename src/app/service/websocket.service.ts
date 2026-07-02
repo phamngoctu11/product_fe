@@ -22,7 +22,7 @@ export class WebsocketService {
     });
   }
 
-  connect(isAdmin: boolean, userId: number | null) {
+  connect(isAdmin: boolean, userId: string | null) {
     if (!this.client.active) {
       this.client.onConnect = (frame) => {
         console.log('Đã kết nối WebSocket thành công!');

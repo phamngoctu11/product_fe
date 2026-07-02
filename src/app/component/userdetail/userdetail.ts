@@ -41,7 +41,7 @@ export class Userdetail implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<Userdetail>,
-    @Inject(MAT_DIALOG_DATA) public data: { id: number | null; action?: string },
+    @Inject(MAT_DIALOG_DATA) public data: { id: string | null; action?: string },
     private userService: UserService,
     private datePipe: DatePipe, // Inject DatePipe
     private http: HttpClient    // Inject HttpClient
