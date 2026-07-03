@@ -385,6 +385,7 @@ export class ProductDetailComponent implements OnInit {
 
   save() {
     const userId = this.authService.getUserId();
+    console.log("id của user hiện tại là: "+userId);
 
     if (this.productForm.invalid || this.isView) {
       this.productForm.markAllAsTouched();

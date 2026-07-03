@@ -2,10 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../service/toast.service';
-import { HttpClient } from '@angular/common/http'; // 1. BẮT BUỘC IMPORT HTTPCLIENT
+import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserService } from '../../service/user.service';
+import { AuthService } from '../../service/auth.service'; // Đã thêm AuthService
 import { UserInforDTO } from '../../model/user.model';
 import { CartModalComponent } from '../cart/cart-modal';
 import { ApiResponse, unwrapApiResponse } from '../../model/api-response.model';
@@ -28,7 +29,8 @@ export class Myinfor implements OnInit {
   constructor(
     private userService: UserService,
     private dialog: MatDialog,
-    private http: HttpClient // 2. BẮT BUỘC INJECT VÀO CONSTRUCTOR
+    private http: HttpClient,
+    private authService: AuthService // Inject AuthService
   ) {}
 
   ngOnInit(): void {
@@ -36,14 +38,14 @@ export class Myinfor implements OnInit {
   }
 
   loadMyInfo() {
-    const userIdStr = localStorage.getItem('user_id');
-    if (!userIdStr) {
+    // Lấy ID từ Token thay vì LocalStorage
+    const userId = this.authService.getUserId();
+
+    if (!userId) {
       this.errorMessage = 'Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại.';
       this.isLoading = false;
       return;
     }
-
-    const userId = userIdStr;
 
     this.userService.getById(userId).subscribe({
       next: (res: any) => {
@@ -60,28 +62,22 @@ export class Myinfor implements OnInit {
 
   onAvatarSelected(event: any) {
     const file: File = event.target.files[0];
-
-    // 3. Bổ sung điều kiện kiểm tra this.userInfo để TypeScript không báo lỗi
     if (file && this.userInfo) {
       this.isUploadingAvatar = true;
       const formData = new FormData();
       formData.append('file', file);
 
-      // Gọi API tải ảnh lên Cloudinary
       this.http
         .post<ApiResponse<{ url: string }> | { url: string }>(`${environment.apiUrl}/upload/image`, formData)
         .pipe(map(unwrapApiResponse))
         .subscribe({
         next: (res) => {
-          // Cập nhật URL ảnh trên giao diện
           this.userInfo!.avatar_url = res.url;
           this.isUploadingAvatar = false;
 
-          // Tự động lưu xuống Database bằng ID của user hiện tại
           this.userService.update(this.userInfo!.id, this.userInfo!).subscribe({
               next: () => {
                   this.toast.notify('Cập nhật ảnh đại diện thành công!');
-                  // Cập nhật localStorage để thanh Navbar có thể lấy ảnh mới ngay lập tức
                   localStorage.setItem('user_avatar', res.url);
               },
               error: () => this.toast.notify('Lỗi khi lưu thông tin user xuống hệ thống!')
@@ -96,10 +92,14 @@ export class Myinfor implements OnInit {
   }
 
   openCart() {
-    const userIdStr = localStorage.getItem('user_id');
-    if (userIdStr) {
+    // Lấy ID từ Token thay vì LocalStorage
+    const userId = this.authService.getUserId();
+
+    if (userId) {
+      // Ép kiểu nếu hệ thống giỏ hàng cũ bắt buộc ID là số, nhưng với Keycloak ID là chuỗi UUID.
+      // Dựa theo code cũ của bạn đang map number, hãy đảm bảo Backend giỏ hàng chấp nhận UUID chuỗi.
       this.dialog.open(CartModalComponent, {
-        data: Number(userIdStr),
+        data: userId,
         width: '900px',
         maxWidth: 'calc(100vw - 48px)',
         maxHeight: '78vh',

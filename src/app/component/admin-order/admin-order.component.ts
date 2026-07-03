@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { inject as injectActionDialog } from '@angular/core';
 import { ActionDialogService } from '../../service/action-dialog.service';
@@ -12,6 +12,7 @@ import { UserService } from '../../service/user.service';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-popup.component';
 import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
+import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-admin-order',
@@ -25,6 +26,7 @@ export class AdminOrderComponent implements OnInit {
   private readonly toast = injectToast(ToastService);
   pendingOrders: OrderListDTO[] = [];
   staffs: UserResListDTO[] = [];
+  authService = inject(AuthService);
   selectedStaffByOrder: { [orderId: number]: string | null } = {};
   activeStatus: 'PENDING_KCS' | 'PENDING_APPROVAL' | null = null;
   isLoading = false;
@@ -45,7 +47,7 @@ export class AdminOrderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const storedUserId = localStorage.getItem('user_id');
+    const storedUserId = this.authService.getUserId();
     this.userId = storedUserId ? storedUserId : null;
     this.loadStaffs();
   }

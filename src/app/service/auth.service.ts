@@ -28,8 +28,6 @@ export class AuthService {
         map(unwrapApiResponse),
         tap((response) => {
           localStorage.setItem('accessToken', response.accessToken);
-          localStorage.setItem('user_id', response.user_id.toString());
-          localStorage.setItem('username', response.username);
         }),
       );
   }
@@ -45,8 +43,12 @@ export class AuthService {
   }
 
   getUserId(): string | null {
-    const id = localStorage.getItem('user_id');
-    return id ? id : null;
+    const decodedToken = this.getDecodedToken();
+    const sub = decodedToken ? (decodedToken['sub'] as string) : null;
+    if (sub) {
+      return sub;
+    }
+    return localStorage.getItem('user_id');
   }
 
   getToken(): string | null {
@@ -75,7 +77,6 @@ export class AuthService {
       clearAuthStorage();
       return false;
     }
-
     return true;
   }
 
@@ -84,6 +85,11 @@ export class AuthService {
   }
 
   getCurrentUserName(): string | null {
-    return localStorage.getItem('username') ?? this.getDecodedToken()?.preferred_username ?? null;
+    const decodedToken = this.getDecodedToken();
+    const preferredUsername = decodedToken ? (decodedToken['preferred_username'] as string) : null;
+    if (preferredUsername) {
+      return preferredUsername;
+    }
+    return localStorage.getItem('username');
   }
 }

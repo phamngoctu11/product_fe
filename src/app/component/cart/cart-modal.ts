@@ -15,6 +15,7 @@ import { getApiErrorMessage } from '../../model/api-response.model';
 import * as QRCode from 'qrcode';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-cart-modal',
@@ -26,6 +27,7 @@ import { Router } from '@angular/router';
 export class CartModalComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
   private readonly toast = injectToast(ToastService);
+  authService = inject(AuthService);
   isLoading = false;
   http = inject(HttpClient);
   router = inject(Router);
@@ -52,7 +54,7 @@ export class CartModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const userStr = localStorage.getItem('user_id');
+    const userStr = this.authService.getUserId();
     this.isOwner = userStr === this.userId.toString();
     this.loadCart();
     if (this.isOwner) {

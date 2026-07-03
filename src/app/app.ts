@@ -34,15 +34,15 @@ export class App implements OnInit, OnDestroy {
   readonly currentYear = new Date().getFullYear();
   authService = inject(AuthService);
   userService = inject(UserService);
+
   private dialog = inject(MatDialog);
   private router = inject(Router);
   private readonly mobileBreakpoint = 992;
+
   userLastNamee: string = '';
   userAvatarUrl: string = '';
   isSidebarCollapsed = false;
   isMobileSidebarOpen = false;
-
-  // Kho lưu trữ thông báo
   notifications: any[] = [];
   unreadCount: number = 0;
 
@@ -52,8 +52,9 @@ export class App implements OnInit, OnDestroy {
     private notificationService: NotificationService
   ) {}
 
+  // Lấy Username từ Token
   get userLastName(): string {
-    return localStorage.getItem('username') || 'User';
+    return this.authService.getCurrentUserName() || 'User';
   }
 
   get currentRole(): string {
@@ -69,7 +70,6 @@ export class App implements OnInit, OnDestroy {
       this.isMobileSidebarOpen = !this.isMobileSidebarOpen;
       return;
     }
-
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
 
@@ -135,25 +135,19 @@ export class App implements OnInit, OnDestroy {
     const isAdmin = this.authService.isAdmin();
 
     if (this.authService.isLoggedIn() && userId) {
-      // 1. NGAY LÚC MỞ TRANG (HOẶC F5): Tải toàn bộ thông báo cũ từ Database
       this.notificationService.getHistory(userId, isAdmin).subscribe({
         next: (data) => {
           this.notifications = data;
-          // Tính số lượng tin nhắn chưa đọc (isRead === false)
           this.unreadCount = data.filter(n => !n.read).length;
         }
       });
 
-      // 2. KẾT NỐI WEBSOCKET: Nghe ngóng thông báo MỚI tinh đang tới
       this.websocketService.connect(isAdmin, userId);
-
       this.websocketService.notifications$.subscribe(notification => {
-        // Đẩy lên đầu danh sách và tăng số đỏ
         this.notifications.unshift(notification);
         this.unreadCount++;
       });
 
-      // Lấy avatar và tên User (như cũ)
       this.userService.getById(userId).subscribe({
         next: (res: any) => {
           this.userLastNamee = res.lastname;
@@ -162,25 +156,22 @@ export class App implements OnInit, OnDestroy {
       });
     }
   }
-markAsRead() {
+
+  markAsRead() {
     const userId = this.authService.getUserId();
     const isAdmin = this.authService.isAdmin();
-
     if (this.unreadCount > 0 && userId) {
-      this.unreadCount = 0; // Xóa số đỏ trên Frontend trước cho mượt
-
-      // Cập nhật trạng thái "đã đọc" xuống Database
+      this.unreadCount = 0;
       this.notificationService.markAllAsRead(userId, isAdmin).subscribe();
-
-      // Đổi thủ công biến read trong mảng thành true
       this.notifications.forEach(n => n.read = true);
     }
   }
+
   ngOnDestroy() {
     this.websocketService.disconnect();
   }
 
- logout() {
+  logout() {
     this.websocketService.disconnect();
     this.notifications = [];
     this.unreadCount = 0;

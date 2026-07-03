@@ -86,7 +86,7 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
     });
   }
   ngDoCheck() {
-    const storedId = localStorage.getItem('user_id');
+    const storedId = this.authService.getUserId();
     const currentId = storedId ;
 
     if (this.authService.isLoggedIn() && !this.authService.isAdmin() && currentId !== this.userId) {
