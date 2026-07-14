@@ -22,15 +22,31 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  getOrdersByUserId(userId: string, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
-    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+  getOrdersByUserId(
+    userId: string,
+    page: number = 0,
+    size: number = 20,
+    minPrice: number | null = null,
+    maxPrice: number | null = null,
+  ): Observable<PageResponse<OrderListDTO>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    if (minPrice !== null) params = params.set('minPrice', minPrice.toString());
+    if (maxPrice !== null) params = params.set('maxPrice', maxPrice.toString());
     return this.http
       .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/user/${userId}`, { params })
       .pipe(map(unwrapApiResponse));
   }
 
-  getCancelledOrdersByUserId(userId: string, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
-    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+  getCancelledOrdersByUserId(
+    userId: string,
+    page: number = 0,
+    size: number = 20,
+    minPrice: number | null = null,
+    maxPrice: number | null = null,
+  ): Observable<PageResponse<OrderListDTO>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    if (minPrice !== null) params = params.set('minPrice', minPrice.toString());
+    if (maxPrice !== null) params = params.set('maxPrice', maxPrice.toString());
     return this.http
       .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/user/${userId}/cancelled`, { params })
       .pipe(map(unwrapApiResponse));

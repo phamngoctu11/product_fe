@@ -33,6 +33,18 @@ export class UserComponent implements OnInit {
   totalPages: number = 0;
   pageSizeOptions = [10, 20, 50, 100];
   isAdmin: boolean = false;
+  readonly roleOptions = [
+    { value: 'ADMIN', label: 'Quản trị' },
+    { value: 'MANAGER', label: 'Quản lý' },
+    { value: 'STAFF', label: 'Nhân viên' },
+    { value: 'USER', label: 'Khách hàng' },
+  ];
+  roleFilters: Record<string, boolean> = {
+    ADMIN: false,
+    MANAGER: false,
+    STAFF: false,
+    USER: false,
+  };
 
   constructor(
     private userService: UserService,
@@ -46,10 +58,10 @@ export class UserComponent implements OnInit {
   }
 
   loadUsers(page: number, size: number) {
-    this.userService.getAll(page, size).subscribe({
+    this.userService.getAll(page, size, this.getSelectedRoles()).subscribe({
       next: (data) => {
         this.users = data.content;
-        this.filteredUsers = [...data.content];
+        this.filterUsers();
 
         this.totalElements = data.totalElements;
         this.totalPages = data.totalPages;
@@ -90,6 +102,25 @@ export class UserComponent implements OnInit {
       const fullName = `${u.lastname} ${u.firstname}`.toLowerCase();
       return fullName.includes(term);
     });
+  }
+
+  onRoleFilterChange(): void {
+    this.loadUsers(0, this.pageSize);
+  }
+
+  clearRoleFilters(): void {
+    Object.keys(this.roleFilters).forEach((role) => this.roleFilters[role] = false);
+    this.loadUsers(0, this.pageSize);
+  }
+
+  hasRoleFilters(): boolean {
+    return this.getSelectedRoles().length > 0;
+  }
+
+  private getSelectedRoles(): string[] {
+    return this.roleOptions
+      .filter((role) => this.roleFilters[role.value])
+      .map((role) => role.value);
   }
 
   changePage(page: number) {

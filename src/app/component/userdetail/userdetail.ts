@@ -7,7 +7,7 @@ import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/materia
 import { HttpClient } from '@angular/common/http'; // BẮT BUỘC THÊM HTTP CLIENT
 import { map } from 'rxjs/operators';
 import { UserService } from '../../service/user.service';
-import { UserCreDTO } from '../../model/user.model';
+import { UserCreDTO, UserProfileUpdateDTO } from '../../model/user.model';
 import { ApiResponse, getApiErrorMessage, unwrapApiResponse } from '../../model/api-response.model';
 import { environment } from '../../../environments/environment';
 
@@ -36,6 +36,7 @@ export class Userdetail implements OnInit {
   };
   isEdit = false;
   isView = false;
+  isSelfEdit = false;
   isUploadingAvatar: boolean = false;
   uploadedAvatarUrl: string = '';
 
@@ -48,6 +49,16 @@ export class Userdetail implements OnInit {
   ) {}
 
   ngOnInit() {
+    if (this.data?.action === 'self-edit') {
+      this.isSelfEdit = true;
+      this.isEdit = true;
+      this.userService.getMe().subscribe((res) => {
+        this.currentUser = { ...res };
+        this.uploadedAvatarUrl = res.avatar_url || '';
+      });
+      return;
+    }
+
     if (this.data && this.data.action === 'view') {
       this.isView = true;
     }
@@ -106,7 +117,27 @@ export class Userdetail implements OnInit {
     }
 
     // 3. Gửi payload đã format đi
-    if (this.isEdit && payload.id) {
+    if (this.isSelfEdit) {
+      const profilePayload: UserProfileUpdateDTO = {
+        firstname: payload.firstname,
+        lastname: payload.lastname,
+        gender: payload.gender,
+        address: payload.address || '',
+        birth: payload.birth ? String(payload.birth) : null,
+        phone: payload.phone,
+        email: payload.email || '',
+        avatar_url: payload.avatar_url,
+      };
+      this.userService.updateMe(profilePayload).subscribe({
+        next: () => {
+          this.toast.notify('Cập nhật thông tin cá nhân thành công!');
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          this.toast.notify('Lỗi cập nhật: ' + getApiErrorMessage(err, 'Lỗi không xác định'));
+        },
+      });
+    } else if (this.isEdit && payload.id) {
       this.userService.update(payload.id, payload).subscribe({
         next: () => {
           this.toast.notify('Cập nhật user thành công!!');

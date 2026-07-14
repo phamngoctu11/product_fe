@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { UserCreDTO, UserInforDTO, UserResListDTO } from '../model/user.model';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+import { UserCreDTO, UserInforDTO, UserProfileUpdateDTO, UserResListDTO } from '../model/user.model';
 import { PageResponse } from '../model/page-response.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
@@ -12,12 +12,16 @@ import { environment } from '../../environments/environment';
 })
 export class UserService {
   private apiUrl = `${environment.apiUrl}/users`;
+  private readonly currentUserSubject = new BehaviorSubject<UserInforDTO | null>(null);
+  readonly currentUser$ = this.currentUserSubject.asObservable();
+
   constructor(private http: HttpClient) {}
 
-  getAll(page: number = 0, size: number = 10): Observable<PageResponse<UserResListDTO>> {
-    const params = new HttpParams()
+  getAll(page: number = 0, size: number = 10, roles: string[] = []): Observable<PageResponse<UserResListDTO>> {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
+    roles.forEach((role) => params = params.append('roles', role));
 
     return this.http
       .get<ApiResponse<PageResponse<UserResListDTO>> | PageResponse<UserResListDTO>>(this.apiUrl, { params })
@@ -30,6 +34,19 @@ export class UserService {
       .pipe(map(unwrapApiResponse));
   }
 
+  getInfor(): Observable<UserInforDTO> {
+    return this.http
+      .get<ApiResponse<UserInforDTO> | UserInforDTO>(`${this.apiUrl}/me`)
+      .pipe(
+        map(unwrapApiResponse),
+        tap((user) => this.currentUserSubject.next(user)),
+      );
+  }
+
+  getMe(): Observable<UserInforDTO> {
+    return this.getInfor();
+  }
+
   create(user: UserCreDTO): Observable<UserResListDTO> {
     return this.http
       .post<ApiResponse<UserResListDTO> | UserResListDTO>(this.apiUrl, user)
@@ -40,6 +57,19 @@ export class UserService {
     return this.http
       .put<ApiResponse<UserResListDTO> | UserResListDTO>(`${this.apiUrl}/${id}`, user)
       .pipe(map(unwrapApiResponse));
+  }
+
+  updateMe(user: UserProfileUpdateDTO): Observable<UserInforDTO> {
+    return this.http
+      .put<ApiResponse<UserInforDTO> | UserInforDTO>(`${this.apiUrl}/me`, user)
+      .pipe(
+        map(unwrapApiResponse),
+        tap((updatedUser) => this.currentUserSubject.next(updatedUser)),
+      );
+  }
+
+  clearCurrentUser(): void {
+    this.currentUserSubject.next(null);
   }
 
   delete(id: string): Observable<string> {

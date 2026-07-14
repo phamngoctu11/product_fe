@@ -5,7 +5,7 @@
         <i class="bi bi-people"></i>
       </div>
       <div class="app-page-heading-text">
-        <h1 class="app-page-title">Quản lý người dùnggggggg</h1>
+        <h1 class="app-page-title">Quản lý người dùng</h1>
         <p class="app-page-subtitle">Quản lý tài khoản, vai trò và giỏ hàng của người dùng</p>
       </div>
     </div>
@@ -28,6 +28,23 @@
           [(ngModel)]="searchTerm"
           (ngModelChange)="filterUsers()"
         />
+      </div>
+      <div class="d-flex align-items-center flex-wrap gap-3">
+        <span class="small fw-semibold text-muted"><i class="bi bi-funnel me-1"></i>Lọc vai trò:</span>
+        <div class="form-check form-check-inline mb-0" *ngFor="let role of roleOptions">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            [id]="'role-' + role.value"
+            [(ngModel)]="roleFilters[role.value]"
+            (change)="onRoleFilterChange()" />
+          <label class="form-check-label small fw-semibold" [for]="'role-' + role.value">
+            {{ role.label }}
+          </label>
+        </div>
+        <button *ngIf="hasRoleFilters()" type="button" class="btn btn-sm btn-outline-secondary rounded-pill" (click)="clearRoleFilters()">
+          Xóa lọc
+        </button>
       </div>
     </div>
   </div>

@@ -1,5 +1,5 @@
 import { Component, HostListener, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './service/auth.service';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -13,6 +13,7 @@ import { WebsocketService } from './service/websocket.service';
 import { NotificationService } from './service/notification.service';
 import { TimeAgoPipe } from './pipes/time-ago.pipe';
 import { ToastContainerComponent } from './component/toast-container/toast-container.component';
+import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -39,12 +40,16 @@ export class App implements OnInit, OnDestroy {
   private router = inject(Router);
   private readonly mobileBreakpoint = 992;
 
-  userLastNamee: string = '';
+  currentUserDisplayName = '';
   userAvatarUrl: string = '';
+  isCurrentUserLoading = false;
   isSidebarCollapsed = false;
   isMobileSidebarOpen = false;
   notifications: any[] = [];
   unreadCount: number = 0;
+  private activeSessionUserId: string | null = null;
+  private readonly appSubscriptions = new Subscription();
+  private sessionSubscriptions = new Subscription();
 
   constructor(
     private themeService: ThemeService,
@@ -52,17 +57,12 @@ export class App implements OnInit, OnDestroy {
     private notificationService: NotificationService
   ) {}
 
-  // Lấy Username từ Token
-  get userLastName(): string {
-    return this.authService.getCurrentUserName() || 'User';
-  }
-
   get currentRole(): string {
     return this.authService.getUserRole() || 'Khách';
   }
 
   get displayName(): string {
-    return this.userLastNamee || this.userLastName;
+    return this.currentUserDisplayName;
   }
 
   toggleSidebar() {
@@ -131,30 +131,67 @@ export class App implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.appSubscriptions.add(this.userService.currentUser$.subscribe((user) => {
+      if (!user) {
+        this.currentUserDisplayName = '';
+        this.userAvatarUrl = '';
+        return;
+      }
+      this.currentUserDisplayName = [user.lastname, user.firstname].filter(Boolean).join(' ');
+      this.userAvatarUrl = user.avatar_url || '';
+      this.isCurrentUserLoading = false;
+    }));
+
+    this.appSubscriptions.add(this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => this.syncAuthenticatedSession()));
+
+    this.syncAuthenticatedSession();
+  }
+
+  private syncAuthenticatedSession(): void {
     const userId = this.authService.getUserId();
+    if (!this.authService.isLoggedIn() || !userId) {
+      this.stopAuthenticatedSession();
+      return;
+    }
+    if (this.activeSessionUserId === userId) return;
+
+    this.stopAuthenticatedSession();
+    this.activeSessionUserId = userId;
+    this.isCurrentUserLoading = true;
     const isAdmin = this.authService.isAdmin();
 
-    if (this.authService.isLoggedIn() && userId) {
-      this.notificationService.getHistory(userId, isAdmin).subscribe({
-        next: (data) => {
-          this.notifications = data;
-          this.unreadCount = data.filter(n => !n.read).length;
-        }
-      });
+    this.sessionSubscriptions.add(this.notificationService.getHistory(userId, isAdmin).subscribe({
+      next: (data) => {
+        this.notifications = data;
+        this.unreadCount = data.filter((notification) => !notification.read).length;
+      },
+    }));
 
-      this.websocketService.connect(isAdmin, userId);
-      this.websocketService.notifications$.subscribe(notification => {
-        this.notifications.unshift(notification);
-        this.unreadCount++;
-      });
+    this.websocketService.connect(isAdmin, userId);
+    this.sessionSubscriptions.add(this.websocketService.notifications$.subscribe((notification) => {
+      this.notifications.unshift(notification);
+      this.unreadCount++;
+    }));
 
-      this.userService.getById(userId).subscribe({
-        next: (res: any) => {
-          this.userLastNamee = res.lastname;
-          this.userAvatarUrl = res.avatar_url || res.imageUrl || '';
-        }
-      });
-    }
+    this.sessionSubscriptions.add(this.userService.getMe().subscribe({
+      error: () => {
+        this.isCurrentUserLoading = false;
+        this.activeSessionUserId = null;
+      },
+    }));
+  }
+
+  private stopAuthenticatedSession(): void {
+    this.sessionSubscriptions.unsubscribe();
+    this.sessionSubscriptions = new Subscription();
+    this.websocketService.disconnect();
+    this.activeSessionUserId = null;
+    this.notifications = [];
+    this.unreadCount = 0;
+    this.isCurrentUserLoading = false;
+    this.userService.clearCurrentUser();
   }
 
   markAsRead() {
@@ -168,16 +205,13 @@ export class App implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.websocketService.disconnect();
+    this.stopAuthenticatedSession();
+    this.appSubscriptions.unsubscribe();
   }
 
   logout() {
-    this.websocketService.disconnect();
-    this.notifications = [];
-    this.unreadCount = 0;
-    this.userLastNamee = '';
-    this.userAvatarUrl = '';
     this.authService.logout();
-    window.location.href = '/login';
+    this.stopAuthenticatedSession();
+    this.router.navigate(['/login']);
   }
 }

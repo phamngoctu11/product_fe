@@ -41,6 +41,10 @@ export class LoginComponent implements OnInit {
 
   // LẮNG NGHE URL KHI COMPONENT VỪA KHỞI TẠO
   ngOnInit() {
+    if (this.auth.isLoggedIn()) {
+      this.router.navigate(['/product']);
+      return;
+    }
     this.route.queryParams.subscribe(params => {
       if (params['mode'] === 'signup') {
         this.isLoginMode = false; // Mở form đăng ký

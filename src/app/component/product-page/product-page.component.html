@@ -1,5 +1,12 @@
 <div class="container py-5 pd-wrapper">
 
+  <a *ngIf="returnChatRequestId"
+     routerLink="/admin-chat"
+     [queryParams]="{ chatRequestId: returnChatRequestId }"
+     class="btn btn-outline-primary rounded-pill px-4 mb-3 fw-semibold">
+    <i class="bi bi-arrow-left me-2"></i> Quay lại đoạn chat
+  </a>
+
   <!-- Loading -->
   <div *ngIf="isLoading" class="pd-loading">
     <div class="pd-spinner"></div>

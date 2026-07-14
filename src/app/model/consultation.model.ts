@@ -15,6 +15,7 @@ export interface ConsultationRequest {
   id: number;
   userId: string;
   customerName: string;
+  customerAvatarUrl?: string | null;
   productId: number;
   productName: string;
   productImageUrl?: string | null;

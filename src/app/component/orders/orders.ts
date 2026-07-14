@@ -51,6 +51,14 @@ export class Orders implements OnInit {
   totalElements = 0;
   cancelledTotalElements = 0;
   pageSizeOptions = [10, 20, 50, 100];
+  readonly priceRanges = [
+    { value: 'ALL', label: 'Tất cả mức giá', min: null, max: null },
+    { value: 'UNDER_1M', label: 'Dưới 1 triệu', min: 0, max: 999_999 },
+    { value: 'FROM_1M_TO_5M', label: 'Từ 1 đến 5 triệu', min: 1_000_000, max: 5_000_000 },
+    { value: 'OVER_5M_TO_10M', label: 'Trên 5 đến 10 triệu', min: 5_000_001, max: 10_000_000 },
+    { value: 'OVER_10M', label: 'Trên 10 triệu', min: 10_000_001, max: null },
+  ];
+  selectedPriceRange = 'ALL';
 
   selectedOrderDetail: Order | null = null;
   isDetailLoading = false;
@@ -87,7 +95,14 @@ export class Orders implements OnInit {
   loadMyOrders(pageNumber: number = 0): void {
     this.isLoadingOrders = true;
     this.currentPage = pageNumber;
-    this.orderService.getOrdersByUserId(this.userId, this.currentPage, this.pageSize).subscribe({
+    const priceRange = this.getSelectedPriceRange();
+    this.orderService.getOrdersByUserId(
+      this.userId,
+      this.currentPage,
+      this.pageSize,
+      priceRange.min,
+      priceRange.max,
+    ).subscribe({
       next: (page) => {
         this.orders = page.content || [];
         this.currentPage = page.number ?? pageNumber;
@@ -108,7 +123,14 @@ export class Orders implements OnInit {
     if (this.isLoadingMoreOrders || this.currentPage + 1 >= this.totalPages) return;
 
     this.isLoadingMoreOrders = true;
-    this.orderService.getOrdersByUserId(this.userId, this.currentPage + 1, this.pageSize).subscribe({
+    const priceRange = this.getSelectedPriceRange();
+    this.orderService.getOrdersByUserId(
+      this.userId,
+      this.currentPage + 1,
+      this.pageSize,
+      priceRange.min,
+      priceRange.max,
+    ).subscribe({
       next: (page) => {
         this.orders = [...this.orders, ...(page.content || [])];
         this.currentPage = page.number ?? this.currentPage + 1;
@@ -136,6 +158,16 @@ export class Orders implements OnInit {
     this.pageSize = size;
     this.loadMyOrders(0);
     this.loadCancelledOrders(0);
+  }
+
+  onPriceRangeChange(): void {
+    this.loadMyOrders(0);
+    this.loadCancelledOrders(0);
+  }
+
+  private getSelectedPriceRange(): { min: number | null; max: number | null } {
+    return this.priceRanges.find((range) => range.value === this.selectedPriceRange)
+      ?? this.priceRanges[0];
   }
 
   private applyOrderBuckets(): void {
@@ -168,7 +200,14 @@ export class Orders implements OnInit {
   loadCancelledOrders(pageNumber: number = 0): void {
     this.isLoadingCancelledOrders = true;
     this.cancelledPage = pageNumber;
-    this.orderService.getCancelledOrdersByUserId(this.userId, this.cancelledPage, this.pageSize).subscribe({
+    const priceRange = this.getSelectedPriceRange();
+    this.orderService.getCancelledOrdersByUserId(
+      this.userId,
+      this.cancelledPage,
+      this.pageSize,
+      priceRange.min,
+      priceRange.max,
+    ).subscribe({
       next: (page) => {
         this.cancelledOrders = page.content || [];
         this.cancelledPage = page.number ?? pageNumber;

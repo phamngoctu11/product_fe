@@ -31,20 +31,17 @@
               <div class="position-relative d-inline-block mb-3">
                 <div class="profile-avatar d-flex align-items-center justify-content-center shadow-sm overflow-hidden">
 
-                  <div *ngIf="isUploadingAvatar" class="spinner-border text-white" role="status"></div>
+                  <img *ngIf="userInfo?.avatar_url" [src]="userInfo.avatar_url" style="width: 100%; height: 100%; object-fit: cover;">
 
-                  <img *ngIf="userInfo?.avatar_url && !isUploadingAvatar" [src]="userInfo.avatar_url" style="width: 100%; height: 100%; object-fit: cover;">
-
-                  <span *ngIf="!userInfo?.avatar_url && !isUploadingAvatar" class="text-white fw-bold">
+                  <span *ngIf="!userInfo?.avatar_url" class="text-white fw-bold">
                     {{ userInfo.firstname ? (userInfo.firstname.charAt(0) | uppercase) : 'U' }}
                   </span>
                 </div>
 
-                <label class="btn btn-primary position-absolute d-flex justify-content-center align-items-center profile-camera-button"
-                       title="Đổi ảnh đại diện">
+                <button type="button" class="btn btn-primary position-absolute d-flex justify-content-center align-items-center profile-camera-button"
+                       title="Đổi ảnh đại diện" (click)="startEditing()">
                   <i class="bi bi-camera-fill fs-6"></i>
-                  <input type="file" class="d-none" (change)="onAvatarSelected($event)" accept="image/*" [disabled]="isUploadingAvatar">
-                </label>
+                </button>
               </div>
 
               <h3 class="fw-bold mb-1 text-dark fs-4">{{ userInfo.lastname }} {{ userInfo.firstname }}</h3>
@@ -56,6 +53,9 @@
                 </span>
                 <button class="btn btn-primary shadow-sm fw-bold px-4 rounded-pill d-flex align-items-center" (click)="openCart()">
                   <i class="bi bi-cart3 me-2"></i> Giỏ hàng
+                </button>
+                <button class="btn btn-outline-primary shadow-sm fw-bold px-4 rounded-pill d-flex align-items-center" (click)="startEditing()">
+                  <i class="bi bi-pencil-square me-2"></i> Chỉnh sửa
                 </button>
               </div>
             </div>

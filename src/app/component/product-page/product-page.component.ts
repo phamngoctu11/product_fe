@@ -19,6 +19,7 @@ export class ProductPageComponent implements OnInit {
   private readonly toast = injectToast(ToastService);
   product: any = null;
   isLoading = true;
+  returnChatRequestId: number | null = null;
 
   // Từ điển dịch thuộc tính sang Tiếng Việt
   attributeDictionary: { [key: string]: string } = {
@@ -37,6 +38,12 @@ export class ProductPageComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    const fromChat = this.route.snapshot.queryParamMap.get('fromChat') === 'true';
+    const chatRequestId = Number(this.route.snapshot.queryParamMap.get('chatRequestId'));
+    this.returnChatRequestId = fromChat && Number.isFinite(chatRequestId) && chatRequestId > 0
+      ? chatRequestId
+      : null;
+
     // Đọc tham số :id từ URL (Ví dụ: /product/5 -> lấy số 5)
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');

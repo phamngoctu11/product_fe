@@ -2,7 +2,7 @@
   <div class="modal-header text-white border-0 px-4 py-3" [ngClass]="isView ? 'bg-info bg-gradient' : 'bg-primary bg-gradient'">
     <h5 class="modal-title m-0 fw-bold fs-4 text-truncate">
       <i class="bi me-2" [ngClass]="isView ? 'bi-person-vcard' : (isEdit ? 'bi-pencil-square' : 'bi-person-plus-fill')"></i>
-      {{ isView ? 'Chi tiết Người dùng' : (isEdit ? 'Cập nhật Thông tin' : 'Thêm Người dùng mới') }}
+      {{ isSelfEdit ? 'Cập nhật hồ sơ cá nhân' : (isView ? 'Chi tiết Người dùng' : (isEdit ? 'Cập nhật Thông tin' : 'Thêm người dùng mới')) }}
     </h5>
     <button mat-dialog-close type="button" class="btn-close btn-close-white"></button>
   </div>
@@ -81,7 +81,7 @@
             </div>
           }
 
-          <div class="col-md-6" *ngIf="isEdit || isView || (!isEdit && !isView)">
+          <div class="col-md-6" *ngIf="!isSelfEdit">
             <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Vai trò">Vai trò</label>
             <select class="form-select form-control-custom shadow-sm" name="role" [(ngModel)]="currentUser.role" [disabled]="isView">
               <option value="USER">Người dùng (USER)</option>

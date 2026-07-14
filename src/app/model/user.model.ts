@@ -44,3 +44,14 @@ export interface UserInforDTO {
   avatar_url?: string;
   email:string;
 }
+
+export interface UserProfileUpdateDTO {
+  firstname: string;
+  lastname: string;
+  gender: string;
+  address: string;
+  birth: string | null;
+  phone: string;
+  avatar_url?: string;
+  email: string;
+}

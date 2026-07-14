@@ -1,11 +1,16 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guard/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
   {
     path: 'login',
     loadComponent: () => import('./component/login/login').then((m) => m.LoginComponent),
   },
+  {
+    path: '',
+    canActivateChild: [authGuard],
+    children: [
+  { path: '', redirectTo: 'product', pathMatch: 'full' },
   {
     path: 'product',
     loadComponent: () => import('./component/product/product').then((m) => m.ProductComponent),
@@ -98,5 +103,7 @@ export const routes: Routes = [
   {
     path: 'policies/privacy',
     loadComponent: () => import('./component/static-pages/privacy-policy-page.component').then((m) => m.PrivacyPolicyPageComponent),
+  },
+    ],
   },
 ];

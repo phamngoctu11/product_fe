@@ -1,7 +1,7 @@
 import { AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject as injectToast } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { environment } from '../../../../environments/environment';
@@ -36,15 +36,21 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   messages: ChatMessage[] = [];
   newMessage = '';
   private stompClient: any;
+  private pendingConsultationRequestId: number | null = null;
 
   constructor(
     private chatService: ChatService,
     private consultationService: ConsultationService,
     private userService: UserService,
     public authService: AuthService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
+    const chatRequestId = Number(this.route.snapshot.queryParamMap.get('chatRequestId'));
+    this.pendingConsultationRequestId = Number.isFinite(chatRequestId) && chatRequestId > 0
+      ? chatRequestId
+      : null;
     this.loadConsultations();
     if (this.canAssignConsultations()) {
       this.loadStaffUsers();
@@ -68,6 +74,7 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       next: (res) => {
         this.users = res;
         this.sortUsers();
+        this.restorePendingConversation();
       },
       error: (err) => console.error('Cannot load chat users:', err),
     });
@@ -120,13 +127,14 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   openConsultation(consultation: ConsultationRequest) {
+    const existingChatUser = this.users.find((user) => user.id === consultation.userId);
     this.selectedConsultation = consultation;
     this.selectedUser = {
       id: consultation.userId,
       firstname: consultation.customerName,
       lastname: '',
       email: '',
-      avatarUrl: null,
+      avatarUrl: consultation.customerAvatarUrl ?? existingChatUser?.avatarUrl ?? null,
       chatThreadId: consultation.id,
       consultationRequestId: consultation.id,
       productId: consultation.productId,
@@ -282,6 +290,17 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
+  private restorePendingConversation(): void {
+    if (!this.pendingConsultationRequestId) return;
+    const user = this.users.find(
+      (candidate) => candidate.consultationRequestId === this.pendingConsultationRequestId,
+    );
+    if (!user) return;
+
+    this.pendingConsultationRequestId = null;
+    this.selectUser(user);
+  }
+
   private scrollToBottom(): void {
     try {
       if (this.chatBody) {
@@ -332,6 +351,7 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       id: user.consultationRequestId,
       userId: user.id,
       customerName: this.getUserDisplayName(user),
+      customerAvatarUrl: user.avatarUrl,
       productId: user.productId ?? 0,
       productName: user.productName ?? '',
       productImageUrl: user.productImageUrl ?? null,

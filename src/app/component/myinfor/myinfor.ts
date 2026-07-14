@@ -1,16 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { inject as injectToast } from '@angular/core';
-import { ToastService } from '../../service/toast.service';
-import { HttpClient } from '@angular/common/http';
-import { map } from 'rxjs/operators';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { UserService } from '../../service/user.service';
-import { AuthService } from '../../service/auth.service'; // Đã thêm AuthService
+import { AuthService } from '../../service/auth.service';
 import { UserInforDTO } from '../../model/user.model';
 import { CartModalComponent } from '../cart/cart-modal';
-import { ApiResponse, unwrapApiResponse } from '../../model/api-response.model';
-import { environment } from '../../../environments/environment';
+import { Userdetail } from '../userdetail/userdetail';
 
 @Component({
   selector: 'app-myinfor',
@@ -20,17 +15,14 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['../../app.css'],
 })
 export class Myinfor implements OnInit {
-  private readonly toast = injectToast(ToastService);
   userInfo?: UserInforDTO;
   isLoading = true;
-  isUploadingAvatar: boolean = false;
   errorMessage = '';
 
   constructor(
     private userService: UserService,
     private dialog: MatDialog,
-    private http: HttpClient,
-    private authService: AuthService // Inject AuthService
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -38,16 +30,7 @@ export class Myinfor implements OnInit {
   }
 
   loadMyInfo() {
-    // Lấy ID từ Token thay vì LocalStorage
-    const userId = this.authService.getUserId();
-
-    if (!userId) {
-      this.errorMessage = 'Không tìm thấy thông tin đăng nhập. Vui lòng đăng nhập lại.';
-      this.isLoading = false;
-      return;
-    }
-
-    this.userService.getById(userId).subscribe({
+    this.userService.getInfor().subscribe({
       next: (res: any) => {
         this.userInfo = res;
         this.isLoading = false;
@@ -60,35 +43,16 @@ export class Myinfor implements OnInit {
     });
   }
 
-  onAvatarSelected(event: any) {
-    const file: File = event.target.files[0];
-    if (file && this.userInfo) {
-      this.isUploadingAvatar = true;
-      const formData = new FormData();
-      formData.append('file', file);
-
-      this.http
-        .post<ApiResponse<{ url: string }> | { url: string }>(`${environment.apiUrl}/upload/image`, formData)
-        .pipe(map(unwrapApiResponse))
-        .subscribe({
-        next: (res) => {
-          this.userInfo!.avatar_url = res.url;
-          this.isUploadingAvatar = false;
-
-          this.userService.update(this.userInfo!.id, this.userInfo!).subscribe({
-              next: () => {
-                  this.toast.notify('Cập nhật ảnh đại diện thành công!');
-                  localStorage.setItem('user_avatar', res.url);
-              },
-              error: () => this.toast.notify('Lỗi khi lưu thông tin user xuống hệ thống!')
-          });
-        },
-        error: (err) => {
-          this.toast.notify('Lỗi tải ảnh lên Cloudinary!');
-          this.isUploadingAvatar = false;
-        }
-      });
-    }
+  startEditing(): void {
+    const dialogRef = this.dialog.open(Userdetail, {
+      data: { id: null, action: 'self-edit' },
+      width: '760px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: '90vh',
+    });
+    dialogRef.afterClosed().subscribe((updated) => {
+      if (updated) this.loadMyInfo();
+    });
   }
 
   openCart() {

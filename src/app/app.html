@@ -1,3 +1,4 @@
+<ng-container *ngIf="authService.isLoggedIn(); else guestLayout">
 <div
   class="app-shell"
   [class.sidebar-collapsed]="isSidebarCollapsed"
@@ -250,11 +251,12 @@
             data-bs-toggle="dropdown"
             aria-expanded="false">
             <span class="user-avatar">
-              <img *ngIf="userAvatarUrl" [src]="userAvatarUrl" alt="Avatar">
-              <i *ngIf="!userAvatarUrl" class="bi bi-person-fill"></i>
+              <span *ngIf="isCurrentUserLoading" class="spinner-border spinner-border-sm" aria-label="Đang tải thông tin user"></span>
+              <img *ngIf="!isCurrentUserLoading && userAvatarUrl" [src]="userAvatarUrl" alt="Avatar">
+              <i *ngIf="!isCurrentUserLoading && !userAvatarUrl" class="bi bi-person-fill"></i>
             </span>
             <span class="user-summary">
-              <span class="user-name">{{ displayName }}</span>
+              <span class="user-name">{{ isCurrentUserLoading ? 'Đang tải...' : displayName }}</span>
               <span class="user-role">{{ currentRole }}</span>
             </span>
             <i class="bi bi-chevron-down user-chevron"></i>
@@ -398,4 +400,8 @@
     </footer>
   </main>
 </div>
+</ng-container>
+<ng-template #guestLayout>
+  <router-outlet></router-outlet>
+</ng-template>
 <app-toast-container></app-toast-container>
