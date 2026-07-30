@@ -1,37 +1,29 @@
-<div class="container profile-page mt-4 mb-5" style="animation: fadeIn 0.4s;">
-  <div class="app-page-header">
-    <div class="app-page-heading">
-      <div class="app-title-icon">
-        <i class="bi bi-person-badge"></i>
-      </div>
-      <div class="app-page-heading-text">
-        <h1 class="app-page-title">Hồ sơ cá nhân</h1>
-        <p class="app-page-subtitle">Thông tin tài khoản và liên hệ của bạn</p>
-      </div>
-    </div>
-  </div>
+<div class="container profile-page mt-4 mb-5 app-fade-in">
+  <app-page-header
+    icon="bi-person-badge"
+    title="Hồ sơ cá nhân"
+    subtitle="Thông tin tài khoản và liên hệ của bạn">
+  </app-page-header>
 
   <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
       <div class="card shadow border-0 profile-card profile-shell-card overflow-hidden">
         <div class="card-body p-4 p-lg-5">
-          @if (isLoading) {
-            <div class="text-center py-5">
-              <div class="spinner-border text-primary" role="status"></div>
-              <p class="mt-2 text-muted fw-medium">Đang lấy thông tin...</p>
-            </div>
-          } @else if (errorMessage) {
-            <div class="alert alert-danger text-center fw-medium border-0 shadow-sm" role="alert">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
-            </div>
-          } @else if (userInfo) {
+          <app-view-state
+            [loading]="isLoading"
+            [error]="errorMessage"
+            [card]="false"
+            loadingText="Đang lấy thông tin..."
+            [actionLabel]="errorMessage ? 'Thử lại' : ''"
+            (action)="loadMyInfo()">
+          @if (userInfo) {
 
             <div class="d-flex flex-column align-items-center text-center mb-4">
 
               <div class="position-relative d-inline-block mb-3">
                 <div class="profile-avatar d-flex align-items-center justify-content-center shadow-sm overflow-hidden">
 
-                  <img *ngIf="userInfo?.avatar_url" [src]="userInfo.avatar_url" style="width: 100%; height: 100%; object-fit: cover;">
+                  <img *ngIf="userInfo?.avatar_url" [src]="userInfo.avatar_url" class="w-100 h-100 object-fit-cover" alt="Ảnh đại diện">
 
                   <span *ngIf="!userInfo?.avatar_url" class="text-white fw-bold">
                     {{ userInfo.firstname ? (userInfo.firstname.charAt(0) | uppercase) : 'U' }}
@@ -104,6 +96,7 @@
               </div>
             </div>
           }
+          </app-view-state>
         </div>
       </div>
     </div>

@@ -1,8 +1,6 @@
 ﻿import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { inject as injectActionDialog } from '@angular/core';
 import { ActionDialogService } from '../../service/action-dialog.service';
-import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../service/toast.service';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -16,17 +14,20 @@ import * as QRCode from 'qrcode';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../service/auth.service';
+import { CartItemRowComponent } from './cart-item-row/cart-item-row.component';
+import { CartPaymentPanelComponent } from './cart-payment-panel/cart-payment-panel.component';
+import { ViewStateComponent } from '../shared';
 
 @Component({
   selector: 'app-cart-modal',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, FormsModule],
+  imports: [CommonModule, MatDialogModule, FormsModule, CartItemRowComponent, CartPaymentPanelComponent, ViewStateComponent],
   templateUrl: './cart-modal.html',
-  styleUrls: ['../../app.css', './cart-modal.css'],
+  styleUrl: './cart-modal.css',
 })
 export class CartModalComponent implements OnInit {
-  private readonly actionDialog = injectActionDialog(ActionDialogService);
-  private readonly toast = injectToast(ToastService);
+  private readonly actionDialog = inject(ActionDialogService);
+  private readonly toast = inject(ToastService);
   authService = inject(AuthService);
   isLoading = false;
   http = inject(HttpClient);
@@ -46,6 +47,7 @@ export class CartModalComponent implements OnInit {
   onlinePaymentData?: CartPaymentData;
   paymentQrDataUrl: string = '';
   isGeneratingPaymentQr = false;
+  checkoutErrorMessage = '';
 
   constructor(
     private cartService: CartService,
@@ -211,10 +213,17 @@ export class CartModalComponent implements OnInit {
     return requests;
   }
 
+  private createCheckoutIdempotencyKey(paymentMethod: string): string {
+    const randomPart = globalThis.crypto?.randomUUID?.()
+      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    return `checkout-${this.userId}-${paymentMethod.toLowerCase()}-${randomPart}`;
+  }
+
   approve(paymentMethod: string) {
     if (!this.cartData?.user_id) return;
     this.onlinePaymentData = undefined;
     this.paymentQrDataUrl = '';
+    this.checkoutErrorMessage = '';
 
     const productIdsToCheckout = this.selectedProductIds.length > 0
       ? this.selectedProductIds
@@ -226,44 +235,62 @@ export class CartModalComponent implements OnInit {
     }
 
     this.isLoading = true;
-    let voucherIdToPass = this.selectedVoucherId !== 0 ? this.selectedVoucherId : undefined;
 
     const updates = this.getUpdateRequests();
     const performUpdate$: Observable<any> = updates.length > 0 ? forkJoin(updates) : of(null);
 
     performUpdate$.subscribe({
       next: () => {
-        // Gọi đúng tên hàm, đúng thứ tự tham số.
-        this.cartService.acceptCart(this.userId, productIdsToCheckout, this.selectedVoucherId, paymentMethod, this.note).subscribe({
-  next: (res: any) => {
-    if (res && res.status === 'REDIRECT' && res.payUrl) {
-      this.toast.notify('Đang xử lý thanh toán online...');
+        this.cartService.acceptCart(
+          this.userId,
+          productIdsToCheckout,
+          this.selectedVoucherId,
+          paymentMethod,
+          this.note,
+          this.createCheckoutIdempotencyKey(paymentMethod),
+        ).subscribe({
+          next: (res: any) => {
+            if (res && res.status === 'REDIRECT' && res.payUrl) {
+              this.toast.notify(res.message || 'Đang xử lý thanh toán online...');
 
-      // Gọi ngầm endpoint Auto-Duyệt của Backend
-      this.http.get(res.payUrl).subscribe({
-        next: () => {
-          this.cartService.notifyCheckoutSuccess();
-          this.dialogRef.close();
+              // Gọi ngầm endpoint Auto-Duyệt của Backend
+              this.http.get(res.payUrl).subscribe({
+                next: () => {
+                  this.cartService.notifyCheckoutSuccess();
+                  this.dialogRef.close();
 
-          // Trích xuất orderId từ cái payUrl mà backend trả về
-          const urlObj = new URL(res.payUrl);
-          const orderIdStr = urlObj.searchParams.get('orderId');
+                  // Trích xuất orderId từ cái payUrl mà backend trả về
+                  const urlObj = new URL(res.payUrl);
+                  const orderIdStr = urlObj.searchParams.get('orderId');
 
-          // Chủ động route sang component payment-success
-          this.router.navigate(['/payment-success'], {
-            queryParams: { resultCode: '0', orderId: orderIdStr }
-          });
-        },
-        error: () => this.toast.notify('Xử lý auto-duyệt thất bại!')
-      });
-    } else {
-      // Xử lý luồng COD như bình thường
-      this.cartService.notifyCheckoutSuccess();
-      this.dialogRef.close();
-      this.router.navigate(['/orders']);
-    }
-  }
-});
+                  // Chủ động route sang component payment-success
+                  this.router.navigate(['/payment-success'], {
+                    queryParams: { resultCode: '0', orderId: orderIdStr }
+                  });
+                },
+                error: () => {
+                  this.isLoading = false;
+                  this.checkoutErrorMessage = 'Không thể tự động xác nhận thanh toán. Vui lòng mở lại trang thanh toán.';
+                  this.toast.notify(this.checkoutErrorMessage);
+                }
+              });
+            } else {
+              // Xử lý luồng COD như bình thường
+              this.toast.notify(res?.message || 'Đặt hàng thành công.');
+              this.cartService.notifyCheckoutSuccess();
+              this.dialogRef.close();
+              this.router.navigate(['/orders']);
+            }
+          },
+          error: (err: any) => {
+            this.isLoading = false;
+            this.checkoutErrorMessage = getApiErrorMessage(
+              err,
+              'Không thể tạo đơn hàng. Vui lòng kiểm tra lại giỏ hàng.',
+            );
+            this.toast.notify(this.checkoutErrorMessage);
+          },
+        });
       },
       error: (err: any) => {
         this.toast.notify('Lỗi cập nhật số lượng: ' + getApiErrorMessage(err, 'Không thể cập nhật số lượng.'));

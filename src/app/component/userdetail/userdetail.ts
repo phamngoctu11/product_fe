@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Thêm DatePipe
-import { inject as injectToast } from '@angular/core';
+import { inject } from '@angular/core';
 import { ToastService } from '../../service/toast.service';
 import { FormsModule, NgForm } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -10,17 +10,32 @@ import { UserService } from '../../service/user.service';
 import { UserCreDTO, UserProfileUpdateDTO } from '../../model/user.model';
 import { ApiResponse, getApiErrorMessage, unwrapApiResponse } from '../../model/api-response.model';
 import { environment } from '../../../environments/environment';
+import { FormFieldComponent } from '../shared';
 
 @Component({
   selector: 'app-userdetail',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, MatDialogModule, FormFieldComponent],
   templateUrl: './userdetail.html',
-  styleUrls: ['../../app.css', './userdetail.css'],
+  styleUrl: './userdetail.css',
   providers: [DatePipe], // Khai báo DatePipe
 })
 export class Userdetail implements OnInit {
-  private readonly toast = injectToast(ToastService);
+  private readonly toast = inject(ToastService);
+  readonly usernameErrors = {
+    required: 'Tên đăng nhập là bắt buộc.',
+    minlength: 'Tên đăng nhập phải có ít nhất 3 ký tự.',
+    maxlength: 'Tên đăng nhập không được vượt quá 50 ký tự.',
+  };
+  readonly passwordErrors = {
+    required: 'Mật khẩu là bắt buộc.',
+    minlength: 'Mật khẩu phải có ít nhất 6 ký tự.',
+    maxlength: 'Mật khẩu không được vượt quá 100 ký tự.',
+  };
+  readonly phoneErrors = {
+    required: 'Số điện thoại là bắt buộc.',
+    maxlength: 'Số điện thoại không được vượt quá 20 ký tự.',
+  };
   currentUser: UserCreDTO = {
     firstname: '',
     lastname: '',

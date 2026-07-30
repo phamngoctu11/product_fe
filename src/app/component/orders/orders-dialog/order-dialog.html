@@ -6,76 +6,29 @@
     <button mat-dialog-close type="button" class="btn-close btn-close-white"></button>
   </div>
 
-  <mat-dialog-content class="p-4 bg-light" style="max-height: 70vh; overflow-y: auto;">
-    <div *ngIf="isLoading" class="text-center py-5 text-muted bg-white rounded-4 shadow-sm border">
-      <div class="spinner-border text-primary mb-3" role="status"></div>
-      <p class="fw-medium">Đang tải đơn hàng...</p>
-    </div>
-
-    <div *ngIf="!isLoading && orders.length === 0" class="text-center py-5 text-muted bg-white rounded-4 shadow-sm border">
-      <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
-      <p class="fw-medium">Người dùng này chưa có đơn hàng nào.</p>
-    </div>
-
-    <div *ngFor="let order of orders"
-         class="card shadow-sm border-0 mb-4 rounded-4 hover-elevate overflow-hidden"
-         style="cursor: pointer;"
-         (click)="openOrderDetail(order)">
-      <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-3 p-4">
-        <div class="flex-grow-1">
-          <span class="fw-bold text-dark fs-6">Mã đơn hàng: #{{ order.id }}</span>
-          <span class="text-muted small d-block mt-1">
-            <i class="bi bi-calendar3 me-1"></i><strong>Ngày đặt:</strong> {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
-          </span>
-        </div>
-        <div class="text-end">
-          <span class="badge rounded-pill px-3 py-2 fs-6 shadow-sm border"
-                [ngClass]="{
-                  'bg-primary bg-opacity-10 text-primary border-primary border-opacity-25': order.status !== 'CANCELLED' && order.status !== 'DELIVERED',
-                  'bg-success bg-opacity-10 text-success border-success border-opacity-25': order.status === 'DELIVERED',
-                  'bg-danger bg-opacity-10 text-danger border-danger border-opacity-25': order.status === 'CANCELLED'
-                }">
-            {{ order.status }}
-          </span>
-        </div>
-      </div>
-
-      <div class="card-body p-4">
-        <div class="row g-3 align-items-center">
-          <div class="col-md-3">
-            <div class="text-muted small">Khách hàng</div>
-            <div class="fw-bold text-dark">{{ order.customerName || 'Khách vãng lai' }}</div>
-          </div>
-          <div class="col-md-3">
-            <div class="text-muted small">Thanh toán</div>
-            <div class="fw-bold text-uppercase">{{ order.paymentMethod || 'COD' }}</div>
-          </div>
-          <div class="col-md-3">
-            <div class="text-muted small">Nhân viên phụ trách</div>
-            <div class="fw-bold" [ngClass]="order.staffName ? 'text-dark' : 'text-muted'">
-              {{ order.staffName || 'Chưa có nhân viên phụ trách' }}
-            </div>
-          </div>
-          <div class="col-md-3 text-md-end">
-            <div class="text-muted small">Tổng thanh toán</div>
-            <div class="text-danger fw-bold fs-5">{{ order.finalPrice | number: '1.0-0' }} đ</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <app-pagination
-      *ngIf="!isLoading && orders.length > 0"
-      [currentPage]="currentPage"
-      [totalPages]="totalPages"
-      [totalElements]="totalElements"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="pageSizeOptions"
-      [disabled]="isLoading"
-      [compact]="true"
-      (pageChange)="changePage($event)"
-      (pageSizeChange)="changePageSize($event)">
-    </app-pagination>
+  <mat-dialog-content class="order-dialog-content p-4 bg-light">
+    <app-view-state
+      [loading]="isLoading"
+      [empty]="orders.length === 0"
+      [card]="false"
+      loadingText="Đang tải đơn hàng..."
+      emptyTitle="Chưa có đơn hàng"
+      emptyText="Người dùng này chưa có đơn hàng nào.">
+      @for (order of orders; track order.id) {
+        <app-order-summary-card [order]="order" (selected)="openOrderDetail($event)"></app-order-summary-card>
+      }
+      <app-pagination
+        [currentPage]="currentPage"
+        [totalPages]="totalPages"
+        [totalElements]="totalElements"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="pageSizeOptions"
+        [disabled]="isLoading"
+        [compact]="true"
+        (pageChange)="changePage($event)"
+        (pageSizeChange)="changePageSize($event)">
+      </app-pagination>
+    </app-view-state>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="p-4 bg-white border-top m-0">

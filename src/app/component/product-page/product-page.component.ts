@@ -2,18 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../service/toast.service';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProductService } from '../../service/product.service';
 import { ChatService } from '../../service/chat.service';
 import { AuthService } from '../../service/auth.service';
 import { ConsultationService } from '../../service/consultation.service';
+import { ViewStateComponent } from '../shared';
 
 @Component({
   selector: 'app-product-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ViewStateComponent],
   templateUrl: './product-page.component.html',
-  styleUrls: ['../../app.css', './product-page.component.css'],
+  styleUrl: './product-page.component.css',
 })
 export class ProductPageComponent implements OnInit {
   private readonly toast = injectToast(ToastService);
@@ -31,11 +32,16 @@ export class ProductPageComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private productService: ProductService,
     private chatService: ChatService,
     private consultationService: ConsultationService,
     public authService: AuthService
   ) {}
+
+  goToStore(): void {
+    this.router.navigate(['/product']);
+  }
 
   ngOnInit() {
     const fromChat = this.route.snapshot.queryParamMap.get('fromChat') === 'true';

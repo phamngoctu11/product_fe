@@ -5,6 +5,12 @@ import { ChartConfiguration, ChartData } from 'chart.js';
 import { DashboardService } from '../../service/dashboard.service';
 import { BestSellingProduct } from '../../model/product.model';
 import { ProductService } from '../../service/product.service';
+import {
+  MetricCardComponent,
+  MetricTone,
+  PageHeaderComponent,
+  ViewStateComponent,
+} from '../shared';
 
 type BestSellingPeriod = 'day' | 'week' | 'month';
 
@@ -31,12 +37,27 @@ interface StatusSummary {
   badgeClass: string;
 }
 
+interface DashboardMetric {
+  label: string;
+  value: number;
+  hint: string;
+  icon: string;
+  tone: MetricTone;
+  suffix: string;
+}
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [
+    CommonModule,
+    BaseChartDirective,
+    MetricCardComponent,
+    PageHeaderComponent,
+    ViewStateComponent,
+  ],
   templateUrl: './admin-dashboard.html',
-  styleUrls: ['../../app.css', './admin-dashboard.css'],
+  styleUrl: './admin-dashboard.css',
 })
 export class AdminDashboard implements OnInit {
   private readonly emptyStats: DashboardStats = {
@@ -221,6 +242,35 @@ export class AdminDashboard implements OnInit {
       this.stats.pendingKCS +
       this.stats.warehouseAssigned
     );
+  }
+
+  get topMetrics(): DashboardMetric[] {
+    return [
+      {
+        label: 'Tổng doanh thu',
+        value: this.stats.totalRevenue,
+        hint: 'Chỉ tính các đơn đã giao',
+        icon: 'bi-wallet2',
+        tone: 'success',
+        suffix: ' đ',
+      },
+      {
+        label: 'Tổng đơn hàng',
+        value: this.stats.totalOrders,
+        hint: 'Tổng số đơn hàng hệ thống',
+        icon: 'bi-bag-check-fill',
+        tone: 'primary',
+        suffix: ' đơn',
+      },
+      {
+        label: 'Đang chờ xử lý',
+        value: this.pendingProcessingOrders,
+        hint: 'Bao gồm chờ thanh toán, duyệt, kho và KCS',
+        icon: 'bi-hourglass-split',
+        tone: 'warning',
+        suffix: ' đơn',
+      },
+    ];
   }
 
   getStatusValue(key: keyof DashboardStats): number {

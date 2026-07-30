@@ -15,7 +15,7 @@ import { getApiErrorMessage } from '../../model/api-response.model';
   standalone: true,
   imports: [CommonModule, MatDialogModule],
   templateUrl: './reward-dialog.html',
-  styleUrls: ['../../app.css', './reward-dialog.css'],
+  styleUrl: './reward-dialog.css',
 })
 export class RewardDialogComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
@@ -35,7 +35,7 @@ export class RewardDialogComponent implements OnInit {
   }
 
   loadData() {
-    this.userService.getById(this.userId).subscribe(user => {
+    this.userService.getMe().subscribe(user => {
       this.currentReputation = user.reputation;
     });
 

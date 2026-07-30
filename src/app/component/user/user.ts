@@ -12,14 +12,22 @@ import { CartRes } from '../../model/cart.model';
 
 import { UserService } from '../../service/user.service';
 import { AuthService } from '../../service/auth.service';
-import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
+import { AppPaginationComponent, PageHeaderComponent, ViewStateComponent } from '../shared';
+import { APP_DIALOG_SIZE } from '../../config/dialog.config';
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, FormsModule, AppPaginationComponent],
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    FormsModule,
+    AppPaginationComponent,
+    PageHeaderComponent,
+    ViewStateComponent,
+  ],
   templateUrl: './user.html',
-  styleUrls: ['../../app.css'],
+  styleUrl: './user.css',
 })
 export class UserComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
@@ -76,9 +84,7 @@ export class UserComponent implements OnInit {
 
   openUserDialog(id: string | null = null) {
     const dialogRef = this.dialog.open(Userdetail, {
-      width: '820px',
-      maxWidth: 'calc(100vw - 48px)',
-      maxHeight: '78vh',
+      ...APP_DIALOG_SIZE.userForm,
       data: { id: id, action: 'edit' },
       disableClose: true,
     });
@@ -135,9 +141,7 @@ export class UserComponent implements OnInit {
 
   viewUser(id: string) {
     this.dialog.open(Userdetail, {
-      width: '820px',
-      maxWidth: 'calc(100vw - 48px)',
-      maxHeight: '78vh',
+      ...APP_DIALOG_SIZE.userForm,
       data: { id: id, action: 'view' },
       disableClose: false,
     });
@@ -160,7 +164,7 @@ export class UserComponent implements OnInit {
 
   openCartModal(userId: string) {
     this.dialog.open(CartModalComponent, {
-      width: '300px',
+      ...APP_DIALOG_SIZE.cartPreview,
       data: userId,
     });
   }

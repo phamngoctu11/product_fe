@@ -1,0 +1,51 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.metric-card {
+  position: relative;
+  display: grid;
+  height: 100%;
+  gap: 0.35rem;
+  padding: 1.1rem;
+  overflow: hidden;
+  border: 1px solid rgba(var(--app-primary-rgb), 0.16);
+  border-radius: 1rem;
+  background: rgba(15, 22, 41, 0.78);
+  box-shadow: var(--shadow-md);
+}
+
+.metric-icon {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.9rem;
+  color: var(--metric-color, #94a3b8);
+  font-size: 1.15rem;
+  opacity: 0.6;
+}
+
+.metric-label {
+  padding-right: 1.75rem;
+  color: var(--app-muted-text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  color: var(--metric-color, var(--app-text));
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  line-height: 1.2;
+}
+
+.metric-hint {
+  color: var(--app-muted-text);
+  line-height: 1.4;
+}
+
+.metric-card[data-tone='primary'] { --metric-color: #818cf8; }
+.metric-card[data-tone='success'] { --metric-color: #34d399; }
+.metric-card[data-tone='warning'] { --metric-color: #fbbf24; }
+.metric-card[data-tone='danger'] { --metric-color: #f87171; }

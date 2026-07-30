@@ -21,19 +21,19 @@
 
       <div class="auth-features">
         <div class="auth-feature-item">
-          <div class="auth-feature-icon" style="background: rgba(99,102,241,0.15); color: #a5b4fc;">
+          <div class="auth-feature-icon auth-feature-icon-primary">
             <i class="bi bi-shield-fill-check"></i>
           </div>
           <span>Bảo mật giao dịch tuyệt đối</span>
         </div>
         <div class="auth-feature-item">
-          <div class="auth-feature-icon" style="background: rgba(16,185,129,0.15); color: #6ee7b7;">
+          <div class="auth-feature-icon auth-feature-icon-success">
             <i class="bi bi-truck-front-fill"></i>
           </div>
           <span>Theo dõi đơn hàng thời gian thực</span>
         </div>
         <div class="auth-feature-item">
-          <div class="auth-feature-icon" style="background: rgba(245,158,11,0.15); color: #fcd34d;">
+          <div class="auth-feature-icon auth-feature-icon-warning">
             <i class="bi bi-gift-fill"></i>
           </div>
           <span>Tích điểm & đổi voucher hấp dẫn</span>
@@ -56,6 +56,11 @@
           <p class="auth-card-subtitle">Chào mừng bạn quay trở lại!</p>
         </div>
 
+        <div *ngIf="loginErrorMessage" class="auth-alert auth-alert-warning">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>{{ loginErrorMessage }}</span>
+        </div>
+
         <form #loginForm="ngForm" (ngSubmit)="handleLogin(loginForm)" novalidate>
           <div class="auth-form-group">
             <label class="auth-form-label">Tên đăng nhập</label>
@@ -75,7 +80,7 @@
             </div>
           </div>
 
-          <div class="auth-form-group" style="margin-bottom: 1.5rem;">
+          <div class="auth-form-group auth-form-group-spacious">
             <label class="auth-form-label">Mật khẩu</label>
             <div class="auth-input-group">
               <i class="bi bi-lock auth-input-icon"></i>
@@ -93,8 +98,13 @@
             </div>
           </div>
 
-          <button type="submit" class="auth-btn">
-            <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+          <button type="submit" class="auth-btn" [disabled]="isSubmittingLogin">
+            @if (isSubmittingLogin) {
+              <span class="auth-btn-spinner"></span>
+              <span>Đang đăng nhập...</span>
+            } @else {
+              <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+            }
           </button>
         </form>
 
@@ -120,7 +130,7 @@
 
           <div class="auth-form-row">
             <div class="auth-form-group">
-              <label class="auth-form-label">Họ đệm <span style="color:#ef4444">*</span></label>
+              <label class="auth-form-label">Họ đệm <span class="auth-required">*</span></label>
               <input
                 type="text"
                 class="auth-input"
@@ -134,7 +144,7 @@
               </div>
             </div>
             <div class="auth-form-group">
-              <label class="auth-form-label">Tên <span style="color:#ef4444">*</span></label>
+              <label class="auth-form-label">Tên <span class="auth-required">*</span></label>
               <input
                 type="text"
                 class="auth-input"
@@ -150,7 +160,7 @@
           </div>
 
           <div class="auth-form-group">
-            <label class="auth-form-label">Tên đăng nhập <span style="color:#ef4444">*</span></label>
+            <label class="auth-form-label">Tên đăng nhập <span class="auth-required">*</span></label>
             <div class="auth-input-group">
               <i class="bi bi-at auth-input-icon"></i>
               <input
@@ -171,7 +181,7 @@
 
           <div class="auth-form-row">
             <div class="auth-form-group">
-              <label class="auth-form-label">Mật khẩu <span style="color:#ef4444">*</span></label>
+              <label class="auth-form-label">Mật khẩu <span class="auth-required">*</span></label>
               <div class="auth-input-group">
                 <i class="bi bi-lock auth-input-icon"></i>
                 <input
@@ -190,7 +200,7 @@
               </div>
             </div>
             <div class="auth-form-group">
-              <label class="auth-form-label">Xác nhận mật khẩu <span style="color:#ef4444">*</span></label>
+              <label class="auth-form-label">Xác nhận mật khẩu <span class="auth-required">*</span></label>
               <div class="auth-input-group">
                 <i class="bi bi-shield-lock auth-input-icon"></i>
                 <input
@@ -210,7 +220,7 @@
 
           <div class="auth-form-row">
             <div class="auth-form-group">
-              <label class="auth-form-label">Giới tính <span style="color:#ef4444">*</span></label>
+              <label class="auth-form-label">Giới tính <span class="auth-required">*</span></label>
               <select class="auth-select" name="gender" #gender="ngModel" [(ngModel)]="registerData.gender" required>
                 <option value="male">Nam</option>
                 <option value="female">Nữ</option>
@@ -221,7 +231,7 @@
               </div>
             </div>
             <div class="auth-form-group">
-              <label class="auth-form-label">Số điện thoại <span style="color:#ef4444">*</span></label>
+              <label class="auth-form-label">Số điện thoại <span class="auth-required">*</span></label>
               <div class="auth-input-group">
                 <i class="bi bi-telephone auth-input-icon"></i>
                 <input
@@ -264,7 +274,7 @@
             </div>
           </div>
 
-          <div class="auth-form-group" style="margin-bottom: 1.5rem;">
+          <div class="auth-form-group auth-form-group-spacious">
             <label class="auth-form-label">Địa chỉ</label>
             <textarea
               class="auth-textarea"

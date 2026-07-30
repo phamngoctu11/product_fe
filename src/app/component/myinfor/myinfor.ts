@@ -6,13 +6,14 @@ import { AuthService } from '../../service/auth.service';
 import { UserInforDTO } from '../../model/user.model';
 import { CartModalComponent } from '../cart/cart-modal';
 import { Userdetail } from '../userdetail/userdetail';
+import { PageHeaderComponent, ViewStateComponent } from '../shared';
+import { APP_DIALOG_SIZE } from '../../config/dialog.config';
 
 @Component({
   selector: 'app-myinfor',
   standalone: true,
-  imports: [CommonModule, MatDialogModule],
+  imports: [CommonModule, MatDialogModule, PageHeaderComponent, ViewStateComponent],
   templateUrl: './myinfor.html',
-  styleUrls: ['../../app.css'],
 })
 export class Myinfor implements OnInit {
   userInfo?: UserInforDTO;
@@ -46,9 +47,7 @@ export class Myinfor implements OnInit {
   startEditing(): void {
     const dialogRef = this.dialog.open(Userdetail, {
       data: { id: null, action: 'self-edit' },
-      width: '760px',
-      maxWidth: 'calc(100vw - 32px)',
-      maxHeight: '90vh',
+      ...APP_DIALOG_SIZE.profile,
     });
     dialogRef.afterClosed().subscribe((updated) => {
       if (updated) this.loadMyInfo();
@@ -64,9 +63,7 @@ export class Myinfor implements OnInit {
       // Dựa theo code cũ của bạn đang map number, hãy đảm bảo Backend giỏ hàng chấp nhận UUID chuỗi.
       this.dialog.open(CartModalComponent, {
         data: userId,
-        width: '900px',
-        maxWidth: 'calc(100vw - 48px)',
-        maxHeight: '78vh',
+        ...APP_DIALOG_SIZE.cart,
         autoFocus: false
       });
     }

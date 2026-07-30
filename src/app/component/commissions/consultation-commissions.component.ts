@@ -13,14 +13,36 @@ import { AuthService } from '../../service/auth.service';
 import { ConsultationCommissionService } from '../../service/consultation-commission.service';
 import { ActionDialogService } from '../../service/action-dialog.service';
 import { ToastService } from '../../service/toast.service';
-import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
+import {
+  AppPaginationComponent,
+  MetricCardComponent,
+  PageHeaderComponent,
+  ViewStateComponent,
+} from '../shared';
+import type { MetricTone } from '../shared';
+
+interface CommissionMetric {
+  label: string;
+  value: number;
+  hint: string;
+  icon: string;
+  tone: MetricTone;
+  suffix: string;
+}
 
 @Component({
   selector: 'app-consultation-commissions',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppPaginationComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AppPaginationComponent,
+    MetricCardComponent,
+    PageHeaderComponent,
+    ViewStateComponent,
+  ],
   templateUrl: './consultation-commissions.component.html',
-  styleUrls: ['../../app.css', './consultation-commissions.component.css'],
+  styleUrl: './consultation-commissions.component.css',
 })
 export class ConsultationCommissionsComponent implements OnInit {
   readonly periods: { value: CommissionPeriod; label: string }[] = [
@@ -59,8 +81,6 @@ export class ConsultationCommissionsComponent implements OnInit {
   isLoadingSummary = false;
   isLoadingDetails = false;
   isLoadingStaffs = false;
-  isLoadingMoreStaffs = false;
-  isLoadingMoreDetails = false;
   isRebuilding = false;
   isDetailOpen = false;
 
@@ -110,6 +130,72 @@ export class ConsultationCommissionsComponent implements OnInit {
 
   get totalConfirmedOrders(): number {
     return this.staffSummaries.reduce((total, item) => total + Number(item.confirmedOrderCount || 0), 0);
+  }
+
+  get adminMetrics(): readonly CommissionMetric[] {
+    return [
+      {
+        label: 'Hoa hồng đã chốt',
+        value: this.totalConfirmedCommission,
+        hint: 'Tổng trên danh sách staff đang tải',
+        icon: 'bi-check-circle-fill',
+        tone: 'success',
+        suffix: ' đ',
+      },
+      {
+        label: 'Doanh thu attribution',
+        value: this.totalConfirmedRevenue,
+        hint: `${this.totalConfirmedOrders.toLocaleString('vi-VN')} đơn đã ghi nhận`,
+        icon: 'bi-graph-up-arrow',
+        tone: 'primary',
+        suffix: ' đ',
+      },
+      {
+        label: 'Hoa hồng đang chờ',
+        value: this.totalPendingCommission,
+        hint: 'Chưa mở chi tiết order item',
+        icon: 'bi-hourglass-split',
+        tone: 'warning',
+        suffix: ' đ',
+      },
+    ];
+  }
+
+  selfMetrics(summary: StaffCommissionSummary): readonly CommissionMetric[] {
+    return [
+      {
+        label: 'Hoa hồng đã chốt',
+        value: summary.confirmedCommissionAmount,
+        hint: `${summary.confirmedOrderCount} đơn, ${summary.confirmedAttributionCount} attribution`,
+        icon: 'bi-check-circle-fill',
+        tone: 'success',
+        suffix: ' đ',
+      },
+      {
+        label: 'Doanh thu attribution',
+        value: summary.confirmedRevenueAmount,
+        hint: 'Doanh thu item có tư vấn',
+        icon: 'bi-graph-up-arrow',
+        tone: 'primary',
+        suffix: ' đ',
+      },
+      {
+        label: 'Hoa hồng đang chờ',
+        value: summary.pendingCommissionAmount,
+        hint: `${summary.pendingOrderCount} đơn, ${summary.pendingAttributionCount} attribution`,
+        icon: 'bi-hourglass-split',
+        tone: 'warning',
+        suffix: ' đ',
+      },
+      {
+        label: 'Attribution đã hủy',
+        value: summary.cancelledAttributionCount,
+        hint: 'Không tính vào hoa hồng đã chốt',
+        icon: 'bi-x-circle-fill',
+        tone: 'danger',
+        suffix: '',
+      },
+    ];
   }
 
   loadData(): void {
@@ -174,47 +260,6 @@ export class ConsultationCommissionsComponent implements OnInit {
     this.detailTotalPages = 0;
     this.detailTotalElements = 0;
     this.isLoadingDetails = false;
-    this.isLoadingMoreDetails = false;
-  }
-
-  loadMoreStaffs(): void {
-    if (this.isLoadingMoreStaffs || this.staffPage + 1 >= this.staffTotalPages) return;
-
-    this.isLoadingMoreStaffs = true;
-    this.commissionService.getStaffSummaries({
-      ...this.baseQuery(),
-      page: this.staffPage + 1,
-      size: this.safePageSize(),
-    }).subscribe({
-      next: (page) => {
-        this.staffSummaries = [...this.staffSummaries, ...(page.content || [])];
-        this.staffPage = page.number ?? this.staffPage + 1;
-        this.staffTotalPages = page.totalPages || 0;
-        this.isLoadingMoreStaffs = false;
-      },
-      error: (err) => {
-        this.toast.error('Khong the tai them danh sach staff: ' + getApiErrorMessage(err, 'Vui long thu lai.'));
-        this.isLoadingMoreStaffs = false;
-      },
-    });
-  }
-
-  loadMoreDetails(): void {
-    if (!this.isDetailOpen || this.isLoadingMoreDetails || this.detailPage + 1 >= this.detailTotalPages) return;
-
-    this.isLoadingMoreDetails = true;
-    this.detailsRequest(this.detailPage + 1).subscribe({
-      next: (page) => {
-        this.details = [...this.details, ...(page.content || [])];
-        this.detailPage = page.number ?? this.detailPage + 1;
-        this.detailTotalPages = page.totalPages || 0;
-        this.isLoadingMoreDetails = false;
-      },
-      error: (err) => {
-        this.toast.error('Khong the tai them chi tiet hoa hong: ' + getApiErrorMessage(err, 'Vui long thu lai.'));
-        this.isLoadingMoreDetails = false;
-      },
-    });
   }
 
   rebuildSummaries(): void {
@@ -241,14 +286,6 @@ export class ConsultationCommissionsComponent implements OnInit {
         },
       });
     });
-  }
-
-  hasMoreStaffs(): boolean {
-    return this.staffPage + 1 < this.staffTotalPages;
-  }
-
-  hasMoreDetails(): boolean {
-    return this.detailPage + 1 < this.detailTotalPages;
   }
 
   changeStaffPage(page: number): void {

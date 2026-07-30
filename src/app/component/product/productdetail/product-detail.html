@@ -130,113 +130,42 @@
         </div>
 
         <div class="variant-grid">
-          <article *ngFor="let v of variants.controls; let i=index" [formGroupName]="i" class="variant-card">
-            <div class="variant-media-row">
-              <label class="variant-upload" [class.is-editable]="canEditVariant(i)" [title]="canEditVariant(i) ? 'Đổi ảnh phân loại' : ''">
-                <div *ngIf="isUploadingVariantImage[i]" class="spinner-border spinner-border-sm text-success" role="status"></div>
-                <img *ngIf="v.get('image_url')?.value && !isUploadingVariantImage[i]" [src]="v.get('image_url')?.value" alt="Ảnh phân loại">
-                <i *ngIf="!v.get('image_url')?.value && !isUploadingVariantImage[i]" class="bi bi-image"></i>
-                <input *ngIf="canEditVariant(i)" type="file" class="d-none" (change)="onVariantFileSelected($event, i)" accept="image/*" [disabled]="isUploadingVariantImage[i]">
-              </label>
-
-              <div class="variant-title">
-                <span>Phân loại #{{ i + 1 }}</span>
-                <strong>{{ v.get('variantName')?.value || 'Chưa đặt tên' }}</strong>
-                <small *ngIf="isStaffMode && isExistingVariant(i)">Chỉ nhập kho</small>
-                <small *ngIf="isStaffMode && !isExistingVariant(i)">Phân loại mới</small>
-              </div>
-
-              <button *ngIf="canRemoveVariant(i)" type="button" class="btn btn-sm btn-outline-danger rounded-pill ms-auto" (click)="removeVariant(i)">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-
-            <div class="variant-form-grid" *ngIf="!isView; else variantReadonlySummary">
-              <div class="field-block">
-                <label>Tên hiển thị</label>
-                <input type="text" class="form-control form-control-custom" formControlName="variantName" placeholder="VD: Màu Đen - Size L" />
-                <div class="text-danger small mt-1" *ngIf="isVariantInvalid(i, 'variantName')">Tên phân loại là bắt buộc.</div>
-              </div>
-
-              <div class="field-block">
-                <label>Giá bán</label>
-                <input type="number" class="form-control form-control-custom price-input" formControlName="price" />
-                <div class="text-danger small mt-1" *ngIf="isVariantInvalid(i, 'price')">Giá phân loại phải lớn hơn hoặc bằng 0.</div>
-              </div>
-
-              <div class="field-block">
-                <label>Tồn kho</label>
-                <input type="number" class="form-control form-control-custom" formControlName="quantity" />
-                <div class="text-danger small mt-1" *ngIf="isVariantInvalid(i, 'quantity')">Số lượng phải lớn hơn hoặc bằng 0.</div>
-              </div>
-            </div>
-
-            <ng-template #variantReadonlySummary>
-              <div class="variant-summary-grid">
-                <div>
-                  <span>Tên hiển thị</span>
-                  <strong>{{ v.get('variantName')?.value || 'Chưa đặt tên' }}</strong>
-                </div>
-                <div>
-                  <span>Giá bán</span>
-                  <strong>{{ v.get('price')?.value | number:'1.0-0' }} đ</strong>
-                </div>
-                <div>
-                  <span>Tồn kho</span>
-                  <strong>{{ v.get('quantity')?.value | number }}</strong>
-                </div>
-              </div>
-            </ng-template>
-
-            <div formGroupName="dynamicAttributes" class="attribute-grid" *ngIf="!isView && dynamicFields.length > 0">
-              <div class="field-block" *ngFor="let field of dynamicFields">
-                <label [title]="getLabel(field)">{{ getLabel(field) }}</label>
-                <input type="text" class="form-control form-control-custom" [formControlName]="field" />
-              </div>
-            </div>
-
-            <div class="attribute-preview" *ngIf="isView && getVariantAttributes(i).length > 0">
-              <span *ngFor="let attr of getVariantAttributes(i)">
-                {{ attr.label }}: <strong>{{ attr.value }}</strong>
-              </span>
-            </div>
-
-            <div *ngIf="isStaffMode && isExistingVariant(i)" class="staff-restock-panel">
-              <label>Nhập thêm tồn kho</label>
-              <div class="d-flex flex-wrap align-items-center gap-2">
-                <input
-                  type="number"
-                  class="form-control form-control-custom"
-                  min="1"
-                  [(ngModel)]="staffRestockQuantities[i]"
-                  [ngModelOptions]="{standalone: true}"
-                  placeholder="Số lượng">
-                <button
-                  type="button"
-                  class="btn btn-success rounded-pill px-4 fw-bold"
-                  [disabled]="isRestockingVariant[i] || !staffRestockQuantities[i] || staffRestockQuantities[i] <= 0"
-                  (click)="restockVariant(i)">
-                  <span *ngIf="isRestockingVariant[i]" class="spinner-border spinner-border-sm me-2"></span>
-                  <i *ngIf="!isRestockingVariant[i]" class="bi bi-plus-circle me-1"></i>
-                  Nhập kho
-                </button>
-              </div>
-            </div>
-          </article>
+          @for (variant of variants.controls; track variant; let index = $index) {
+            <app-product-variant-editor
+              [group]="variant"
+              [index]="index"
+              [viewOnly]="isView"
+              [staffMode]="isStaffMode"
+              [existing]="isExistingVariant(index)"
+              [editable]="canEditVariant(index)"
+              [removable]="canRemoveVariant(index)"
+              [uploading]="isUploadingVariantImage[index]"
+              [restocking]="isRestockingVariant[index]"
+              [dynamicFields]="dynamicFields"
+              [fieldLabels]="attributeDictionary"
+              [(restockQuantity)]="staffRestockQuantities[index]"
+              (imageSelected)="onVariantFileSelected($event, index)"
+              (remove)="removeVariant(index)"
+              (restock)="restockVariant(index)">
+            </app-product-variant-editor>
+          }
         </div>
+
         <div class="detail-footer">
-    <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold me-auto"
-            *ngIf="!authService.isAdmin() && !authService.isStaff()"
-            (click)="askAboutProduct()">
-      <i class="bi bi-chat-heart-fill me-2"></i> Tư vấn sản phẩm
-    </button>
-
-    <button class="btn btn-secondary rounded-pill px-4 fw-bold" (click)="onCancel()">{{ isView ? 'Đóng' : 'Hủy bỏ' }}</button>
-
-    <button class="btn btn-success rounded-pill px-4 fw-bold" [disabled]="productForm.invalid" (click)="save()" *ngIf="!isView">
-      <i class="bi bi-check-circle me-1"></i> {{ isStaffMode ? 'Lưu thông tin' : 'Lưu dữ liệu' }}
-    </button>
-  </div>
+          @if (!authService.isAdmin() && !authService.isStaff()) {
+            <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold me-auto" (click)="askAboutProduct()">
+              <i class="bi bi-chat-heart-fill me-2"></i> Tư vấn sản phẩm
+            </button>
+          }
+          <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" (click)="onCancel()">
+            {{ isView ? 'Đóng' : 'Hủy bỏ' }}
+          </button>
+          @if (!isView) {
+            <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" [disabled]="productForm.invalid" (click)="save()">
+              <i class="bi bi-check-circle me-1"></i> {{ isStaffMode ? 'Lưu thông tin' : 'Lưu dữ liệu' }}
+            </button>
+          }
+        </div>
       </section>
     </form>
   </div>

@@ -8,11 +8,10 @@
 
   <div class="modal-body p-4">
     <div class="mb-4">
-      <label class="form-label fw-bold text-secondary mb-3 small text-uppercase" style="letter-spacing: 0.5px;">Màu nền tùy chỉnh</label>
+      <label class="setting-label form-label fw-bold text-secondary mb-3 small text-uppercase">Màu nền tùy chỉnh</label>
       <div class="d-flex align-items-center gap-3 bg-light p-3 rounded-4 border color-picker-box">
         <input type="color"
-               class="form-control form-control-color border-0 p-1 shadow-sm rounded-circle"
-               style="width: 50px; height: 50px; cursor: pointer;"
+               class="custom-color-picker form-control form-control-color border-0 p-1 shadow-sm rounded-circle"
                [(ngModel)]="selectedColor"
                (ngModelChange)="applyColor($event)"
                title="Chọn màu tùy chỉnh">
@@ -23,15 +22,14 @@
     <hr class="text-muted opacity-10 my-4">
 
     <div class="mb-3">
-      <label class="form-label fw-bold text-secondary mb-3 small text-uppercase" style="letter-spacing: 0.5px;">Màu gợi ý</label>
+      <label class="setting-label form-label fw-bold text-secondary mb-3 small text-uppercase">Màu gợi ý</label>
       <div class="d-flex flex-wrap gap-3 justify-content-center bg-light p-4 rounded-4 border">
         @for (color of presetColors; track color) {
-          <button class="btn rounded-circle shadow-sm color-btn"
+          <button class="btn rounded-circle shadow-sm color-btn preset-color-btn"
                   [style.background-color]="color"
                   [class.border-primary]="selectedColor === color"
                   [class.border-2]="selectedColor === color"
                   [class.border]="selectedColor !== color"
-                  style="width: 50px; height: 50px; border-color: rgba(0,0,0,0.1) !important;"
                   (click)="applyColor(color)">
             <i class="bi bi-check-lg fs-5"
                [ngClass]="color === '#212529' ? 'text-white' : 'text-primary'"

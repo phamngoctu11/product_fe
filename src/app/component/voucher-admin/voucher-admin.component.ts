@@ -6,13 +6,14 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { VoucherTemplate, VoucherTemplateRequest } from '../../model/voucher.model';
 import { VoucherService } from '../../service/voucher.service';
+import { FormFieldComponent, PageHeaderComponent, ViewStateComponent } from '../shared';
 
 @Component({
   selector: 'app-voucher-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PageHeaderComponent, FormFieldComponent, ViewStateComponent],
   templateUrl: './voucher-admin.component.html',
-  styleUrls: ['../../app.css'],
+  styleUrl: './voucher-admin.component.css',
 })
 export class VoucherAdminComponent implements OnInit {
   private readonly toast = injectToast(ToastService);

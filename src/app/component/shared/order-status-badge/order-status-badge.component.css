@@ -1,0 +1,53 @@
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.order-status-compact {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.74rem;
+}
+
+.order-status[data-tone='warning'] {
+  border-color: rgba(245, 158, 11, 0.32);
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+.order-status[data-tone='info'] {
+  border-color: rgba(6, 182, 212, 0.32);
+  background: rgba(6, 182, 212, 0.14);
+  color: #22d3ee;
+}
+
+.order-status[data-tone='primary'] {
+  border-color: rgba(var(--app-primary-rgb), 0.28);
+  background: rgba(var(--app-primary-rgb), 0.14);
+  color: var(--app-primary-light);
+}
+
+.order-status[data-tone='success'] {
+  border-color: rgba(34, 197, 94, 0.32);
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+}
+
+.order-status[data-tone='danger'] {
+  border-color: rgba(239, 68, 68, 0.32);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fb7185;
+}
+
+.order-status[data-tone='secondary'] {
+  border-color: rgba(148, 163, 184, 0.26);
+  background: rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+}

@@ -20,130 +20,44 @@
     <!-- Body -->
     <div class="cart-body">
 
-      <!-- Loading -->
-      <div *ngIf="isLoading" class="cart-loading">
-        <div class="cart-spinner"></div>
-        <p style="color:#7c85b0;font-size:0.875rem;">Đang tải giỏ hàng...</p>
+      <div *ngIf="checkoutErrorMessage && !isLoading" class="cart-inline-alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ checkoutErrorMessage }}</span>
       </div>
 
-      <!-- Items -->
-      <div class="cart-items" *ngIf="!isLoading">
-
-        <!-- Empty -->
-        <div *ngIf="!cartData?.items || (cartData?.items?.length ?? 0) === 0" class="cart-empty">
-          <div class="cart-empty-icon">
-            <i class="bi bi-bag-x"></i>
-          </div>
-          <h6 style="color:#c7cbee;font-weight:700;">Giỏ hàng trống</h6>
-          <p style="color:#7c85b0;font-size:0.85rem;">Thêm sản phẩm vào giỏ hàng để tiến hành đặt hàng.</p>
-        </div>
-
-        <!-- Product rows -->
-        @for (item of cartData?.items; track getCartItemId(item); let i = $index) {
-          <div class="cart-item">
-            <!-- Checkbox -->
-            <input
-              *ngIf="isOwner"
-              type="checkbox"
-              class="cart-checkbox"
-              [checked]="selectedProductIds.includes(getCartItemId(item))"
-              (change)="toggleSelection(getCartItemId(item))" />
-
-            <!-- Product info -->
-            <div class="cart-product-info">
-              <div class="cart-product-thumb">
-                <img *ngIf="item.image_url" [src]="item.image_url" [alt]="getCartItemName(item)">
-                <i *ngIf="!item.image_url" class="bi bi-box-seam"></i>
-              </div>
-              <div class="min-w-0">
-                <div class="cart-product-name">
-                  {{ getCartItemName(item) || 'Sản phẩm #' + getCartItemId(item) }}
-                </div>
-                <div class="cart-product-id">#{{ getCartItemId(item) }}</div>
-              </div>
-            </div>
-
-            <!-- Quantity -->
-            <div>
-              @if (isOwner) {
-                <div class="cart-qty">
-                  <button class="cart-qty-btn minus" (click)="changeQuantity(i, -1)">
-                    <i class="bi bi-dash-lg"></i>
-                  </button>
-                  <span class="cart-qty-val">{{ listCurQuan[i] }}</span>
-                  <button class="cart-qty-btn plus" (click)="changeQuantity(i, 1)">
-                    <i class="bi bi-plus-lg"></i>
-                  </button>
-                </div>
-              } @else {
-                <span style="font-weight:800;color:#c7cbee;font-size:0.95rem;">{{ listCurQuan[i] }}</span>
-              }
-            </div>
-
-            <!-- Unit price -->
-            <div class="cart-unit-price">{{ item.price | number }}đ</div>
-
-            <!-- Subtotal -->
-            <div class="cart-total-price">{{ listCurQuan[i] * item.price | number }}đ</div>
-
-            <!-- Delete -->
-            <button
-              *ngIf="isOwner"
-              type="button"
-              class="cart-del-btn"
-              [disabled]="isDeleting(getCartItemId(item))"
-              title="Xóa khỏi giỏ hàng"
-              (click)="removeItem(getCartItemId(item))">
-              @if (isDeleting(getCartItemId(item))) {
-                <span class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;color:#f87171;"></span>
-              } @else {
-                <i class="bi bi-trash3-fill cart-trash-icon"></i>
-              }
-            </button>
-          </div>
+      <app-view-state
+        [loading]="isLoading"
+        [empty]="!cartData?.items || (cartData?.items?.length ?? 0) === 0"
+        [card]="false"
+        loadingText="Đang tải giỏ hàng..."
+        emptyTitle="Giỏ hàng trống"
+        emptyText="Thêm sản phẩm vào giỏ hàng để tiến hành đặt hàng."
+        emptyIcon="bi-bag-x">
+      <div class="cart-items">
+        @for (item of cartData?.items; track getCartItemId(item); let index = $index) {
+          <app-cart-item-row
+            [item]="item"
+            [quantity]="listCurQuan[index]"
+            [owner]="isOwner"
+            [selected]="selectedProductIds.includes(getCartItemId(item))"
+            [deleting]="isDeleting(getCartItemId(item))"
+            (selectionToggle)="toggleSelection($event)"
+            (quantityDelta)="changeQuantity(index, $event)"
+            (remove)="removeItem($event)">
+          </app-cart-item-row>
         }
       </div>
+      </app-view-state>
 
-      <!-- QR Payment Panel -->
-      <div *ngIf="onlinePaymentData" class="cart-qr-panel">
-        <div class="d-flex gap-4 align-items-start flex-wrap">
-          <div class="cart-qr-box">
-            @if (isGeneratingPaymentQr) {
-              <div class="text-center">
-                <div class="cart-spinner"></div>
-                <div style="color:#7c85b0;font-size:0.75rem;">Đang tạo QR...</div>
-              </div>
-            } @else if (paymentQrDataUrl) {
-              <img [src]="paymentQrDataUrl" alt="QR thanh toán">
-            } @else {
-              <span style="color:#3d4b6e;font-size:0.8rem;">Không có dữ liệu QR.</span>
-            }
-          </div>
-          <div class="flex-grow-1 min-w-0">
-            <div class="cart-provider-badge">
-              <i class="bi bi-wallet2 me-1"></i>{{ onlinePaymentData.provider || 'MOMO' }}
-            </div>
-            <div class="cart-qr-title">Thanh toán online qua MoMo</div>
-            <p class="cart-qr-desc">{{ onlinePaymentData.message || 'Quét mã QR hoặc mở trang thanh toán để hoàn tất đơn hàng.' }}</p>
-            <div class="cart-qr-actions">
-              <button
-                type="button"
-                class="cart-qr-btn-main"
-                [disabled]="!getPaymentUrl()"
-                (click)="openPaymentUrl()">
-                <i class="bi bi-box-arrow-up-right"></i> Mở trang thanh toán
-              </button>
-              <button
-                type="button"
-                class="cart-qr-btn-outline"
-                *ngIf="onlinePaymentData.deeplink"
-                (click)="openDeeplink()">
-                <i class="bi bi-phone"></i> Mở app MoMo
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      @if (onlinePaymentData) {
+        <app-cart-payment-panel
+          [payment]="onlinePaymentData"
+          [qrDataUrl]="paymentQrDataUrl"
+          [generatingQr]="isGeneratingPaymentQr"
+          (openPayment)="openPaymentUrl()"
+          (openDeeplink)="openDeeplink()">
+        </app-cart-payment-panel>
+      }
     </div>
 
     <!-- Summary -->

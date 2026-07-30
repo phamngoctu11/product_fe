@@ -1,34 +1,32 @@
-/* Extracted from component template. */
-.stat-card {
+.dashboard-panel {
+    border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;
     border-radius: 1.1rem;
-    overflow: hidden;
-    border: 1px solid rgba(var(--app-primary-rgb), 0.18);
-    background: linear-gradient(180deg, #10172b 0%, #0d1427 100%);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-  .stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 24px 52px rgba(0,0,0,0.36), 0 0 0 1px rgba(var(--app-primary-rgb),0.22) !important;
   }
 
-  .stat-icon {
-    width: 52px; height: 52px;
-    border-radius: 0.85rem;
+  .dashboard-panel-header {
+    border-radius: 1.1rem 1.1rem 0 0;
+  }
+
+  .dashboard-panel-title {
+    color: #0f172a;
+    font-size: 0.95rem;
+  }
+
+  .dashboard-panel-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .best-seller-title {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 1.4rem;
-    color: #fff;
+    gap: 0.5rem;
   }
 
-  .stat-icon-revenue  { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 6px 16px rgba(16,185,129,0.30); }
-  .stat-icon-orders   { background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 6px 16px rgba(99,102,241,0.30); }
-  .stat-icon-pending  { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 6px 16px rgba(245,158,11,0.30); }
-
-  .stat-value-revenue { color: #10b981; }
-  .stat-value-orders  { color: var(--app-text); }
-  .stat-value-pending { color: #f59e0b; }
+  .status-label { font-size: 0.875rem; }
+  .status-description { font-size: 0.75rem; }
+  .status-percent { font-size: 0.72rem; }
+  .operation-value { font-size: 1.1rem; }
+  .operation-percent { font-size: 0.7rem; }
 
   .chart-shell {
     width: 100%;
@@ -119,6 +117,46 @@
   }
   .best-seller-table tbody tr:last-child td { border-bottom: none; }
   .best-seller-table tbody tr:hover td { background: rgba(var(--app-primary-rgb),0.08); }
+
+  .rank-column { width: 64px; }
+
+  .best-seller-count {
+    background: rgba(239,68,68,0.08);
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .best-seller-image {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    background: #f8f9ff;
+  }
+
+  .best-seller-image-content {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .best-seller-name {
+    max-width: 480px;
+    color: #0f172a;
+    font-size: 0.88rem;
+  }
+
+  .product-id-badge {
+    background: rgba(99,102,241,0.08);
+    color: #6366f1;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .sold-quantity {
+    color: #10b981;
+    font-size: 0.95rem;
+  }
 
   .rank-badge {
     display: inline-flex;

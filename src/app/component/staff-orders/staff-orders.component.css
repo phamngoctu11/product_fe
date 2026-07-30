@@ -1,0 +1,12 @@
+.staff-detail-backdrop {
+  z-index: 2000;
+}
+
+.staff-detail-modal {
+  max-width: 980px;
+  max-height: 92vh;
+}
+
+.staff-detail-body {
+  max-height: calc(92vh - 96px);
+}

@@ -11,15 +11,28 @@ import { OrderService } from '../../service/order.service';
 import { UserService } from '../../service/user.service';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-popup.component';
-import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
+import {
+  AppPaginationComponent,
+  OrderStatusBadgeComponent,
+  PageHeaderComponent,
+  ViewStateComponent,
+} from '../shared';
 import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-admin-order',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrderDetailPopupComponent, AppPaginationComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    OrderDetailPopupComponent,
+    AppPaginationComponent,
+    PageHeaderComponent,
+    OrderStatusBadgeComponent,
+    ViewStateComponent,
+  ],
   templateUrl: './admin-order.component.html',
-  styleUrls: ['../../app.css', './admin-order.component.css'],
+  styleUrl: './admin-order.component.css',
 })
 export class AdminOrderComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
@@ -30,7 +43,6 @@ export class AdminOrderComponent implements OnInit {
   selectedStaffByOrder: { [orderId: number]: string | null } = {};
   activeStatus: 'PENDING_KCS' | 'PENDING_APPROVAL' | null = null;
   isLoading = false;
-  isLoadingMore = false;
   currentPage = 0;
   pageSize = 20;
   totalPages = 0;
@@ -78,28 +90,6 @@ export class AdminOrderComponent implements OnInit {
         this.isLoading = false;
       },
     });
-  }
-
-  loadMorePendingOrders(): void {
-    if (!this.activeStatus || this.isLoadingMore || this.currentPage + 1 >= this.totalPages) return;
-
-    this.isLoadingMore = true;
-    this.orderService.getPendingOrders(this.activeStatus, this.currentPage + 1, this.pageSize).subscribe({
-      next: (res) => {
-        this.pendingOrders = [...this.pendingOrders, ...(res.content || [])];
-        this.currentPage = res.number ?? this.currentPage + 1;
-        this.totalPages = res.totalPages || 0;
-        this.isLoadingMore = false;
-      },
-      error: (err) => {
-        this.toast.notify('Không thể tải thêm đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
-        this.isLoadingMore = false;
-      },
-    });
-  }
-
-  hasMoreOrders(): boolean {
-    return this.currentPage + 1 < this.totalPages;
   }
 
   changePage(page: number): void {

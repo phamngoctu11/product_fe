@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.order-summary-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.order-summary-card.order-clickable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md) !important;
+}
+
+.order-summary-heading-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.65rem;
+}
+
+@media (max-width: 575.98px) {
+  .order-summary-heading-actions {
+    width: 100%;
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,74 @@
+<div class="table-responsive order-items-table-wrap">
+  <table class="table align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        @if (!isWarehouse) {
+          <th class="ps-4">Item</th>
+          <th>Hình ảnh</th>
+        }
+        <th>Sản phẩm</th>
+        <th class="text-center">SL đặt</th>
+        @if (!isWarehouse) {
+          <th class="text-center">SL xuất</th>
+          <th class="text-center">SL nhận</th>
+        }
+        @if (isReceipt) {
+          <th class="text-center quantity-column">SL thực nhận</th>
+        } @else if (isWarehouse) {
+          <th class="text-center quantity-column">SL xuất</th>
+        }
+        <th class="text-end pe-4">Đơn giá</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of items; track item.id ?? item.orderItemId ?? getVariantId(item)) {
+        <tr>
+          @if (!isWarehouse) {
+            <td class="ps-4 fw-bold">#{{ item.id || item.orderItemId || item.productId }}</td>
+            <td>
+              @if (getImage(item)) {
+                <img [src]="getImage(item)" [alt]="item.productName" class="order-item-image">
+              } @else {
+                <span class="order-item-image-placeholder"><i class="bi bi-image"></i></span>
+              }
+            </td>
+          }
+          <td [class.ps-4]="isWarehouse">
+            <div class="order-item-product">
+              @if (isWarehouse && getImage(item)) {
+                <img [src]="getImage(item)" [alt]="item.productName" class="order-item-image">
+              }
+              <div>
+                <div class="fw-bold text-dark">{{ item.variantName || item.productName || 'Sản phẩm' }}</div>
+                <div class="text-muted small">{{ getVariantLabel(item) }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-center fw-bold">{{ item.quantity }}</td>
+          @if (!isWarehouse) {
+            <td class="text-center">{{ item.exportedQuantity ?? '-' }}</td>
+            <td class="text-center">{{ item.receivedQuantity ?? '-' }}</td>
+          }
+          @if (isReceipt || isWarehouse) {
+            <td class="text-center">
+              <input
+                type="number"
+                class="form-control text-center fw-bold quantity-input"
+                min="0"
+                [disabled]="!editable"
+                [ngModel]="getQuantity(item)"
+                (ngModelChange)="updateQuantity(item, $event)">
+            </td>
+          }
+          <td class="text-end pe-4 fw-bold">{{ item.price | number: '1.0-0' }} đ</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="columnCount" class="text-center text-muted fst-italic py-4">
+            Đơn hàng chưa có danh sách sản phẩm.
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

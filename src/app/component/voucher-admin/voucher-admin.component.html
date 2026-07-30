@@ -1,21 +1,15 @@
 <div class="container-fluid p-4 voucher-admin-page">
-  <div class="app-page-header flex-wrap">
-    <div class="app-page-heading">
-      <div class="app-title-icon">
-        <i class="bi bi-ticket-perforated-fill"></i>
-      </div>
-      <div class="app-page-heading-text">
-        <h1 class="app-page-title">Cấu hình voucher</h1>
-        <p class="app-page-subtitle">Tạo campaign đổi điểm và giảm giá cho toàn hệ thống</p>
-      </div>
-    </div>
-    <button class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm"
+  <app-page-header
+    icon="bi-ticket-perforated-fill"
+    title="Cấu hình voucher"
+    subtitle="Tạo campaign đổi điểm và giảm giá cho toàn hệ thống">
+    <button pageActions class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm"
             type="button"
             (click)="loadTemplates()"
             [disabled]="isLoadingTemplates">
       <i class="bi bi-arrow-clockwise me-1"></i> Tải lại
     </button>
-  </div>
+  </app-page-header>
 
   <div class="row g-4">
     <div class="col-xl-7">
@@ -29,116 +23,72 @@
           <form #voucherForm="ngForm" (ngSubmit)="saveCampaign(voucherForm)">
             <div class="row g-3">
               <div class="col-md-5">
-                <label class="form-label fw-semibold">Mã voucher</label>
-                <input class="form-control shadow-sm"
-                       name="code"
-                       required
-                       maxlength="50"
-                       placeholder="VD: SUMMER20"
-                       [(ngModel)]="campaign.code">
+                <app-form-field label="Mã voucher" for="voucherCode" [required]="true" [control]="voucherForm.controls['code']">
+                  <input id="voucherCode" class="form-control shadow-sm" name="code" required maxlength="50" placeholder="VD: SUMMER20" [(ngModel)]="campaign.code">
+                </app-form-field>
               </div>
 
               <div class="col-md-7">
-                <label class="form-label fw-semibold">Tên voucher</label>
-                <input class="form-control shadow-sm"
-                       name="name"
-                       required
-                       maxlength="120"
-                       placeholder="VD: Giảm 20% mùa hè"
-                       [(ngModel)]="campaign.name">
+                <app-form-field label="Tên voucher" for="voucherName" [required]="true" [control]="voucherForm.controls['name']">
+                  <input id="voucherName" class="form-control shadow-sm" name="name" required maxlength="120" placeholder="VD: Giảm 20% mùa hè" [(ngModel)]="campaign.name">
+                </app-form-field>
               </div>
 
               <div class="col-12">
-                <label class="form-label fw-semibold">Mô tả</label>
-                <textarea class="form-control shadow-sm"
-                          name="description"
-                          rows="3"
-                          maxlength="500"
-                          placeholder="Mô tả điều kiện và mục đích campaign"
-                          [(ngModel)]="campaign.description"></textarea>
+                <app-form-field label="Mô tả" for="voucherDescription">
+                  <textarea id="voucherDescription" class="form-control shadow-sm" name="description" rows="3" maxlength="500" placeholder="Mô tả điều kiện và mục đích campaign" [(ngModel)]="campaign.description"></textarea>
+                </app-form-field>
               </div>
 
               <div class="col-md-4">
-                <label class="form-label fw-semibold">Điểm đổi</label>
-                <input class="form-control shadow-sm"
-                       name="pointCost"
-                       type="number"
-                       min="0"
-                       required
-                       [(ngModel)]="campaign.pointCost">
+                <app-form-field label="Điểm đổi" for="voucherPointCost" [required]="true" [control]="voucherForm.controls['pointCost']">
+                  <input id="voucherPointCost" class="form-control shadow-sm" name="pointCost" type="number" min="0" required [(ngModel)]="campaign.pointCost">
+                </app-form-field>
               </div>
 
               <div class="col-md-4">
-                <label class="form-label fw-semibold">Đơn tối thiểu</label>
-                <input class="form-control shadow-sm"
-                       name="minOrderValue"
-                       type="number"
-                       min="0"
-                       step="1000"
-                       required
-                       [(ngModel)]="campaign.minOrderValue">
+                <app-form-field label="Đơn tối thiểu" for="voucherMinOrder" [required]="true" [control]="voucherForm.controls['minOrderValue']">
+                  <input id="voucherMinOrder" class="form-control shadow-sm" name="minOrderValue" type="number" min="0" step="1000" required [(ngModel)]="campaign.minOrderValue">
+                </app-form-field>
               </div>
 
               <div class="col-md-4">
-                <label class="form-label fw-semibold">Số lượng phát hành</label>
-                <input class="form-control shadow-sm"
-                       name="quantity"
-                       type="number"
-                       min="0"
-                       required
-                       [(ngModel)]="campaign.quantity">
+                <app-form-field label="Số lượng phát hành" for="voucherQuantity" [required]="true" [control]="voucherForm.controls['quantity']">
+                  <input id="voucherQuantity" class="form-control shadow-sm" name="quantity" type="number" min="0" required [(ngModel)]="campaign.quantity">
+                </app-form-field>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Phần trăm giảm</label>
-                <div class="input-group shadow-sm">
-                  <input class="form-control"
-                         name="discountPercent"
-                         type="number"
-                         min="0"
-                         step="0.1"
-                         required
-                         [(ngModel)]="campaign.discountPercent">
-                  <span class="input-group-text">%</span>
-                </div>
+                <app-form-field label="Phần trăm giảm" for="voucherDiscount" [required]="true" [control]="voucherForm.controls['discountPercent']">
+                  <div class="input-group shadow-sm">
+                    <input id="voucherDiscount" class="form-control" name="discountPercent" type="number" min="0" step="0.1" required [(ngModel)]="campaign.discountPercent">
+                    <span class="input-group-text">%</span>
+                  </div>
+                </app-form-field>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Giảm tối đa</label>
-                <div class="input-group shadow-sm">
-                  <input class="form-control"
-                         name="maxDiscountAmount"
-                         type="number"
-                         min="0"
-                         step="1000"
-                         required
-                         [(ngModel)]="campaign.maxDiscountAmount">
-                  <span class="input-group-text">đ</span>
-                </div>
+                <app-form-field label="Giảm tối đa" for="voucherMaxDiscount" [required]="true" [control]="voucherForm.controls['maxDiscountAmount']">
+                  <div class="input-group shadow-sm">
+                    <input id="voucherMaxDiscount" class="form-control" name="maxDiscountAmount" type="number" min="0" step="1000" required [(ngModel)]="campaign.maxDiscountAmount">
+                    <span class="input-group-text">đ</span>
+                  </div>
+                </app-form-field>
               </div>
 
               <div class="col-md-7">
-                <label class="form-label fw-semibold">Ngày hết hạn</label>
-                <input class="form-control shadow-sm"
-                       name="expiryDate"
-                       type="datetime-local"
-                       required
-                       [min]="getMinExpiryDate()"
-                       [(ngModel)]="campaign.expiryDate">
+                <app-form-field label="Ngày hết hạn" for="voucherExpiry" [required]="true" [control]="voucherForm.controls['expiryDate']">
+                  <input id="voucherExpiry" class="form-control shadow-sm" name="expiryDate" type="datetime-local" required [min]="getMinExpiryDate()" [(ngModel)]="campaign.expiryDate">
+                </app-form-field>
               </div>
 
               <div class="col-md-5">
-                <label class="form-label fw-semibold d-block">Trạng thái</label>
-                <div class="form-check form-switch bg-light border rounded-3 px-5 py-2 shadow-sm">
-                  <input class="form-check-input"
-                         type="checkbox"
-                         role="switch"
-                         name="active"
-                         [(ngModel)]="campaign.active">
-                  <label class="form-check-label fw-semibold">
-                    {{ campaign.active ? 'Đang kích hoạt' : 'Tạm tắt' }}
-                  </label>
-                </div>
+                <app-form-field label="Trạng thái" for="voucherActive">
+                  <div class="form-check form-switch bg-light border rounded-3 px-5 py-2 shadow-sm">
+                    <input id="voucherActive" class="form-check-input" type="checkbox" role="switch" name="active" [(ngModel)]="campaign.active">
+                    <label class="form-check-label fw-semibold" for="voucherActive">{{ campaign.active ? 'Đang kích hoạt' : 'Tạm tắt' }}</label>
+                  </div>
+                </app-form-field>
               </div>
             </div>
 
@@ -214,16 +164,15 @@
           <small class="text-muted">Dữ liệu lấy từ `/api/vouchers/templates`.</small>
         </div>
         <div class="card-body p-0">
-          <div *ngIf="isLoadingTemplates" class="text-center py-5">
-            <div class="spinner-border text-primary"></div>
-          </div>
-
-          <div *ngIf="!isLoadingTemplates && templates.length === 0" class="text-center py-5 text-muted">
-            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-            Chưa có voucher active.
-          </div>
-
-          <div *ngIf="!isLoadingTemplates && templates.length > 0" class="table-responsive">
+          <app-view-state
+            [loading]="isLoadingTemplates"
+            [empty]="templates.length === 0"
+            [card]="false"
+            loadingText="Đang tải voucher..."
+            emptyTitle="Chưa có voucher đang phát hành"
+            emptyText="Tạo campaign mới để bắt đầu phát hành voucher."
+            emptyIcon="bi-ticket-perforated">
+          <div class="table-responsive">
             <table class="table align-middle mb-0">
               <thead class="table-light small text-uppercase text-muted">
                 <tr>
@@ -237,7 +186,7 @@
                 <tr *ngFor="let template of templates">
                   <td class="ps-4">
                     <div class="fw-bold text-dark">{{ template.code }}</div>
-                    <div class="text-muted small text-truncate" style="max-width: 220px;">{{ template.name }}</div>
+                    <div class="voucher-template-name text-muted small text-truncate">{{ template.name }}</div>
                   </td>
                   <td>{{ template.pointCost | number }}</td>
                   <td>{{ template.quantity | number }}</td>
@@ -250,6 +199,7 @@
               </tbody>
             </table>
           </div>
+          </app-view-state>
         </div>
       </div>
     </div>

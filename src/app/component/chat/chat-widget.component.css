@@ -1,3 +1,55 @@
+.chat-widget-root {
+  z-index: 9999;
+}
+
+.chat-widget-window {
+  width: min(360px, calc(100vw - 2rem));
+  height: min(500px, calc(100vh - 6rem));
+  animation: slideUpChat 0.3s ease-out;
+  background: #0d1427;
+}
+
+.chat-widget-window h2 {
+  font-size: 0.95rem;
+}
+
+.chat-widget-header-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.chat-widget-messages {
+  background: #070b19;
+}
+
+.chat-widget-input {
+  background: #0d1427;
+}
+
+.chat-widget-input .form-control {
+  border-color: #1e2a4a;
+  background: #0a0e20;
+}
+
+.chat-widget-send {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+}
+
+.chat-btn-float {
+  display: grid;
+  width: 65px;
+  height: 65px;
+  place-items: center;
+}
+
 .chat-widget-container {
   position: fixed;
   bottom: 30px;

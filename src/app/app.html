@@ -1,187 +1,38 @@
-<ng-container *ngIf="authService.isLoggedIn(); else guestLayout">
-<div
-  class="app-shell"
-  [class.sidebar-collapsed]="isSidebarCollapsed"
-  [class.mobile-sidebar-open]="isMobileSidebarOpen">
-  <aside class="app-sidebar" aria-label="Điều hướng chính">
-    <div class="sidebar-heading">
-      <div class="brand-mark">
-        <i class="bi bi-bag-heart-fill"></i>
-      </div>
-      <span class="brand-title">ShopVN</span>
-      <button
-        type="button"
-        class="sidebar-toggle"
-        [attr.aria-label]="isSidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'"
-        (click)="toggleSidebar()">
-        <i class="bi" [ngClass]="isSidebarCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
-      </button>
-    </div>
+@if (authService.isLoggedIn()) {
+  <div
+    class="app-shell"
+    [class.sidebar-collapsed]="isSidebarCollapsed"
+    [class.mobile-sidebar-open]="isMobileSidebarOpen">
+    <app-sidebar
+      [collapsed]="isSidebarCollapsed"
+      (toggleCollapsed)="toggleSidebar()"
+      (navigationSelected)="closeMobileSidebar()">
+    </app-sidebar>
 
-    <nav class="sidebar-nav">
-      <a
-        *ngIf="authService.isAdmin()"
-        routerLink="/admin-dashboard"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Bảng thống kê"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-bar-chart-line-fill"></i>
-        <span class="nav-label">Bảng thống kê</span>
-      </a>
+    <button
+      type="button"
+      class="sidebar-backdrop"
+      aria-label="Đóng menu"
+      (click)="closeMobileSidebar()">
+    </button>
 
-      <a
-        *ngIf="authService.isAdmin() || authService.isStaff()"
-        routerLink="/admin-chat"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Quản lý chat"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-chat-square-dots-fill"></i>
-        <span class="nav-label">Quản lý chat</span>
-      </a>
-
-      <a
-        *ngIf="authService.isAdmin() || authService.isStaff()"
-        routerLink="/commissions"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Hoa hồng tư vấn"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-cash-stack"></i>
-        <span class="nav-label">Hoa hồng tư vấn</span>
-      </a>
-
-      <a
-        routerLink="/product"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Quản lý sản phẩm"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-grid-fill"></i>
-        <span class="nav-label">Quản lý sản phẩm</span>
-      </a>
-
-      <a
-        *ngIf="authService.isAdmin()"
-        routerLink="/user"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Quản lý người dùng"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-people-fill"></i>
-        <span class="nav-label">Quản lý người dùng</span>
-      </a>
-
-      <a
-        *ngIf="authService.isAdmin()"
-        routerLink="/admin-orders"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Duyệt đơn hàng"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-clipboard2-check-fill"></i>
-        <span class="nav-label">Duyệt đơn hàng</span>
-      </a>
-
-      <a
-        *ngIf="authService.isAdmin()"
-        routerLink="/admin-vouchers"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Cấu hình voucher"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-ticket-perforated-fill"></i>
-        <span class="nav-label">Cấu hình voucher</span>
-      </a>
-
-      <a
-        *ngIf="authService.isStaff()"
-        routerLink="/staff-orders"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Kho hàng"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-box-seam-fill"></i>
-        <span class="nav-label">Kho hàng</span>
-      </a>
-
-      <a
-        routerLink="/orders"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Đơn hàng của tôi"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-receipt-cutoff"></i>
-        <span class="nav-label">Đơn hàng của tôi</span>
-      </a>
-
-      <a
-        *ngIf="authService.isLoggedIn() && !authService.isAdmin() && !authService.isStaff()"
-        routerLink="/consultations"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Tư vấn sản phẩm"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-chat-heart-fill"></i>
-        <span class="nav-label">Tư vấn sản phẩm</span>
-      </a>
-
-      <a
-        routerLink="/myinfor"
-        routerLinkActive="active"
-        class="custom-sidebar-link"
-        title="Hồ sơ cá nhân"
-        (click)="closeMobileSidebar()">
-        <i class="bi bi-person-badge-fill"></i>
-        <span class="nav-label">Hồ sơ cá nhân</span>
-      </a>
-    </nav>
-  </aside>
-
-  <button
-    type="button"
-    class="sidebar-backdrop"
-    aria-label="Đóng menu"
-    (click)="closeMobileSidebar()">
-  </button>
-
-  <header class="app-topbar">
-    <div class="topbar-left">
-      <!-- Mobile hamburger -->
-      <button
-        type="button"
-        class="topbar-hamburger"
-        aria-label="Mở menu"
-        (click)="isMobileSidebarOpen = true">
-        <i class="bi bi-list fs-5"></i>
-      </button>
-
-      <div class="topbar-heading">
-        <span class="topbar-title">Bảng điều khiển</span>
-        <span class="topbar-subtitle">Quản lý đơn hàng, sản phẩm và thông báo</span>
-      </div>
-    </div>
-
-    <div class="topbar-actions">
-      <ng-container *ngIf="!authService.isLoggedIn(); else loggedInToolbar">
+    <header class="app-topbar">
+      <div class="topbar-left">
         <button
-          class="btn btn-light border fw-semibold text-secondary px-4 rounded-pill"
-          style="font-size:0.875rem;"
-          routerLink="/login">
-          Đăng nhập
+          type="button"
+          class="topbar-hamburger"
+          aria-label="Mở menu"
+          (click)="isMobileSidebarOpen = true">
+          <i class="bi bi-list fs-5"></i>
         </button>
 
-        <button
-          class="btn fw-semibold px-4 rounded-pill text-white"
-          style="background: var(--app-gradient); font-size:0.875rem; box-shadow: var(--shadow-primary);"
-          [routerLink]="['/login']"
-          [queryParams]="{ mode: 'signup' }">
-          Đăng ký ngay
-        </button>
-      </ng-container>
+        <div class="topbar-heading">
+          <span class="topbar-title">Bảng điều khiển</span>
+          <span class="topbar-subtitle">Quản lý đơn hàng, sản phẩm và thông báo</span>
+        </div>
+      </div>
 
-      <ng-template #loggedInToolbar>
+      <div class="topbar-actions">
         <button
           type="button"
           class="topbar-icon-button"
@@ -201,45 +52,38 @@
             title="Thông báo"
             (click)="markAsRead()">
             <i class="bi bi-bell"></i>
-
-            <span
-              *ngIf="unreadCount > 0"
-              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge"
-              style="font-size:0.6rem;">
-              {{ unreadCount > 99 ? '99+' : unreadCount }}
-            </span>
+            @if (unreadCount > 0) {
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            }
           </button>
 
-          <ul
-            class="dropdown-menu dropdown-menu-end mt-2 p-0 notification-menu"
-            aria-labelledby="notificationMenu">
+          <ul class="dropdown-menu dropdown-menu-end mt-2 p-0 notification-menu" aria-labelledby="notificationMenu">
             <li class="dropdown-header notification-header">
               <span>Thông báo</span>
-              <span class="badge rounded-pill text-white" style="background: var(--app-gradient);">{{ notifications.length }}</span>
+              <span class="badge rounded-pill text-bg-primary">{{ notifications.length }}</span>
             </li>
-
-            <li *ngIf="notifications.length === 0" class="text-center py-5 text-muted small">
-              <i class="bi bi-bell-slash fs-2 d-block mb-3 opacity-25"></i>
-              Bạn không có thông báo nào.
-            </li>
-
-            <li *ngFor="let notif of notifications">
-              <a
-                class="dropdown-item notification-item"
-                routerLink="/orders"
-                style="white-space: normal; cursor: pointer;">
-                <div class="notification-icon">
-                  <i class="bi bi-box-seam-fill"></i>
-                </div>
-                <div class="min-w-0">
-                  <h6 class="mb-1 fw-bold text-dark fs-6">{{ notif.title }}</h6>
-                  <p class="mb-0 text-muted small">{{ notif.content }}</p>
-                  <small class="fw-semibold mt-1 d-block" style="color: var(--app-primary);">
-                    {{ notif.createdAt | timeAgo }}
-                  </small>
-                </div>
-              </a>
-            </li>
+            @if (notifications.length === 0) {
+              <li class="text-center py-5 text-muted small">
+                <i class="bi bi-bell-slash fs-2 d-block mb-3 opacity-25"></i>
+                Bạn không có thông báo nào.
+              </li>
+            }
+            @for (notification of notifications; track notification.id ?? $index) {
+              <li>
+                <a class="dropdown-item notification-item" routerLink="/orders">
+                  <div class="notification-icon"><i class="bi bi-box-seam-fill"></i></div>
+                  <div class="min-w-0">
+                    <h6 class="mb-1 fw-bold text-dark fs-6">{{ notification.title }}</h6>
+                    <p class="mb-0 text-muted small">{{ notification.content }}</p>
+                    <small class="notification-time fw-semibold mt-1 d-block">
+                      {{ notification.createdAt | timeAgo }}
+                    </small>
+                  </div>
+                </a>
+              </li>
+            }
           </ul>
         </div>
 
@@ -251,9 +95,13 @@
             data-bs-toggle="dropdown"
             aria-expanded="false">
             <span class="user-avatar">
-              <span *ngIf="isCurrentUserLoading" class="spinner-border spinner-border-sm" aria-label="Đang tải thông tin user"></span>
-              <img *ngIf="!isCurrentUserLoading && userAvatarUrl" [src]="userAvatarUrl" alt="Avatar">
-              <i *ngIf="!isCurrentUserLoading && !userAvatarUrl" class="bi bi-person-fill"></i>
+              @if (isCurrentUserLoading) {
+                <span class="spinner-border spinner-border-sm" aria-label="Đang tải thông tin người dùng"></span>
+              } @else if (userAvatarUrl) {
+                <img [src]="userAvatarUrl" alt="Ảnh đại diện">
+              } @else {
+                <i class="bi bi-person-fill"></i>
+              }
             </span>
             <span class="user-summary">
               <span class="user-name">{{ isCurrentUserLoading ? 'Đang tải...' : displayName }}</span>
@@ -263,145 +111,27 @@
           </button>
 
           <ul class="dropdown-menu dropdown-menu-end mt-2 user-dropdown" aria-labelledby="userMenu">
-            <li>
-              <a class="dropdown-item custom-hover" routerLink="/myinfor" style="cursor: pointer">
-                <i class="bi bi-person-badge text-primary"></i>Thông tin cá nhân
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item custom-hover" (click)="openRewards()" style="cursor: pointer">
-                <i class="bi bi-gift-fill text-warning"></i>Đổi voucher
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item custom-hover" (click)="openOrders()" style="cursor: pointer">
-                <i class="bi bi-bag-heart text-primary"></i>Đơn hàng của tôi
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item custom-hover" (click)="openCart()" style="cursor: pointer">
-                <i class="bi bi-bag-check-fill text-success"></i>Giỏ hàng của tôi
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item custom-hover" (click)="openSettings()" style="cursor: pointer">
-                <i class="bi bi-palette2 text-secondary"></i>Cài đặt giao diện
-              </a>
-            </li>
-            <li><hr class="dropdown-divider opacity-25 my-1" /></li>
-            <li>
-              <a class="dropdown-item custom-hover-danger" (click)="logout()" style="cursor: pointer">
-                <i class="bi bi-box-arrow-right"></i>Đăng xuất
-              </a>
-            </li>
+            <li><a class="dropdown-item custom-hover" routerLink="/myinfor"><i class="bi bi-person-badge text-primary"></i>Thông tin cá nhân</a></li>
+            <li><button class="dropdown-item custom-hover" type="button" (click)="openRewards()"><i class="bi bi-gift-fill text-warning"></i>Đổi voucher</button></li>
+            <li><button class="dropdown-item custom-hover" type="button" (click)="openOrders()"><i class="bi bi-bag-heart text-primary"></i>Đơn hàng của tôi</button></li>
+            <li><button class="dropdown-item custom-hover" type="button" (click)="openCart()"><i class="bi bi-bag-check-fill text-success"></i>Giỏ hàng của tôi</button></li>
+            <li><button class="dropdown-item custom-hover" type="button" (click)="openSettings()"><i class="bi bi-palette2 text-secondary"></i>Cài đặt giao diện</button></li>
+            <li><hr class="dropdown-divider opacity-25 my-1"></li>
+            <li><button class="dropdown-item custom-hover-danger" type="button" (click)="logout()"><i class="bi bi-box-arrow-right"></i>Đăng xuất</button></li>
           </ul>
         </div>
-      </ng-template>
-    </div>
-  </header>
-
-  <main class="app-main">
-    <div class="app-content">
-      <router-outlet></router-outlet>
-    </div>
-
-    <footer class="app-footer">
-      <div class="footer-highlight">
-        <div class="footer-highlight-item">
-          <span class="footer-highlight-icon"><i class="bi bi-truck-front-fill"></i></span>
-          <div>
-            <strong>Giao hàng thuận tiện</strong>
-            <span>Theo dõi trạng thái đơn hàng dễ dàng</span>
-          </div>
-        </div>
-        <div class="footer-highlight-item">
-          <span class="footer-highlight-icon"><i class="bi bi-shield-fill-check"></i></span>
-          <div>
-            <strong>Mua sắm an tâm</strong>
-            <span>Thông tin và giao dịch được bảo vệ</span>
-          </div>
-        </div>
-        <div class="footer-highlight-item">
-          <span class="footer-highlight-icon"><i class="bi bi-headset"></i></span>
-          <div>
-            <strong>Hỗ trợ khách hàng</strong>
-            <span>Tiếp nhận yêu cầu trong giờ làm việc</span>
-          </div>
-        </div>
       </div>
+    </header>
 
-      <div class="footer-main">
-        <section class="footer-brand" aria-labelledby="footer-brand-title">
-          <a class="footer-logo" routerLink="/product" id="footer-brand-title">
-            <span class="footer-logo-mark"><i class="bi bi-bag-heart-fill"></i></span>
-            <span>ShopVN</span>
-          </a>
-          <p>
-            Nền tảng mua sắm trực tuyến giúp bạn tìm kiếm sản phẩm, quản lý đơn hàng
-            và nhận hỗ trợ nhanh chóng trên cùng một hệ thống.
-          </p>
-          <div class="footer-socials" aria-label="Mạng xã hội">
-            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-              <i class="bi bi-facebook"></i>
-            </a>
-            <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-              <i class="bi bi-youtube"></i>
-            </a>
-            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <i class="bi bi-instagram"></i>
-            </a>
-            <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-              <i class="bi bi-tiktok"></i>
-            </a>
-          </div>
-        </section>
-
-        <nav class="footer-column" aria-labelledby="footer-support-title">
-          <h2 id="footer-support-title">Chăm sóc khách hàng</h2>
-          <a routerLink="/help/shopping-guide"><i class="bi bi-chevron-right"></i>Hướng dẫn mua hàng</a>
-          <a routerLink="/help/order-tracking"><i class="bi bi-chevron-right"></i>Kiểm tra đơn hàng</a>
-          <a routerLink="/help/payment-methods"><i class="bi bi-chevron-right"></i>Phương thức thanh toán</a>
-          <a routerLink="/help/contact-support"><i class="bi bi-chevron-right"></i>Gửi yêu cầu hỗ trợ</a>
-        </nav>
-
-        <nav class="footer-column" aria-labelledby="footer-policy-title">
-          <h2 id="footer-policy-title">Chính sách mua sắm</h2>
-          <a routerLink="/policies/shipping"><i class="bi bi-chevron-right"></i>Chính sách giao hàng</a>
-          <a routerLink="/policies/returns-refunds"><i class="bi bi-chevron-right"></i>Đổi trả và hoàn tiền</a>
-          <a routerLink="/policies/warranty"><i class="bi bi-chevron-right"></i>Bảo hành sản phẩm</a>
-          <a routerLink="/policies/privacy"><i class="bi bi-chevron-right"></i>Bảo mật thông tin</a>
-        </nav>
-
-        <section class="footer-column footer-contact" aria-labelledby="footer-contact-title">
-          <h2 id="footer-contact-title">Liên hệ chúng tôi</h2>
-          <a href="tel:19000000">
-            <i class="bi bi-telephone-fill"></i>
-            <span><small>Hotline hỗ trợ</small>1900 0000</span>
-          </a>
-          <a href="mailto:support@shopvn.vn">
-            <i class="bi bi-envelope-fill"></i>
-            <span><small>Email</small>support@shopvn.vn</span>
-          </a>
-          <p>
-            <i class="bi bi-clock-fill"></i>
-            <span><small>Thời gian làm việc</small>08:00 - 17:30, Thứ 2 - Thứ 7</span>
-          </p>
-        </section>
+    <main class="app-main">
+      <div class="app-content">
+        <router-outlet></router-outlet>
       </div>
-
-      <div class="footer-bottom" id="payment-methods">
-        <p>© {{ currentYear }} ShopVN. Đã đăng ký bản quyền.</p>
-        <div class="footer-payments" aria-label="Phương thức thanh toán được hỗ trợ">
-          <span><i class="bi bi-cash-coin"></i>Tiền mặt</span>
-          <span><i class="bi bi-credit-card-2-front"></i>Thẻ ngân hàng</span>
-          <span><i class="bi bi-qr-code-scan"></i>Thanh toán QR</span>
-        </div>
-      </div>
-    </footer>
-  </main>
-</div>
-</ng-container>
-<ng-template #guestLayout>
+      <app-footer></app-footer>
+    </main>
+  </div>
+} @else {
   <router-outlet></router-outlet>
-</ng-template>
+}
+
 <app-toast-container></app-toast-container>

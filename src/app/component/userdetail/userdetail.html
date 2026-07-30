@@ -43,52 +43,51 @@
 
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Tên đăng nhập">Tên đăng nhập</label>
-            <div class="input-group shadow-sm rounded-pill overflow-hidden border">
-              <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-person"></i></span>
-              <input type="text" class="form-control border-0 ps-0 shadow-none bg-white fw-bold text-primary"
-                     name="username"
-                     #username="ngModel"
-                     [(ngModel)]="currentUser.username"
-                     [disabled]="isEdit || isView"
-                     required
-                     minlength="3"
-                     maxlength="50"
-                     placeholder="Nhập tên đăng nhập..." />
-            </div>
-            <div class="text-danger small mt-1" *ngIf="username.invalid && username.touched">
-              Tên đăng nhập là bắt buộc, dài từ 3 đến 50 ký tự.
-            </div>
+            <app-form-field
+              label="Tên đăng nhập"
+              [required]="true"
+              [control]="userForm.controls['username']"
+              [errorMap]="usernameErrors">
+              <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-person"></i></span>
+                <input type="text" class="form-control border-0 ps-0 shadow-none bg-white fw-bold text-primary"
+                       name="username"
+                       [(ngModel)]="currentUser.username"
+                       [disabled]="isEdit || isView"
+                       required minlength="3" maxlength="50"
+                       placeholder="Nhập tên đăng nhập...">
+              </div>
+            </app-form-field>
           </div>
 
           @if (!isEdit && !isView) {
             <div class="col-md-6">
-              <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Mật khẩu">Mật khẩu</label>
-              <div class="input-group shadow-sm rounded-pill overflow-hidden border">
-                <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-key"></i></span>
-                <input type="password" class="form-control border-0 ps-0 shadow-none bg-white"
-                       name="password"
-                       #password="ngModel"
-                       [(ngModel)]="currentUser.password"
-                       required
-                       minlength="6"
-                       maxlength="100"
-                       placeholder="Tạo mật khẩu..." />
-              </div>
-              <div class="text-danger small mt-1" *ngIf="password.invalid && password.touched">
-                Mật khẩu là bắt buộc, dài từ 6 đến 100 ký tự.
-              </div>
+              <app-form-field
+                label="Mật khẩu"
+                [required]="true"
+                [control]="userForm.controls['password']"
+                [errorMap]="passwordErrors">
+                <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                  <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-key"></i></span>
+                  <input type="password" class="form-control border-0 ps-0 shadow-none bg-white"
+                         name="password"
+                         [(ngModel)]="currentUser.password"
+                         required minlength="6" maxlength="100"
+                         placeholder="Tạo mật khẩu...">
+                </div>
+              </app-form-field>
             </div>
           }
 
           <div class="col-md-6" *ngIf="!isSelfEdit">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Vai trò">Vai trò</label>
-            <select class="form-select form-control-custom shadow-sm" name="role" [(ngModel)]="currentUser.role" [disabled]="isView">
-              <option value="USER">Người dùng (USER)</option>
-              <option value="ADMIN">Quản trị (ADMIN)</option>
-              <option value="MANAGER">Chủ shop (MANAGER)</option>
-              <option value="STAFF">Nhân viên (STAFF)</option>
-            </select>
+            <app-form-field label="Vai trò">
+              <select class="form-select form-control-custom shadow-sm" name="role" [(ngModel)]="currentUser.role" [disabled]="isView">
+                <option value="USER">Người dùng (USER)</option>
+                <option value="ADMIN">Quản trị (ADMIN)</option>
+                <option value="MANAGER">Chủ shop (MANAGER)</option>
+                <option value="STAFF">Nhân viên (STAFF)</option>
+              </select>
+            </app-form-field>
           </div>
         </div>
       </div>
@@ -103,86 +102,69 @@
 
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Họ">Họ</label>
-            <input type="text" class="form-control form-control-custom shadow-sm"
-                   name="lastname"
-                   #lastname="ngModel"
-                   [(ngModel)]="currentUser.lastname"
-                   [disabled]="isView"
-                   required
-                   placeholder="VD: Nguyễn Văn" />
-            <div class="text-danger small mt-1" *ngIf="lastname.invalid && lastname.touched">Lastname là bắt buộc.</div>
+            <app-form-field label="Họ" [required]="true" [control]="userForm.controls['lastname']">
+              <input type="text" class="form-control form-control-custom shadow-sm"
+                     name="lastname" [(ngModel)]="currentUser.lastname"
+                     [disabled]="isView" required placeholder="VD: Nguyễn Văn">
+            </app-form-field>
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Tên">Tên</label>
-            <input type="text" class="form-control form-control-custom shadow-sm"
-                   name="firstname"
-                   #firstname="ngModel"
-                   [(ngModel)]="currentUser.firstname"
-                   [disabled]="isView"
-                   required
-                   placeholder="VD: A" />
-            <div class="text-danger small mt-1" *ngIf="firstname.invalid && firstname.touched">Firstname là bắt buộc.</div>
+            <app-form-field label="Tên" [required]="true" [control]="userForm.controls['firstname']">
+              <input type="text" class="form-control form-control-custom shadow-sm"
+                     name="firstname" [(ngModel)]="currentUser.firstname"
+                     [disabled]="isView" required placeholder="VD: A">
+            </app-form-field>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Giới tính">Giới tính</label>
-            <select class="form-select form-control-custom shadow-sm"
-                    name="gender"
-                    #gender="ngModel"
-                    [(ngModel)]="currentUser.gender"
-                    [disabled]="isView"
-                    required>
-              <option value="male">Nam</option>
-              <option value="female">Nữ</option>
-            </select>
-            <div class="text-danger small mt-1" *ngIf="gender.invalid && gender.touched">Giới tính là bắt buộc.</div>
+            <app-form-field label="Giới tính" [required]="true" [control]="userForm.controls['gender']">
+              <select class="form-select form-control-custom shadow-sm"
+                      name="gender" [(ngModel)]="currentUser.gender" [disabled]="isView" required>
+                <option value="male">Nam</option>
+                <option value="female">Nữ</option>
+              </select>
+            </app-form-field>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Ngày sinh">Ngày sinh</label>
-            <input type="date" class="form-control form-control-custom shadow-sm"
-                   name="birth"
-                   [ngModel]="currentUser.birth | date: 'yyyy-MM-dd'"
-                   (ngModelChange)="currentUser.birth = $event" [disabled]="isView" />
+            <app-form-field label="Ngày sinh">
+              <input type="date" class="form-control form-control-custom shadow-sm"
+                     name="birth" [ngModel]="currentUser.birth | date: 'yyyy-MM-dd'"
+                     (ngModelChange)="currentUser.birth = $event" [disabled]="isView">
+            </app-form-field>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Số điện thoại">Số điện thoại</label>
-            <div class="input-group shadow-sm rounded-pill overflow-hidden border">
-              <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-telephone"></i></span>
-              <input type="text" class="form-control border-0 ps-0 shadow-none bg-white"
-                     name="phone"
-                     #phone="ngModel"
-                     [(ngModel)]="currentUser.phone"
-                     [disabled]="isView"
-                     required
-                     maxlength="20"
-                     placeholder="VD: 0987654321" />
-            </div>
-            <div class="text-danger small mt-1" *ngIf="phone.invalid && phone.touched">
-              Số điện thoại là bắt buộc và tối đa 20 ký tự.
-            </div>
+            <app-form-field
+              label="Số điện thoại"
+              [required]="true"
+              [control]="userForm.controls['phone']"
+              [errorMap]="phoneErrors">
+              <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-telephone"></i></span>
+                <input type="text" class="form-control border-0 ps-0 shadow-none bg-white"
+                       name="phone" [(ngModel)]="currentUser.phone"
+                       [disabled]="isView" required maxlength="20"
+                       placeholder="VD: 0987654321">
+              </div>
+            </app-form-field>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Email">Email</label>
-            <div class="input-group shadow-sm rounded-pill overflow-hidden border">
-              <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-envelope"></i></span>
-              <input type="email" class="form-control border-0 ps-0 shadow-none bg-white"
-                     name="email"
-                     #email="ngModel"
-                     [(ngModel)]="currentUser.email"
-                     [disabled]="isView"
-                     email
-                     placeholder="Nhập Email">
-            </div>
-            <div class="text-danger small mt-1" *ngIf="email.invalid && email.touched">Email không đúng định dạng.</div>
+            <app-form-field label="Email" [control]="userForm.controls['email']">
+              <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control border-0 ps-0 shadow-none bg-white"
+                       name="email" [(ngModel)]="currentUser.email"
+                       [disabled]="isView" email placeholder="Nhập Email">
+              </div>
+            </app-form-field>
           </div>
 
           <div class="col-md-12">
-            <label class="form-label fw-semibold text-secondary small text-uppercase field-label" title="Địa chỉ">Địa chỉ</label>
-            <textarea class="form-control form-control-custom shadow-sm" rows="2" name="address" [(ngModel)]="currentUser.address" [disabled]="isView" placeholder="Nhập địa chỉ cụ thể..."></textarea>
+            <app-form-field label="Địa chỉ">
+              <textarea class="form-control form-control-custom shadow-sm" rows="2" name="address" [(ngModel)]="currentUser.address" [disabled]="isView" placeholder="Nhập địa chỉ cụ thể..."></textarea>
+            </app-form-field>
           </div>
         </div>
       </div>

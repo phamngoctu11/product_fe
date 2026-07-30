@@ -1,20 +1,14 @@
 <div class="container-fluid p-4 admin-order-page">
-  <div class="app-page-header flex-wrap">
-    <div class="app-page-heading">
-      <div class="app-title-icon">
-        <i class="bi bi-clipboard-check"></i>
-      </div>
-      <div class="app-page-heading-text">
-        <h1 class="app-page-title">Quản lý luồng đơn hàng</h1>
-        <p class="app-page-subtitle">Duyệt đơn, gán staff và kiểm tra KCS</p>
-      </div>
-    </div>
-    <button class="btn btn-outline-primary rounded-pill px-4 shadow-sm"
+  <app-page-header
+    icon="bi-clipboard-check"
+    title="Quản lý luồng đơn hàng"
+    subtitle="Duyệt đơn, gán staff và kiểm tra KCS">
+    <button pageActions class="btn btn-outline-primary rounded-pill px-4 shadow-sm"
             (click)="loadPendingOrders()"
             [disabled]="isLoading || !activeStatus">
       <i class="bi bi-arrow-clockwise me-2"></i> Làm mới
     </button>
-  </div>
+  </app-page-header>
 
   <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
     <div class="card-body p-0">
@@ -54,22 +48,20 @@
         </button>
       </div>
 
-      <div *ngIf="!activeStatus && !isLoading" class="text-center py-5">
-        <i class="bi bi-layout-split fs-1 text-muted"></i>
-        <h5 class="mt-3 text-muted">Chọn một nhóm đơn hàng ở trên để tải danh sách.</h5>
-      </div>
-
-      <div *ngIf="isLoading" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
-      </div>
-
-      <div *ngIf="activeStatus && !isLoading && pendingOrders.length === 0" class="text-center py-5">
-        <i class="bi bi-inbox fs-1 text-muted"></i>
-        <h5 class="mt-3 text-muted">Không có {{ getActivePanelTitle() | lowercase }} nào cần xử lý.</h5>
-      </div>
-
-      <div class="table-responsive" *ngIf="activeStatus && !isLoading && pendingOrders.length > 0">
+      <app-view-state
+        [loading]="isLoading"
+        [empty]="!activeStatus"
+        [card]="false"
+        loadingText="Đang tải danh sách đơn hàng..."
+        emptyTitle="Chọn nhóm đơn hàng"
+        emptyText="Chọn một nhóm đơn hàng ở trên để tải danh sách."
+        emptyIcon="bi-layout-split">
+      <app-view-state
+        [empty]="pendingOrders.length === 0"
+        [card]="false"
+        [emptyTitle]="'Không có ' + getActivePanelTitle().toLowerCase()"
+        emptyText="Hiện không có đơn hàng nào cần xử lý.">
+      <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light text-uppercase small">
             <tr>
@@ -87,15 +79,7 @@
               <td class="ps-4 fw-bold">#{{ order.id }}</td>
               <td>{{ order.customerName || 'Khách vãng lai' }}</td>
               <td>
-                <span class="badge rounded-pill px-3 py-2"
-                      [ngClass]="{
-                        'text-bg-warning': order.status === 'PENDING_APPROVAL' || order.status === 'PENDING_WAREHOUSE',
-                        'text-bg-info': order.status === 'PENDING_KCS',
-                        'text-bg-primary': order.status === 'WAREHOUSE_ASSIGNED',
-                        'text-bg-secondary': order.status !== 'PENDING_APPROVAL' && order.status !== 'PENDING_WAREHOUSE' && order.status !== 'PENDING_KCS' && order.status !== 'WAREHOUSE_ASSIGNED'
-                      }">
-                  {{ order.status }}
-                </span>
+                <app-order-status-badge [status]="order.status" [compact]="true"></app-order-status-badge>
               </td>
               <td class="text-uppercase">
                 <span class="badge rounded-pill px-3 py-2"
@@ -105,7 +89,7 @@
                 </span>
               </td>
               <td class="fw-bold text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</td>
-              <td style="min-width: 220px;">
+              <td class="admin-order-customer-column">
                 @if (order.status === 'PENDING_APPROVAL') {
                   <select class="form-select form-select-sm"
                           [(ngModel)]="selectedStaffByOrder[order.id]"
@@ -159,7 +143,7 @@
         </table>
       </div>
 
-      <div *ngIf="activeStatus && !isLoading && pendingOrders.length > 0" class="p-4 border-top">
+      <div class="p-4 border-top">
         <app-pagination
           [currentPage]="currentPage"
           [totalPages]="totalPages"
@@ -171,6 +155,8 @@
           (pageSizeChange)="changePageSize($event)">
         </app-pagination>
       </div>
+      </app-view-state>
+      </app-view-state>
     </div>
   </div>
 </div>

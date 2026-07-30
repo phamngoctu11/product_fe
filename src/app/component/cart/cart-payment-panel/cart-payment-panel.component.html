@@ -1,0 +1,28 @@
+<section class="cart-qr-panel" aria-labelledby="cart-payment-title">
+  <div class="cart-payment-layout">
+    <div class="cart-qr-box">
+      @if (generatingQr) {
+        <div class="cart-qr-loading"><span class="cart-qr-spinner"></span><span>Đang tạo QR...</span></div>
+      } @else if (qrDataUrl) {
+        <img [src]="qrDataUrl" alt="QR thanh toán">
+      } @else {
+        <span class="cart-qr-empty">Không có dữ liệu QR.</span>
+      }
+    </div>
+    <div class="cart-payment-content">
+      <div class="cart-provider-badge"><i class="bi bi-wallet2"></i>{{ payment.provider || 'MOMO' }}</div>
+      <h2 id="cart-payment-title" class="cart-qr-title">Thanh toán online qua MoMo</h2>
+      <p class="cart-qr-desc">{{ payment.message || 'Quét mã QR hoặc mở trang thanh toán để hoàn tất đơn hàng.' }}</p>
+      <div class="cart-qr-actions">
+        <button type="button" class="cart-qr-btn-main" [disabled]="!paymentUrl" (click)="openPayment.emit()">
+          <i class="bi bi-box-arrow-up-right"></i> Mở trang thanh toán
+        </button>
+        @if (payment.deeplink) {
+          <button type="button" class="cart-qr-btn-outline" (click)="openDeeplink.emit()">
+            <i class="bi bi-phone"></i> Mở app MoMo
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</section>

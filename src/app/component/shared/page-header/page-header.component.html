@@ -1,0 +1,15 @@
+<header class="app-page-header flex-wrap">
+  <div class="app-page-heading">
+    <div class="app-title-icon" aria-hidden="true">
+      <i [class]="'bi ' + icon"></i>
+    </div>
+    <div class="app-page-heading-text">
+      <h1 class="app-page-title">{{ title }}</h1>
+      @if (subtitle) {
+        <p class="app-page-subtitle">{{ subtitle }}</p>
+      }
+    </div>
+  </div>
+
+  <ng-content select="[pageActions]"></ng-content>
+</header>

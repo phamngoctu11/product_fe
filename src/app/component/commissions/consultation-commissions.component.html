@@ -1,16 +1,9 @@
 <div class="container-fluid commission-page py-4 app-fade-in">
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-    <div class="d-flex align-items-center gap-3">
-      <div class="page-section-icon">
-        <i class="bi bi-cash-stack"></i>
-      </div>
-      <div>
-        <h1 class="m-0 fw-bold">Hoa hồng tư vấn</h1>
-        <p class="m-0 text-muted">Thống kê hoa hồng theo staff, kỳ thời gian và trạng thái attribution</p>
-      </div>
-    </div>
-
-    <div class="d-flex flex-wrap gap-2">
+  <app-page-header
+    icon="bi-cash-stack"
+    title="Hoa hồng tư vấn"
+    subtitle="Thống kê hoa hồng theo staff, kỳ thời gian và trạng thái attribution">
+    <div pageActions class="d-flex flex-wrap gap-2">
       <button class="btn btn-outline-primary rounded-pill px-4 fw-bold" type="button" (click)="loadData()">
         <i class="bi bi-arrow-clockwise"></i> Làm mới
       </button>
@@ -24,7 +17,7 @@
         <span *ngIf="isRebuilding">Đang rebuild...</span>
       </button>
     </div>
-  </div>
+  </app-page-header>
 
   <section class="commission-toolbar mb-4">
     <div>
@@ -73,23 +66,20 @@
   </div>
 
   <ng-container *ngIf="canViewCommission">
-    <section *ngIf="isAdminView" class="admin-total-grid mb-4">
-      <div class="commission-stat-card">
-        <span class="stat-label">Hoa hồng đã chốt</span>
-        <strong class="stat-money success">{{ totalConfirmedCommission | number:'1.0-0' }} đ</strong>
-        <small>Tổng trên danh sách staff đang tải</small>
-      </div>
-      <div class="commission-stat-card">
-        <span class="stat-label">Doanh thu attribution</span>
-        <strong class="stat-money primary">{{ totalConfirmedRevenue | number:'1.0-0' }} đ</strong>
-        <small>{{ totalConfirmedOrders | number }} đơn đã ghi nhận</small>
-      </div>
-      <div class="commission-stat-card">
-        <span class="stat-label">Hoa hồng đang chờ</span>
-        <strong class="stat-money warning">{{ totalPendingCommission | number:'1.0-0' }} đ</strong>
-        <small>Chưa mở chi tiết order item</small>
-      </div>
-    </section>
+    @if (isAdminView) {
+      <section class="admin-total-grid mb-4">
+        @for (metric of adminMetrics; track metric.label) {
+          <app-metric-card
+            [label]="metric.label"
+            [value]="metric.value"
+            [hint]="metric.hint"
+            [icon]="metric.icon"
+            [tone]="metric.tone"
+            suffix=" đ">
+          </app-metric-card>
+        }
+      </section>
+    }
 
     <section *ngIf="isAdminView" class="staff-table-card">
       <div class="staff-table-header">
@@ -101,18 +91,14 @@
         <span class="staff-count-pill">{{ staffSummaries.length | number }} staff</span>
       </div>
 
-      <div *ngIf="isLoadingStaffs" class="panel-loading big">
-        <div class="spinner-border text-primary" role="status"></div>
-        <span>Đang tải summary staff...</span>
-      </div>
-
-      <div *ngIf="!isLoadingStaffs && staffSummaries.length === 0" class="panel-empty big">
-        <i class="bi bi-inbox"></i>
-        <h3>Chưa có dữ liệu hoa hồng</h3>
-        <p>Hãy thử đổi kỳ thống kê hoặc rebuild summary sau khi deploy backend.</p>
-      </div>
-
-      <div *ngIf="!isLoadingStaffs && staffSummaries.length > 0" class="table-responsive">
+      <app-view-state
+        [loading]="isLoadingStaffs"
+        [empty]="staffSummaries.length === 0"
+        [card]="false"
+        loadingText="Đang tải summary staff..."
+        emptyTitle="Chưa có dữ liệu hoa hồng"
+        emptyText="Hãy thử đổi kỳ thống kê hoặc rebuild summary sau khi deploy backend.">
+      <div class="table-responsive">
         <table class="table align-middle mb-0 commission-table staff-main-table">
           <thead>
             <tr>
@@ -172,7 +158,7 @@
         </table>
       </div>
 
-      <div *ngIf="!isLoadingStaffs && staffSummaries.length > 0" class="p-4 border-top">
+      <div class="p-4 border-top">
         <app-pagination
           [currentPage]="staffPage"
           [totalPages]="staffTotalPages"
@@ -184,15 +170,18 @@
           (pageSizeChange)="changePageSize($event)">
         </app-pagination>
       </div>
+      </app-view-state>
     </section>
 
     <section *ngIf="!isAdminView" class="staff-self-card">
-      <div *ngIf="isLoadingSummary" class="panel-loading big">
-        <div class="spinner-border text-primary" role="status"></div>
-        <span>Đang tải hoa hồng của bạn...</span>
-      </div>
-
-      <ng-container *ngIf="!isLoadingSummary && summary as current">
+      <app-view-state
+        [loading]="isLoadingSummary"
+        [empty]="!summary"
+        [card]="false"
+        loadingText="Đang tải hoa hồng của bạn..."
+        emptyTitle="Chưa có dữ liệu hoa hồng"
+        emptyText="Hãy thử đổi kỳ thống kê.">
+      @if (summary; as current) {
         <div class="staff-hero">
           <div class="d-flex align-items-center gap-3 min-w-0">
             <span class="staff-avatar hero-avatar">
@@ -211,34 +200,19 @@
         </div>
 
         <div class="summary-grid">
-          <div class="commission-stat-card">
-            <span class="stat-label">Hoa hồng đã chốt</span>
-            <strong class="stat-money success">{{ current.confirmedCommissionAmount | number:'1.0-0' }} đ</strong>
-            <small>{{ current.confirmedOrderCount | number }} đơn, {{ current.confirmedAttributionCount | number }} attribution</small>
-          </div>
-          <div class="commission-stat-card">
-            <span class="stat-label">Doanh thu attribution</span>
-            <strong class="stat-money primary">{{ current.confirmedRevenueAmount | number:'1.0-0' }} đ</strong>
-            <small>Doanh thu item có tư vấn</small>
-          </div>
-          <div class="commission-stat-card">
-            <span class="stat-label">Hoa hồng đang chờ</span>
-            <strong class="stat-money warning">{{ current.pendingCommissionAmount | number:'1.0-0' }} đ</strong>
-            <small>{{ current.pendingOrderCount | number }} đơn, {{ current.pendingAttributionCount | number }} attribution</small>
-          </div>
-          <div class="commission-stat-card">
-            <span class="stat-label">Attribution đã hủy</span>
-            <strong class="stat-money danger">{{ current.cancelledAttributionCount | number }}</strong>
-            <small>Không tính vào hoa hồng đã chốt</small>
-          </div>
+          @for (metric of selfMetrics(current); track metric.label) {
+            <app-metric-card
+              [label]="metric.label"
+              [value]="metric.value"
+              [hint]="metric.hint"
+              [icon]="metric.icon"
+              [tone]="metric.tone"
+              [suffix]="metric.suffix">
+            </app-metric-card>
+          }
         </div>
-      </ng-container>
-
-      <div *ngIf="!isLoadingSummary && !summary" class="panel-empty big">
-        <i class="bi bi-inbox"></i>
-        <h3>Chưa có dữ liệu hoa hồng</h3>
-        <p>Hãy thử đổi kỳ thống kê.</p>
-      </div>
+      }
+      </app-view-state>
     </section>
   </ng-container>
 </div>
@@ -295,17 +269,14 @@
         </div>
       </div>
 
-      <div *ngIf="isLoadingDetails" class="panel-loading detail-loading">
-        <div class="spinner-border text-primary" role="status"></div>
-        <span>Đang tải trang chi tiết đầu tiên...</span>
-      </div>
-
-      <div *ngIf="!isLoadingDetails && details.length === 0" class="panel-empty py-5">
-        <i class="bi bi-inbox"></i>
-        <span>Không có attribution {{ getStatusLabel(status) | lowercase }} trong kỳ này.</span>
-      </div>
-
-      <div *ngIf="!isLoadingDetails && details.length > 0" class="table-responsive drawer-table-wrap thin-scrollbar">
+      <app-view-state
+        [loading]="isLoadingDetails"
+        [empty]="details.length === 0"
+        [card]="false"
+        loadingText="Đang tải chi tiết attribution..."
+        emptyTitle="Không có attribution"
+        [emptyText]="'Không có attribution ' + getStatusLabel(status).toLowerCase() + ' trong kỳ này.'">
+      <div class="table-responsive drawer-table-wrap thin-scrollbar">
         <table class="table align-middle mb-0 commission-table">
           <thead>
             <tr>
@@ -362,7 +333,7 @@
         </table>
       </div>
 
-      <div *ngIf="!isLoadingDetails && details.length > 0" class="p-4 border-top">
+      <div class="p-4 border-top">
         <app-pagination
           [currentPage]="detailPage"
           [totalPages]="detailTotalPages"
@@ -375,6 +346,7 @@
           (pageSizeChange)="changePageSize($event)">
         </app-pagination>
       </div>
+      </app-view-state>
     </div>
   </aside>
 </div>

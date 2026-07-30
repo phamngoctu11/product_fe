@@ -19,14 +19,27 @@ import {
 import { UserInforDTO } from '../../model/user.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../order-detail-popup/order-detail-popup.component';
-import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
+import {
+  AppPaginationComponent,
+  OrderSummaryCardComponent,
+  PageHeaderComponent,
+  ViewStateComponent,
+} from '../shared';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrderDetailPopupComponent, AppPaginationComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    OrderDetailPopupComponent,
+    AppPaginationComponent,
+    PageHeaderComponent,
+    OrderSummaryCardComponent,
+    ViewStateComponent,
+  ],
   templateUrl: './orders.html',
-  styleUrls: ['../../app.css', './orders.css'],
+  styleUrl: './orders.css',
 })
 export class Orders implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
@@ -41,7 +54,6 @@ export class Orders implements OnInit {
   modalOrders: OrderListDTO[] = [];
   modalTitle = '';
   isLoadingOrders = false;
-  isLoadingMoreOrders = false;
   isLoadingCancelledOrders = false;
   currentPage = 0;
   cancelledPage = 0;
@@ -119,36 +131,6 @@ export class Orders implements OnInit {
     });
   }
 
-  loadMoreOrders(): void {
-    if (this.isLoadingMoreOrders || this.currentPage + 1 >= this.totalPages) return;
-
-    this.isLoadingMoreOrders = true;
-    const priceRange = this.getSelectedPriceRange();
-    this.orderService.getOrdersByUserId(
-      this.userId,
-      this.currentPage + 1,
-      this.pageSize,
-      priceRange.min,
-      priceRange.max,
-    ).subscribe({
-      next: (page) => {
-        this.orders = [...this.orders, ...(page.content || [])];
-        this.currentPage = page.number ?? this.currentPage + 1;
-        this.totalPages = page.totalPages || 0;
-        this.applyOrderBuckets();
-        this.isLoadingMoreOrders = false;
-      },
-      error: (err) => {
-        this.toast.notify('Không thể tải thêm đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
-        this.isLoadingMoreOrders = false;
-      },
-    });
-  }
-
-  hasMoreOrders(): boolean {
-    return this.currentPage + 1 < this.totalPages;
-  }
-
   changeOrdersPage(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
     this.loadMyOrders(page);
@@ -180,7 +162,7 @@ export class Orders implements OnInit {
   }
 
   loadUserInfo(): void {
-    this.userService.getById(this.userId).subscribe({
+    this.userService.getMe().subscribe({
       next: (res: any) => this.userInfo = res,
       error: (err) => console.error('Lỗi tải thông tin cá nhân', err),
     });

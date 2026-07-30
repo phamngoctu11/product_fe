@@ -1,0 +1,10 @@
+<article class="metric-card" [attr.data-tone]="tone">
+  @if (icon) {
+    <span class="metric-icon"><i [class]="'bi ' + icon" aria-hidden="true"></i></span>
+  }
+  <span class="metric-label">{{ label }}</span>
+  <strong class="metric-value">{{ value | number: digits }}{{ suffix }}</strong>
+  @if (hint) {
+    <small class="metric-hint">{{ hint }}</small>
+  }
+</article>

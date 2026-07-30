@@ -1,6 +1,5 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../../service/toast.service';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -13,16 +12,17 @@ import { ChatService } from '../../../service/chat.service';
 import { ConsultationService } from '../../../service/consultation.service';
 import { ApiResponse, unwrapApiResponse } from '../../../model/api-response.model';
 import { environment } from '../../../../environments/environment';
+import { ProductVariantEditorComponent } from './product-variant-editor/product-variant-editor.component';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule, ProductVariantEditorComponent],
   templateUrl: './product-detail.html',
-  styleUrls: ['../../../app.css', './product-detail.css'],
+  styleUrl: './product-detail.css',
 })
 export class ProductDetailComponent implements OnInit {
-  private readonly toast = injectToast(ToastService);
+  private readonly toast = inject(ToastService);
   productForm: FormGroup;
   isEdit = false;
   isView = false;

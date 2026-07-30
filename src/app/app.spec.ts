@@ -18,10 +18,11 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render the application brand', () => {
+  it('should render the public router outlet when logged out', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.brand-title')?.textContent).toContain('My App');
+    expect(compiled.querySelector('router-outlet')).not.toBeNull();
+    expect(compiled.querySelector('.app-shell')).toBeNull();
   });
 });

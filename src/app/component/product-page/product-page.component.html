@@ -7,19 +7,22 @@
     <i class="bi bi-arrow-left me-2"></i> Quay lại đoạn chat
   </a>
 
-  <!-- Loading -->
-  <div *ngIf="isLoading" class="pd-loading">
-    <div class="pd-spinner"></div>
-    <p style="color: #7c85b0; font-size: 0.9rem;">Đang tải thông tin sản phẩm...</p>
-  </div>
-
-  <!-- Product Card -->
-  <div *ngIf="!isLoading && product" class="pd-card p-4 p-lg-5">
+  <app-view-state
+    [loading]="isLoading"
+    [empty]="!product"
+    loadingText="Đang tải thông tin sản phẩm..."
+    emptyTitle="Sản phẩm không tồn tại"
+    emptyText="Sản phẩm có thể đã bị xóa. Vui lòng quay lại cửa hàng để xem sản phẩm khác."
+    emptyIcon="bi-box-seam"
+    actionLabel="Quay lại cửa hàng"
+    actionIcon="bi-arrow-left"
+    (action)="goToStore()">
+  <div *ngIf="product" class="pd-card p-4 p-lg-5">
     <div class="row g-5">
 
       <!-- LEFT: Image + Consult -->
       <div class="col-lg-5">
-        <div class="position-sticky" style="top: 24px;">
+        <div class="position-sticky pd-sticky-media">
           <div class="pd-img-box">
             <img *ngIf="product.image_url" [src]="product.image_url" class="pd-img" alt="Ảnh sản phẩm">
             <i *ngIf="!product.image_url" class="bi bi-image icon-3xl icon-color-muted-darker"></i>
@@ -63,7 +66,7 @@
               <div class="pd-variant-card p-3">
                 <div class="d-flex gap-3 align-items-center mb-2">
                   <div class="pd-variant-img">
-                    <img *ngIf="v.image_url" [src]="v.image_url" style="width:100%;height:100%;object-fit:cover;">
+                    <img *ngIf="v.image_url" [src]="v.image_url" class="pd-variant-image" [alt]="v.variantName">
                     <i *ngIf="!v.image_url" class="bi bi-box-seam icon-variant-lg icon-color-muted-dark"></i>
                   </div>
                   <div class="min-w-0">
@@ -99,17 +102,6 @@
     </div>
   </div>
 
-  <!-- Not Found -->
-  <div *ngIf="!isLoading && !product" class="text-center py-5" style="animation: fadeIn 0.4s;">
-    <div class="pd-empty-icon-wrap">
-      <i class="bi bi-box-seam icon-xl icon-color-primary"></i>
-    </div>
-    <h4 style="color:#c7cbee;font-weight:800;">Sản phẩm không tồn tại hoặc đã bị xóa.</h4>
-    <p style="color:#7c85b0;font-size:0.9rem;">Vui lòng quay lại trang chủ để xem các sản phẩm khác.</p>
-    <a routerLink="/" class="btn mt-2 rounded-pill px-4 fw-bold text-white"
-       style="background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 4px 16px rgba(99,102,241,0.35);">
-      Quay lại trang chủ
-    </a>
-  </div>
+  </app-view-state>
 
 </div>

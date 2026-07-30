@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Observable, map } from 'rxjs';
 import { ActionDialogComponent, ActionDialogData } from '../component/action-dialog/action-dialog.component';
+import { APP_DIALOG_SIZE } from '../config/dialog.config';
 
 @Injectable({ providedIn: 'root' })
 export class ActionDialogService {
@@ -18,8 +19,7 @@ export class ActionDialogService {
   private open(data: ActionDialogData): Observable<boolean | string | undefined> {
     return this.dialog.open(ActionDialogComponent, {
       data,
-      width: '560px',
-      maxWidth: 'calc(100vw - 24px)',
+      ...APP_DIALOG_SIZE.action,
       panelClass: 'app-action-dialog-panel',
       autoFocus: data.input ? 'textarea' : '.btn-confirm',
       restoreFocus: true,

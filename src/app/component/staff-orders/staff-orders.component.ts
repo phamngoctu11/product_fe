@@ -1,32 +1,45 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { inject as injectActionDialog } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { ActionDialogService } from '../../service/action-dialog.service';
-import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../service/toast.service';
 import { FormsModule } from '@angular/forms';
 import { Order, OrderItem, OrderListDTO } from '../../model/order.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import { OrderService } from '../../service/order.service';
-import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
+import {
+  AppPaginationComponent,
+  OrderItemsTableComponent,
+  OrderStatusBadgeComponent,
+  OrderSummaryCardComponent,
+  PageHeaderComponent,
+  ViewStateComponent,
+} from '../shared';
+import type { OrderItemQuantityChange } from '../shared';
 
 @Component({
   selector: 'app-staff-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppPaginationComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AppPaginationComponent,
+    OrderItemsTableComponent,
+    PageHeaderComponent,
+    OrderSummaryCardComponent,
+    OrderStatusBadgeComponent,
+    ViewStateComponent,
+  ],
   templateUrl: './staff-orders.component.html',
-  styleUrls: ['../../app.css'],
+  styleUrl: './staff-orders.component.css',
 })
 export class StaffOrdersComponent implements OnInit {
-  private readonly actionDialog = injectActionDialog(ActionDialogService);
-  private readonly toast = injectToast(ToastService);
+  private readonly actionDialog = inject(ActionDialogService);
+  private readonly toast = inject(ToastService);
   warehousePendingOrders: OrderListDTO[] = [];
   myOrders: OrderListDTO[] = [];
   activeTab: 'pending' | 'mine' = 'pending';
 
   isLoading = false;
-  isLoadingMorePending = false;
-  isLoadingMoreMine = false;
   pendingPage = 0;
   minePage = 0;
   pageSize = 20;
@@ -82,50 +95,6 @@ export class StaffOrdersComponent implements OnInit {
         this.isLoading = false;
       },
     });
-  }
-
-  loadMorePendingOrders(): void {
-    if (this.isLoadingMorePending || this.pendingPage + 1 >= this.pendingTotalPages) return;
-
-    this.isLoadingMorePending = true;
-    this.orderService.getWarehousePendingOrders(this.pendingPage + 1, this.pageSize).subscribe({
-      next: (page) => {
-        this.warehousePendingOrders = [...this.warehousePendingOrders, ...(page.content || [])];
-        this.pendingPage = page.number ?? this.pendingPage + 1;
-        this.pendingTotalPages = page.totalPages || 0;
-        this.isLoadingMorePending = false;
-      },
-      error: (err) => {
-        this.toast.notify('Không thể tải thêm đơn chờ nhận: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
-        this.isLoadingMorePending = false;
-      },
-    });
-  }
-
-  loadMoreMyOrders(): void {
-    if (this.isLoadingMoreMine || this.minePage + 1 >= this.mineTotalPages) return;
-
-    this.isLoadingMoreMine = true;
-    this.orderService.getMyStaffOrders(this.minePage + 1, this.pageSize).subscribe({
-      next: (page) => {
-        this.myOrders = [...this.myOrders, ...(page.content || [])];
-        this.minePage = page.number ?? this.minePage + 1;
-        this.mineTotalPages = page.totalPages || 0;
-        this.isLoadingMoreMine = false;
-      },
-      error: (err) => {
-        this.toast.notify('Không thể tải thêm đơn phụ trách: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
-        this.isLoadingMoreMine = false;
-      },
-    });
-  }
-
-  hasMorePendingOrders(): boolean {
-    return this.pendingPage + 1 < this.pendingTotalPages;
-  }
-
-  hasMoreMyOrders(): boolean {
-    return this.minePage + 1 < this.mineTotalPages;
   }
 
   changePendingPage(page: number): void {
@@ -275,25 +244,14 @@ export class StaffOrdersComponent implements OnInit {
     return Number(item.variantId || item.productVariantId || 0);
   }
 
-  getVariantLabel(item: OrderItem): string {
-    if (item.variantName) return item.variantName;
-    const variantId = this.getVariantId(item);
-    return variantId ? `Variant #${variantId}` : 'Chưa có variantId';
-  }
-
-  getItemImage(item: OrderItem): string {
-    return item.image_url || item.imageUrl || '';
-  }
-
   getExportQuantity(orderId: number, item: OrderItem): number {
     const variantId = this.getVariantId(item);
     return Number(this.exportQuantities[orderId]?.[variantId] ?? item.exportedQuantity ?? item.quantity ?? 0);
   }
 
-  setExportQuantity(orderId: number, item: OrderItem, value: number): void {
-    const variantId = this.getVariantId(item);
+  updateExportQuantity(orderId: number, change: OrderItemQuantityChange): void {
     if (!this.exportQuantities[orderId]) this.exportQuantities[orderId] = {};
-    this.exportQuantities[orderId][variantId] = Number(value || 0);
+    this.exportQuantities[orderId][change.variantId] = change.quantity;
   }
 
   canExport(order: Order | null): boolean {

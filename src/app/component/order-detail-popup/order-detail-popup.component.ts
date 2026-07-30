@@ -1,14 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Order, OrderItem, ReceiptConfirmResponse } from '../../model/order.model';
+import { Order, ReceiptConfirmResponse } from '../../model/order.model';
+import {
+  OrderItemsTableComponent,
+  OrderStatusBadgeComponent,
+  ViewStateComponent,
+} from '../shared';
+import type { OrderItemQuantityChange } from '../shared';
 
 @Component({
   selector: 'app-order-detail-popup',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrderItemsTableComponent, OrderStatusBadgeComponent, ViewStateComponent],
   templateUrl: './order-detail-popup.component.html',
-  styleUrls: ['../../app.css', './order-detail-popup.component.css'],
+  styleUrl: './order-detail-popup.component.css',
 })
 export class OrderDetailPopupComponent {
   @Input() order: Order | null = null;
@@ -29,11 +35,7 @@ export class OrderDetailPopupComponent {
     return this.isLoading || !!this.order || !!this.error;
   }
 
-  getVariantId(item: OrderItem): number {
-    return Number(item.variantId || item.productVariantId || 0);
-  }
-
-  getExpectedQuantity(item: OrderItem): number {
-    return Number(item.exportedQuantity ?? item.quantity ?? 0);
+  updateReceivedQuantity(change: OrderItemQuantityChange): void {
+    this.receivedQuantities[change.variantId] = change.quantity;
   }
 }

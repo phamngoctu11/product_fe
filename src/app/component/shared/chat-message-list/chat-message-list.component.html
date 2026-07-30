@@ -1,0 +1,61 @@
+@if (loading) {
+  <div class="chat-list-state" role="status">
+    <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
+    Đang tải lịch sử...
+  </div>
+} @else if (messages.length === 0) {
+  <div class="chat-list-state"><i class="bi bi-chat-square-text"></i> Chưa có tin nhắn.</div>
+}
+
+@for (message of messages; track message.id ?? $index) {
+  <div class="chat-message-row" [class.is-right]="isRight(message)">
+    @if (showPeerAvatar && !message.isShopSender) {
+      <span class="chat-peer-avatar">
+        @if (peerAvatar) {
+          <img [src]="peerAvatar" [alt]="peerName">
+        } @else {
+          {{ getInitial(peerName) }}
+        }
+      </span>
+    }
+
+    <div class="chat-message-content">
+      <span class="chat-message-meta">
+        {{ senderLabel(message) }} · {{ message.timestamp | date: 'HH:mm' }}
+      </span>
+
+      @if (!message.messageType || message.messageType === 'TEXT') {
+        <div class="chat-message-bubble">{{ message.content }}</div>
+      }
+
+      @if (message.messageType === 'PRODUCT' && message.productData) {
+        <article class="chat-product-card">
+          <div class="chat-product-media">
+            @if (message.productData.imageUrl) {
+              <img [src]="message.productData.imageUrl" [alt]="message.productData.name">
+            } @else {
+              <span class="chat-product-placeholder"><i class="bi bi-box-seam"></i></span>
+            }
+            @if (message.productData.variantsCount > 0) {
+              <span class="chat-variant-badge">{{ message.productData.variantsCount }} phân loại</span>
+            }
+          </div>
+          <div class="chat-product-body">
+            <strong [title]="message.productData.name">{{ message.productData.name }}</strong>
+            @if (productTags(message).length > 0) {
+              <div class="chat-product-tags">
+                @for (tag of productTags(message); track tag) {
+                  <span>{{ tag }}</span>
+                }
+              </div>
+            }
+            <p>{{ message.productData.price | number }}đ</p>
+            <a [routerLink]="['/product', message.productData.id]" class="btn btn-sm btn-primary rounded-pill">
+              <i class="bi bi-eye me-1"></i> Xem chi tiết
+            </a>
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+}

@@ -1,15 +1,9 @@
-<div class="container mt-4 mb-5" style="animation: fadeIn 0.4s;">
-  <div class="app-page-header flex-wrap">
-    <div class="app-page-heading">
-      <div class="app-title-icon">
-        <i class="bi bi-receipt-cutoff"></i>
-      </div>
-      <div class="app-page-heading-text">
-        <h1 class="app-page-title">Lịch sử đơn hàng</h1>
-        <p class="app-page-subtitle">Theo dõi đơn đang xử lý, lịch sử giao hàng và điểm uy tín</p>
-      </div>
-    </div>
-    <div class="d-flex gap-2">
+<div class="container mt-4 mb-5 app-fade-in">
+  <app-page-header
+    icon="bi-receipt-cutoff"
+    title="Lịch sử đơn hàng"
+    subtitle="Theo dõi đơn đang xử lý, lịch sử giao hàng và điểm uy tín">
+    <div pageActions class="d-flex flex-wrap gap-2">
       <button class="btn btn-outline-warning rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#reputationPolicyModal">
         <i class="bi bi-shield-check me-1"></i> Quy định điểm
       </button>
@@ -20,7 +14,7 @@
         <i class="bi bi-x-circle me-1"></i> Đã hủy ({{ cancelledOrders.length }})
       </button>
     </div>
-  </div>
+  </app-page-header>
 
   <div class="card shadow-sm border-0 rounded-4 mb-4">
     <div class="card-body p-4 d-flex align-items-center flex-wrap gap-3">
@@ -41,110 +35,58 @@
     </div>
   </div>
 
-  <div *ngIf="isLoadingOrders" class="card shadow-sm border-0 rounded-4 p-5 text-center text-muted">
-    <div class="spinner-border text-primary mx-auto mb-3" role="status"></div>
-    Đang tải đơn hàng...
-  </div>
+  <app-view-state
+    [loading]="isLoadingOrders"
+    [empty]="activeOrders.length === 0"
+    loadingText="Đang tải đơn hàng..."
+    emptyTitle="Không có đơn hàng"
+    emptyText="Bạn không có đơn hàng nào đang trong quá trình xử lý.">
+    <div *ngFor="let order of activeOrders">
+      <ng-container *ngTemplateOutlet="orderCardTemplate; context: { order: order }"></ng-container>
+    </div>
 
-  <div *ngIf="!isLoadingOrders && activeOrders.length === 0" class="card shadow-sm border-0 rounded-4 p-5 text-center text-muted">
-    <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
-    <h5 class="fw-bold">Không có đơn hàng</h5>
-    <p class="mb-0">Bạn không có đơn hàng nào đang trong quá trình xử lý.</p>
-  </div>
-
-  <div *ngFor="let order of activeOrders">
-    <ng-container *ngTemplateOutlet="orderCardTemplate; context: { order: order }"></ng-container>
-  </div>
-
-  <app-pagination
-    *ngIf="!isLoadingOrders && orders.length > 0"
-    [currentPage]="currentPage"
-    [totalPages]="totalPages"
-    [totalElements]="totalElements"
-    [pageSize]="pageSize"
-    [pageSizeOptions]="pageSizeOptions"
-    [disabled]="isLoadingOrders"
-    (pageChange)="changeOrdersPage($event)"
-    (pageSizeChange)="changePageSize($event)">
-  </app-pagination>
+    <app-pagination
+      *ngIf="orders.length > 0"
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalElements]="totalElements"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [disabled]="isLoadingOrders"
+      (pageChange)="changeOrdersPage($event)"
+      (pageSizeChange)="changePageSize($event)">
+    </app-pagination>
+  </app-view-state>
 </div>
 
 <ng-template #orderCardTemplate let-order="order">
-  <div class="card shadow-sm border-0 mb-4 rounded-4 hover-elevate overflow-hidden order-clickable-card" (click)="openOrderDetail(order)">
-    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-3 p-4">
-      <div class="flex-grow-1">
-        <span class="fw-bold text-dark fs-6">Mã đơn hàng: #{{ order.id }}</span>
-        <span class="text-muted small d-block mt-1">
-          <i class="bi bi-calendar3 me-1"></i>Ngày đặt: {{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}
-        </span>
-      </div>
-
-      <div class="text-end">
-        <span class="order-status-badge mb-2 shadow-sm"
-              [ngClass]="{
-                'order-status-pending-approval': order.status === 'PENDING_APPROVAL',
-                'order-status-warehouse': order.status === 'PENDING_WAREHOUSE' || order.status === 'WAREHOUSE_ASSIGNED',
-                'order-status-shipping': order.status === 'PENDING_KCS' || order.status === 'SHIPPING',
-                'order-status-delivered': order.status === 'DELIVERED',
-                'order-status-cancelled': order.status === 'CANCELLED',
-                'order-status-default': order.status !== 'PENDING_APPROVAL' && order.status !== 'PENDING_WAREHOUSE' && order.status !== 'WAREHOUSE_ASSIGNED' && order.status !== 'PENDING_KCS' && order.status !== 'SHIPPING' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED'
-              }">
-          <i class="bi bi-info-circle"></i>
-          {{ order.status }}
-        </span>
-
-        <div class="d-flex gap-2 justify-content-end">
-          <button class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#timelineModal" (click)="$event.stopPropagation(); viewTimeline(order.id)">
-            <i class="bi bi-clock-history"></i> Tiến trình
-          </button>
-          <ng-container *ngIf="order.status === 'SHIPPING'">
-            <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" (click)="$event.stopPropagation(); openReceiptConfirm(order)">
-              Đã nhận hàng <i class="bi bi-arrow-right-circle ms-1"></i>
-            </button>
-          </ng-container>
-        </div>
-      </div>
+  <app-order-summary-card
+    [order]="order"
+    [showActions]="true"
+    [showFooter]="true"
+    (selected)="openOrderDetail($event)">
+    <div orderActions>
+      <button class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#timelineModal" (click)="$event.stopPropagation(); viewTimeline(order.id)">
+        <i class="bi bi-clock-history"></i> Tiến trình
+      </button>
+      <button *ngIf="order.status === 'SHIPPING'" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" (click)="$event.stopPropagation(); openReceiptConfirm(order)">
+        Đã nhận hàng <i class="bi bi-arrow-right-circle ms-1"></i>
+      </button>
     </div>
 
-    <div class="card-body p-4">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <div class="text-muted small">Khách hàng</div>
-          <div class="fw-bold text-dark">{{ order.customerName || 'Khách vãng lai' }}</div>
-        </div>
-        <div class="col-md-3">
-          <div class="text-muted small">Thanh toán</div>
-          <div class="fw-bold text-uppercase">{{ order.paymentMethod || 'COD' }}</div>
-        </div>
-        <div class="col-md-3">
-          <div class="text-muted small">Nhân viên phụ trách</div>
-          <div class="fw-bold" [ngClass]="order.staffName ? 'text-dark' : 'text-muted'">
-            {{ order.staffName || 'Chưa có nhân viên phụ trách' }}
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="text-muted small">Tổng thanh toán</div>
-          <div class="fw-bold text-danger fs-5">{{ order.finalPrice | number: '1.0-0' }} đ</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card-footer bg-white border-top py-3">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div orderFooter class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div class="text-muted small">
           <i class="bi bi-info-circle me-1"></i>Click vào đơn hàng để xem chi tiết sản phẩm, người phụ trách và người duyệt.
         </div>
-        <ng-container *ngIf="order.status !== 'DELIVERED' && order.status !== 'CANCELLED'">
-          <button class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm"
-                  (click)="$event.stopPropagation(); cancelOrder(order)"
-                  [disabled]="!canCancelOrder(order)"
-                  [title]="canCancelOrder(order) ? 'Hủy đơn hàng' : 'Đơn hàng đã được xử lý nên không thể hủy'">
-            <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
-          </button>
-        </ng-container>
-      </div>
+        <button *ngIf="order.status !== 'DELIVERED' && order.status !== 'CANCELLED'"
+                class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm"
+                (click)="$event.stopPropagation(); cancelOrder(order)"
+                [disabled]="!canCancelOrder(order)"
+                [title]="canCancelOrder(order) ? 'Hủy đơn hàng' : 'Đơn hàng đã được xử lý nên không thể hủy'">
+          <i class="bi bi-x-circle me-1"></i> Hủy đơn hàng
+        </button>
     </div>
-  </div>
+  </app-order-summary-card>
 </ng-template>
 
 <app-order-detail-popup
@@ -220,10 +162,10 @@
             <div class="fw-bold fs-6" [ngClass]="{'text-danger': step.newstatus === 'CANCELLED', 'text-success': step.newstatus === 'DELIVERED'}">
               {{ step.newstatus }}
             </div>
-            <div class="text-muted" style="font-size: 0.85rem; margin-top: 4px;">
+            <div class="timeline-date text-muted">
               <i class="bi bi-calendar3 me-1"></i> {{ step.updatetime | date:'dd/MM/yyyy HH:mm:ss' }}
             </div>
-            <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;" *ngIf="step.oldstatus">
+            <div class="timeline-previous-status text-muted" *ngIf="step.oldstatus">
               <i class="bi bi-arrow-return-right me-1"></i> Từ: {{ step.oldstatus }}
             </div>
           </li>

@@ -1,8 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { inject as injectActionDialog } from '@angular/core';
 import { ActionDialogService } from '../../service/action-dialog.service';
-import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../service/toast.service';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -14,18 +12,33 @@ import { AddToCartModalComponent } from './add-to-cart-modal/add-to-cart-modal';
 import { Product } from '../../model/product.model';
 import { Subscription } from 'rxjs';
 import { getApiErrorMessage } from '../../model/api-response.model';
-import { AppPaginationComponent } from '../shared/app-pagination/app-pagination.component';
+import {
+  AppPaginationComponent,
+  PageHeaderComponent,
+  ProductCardComponent,
+  ViewStateComponent,
+} from '../shared';
+import { APP_DIALOG_SIZE } from '../../config/dialog.config';
 
 @Component({
   selector: 'app-product',
   standalone: true,
-  imports: [FormsModule, CommonModule, ReactiveFormsModule, MatDialogModule, AppPaginationComponent],
+  imports: [
+    FormsModule,
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    AppPaginationComponent,
+    PageHeaderComponent,
+    ProductCardComponent,
+    ViewStateComponent,
+  ],
   templateUrl: './product.html',
-  styleUrls: ['../../app.css', './product.css'],
+  styleUrl: './product.css',
 })
 export class ProductComponent implements OnInit, OnDestroy {
-  private readonly actionDialog = injectActionDialog(ActionDialogService);
-  private readonly toast = injectToast(ToastService);
+  private readonly actionDialog = inject(ActionDialogService);
+  private readonly toast = inject(ToastService);
   plist: Product[] = [];
   filteredProducts: Product[] = [];
 
@@ -40,6 +53,8 @@ export class ProductComponent implements OnInit, OnDestroy {
   totalPages: number = 0;
   totalElements: number = 0;
   pageSizeOptions = [10, 20, 50, 100];
+  isLoading = false;
+  loadError = '';
 
   private cartSubscription!: Subscription;
 
@@ -66,6 +81,8 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   getAll(page: number = 0, size: number = 10) {
+    this.isLoading = true;
+    this.loadError = '';
     this.productService.getAll(page, size).subscribe({
       next: (res: any) => {
         this.plist = res.content || [];
@@ -75,8 +92,13 @@ export class ProductComponent implements OnInit, OnDestroy {
         this.totalPages = res.totalPages || 0;
         this.totalElements = res.totalElements || 0;
         this.filterProducts();
+        this.isLoading = false;
       },
-      error: (err) => console.error('Lỗi khi lấy danh sách sản phẩm:', err)
+      error: (err) => {
+        console.error('Lỗi khi lấy danh sách sản phẩm:', err);
+        this.loadError = getApiErrorMessage(err, 'Không thể tải danh sách sản phẩm.');
+        this.isLoading = false;
+      },
     });
   }
 
@@ -96,6 +118,12 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.filteredProducts = tempArray;
   }
 
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.searchPrice = null;
+    this.filterProducts();
+  }
+
   getAvailableTags(): string[] {
     const tagsSet = new Set<string>();
     ['#quanao', '#giay', '#dienthoai', '#giadung', '#mypham', '#thucpham'].forEach(t => tagsSet.add(t));
@@ -108,8 +136,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   // HÀM MỚI: XEM CHI TIẾT SẢN PHẨM (READ-ONLY)
   viewProduct(id: number | null | undefined) {
     this.dialog.open(ProductDetailComponent, {
-      width: '940px',
-      maxWidth: 'calc(100vw - 48px)',
+      ...APP_DIALOG_SIZE.product,
       panelClass: 'product-detail-dialog-panel',
       data: { id: id || null, availableTags: this.getAvailableTags(), isView: true },
       disableClose: false,
@@ -123,8 +150,7 @@ export class ProductComponent implements OnInit, OnDestroy {
       return;
     }
     const dialogRef = this.dialog.open(ProductDetailComponent, {
-      width: '940px',
-      maxWidth: 'calc(100vw - 48px)',
+      ...APP_DIALOG_SIZE.product,
       panelClass: 'product-detail-dialog-panel',
       data: {
         id: id || null,
@@ -145,9 +171,7 @@ export class ProductComponent implements OnInit, OnDestroy {
     if (!product.variants || product.variants.length === 0) { this.toast.notify('Sản phẩm này hiện tại chưa có phân loại hàng!'); return; }
 
     const dialogRef = this.dialog.open(AddToCartModalComponent, {
-      width: '860px',
-      maxWidth: 'calc(100vw - 48px)',
-      maxHeight: '78vh',
+      ...APP_DIALOG_SIZE.addToCart,
       data: { product: product },
       disableClose: false
     });

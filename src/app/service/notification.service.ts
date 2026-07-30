@@ -13,6 +13,22 @@ export class NotificationService {
 
   constructor(private http: HttpClient) {}
 
+  getCurrentUserHistory(): Observable<any[]> {
+    return this.http
+      .get<ApiResponse<any[]> | any[]>(`${this.apiUrl}/me`)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getAdminHistory(): Observable<any[]> {
+    return this.http
+      .get<ApiResponse<any[]> | any[]>(`${this.apiUrl}/admin`)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getMyHistory(useAdminFeed: boolean): Observable<any[]> {
+    return useAdminFeed ? this.getAdminHistory() : this.getCurrentUserHistory();
+  }
+
   // Lấy danh sách thông báo cũ từ Database
   getHistory(userId: string, isAdmin: boolean): Observable<any[]> {
     return this.http
@@ -21,6 +37,18 @@ export class NotificationService {
   }
 
   // Đánh dấu tất cả là đã đọc
+  markCurrentUserAsRead(): Observable<any> {
+    return this.http.put(`${this.apiUrl}/read-all/me`, {}, { responseType: 'text' });
+  }
+
+  markAdminAsRead(): Observable<any> {
+    return this.http.put(`${this.apiUrl}/read-all/admin`, {}, { responseType: 'text' });
+  }
+
+  markMyHistoryAsRead(useAdminFeed: boolean): Observable<any> {
+    return useAdminFeed ? this.markAdminAsRead() : this.markCurrentUserAsRead();
+  }
+
   markAllAsRead(userId: string, isAdmin: boolean): Observable<any> {
     return this.http.put(`${this.apiUrl}/read-all/${userId}?isAdmin=${isAdmin}`, {}, { responseType: 'text' });
   }

@@ -10,17 +10,18 @@ import { AuthService } from '../../service/auth.service';
 import { ChatService } from '../../service/chat.service';
 import { ConsultationService } from '../../service/consultation.service';
 import { ToastService } from '../../service/toast.service';
+import { ChatMessageListComponent, PageHeaderComponent, ViewStateComponent } from '../shared';
 
 @Component({
   selector: 'app-user-consultations',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ChatMessageListComponent, PageHeaderComponent, ViewStateComponent],
   templateUrl: './user-consultations.component.html',
-  styleUrls: ['../../app.css', './user-consultations.component.css'],
+  styleUrl: './user-consultations.component.css',
 })
 export class UserConsultationsComponent implements OnInit, AfterViewChecked, OnDestroy {
   private readonly toast = injectToast(ToastService);
-  @ViewChild('chatBody') private chatBody!: ElementRef;
+  @ViewChild('chatBody', { read: ElementRef }) private chatBody!: ElementRef;
 
   threads: ChatUser[] = [];
   selectedThread: ChatUser | null = null;
@@ -131,13 +132,6 @@ export class UserConsultationsComponent implements OnInit, AfterViewChecked, OnD
     if (!thread) return '';
     const fullName = `${thread.lastname || ''} ${thread.firstname || ''}`.trim();
     return fullName || thread.email || 'Ban';
-  }
-
-  getSenderLabel(message: ChatMessage): string {
-    if (!message.isShopSender) {
-      return 'Ban';
-    }
-    return message.senderName || message.assignedStaffName || this.selectedThread?.assignedStaffName || 'Nhan vien tu van';
   }
 
   private loadSelectedHistory() {

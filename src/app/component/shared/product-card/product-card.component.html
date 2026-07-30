@@ -1,0 +1,79 @@
+<article
+  class="card shadow-sm product-card h-100"
+  role="button"
+  tabindex="0"
+  [attr.aria-label]="'Xem sản phẩm ' + product.product_name"
+  (click)="open()"
+  (keydown.enter)="open()"
+  (keydown.space)="$event.preventDefault(); open()">
+  <div class="product-img-wrapper">
+    @if (product.image_url) {
+      <img [src]="product.image_url" class="product-img" [alt]="product.product_name">
+    } @else {
+      <div class="product-img product-img-placeholder">
+        <i class="bi bi-box-fill" aria-hidden="true"></i>
+      </div>
+    }
+    <div class="product-overlay"></div>
+    @if (isOutOfStock) {
+      <span class="badge-oos">Hết hàng</span>
+    }
+  </div>
+
+  <div class="card-body d-flex flex-column p-3">
+    <h2 class="product-name text-truncate" [title]="product.product_name">
+      {{ product.product_name }}
+    </h2>
+
+    <div class="mb-2 d-flex flex-wrap gap-1">
+      @if (product.tags) {
+        <span class="badge tag-badge rounded-pill">{{ product.tags }}</span>
+      }
+      @if (product.variants?.length) {
+        <span class="badge meta-badge rounded-pill">
+          <i class="bi bi-tags me-1"></i>{{ product.variants?.length }} loại
+        </span>
+      }
+    </div>
+
+    <div class="mt-auto pt-2 d-flex justify-content-between align-items-end">
+      <div>
+        <small class="product-price-label">Giá tham khảo</small>
+        <span class="product-price">{{ product.price | number }}đ</span>
+      </div>
+      @if (!isOutOfStock) {
+        <small class="product-stock">Kho: {{ product.quantity }}</small>
+      }
+    </div>
+  </div>
+
+  <footer class="card-footer product-actions p-3">
+    <button
+      type="button"
+      class="btn-add-cart flex-grow-1"
+      [disabled]="isOutOfStock"
+      (click)="$event.stopPropagation(); purchased.emit(product)">
+      <i class="bi bi-cart-plus-fill"></i> Chọn mua
+    </button>
+    @if (canEdit) {
+      <button
+        type="button"
+        class="btn-icon-action edit"
+        title="Chỉnh sửa"
+        aria-label="Chỉnh sửa sản phẩm"
+        (click)="$event.stopPropagation(); edited.emit(product)">
+        <i class="bi bi-pencil-fill text-warning"></i>
+      </button>
+    }
+    @if (canDelete) {
+      <button
+        type="button"
+        class="btn-icon-action delete"
+        title="Xóa"
+        aria-label="Xóa sản phẩm"
+        (click)="$event.stopPropagation(); deleted.emit(product)">
+        <i class="bi bi-trash3-fill text-danger"></i>
+      </button>
+    }
+  </footer>
+</article>

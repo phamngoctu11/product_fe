@@ -9,7 +9,7 @@ import { Product, ProductVariant } from '../../../model/product.model';
   standalone: true,
   imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './add-to-cart-modal.html',
-  styleUrls: ['../../../app.css', './add-to-cart-modal.css'],
+  styleUrl: './add-to-cart-modal.css',
 })
 export class AddToCartModalComponent implements OnInit {
   product: Product;

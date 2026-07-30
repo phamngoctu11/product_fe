@@ -1,6 +1,5 @@
 <div *ngIf="isVisible"
-     class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3"
-     style="z-index: 2000;"
+     class="order-detail-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3"
      (click)="close.emit()">
   <div class="bg-white rounded-4 shadow-lg overflow-hidden w-100 order-detail-modal"
        (click)="$event.stopPropagation()">
@@ -19,16 +18,12 @@
     </div>
 
     <div class="p-4 overflow-auto order-detail-body">
-      <div *ngIf="isLoading" class="text-center text-muted py-5">
-        <div class="spinner-border text-primary mb-3" role="status"></div>
-        <div>Đang tải chi tiết đơn hàng...</div>
-      </div>
-
-      <div *ngIf="!isLoading && error" class="alert alert-danger mb-0">
-        {{ error }}
-      </div>
-
-      <ng-container *ngIf="!isLoading && !error && order as orderDetail">
+      <app-view-state
+        [loading]="isLoading"
+        [error]="error"
+        [card]="false"
+        loadingText="Đang tải chi tiết đơn hàng...">
+      <ng-container *ngIf="order as orderDetail">
         <div class="row g-3 mb-4">
           <div class="col-md-6">
             <div class="border rounded-3 p-3 h-100 bg-light">
@@ -64,7 +59,7 @@
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Trạng thái</div>
-            <div class="fw-bold">{{ orderDetail.status }}</div>
+            <app-order-status-badge [status]="orderDetail.status" [compact]="true"></app-order-status-badge>
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Thanh toán</div>
@@ -104,58 +99,12 @@
           {{ receiptError }}
         </div>
 
-        <div class="table-responsive border rounded-3">
-          <table class="table align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th class="ps-4">Item</th>
-                <th>Hình ảnh</th>
-                <th>Tên sản phẩm</th>
-                <th class="text-center">SL đặt</th>
-                <th class="text-center">SL xuất</th>
-                <th class="text-center">SL nhận</th>
-                <th *ngIf="receiptMode" class="text-center" style="width: 180px;">SL thực nhận</th>
-                <th class="text-end pe-4">Đơn giá</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of orderDetail.items">
-                <td class="ps-4 fw-bold">#{{ item.id || item.orderItemId || item.productId }}</td>
-                <td>
-                  <div class="d-flex align-items-center gap-3">
-                    <img *ngIf="item.imageUrl || item.image_url"
-                         [src]="item.imageUrl || item.image_url"
-                         class="rounded border flex-shrink-0"
-                         style="width: 48px; height: 48px; object-fit: cover;">
-                    <div>
-                      <div class="fw-bold text-dark">{{ item.productName }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div class="fw-semibold">{{ item.variantName || 'Chưa có tên variant' }}</div>
-                  <div class="text-muted small" *ngIf="item.attributes">{{ item.attributes }}</div>
-                </td>
-                <td class="text-center fw-bold">{{ item.quantity }}</td>
-                <td class="text-center">{{ item.exportedQuantity ?? '-' }}</td>
-                <td class="text-center">{{ item.receivedQuantity ?? '-' }}</td>
-                <td *ngIf="receiptMode" class="text-center">
-                  <input type="number"
-                         class="form-control text-center fw-bold"
-                         min="0"
-                         [ngModel]="receivedQuantities[getVariantId(item)]"
-                         (ngModelChange)="receivedQuantities[getVariantId(item)] = +$event">
-                </td>
-                <td class="text-end pe-4 fw-bold">{{ item.price | number: '1.0-0' }} đ</td>
-              </tr>
-              <tr *ngIf="!orderDetail.items || orderDetail.items.length === 0">
-                <td [attr.colspan]="receiptMode ? 8 : 7" class="text-center text-muted fst-italic py-4">
-                  Đơn hàng chưa có danh sách item.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <app-order-items-table
+          [items]="orderDetail.items || []"
+          [mode]="receiptMode ? 'receipt' : 'readonly'"
+          [quantities]="receivedQuantities"
+          (quantityChange)="updateReceivedQuantity($event)">
+        </app-order-items-table>
 
         <div *ngIf="receiptMode && receiptResponse && !receiptResponse.confirmed && receiptResponse.mismatches?.length" class="border rounded-3 p-3 mt-4 bg-light">
           <div class="fw-bold text-danger mb-3">Số lượng thực nhận đang lệch với số lượng xuất kho</div>
@@ -216,6 +165,7 @@
           </button>
         </div>
       </ng-container>
+      </app-view-state>
     </div>
   </div>
 </div>

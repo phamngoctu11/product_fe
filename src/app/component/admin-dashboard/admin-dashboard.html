@@ -1,103 +1,30 @@
-<div class="container-fluid p-4" style="animation: fadeIn 0.4s;">
+<div class="container-fluid p-4 app-fade-in">
 
-  <!-- Page Title -->
-  <div class="app-page-header">
-    <div class="app-page-heading">
-      <div class="app-title-icon">
-        <i class="bi bi-bar-chart-line-fill"></i>
-      </div>
-      <div class="app-page-heading-text">
-        <h1 class="app-page-title">Tổng quan kinh doanh</h1>
-        <p class="app-page-subtitle">Thống kê hiệu suất và dữ liệu vận hành</p>
-      </div>
-    </div>
-  </div>
+  <app-page-header
+    icon="bi-bar-chart-line-fill"
+    title="Tổng quan kinh doanh"
+    subtitle="Thống kê hiệu suất và dữ liệu vận hành">
+  </app-page-header>
 
-  <div *ngIf="isLoading" class="text-center py-5">
-    <div class="spinner-border" role="status" style="color: #6366f1; width: 2.5rem; height: 2.5rem;">
-      <span class="visually-hidden">Đang tải...</span>
-    </div>
-    <p class="mt-3 text-muted small">Đang tải dữ liệu...</p>
-  </div>
+  <app-view-state
+    *ngIf="isLoading"
+    [loading]="true"
+    [card]="false"
+    loadingText="Đang tải dữ liệu thống kê...">
+  </app-view-state>
 
   <div *ngIf="!isLoading">
-    <!-- Top 3 Stat Cards -->
     <div class="row g-4 mb-4">
-      <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm stat-card h-100">
-          <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-start gap-3">
-              <div class="min-w-0">
-                <p class="mb-1 text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing: 0.8px;">
-                  Tổng doanh thu
-                </p>
-                <h3 class="mb-0 fw-bold stat-value-revenue" style="letter-spacing: -0.5px;">
-                  {{ stats.totalRevenue | number:'1.0-0' }} <span style="font-size:0.9rem;">đ</span>
-                </h3>
-              </div>
-              <div class="stat-icon stat-icon-revenue">
-                <i class="bi bi-wallet2"></i>
-              </div>
-            </div>
-            <div class="mt-3 pt-3 border-top" style="border-top-color: #f0f2ff !important;">
-              <small class="text-muted" style="font-size:0.78rem;">
-                <i class="bi bi-info-circle me-1 text-primary"></i>Chỉ tính các đơn đã giao
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm stat-card h-100">
-          <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-start gap-3">
-              <div class="min-w-0">
-                <p class="mb-1 text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing: 0.8px;">
-                  Tổng đơn hàng
-                </p>
-                <h3 class="mb-0 fw-bold stat-value-orders" style="letter-spacing: -0.5px;">
-                  {{ stats.totalOrders | number }}
-                  <span class="text-muted fw-normal" style="font-size:0.85rem;">đơn</span>
-                </h3>
-              </div>
-              <div class="stat-icon stat-icon-orders">
-                <i class="bi bi-bag-check-fill"></i>
-              </div>
-            </div>
-            <div class="mt-3 pt-3 border-top" style="border-top-color: #f0f2ff !important;">
-              <small class="text-muted" style="font-size:0.78rem;">
-                <i class="bi bi-check-circle me-1 text-success"></i>Tổng số đơn hàng hệ thống
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-xl-4 col-md-6">
-        <div class="card border-0 shadow-sm stat-card h-100">
-          <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-start gap-3">
-              <div class="min-w-0">
-                <p class="mb-1 text-muted fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing: 0.8px;">
-                  Đang chờ xử lý
-                </p>
-                <h3 class="mb-0 fw-bold stat-value-pending" style="letter-spacing: -0.5px;">
-                  {{ pendingProcessingOrders | number }}
-                  <span class="text-muted fw-normal" style="font-size:0.85rem;">đơn</span>
-                </h3>
-              </div>
-              <div class="stat-icon stat-icon-pending">
-                <i class="bi bi-hourglass-split"></i>
-              </div>
-            </div>
-            <div class="mt-3 pt-3 border-top" style="border-top-color: #f0f2ff !important;">
-              <small class="text-muted" style="font-size:0.78rem;">
-                <i class="bi bi-clock me-1 text-warning"></i>Bao gồm chờ thanh toán, duyệt, kho, KCS
-              </small>
-            </div>
-          </div>
-        </div>
+      <div class="col-xl-4 col-md-6" *ngFor="let metric of topMetrics">
+        <app-metric-card
+          class="h-100"
+          [label]="metric.label"
+          [value]="metric.value"
+          [hint]="metric.hint"
+          [icon]="metric.icon"
+          [tone]="metric.tone"
+          [suffix]="metric.suffix">
+        </app-metric-card>
       </div>
     </div>
 
@@ -107,8 +34,8 @@
         <div class="mini-stat-card shadow-sm">
           <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
             <div class="min-w-0">
-              <p class="mb-0 fw-semibold text-dark" style="font-size:0.875rem;">{{ status.label }}</p>
-              <small class="text-muted" style="font-size:0.75rem;">{{ status.description }}</small>
+              <p class="status-label mb-0 fw-semibold text-dark">{{ status.label }}</p>
+              <small class="status-description text-muted">{{ status.description }}</small>
             </div>
             <div class="mini-stat-icon" [ngClass]="status.bgClass">
               <i class="bi" [ngClass]="[status.icon, status.textClass]"></i>
@@ -118,7 +45,7 @@
             <h4 class="mb-0 fw-bold" [ngClass]="status.textClass">
               {{ getStatusValue(status.key) | number }}
             </h4>
-            <span class="badge rounded-pill px-2" style="font-size:0.72rem;" [ngClass]="status.badgeClass">
+            <span class="status-percent badge rounded-pill px-2" [ngClass]="status.badgeClass">
               {{ getPercent(getStatusValue(status.key)) | number:'1.0-1' }}%
             </span>
           </div>
@@ -129,10 +56,10 @@
     <!-- Charts Row -->
     <div class="row g-4">
       <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100" style="border-radius: 1.1rem; border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;">
-          <div class="card-header border-0 pt-4 pb-0 px-4" style="border-radius: 1.1rem 1.1rem 0 0;">
-            <h5 class="fw-bold mb-1" style="color: #0f172a; font-size: 0.95rem;">Biểu đồ trạng thái đơn hàng</h5>
-            <small class="text-muted" style="font-size:0.78rem;">Tách riêng từng trạng thái chờ xử lý</small>
+        <div class="card dashboard-panel border-0 shadow-sm h-100">
+          <div class="card-header dashboard-panel-header border-0 pt-4 pb-0 px-4">
+            <h5 class="dashboard-panel-title fw-bold mb-1">Biểu đồ trạng thái đơn hàng</h5>
+            <small class="dashboard-panel-subtitle text-muted">Tách riêng từng trạng thái chờ xử lý</small>
           </div>
           <div class="card-body p-4">
             <div class="chart-shell">
@@ -148,10 +75,10 @@
       </div>
 
       <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100" style="border-radius: 1.1rem; border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;">
-          <div class="card-header border-0 pt-4 pb-0 px-4" style="border-radius: 1.1rem 1.1rem 0 0;">
-            <h5 class="fw-bold mb-1" style="color: #0f172a; font-size: 0.95rem;">Chi tiết vận hành</h5>
-            <small class="text-muted" style="font-size:0.78rem;">Số lượng và tỷ lệ theo tổng đơn hàng</small>
+        <div class="card dashboard-panel border-0 shadow-sm h-100">
+          <div class="card-header dashboard-panel-header border-0 pt-4 pb-0 px-4">
+            <h5 class="dashboard-panel-title fw-bold mb-1">Chi tiết vận hành</h5>
+            <small class="dashboard-panel-subtitle text-muted">Số lượng và tỷ lệ theo tổng đơn hàng</small>
           </div>
           <div class="card-body p-4">
             <div
@@ -161,15 +88,15 @@
               <div class="d-flex align-items-center gap-3 min-w-0">
                 <i class="bi fs-4" [ngClass]="[status.icon, status.textClass]"></i>
                 <div class="min-w-0">
-                  <h6 class="mb-0 fw-bold text-dark" style="font-size:0.875rem;">{{ status.label }}</h6>
-                  <small class="text-muted" style="font-size:0.75rem;">{{ status.description }}</small>
+                  <h6 class="status-label mb-0 fw-bold text-dark">{{ status.label }}</h6>
+                  <small class="status-description text-muted">{{ status.description }}</small>
                 </div>
               </div>
               <div class="text-end flex-shrink-0">
-                <h4 class="mb-0 fw-bold" [ngClass]="status.textClass" style="font-size:1.1rem;">
+                <h4 class="operation-value mb-0 fw-bold" [ngClass]="status.textClass">
                   {{ getStatusValue(status.key) | number }}
                 </h4>
-                <span class="badge rounded-pill" style="font-size:0.7rem;" [ngClass]="status.badgeClass">
+                <span class="operation-percent badge rounded-pill" [ngClass]="status.badgeClass">
                   {{ getPercent(getStatusValue(status.key)) | number:'1.0-1' }}%
                 </span>
               </div>
@@ -182,14 +109,14 @@
     <!-- Best Sellers -->
     <div class="row g-4 mt-1">
       <div class="col-12">
-        <div class="card border-0 shadow-sm" style="border-radius: 1.1rem; border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;">
-          <div class="card-header border-0 pt-4 pb-0 px-4" style="border-radius: 1.1rem 1.1rem 0 0;">
+        <div class="card dashboard-panel border-0 shadow-sm">
+          <div class="card-header dashboard-panel-header border-0 pt-4 pb-0 px-4">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div>
-                <h5 class="fw-bold mb-1" style="color: #0f172a; font-size: 0.95rem; display:flex; align-items:center; gap:0.5rem;">
+                <h5 class="dashboard-panel-title best-seller-title fw-bold mb-1">
                   <i class="bi bi-fire text-danger"></i>Sản phẩm bán chạy
                 </h5>
-                <small class="text-muted" style="font-size:0.78rem;">Top sản phẩm theo đơn đã giao thành công</small>
+                <small class="dashboard-panel-subtitle text-muted">Top sản phẩm theo đơn đã giao thành công</small>
               </div>
               <div class="d-flex align-items-center gap-2 flex-wrap">
                 <div class="btn-group btn-group-sm period-btn-group shadow-sm" role="group">
@@ -204,8 +131,7 @@
                     {{ period.label }}
                   </button>
                 </div>
-                <span class="badge rounded-pill px-3 py-2"
-                      style="background: rgba(239,68,68,0.08); color: #ef4444; font-size:0.75rem; font-weight:700;">
+                <span class="best-seller-count badge rounded-pill px-3 py-2">
                   Top {{ bestSellingProducts.length || 5 }}
                 </span>
               </div>
@@ -213,29 +139,20 @@
           </div>
 
           <div class="card-body p-4">
-            <div *ngIf="isLoadingBestSelling" class="text-center py-4">
-              <div class="spinner-border spinner-border-sm" role="status" style="color:#6366f1;"></div>
-              <span class="ms-2 text-muted fw-medium" style="font-size:0.875rem;">Đang tải sản phẩm bán chạy...</span>
-            </div>
-
-            <div *ngIf="!isLoadingBestSelling && bestSellingError"
-                 class="alert border-0 rounded-3 mb-0"
-                 style="background: rgba(245,158,11,0.08); color: #92400e; border-left: 3px solid #f59e0b !important; border-left-style: solid !important;">
-              <i class="bi bi-exclamation-triangle me-2"></i>{{ bestSellingError }}
-            </div>
-
-            <div *ngIf="!isLoadingBestSelling && !bestSellingError && bestSellingProducts.length === 0"
-                 class="text-center py-4 text-muted">
-              <i class="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
-              <span style="font-size:0.875rem;">Chưa có dữ liệu sản phẩm bán chạy.</span>
-            </div>
-
-            <div *ngIf="!isLoadingBestSelling && !bestSellingError && bestSellingProducts.length > 0"
-                 class="table-responsive">
+            <app-view-state
+              [loading]="isLoadingBestSelling"
+              [error]="bestSellingError"
+              [empty]="bestSellingProducts.length === 0"
+              [card]="false"
+              loadingText="Đang tải sản phẩm bán chạy..."
+              emptyTitle="Chưa có dữ liệu sản phẩm bán chạy"
+              actionLabel="Thử lại"
+              (action)="loadBestSellingProducts()">
+            <div class="table-responsive">
               <table class="table align-middle mb-0 best-seller-table">
                 <thead>
                   <tr>
-                    <th style="width: 64px;" class="text-center">Hạng</th>
+                    <th class="rank-column text-center">Hạng</th>
                     <th>Sản phẩm</th>
                     <th class="text-center">Mã SP</th>
                     <th class="text-end">Đã bán</th>
@@ -255,35 +172,34 @@
                     <td>
                       <div class="d-flex align-items-center gap-3">
                         <div
-                          class="rounded-3 border d-flex align-items-center justify-content-center overflow-hidden"
-                          style="width: 50px; height: 50px; flex-shrink: 0; background: #f8f9ff;">
+                          class="best-seller-image rounded-3 border d-flex align-items-center justify-content-center overflow-hidden">
                           <img
                             *ngIf="product.imageUrl"
                             [src]="product.imageUrl"
-                            style="width: 100%; height: 100%; object-fit: cover;"
+                            class="best-seller-image-content"
                             [alt]="product.productName">
                           <i *ngIf="!product.imageUrl" class="bi bi-image text-muted fs-5"></i>
                         </div>
                         <div class="min-w-0">
-                          <div class="fw-bold text-truncate" style="max-width: 480px; font-size:0.88rem; color:#0f172a;">
+                          <div class="best-seller-name fw-bold text-truncate">
                             {{ product.productName }}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td class="text-center">
-                      <span class="badge rounded-pill px-3"
-                            style="background: rgba(99,102,241,0.08); color: #6366f1; font-size:0.75rem; font-weight:700;">
+                      <span class="product-id-badge badge rounded-pill px-3">
                         #{{ product.productId }}
                       </span>
                     </td>
                     <td class="text-end">
-                      <span class="fw-bold" style="color: #10b981; font-size:0.95rem;">{{ product.soldQuantity | number }}</span>
+                      <span class="sold-quantity fw-bold">{{ product.soldQuantity | number }}</span>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
+            </app-view-state>
           </div>
         </div>
       </div>

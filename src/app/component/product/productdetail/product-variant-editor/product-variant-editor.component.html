@@ -1,0 +1,109 @@
+<article class="variant-card" [formGroup]="formGroup">
+  <div class="variant-media-row">
+    <label class="variant-upload" [class.is-editable]="editable" [title]="editable ? 'Đổi ảnh phân loại' : ''">
+      @if (uploading) {
+        <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+      } @else if (group.get('image_url')?.value) {
+        <img [src]="group.get('image_url')?.value" alt="Ảnh phân loại">
+      } @else {
+        <i class="bi bi-image"></i>
+      }
+      @if (editable) {
+        <input type="file" class="d-none" accept="image/*" [disabled]="uploading" (change)="imageSelected.emit($event)">
+      }
+    </label>
+
+    <div class="variant-title">
+      <span>Phân loại #{{ index + 1 }}</span>
+      <strong>{{ group.get('variantName')?.value || 'Chưa đặt tên' }}</strong>
+      @if (staffMode) {
+        <small>{{ existing ? 'Chỉ nhập kho' : 'Phân loại mới' }}</small>
+      }
+    </div>
+
+    @if (removable) {
+      <button type="button" class="btn btn-sm btn-outline-danger rounded-pill ms-auto" (click)="remove.emit()">
+        <i class="bi bi-trash"></i>
+      </button>
+    }
+  </div>
+
+  @if (!viewOnly) {
+    <div class="variant-form-grid">
+      <div class="field-block">
+        <label>Tên hiển thị</label>
+        <input type="text" class="form-control form-control-custom" formControlName="variantName" placeholder="VD: Màu Đen - Size L">
+        @if (isInvalid('variantName')) {
+          <div class="field-error">Tên phân loại là bắt buộc.</div>
+        }
+      </div>
+      <div class="field-block">
+        <label>Giá bán</label>
+        <input type="number" class="form-control form-control-custom price-input" formControlName="price">
+        @if (isInvalid('price')) {
+          <div class="field-error">Giá phân loại phải lớn hơn hoặc bằng 0.</div>
+        }
+      </div>
+      <div class="field-block">
+        <label>Tồn kho</label>
+        <input type="number" class="form-control form-control-custom" formControlName="quantity">
+        @if (isInvalid('quantity')) {
+          <div class="field-error">Số lượng phải lớn hơn hoặc bằng 0.</div>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="variant-summary-grid">
+      <div><span>Tên hiển thị</span><strong>{{ group.get('variantName')?.value || 'Chưa đặt tên' }}</strong></div>
+      <div><span>Giá bán</span><strong>{{ group.get('price')?.value | number: '1.0-0' }} đ</strong></div>
+      <div><span>Tồn kho</span><strong>{{ group.get('quantity')?.value | number }}</strong></div>
+    </div>
+  }
+
+  @if (!viewOnly && dynamicFields.length > 0) {
+    <div formGroupName="dynamicAttributes" class="attribute-grid">
+      @for (field of dynamicFields; track field) {
+        <div class="field-block">
+          <label [title]="getLabel(field)">{{ getLabel(field) }}</label>
+          <input type="text" class="form-control form-control-custom" [formControlName]="field">
+        </div>
+      }
+    </div>
+  }
+
+  @if (viewOnly && attributes.length > 0) {
+    <div class="attribute-preview">
+      @for (attribute of attributes; track attribute.label) {
+        <span>{{ attribute.label }}: <strong>{{ attribute.value }}</strong></span>
+      }
+    </div>
+  }
+
+  @if (staffMode && existing) {
+    <div class="staff-restock-panel">
+      <label>Nhập thêm tồn kho</label>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <input
+          type="number"
+          class="form-control form-control-custom"
+          min="1"
+          [ngModel]="restockQuantity"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Số lượng"
+          (ngModelChange)="restockQuantityChange.emit(+$event)">
+        <button
+          type="button"
+          class="btn btn-success rounded-pill px-4 fw-bold"
+          [disabled]="restocking || restockQuantity <= 0"
+          (click)="restock.emit()">
+          @if (restocking) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+          } @else {
+            <i class="bi bi-plus-circle me-1"></i>
+          }
+          Nhập kho
+        </button>
+      </div>
+    </div>
+  }
+</article>

@@ -3,3 +3,6 @@
   .color-picker-box:hover { box-shadow: 0 0.5rem 1rem rgba(0,0,0,.08)!important; transform: translateY(-2px); }
   .color-btn { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; }
   .color-btn:hover { transform: scale(1.15); box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15)!important; }
+  .setting-label { letter-spacing: 0.5px; }
+  .custom-color-picker { width: 50px; height: 50px; cursor: pointer; }
+  .preset-color-btn { width: 50px; height: 50px; border-color: rgba(0,0,0,0.1) !important; }

@@ -5,19 +5,29 @@ import { Order, OrderListDTO } from '../../../model/order.model';
 import { OrderService } from '../../../service/order.service';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../../order-detail-popup/order-detail-popup.component';
-import { AppPaginationComponent } from '../../shared/app-pagination/app-pagination.component';
+import {
+  AppPaginationComponent,
+  OrderSummaryCardComponent,
+  ViewStateComponent,
+} from '../../shared';
 
 @Component({
   selector: 'app-order-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, OrderDetailPopupComponent, AppPaginationComponent],
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    OrderDetailPopupComponent,
+    AppPaginationComponent,
+    OrderSummaryCardComponent,
+    ViewStateComponent,
+  ],
   templateUrl: './order-dialog.html',
-  styleUrls: ['../../../app.css', './order-dialog.css'],
+  styleUrl: './order-dialog.css',
 })
 export class OrderDialogComponent implements OnInit {
   orders: OrderListDTO[] = [];
   isLoading = false;
-  isLoadingMore = false;
   currentPage = 0;
   pageSize = 20;
   totalPages = 0;
@@ -45,22 +55,6 @@ export class OrderDialogComponent implements OnInit {
       this.totalElements = page.totalElements || 0;
       this.isLoading = false;
     });
-  }
-
-  loadMoreOrders(): void {
-    if (this.isLoadingMore || this.currentPage + 1 >= this.totalPages) return;
-
-    this.isLoadingMore = true;
-    this.orderService.getOrdersByUserId(this.userId, this.currentPage + 1, this.pageSize).subscribe((page) => {
-      this.orders = [...this.orders, ...(page.content || [])];
-      this.currentPage = page.number ?? this.currentPage + 1;
-      this.totalPages = page.totalPages || 0;
-      this.isLoadingMore = false;
-    });
-  }
-
-  hasMoreOrders(): boolean {
-    return this.currentPage + 1 < this.totalPages;
   }
 
   changePage(page: number): void {

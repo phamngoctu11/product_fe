@@ -105,3 +105,6 @@
     border-left: 0;
   }
 }
+.admin-order-customer-column {
+  min-width: 220px;
+}

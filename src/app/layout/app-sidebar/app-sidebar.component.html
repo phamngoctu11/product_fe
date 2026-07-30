@@ -1,0 +1,31 @@
+<aside class="app-sidebar" aria-label="Điều hướng chính">
+  <div class="sidebar-heading">
+    <div class="brand-mark" aria-hidden="true">
+      <i class="bi bi-bag-heart-fill"></i>
+    </div>
+    <span class="brand-title">ShopVN</span>
+    <button
+      type="button"
+      class="sidebar-toggle"
+      [attr.aria-label]="collapsed ? 'Mở rộng menu' : 'Thu gọn menu'"
+      (click)="toggleCollapsed.emit()">
+      <i [class]="collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left'"></i>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav">
+    @for (item of navigation; track item.route) {
+      @if (canShow(item)) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="custom-sidebar-link"
+          [title]="item.label"
+          (click)="navigationSelected.emit()">
+          <i [class]="'bi ' + item.icon"></i>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    }
+  </nav>
+</aside>

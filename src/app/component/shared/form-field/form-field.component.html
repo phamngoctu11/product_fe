@@ -1,0 +1,12 @@
+<div class="app-form-field">
+  <label class="form-label fw-semibold" [attr.for]="for || null">
+    {{ label }}
+    @if (required) {
+      <span class="app-form-required" aria-hidden="true">*</span>
+    }
+  </label>
+  <ng-content></ng-content>
+  @if (showError) {
+    <div class="app-form-error" role="alert">{{ errorMessage }}</div>
+  }
+</div>

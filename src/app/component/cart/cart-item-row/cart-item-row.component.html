@@ -1,0 +1,57 @@
+<div class="cart-item" [class.is-owner]="owner">
+  @if (owner) {
+    <input
+      type="checkbox"
+      class="cart-checkbox"
+      [checked]="selected"
+      [attr.aria-label]="'Chọn ' + itemName"
+      (change)="selectionToggle.emit(itemId)">
+  }
+
+  <div class="cart-product-info">
+    <div class="cart-product-thumb">
+      @if (item.image_url) {
+        <img [src]="item.image_url" [alt]="itemName">
+      } @else {
+        <i class="bi bi-box-seam"></i>
+      }
+    </div>
+    <div class="min-w-0">
+      <div class="cart-product-name">{{ itemName }}</div>
+      <div class="cart-product-id">#{{ itemId }}</div>
+    </div>
+  </div>
+
+  @if (owner) {
+    <div class="cart-qty">
+      <button type="button" class="cart-qty-btn minus" aria-label="Giảm số lượng" (click)="quantityDelta.emit(-1)">
+        <i class="bi bi-dash-lg"></i>
+      </button>
+      <span class="cart-qty-val">{{ quantity }}</span>
+      <button type="button" class="cart-qty-btn plus" aria-label="Tăng số lượng" (click)="quantityDelta.emit(1)">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+    </div>
+  } @else {
+    <span class="cart-readonly-quantity">{{ quantity }}</span>
+  }
+
+  <div class="cart-unit-price">{{ item.price | number }}đ</div>
+  <div class="cart-total-price">{{ quantity * item.price | number }}đ</div>
+
+  @if (owner) {
+    <button
+      type="button"
+      class="cart-del-btn"
+      [disabled]="deleting"
+      title="Xóa khỏi giỏ hàng"
+      [attr.aria-label]="'Xóa ' + itemName"
+      (click)="remove.emit(itemId)">
+      @if (deleting) {
+        <span class="cart-delete-spinner"></span>
+      } @else {
+        <i class="bi bi-trash3-fill"></i>
+      }
+    </button>
+  }
+</div>

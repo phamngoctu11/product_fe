@@ -1,11 +1,9 @@
-import { Component, HostListener, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, HostListener, inject, OnInit, OnDestroy } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './service/auth.service';
-import { CommonModule } from '@angular/common';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { CartModalComponent } from './component/cart/cart-modal';
 import { RewardDialogComponent } from './component/reward/reward-dialog';
-import { Orders } from './component/orders/orders';
 import { SettingsModalComponent } from './component/setting/settings-modal';
 import { ThemeService } from './service/theme.service';
 import { UserService } from './service/user.service';
@@ -14,6 +12,9 @@ import { NotificationService } from './service/notification.service';
 import { TimeAgoPipe } from './pipes/time-ago.pipe';
 import { ToastContainerComponent } from './component/toast-container/toast-container.component';
 import { filter, Subscription } from 'rxjs';
+import { AppSidebarComponent } from './layout/app-sidebar/app-sidebar.component';
+import { AppFooterComponent } from './layout/app-footer/app-footer.component';
+import { APP_DIALOG_SIZE } from './config/dialog.config';
 
 @Component({
   selector: 'app-root',
@@ -21,18 +22,14 @@ import { filter, Subscription } from 'rxjs';
   imports: [
     RouterOutlet,
     RouterLink,
-    RouterLinkActive,
-    CommonModule,
-    MatDialogModule,
     TimeAgoPipe,
     ToastContainerComponent,
+    AppSidebarComponent,
+    AppFooterComponent,
   ],
   templateUrl: './app.html',
-  styleUrls: ['./app.css', './app-shell.css'],
 })
 export class App implements OnInit, OnDestroy {
-  protected readonly title = signal('fe_product');
-  readonly currentYear = new Date().getFullYear();
   authService = inject(AuthService);
   userService = inject(UserService);
 
@@ -88,18 +85,12 @@ export class App implements OnInit, OnDestroy {
     return typeof window !== 'undefined' && window.innerWidth < this.mobileBreakpoint;
   }
 
-  signUp() {
-    // Code xử lý signup sau
-  }
-
   openCart() {
     const userId = this.authService.getUserId();
     if (userId) {
       this.dialog.open(CartModalComponent, {
         data: userId,
-        width: '900px',
-        maxWidth: 'calc(100vw - 48px)',
-        maxHeight: '78vh',
+        ...APP_DIALOG_SIZE.cart,
       });
     }
   }
@@ -116,16 +107,14 @@ export class App implements OnInit, OnDestroy {
     if (userId) {
       this.dialog.open(RewardDialogComponent, {
         data: userId,
-        width: '920px',
-        maxWidth: 'calc(100vw - 48px)',
-        maxHeight: '78vh',
+        ...APP_DIALOG_SIZE.reward,
       });
     }
   }
 
   openSettings() {
     this.dialog.open(SettingsModalComponent, {
-      width: '500px',
+      ...APP_DIALOG_SIZE.compact,
       disableClose: false
     });
   }
@@ -162,7 +151,7 @@ export class App implements OnInit, OnDestroy {
     this.isCurrentUserLoading = true;
     const isAdmin = this.authService.isAdmin();
 
-    this.sessionSubscriptions.add(this.notificationService.getHistory(userId, isAdmin).subscribe({
+    this.sessionSubscriptions.add(this.notificationService.getMyHistory(isAdmin).subscribe({
       next: (data) => {
         this.notifications = data;
         this.unreadCount = data.filter((notification) => !notification.read).length;
@@ -199,7 +188,7 @@ export class App implements OnInit, OnDestroy {
     const isAdmin = this.authService.isAdmin();
     if (this.unreadCount > 0 && userId) {
       this.unreadCount = 0;
-      this.notificationService.markAllAsRead(userId, isAdmin).subscribe();
+      this.notificationService.markMyHistoryAsRead(isAdmin).subscribe();
       this.notifications.forEach(n => n.read = true);
     }
   }

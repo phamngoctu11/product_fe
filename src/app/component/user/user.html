@@ -1,25 +1,19 @@
-<div class="container mt-4 mb-5" style="animation: fadeIn 0.4s;">
-  <div class="app-page-header flex-wrap">
-    <div class="app-page-heading">
-      <div class="app-title-icon">
-        <i class="bi bi-people"></i>
-      </div>
-      <div class="app-page-heading-text">
-        <h1 class="app-page-title">Quản lý người dùng</h1>
-        <p class="app-page-subtitle">Quản lý tài khoản, vai trò và giỏ hàng của người dùng</p>
-      </div>
-    </div>
-    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center" (click)="openUserDialog()">
+<div class="container mt-4 mb-5 app-fade-in">
+  <app-page-header
+    icon="bi-people"
+    title="Quản lý người dùng"
+    subtitle="Quản lý tài khoản, vai trò và giỏ hàng của người dùng">
+    <button pageActions class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center" (click)="openUserDialog()">
       <i class="bi bi-person-plus-fill me-2 fs-5"></i> Thêm Người Dùng
     </button>
-  </div>
+  </app-page-header>
 
   <div class="card shadow-sm border-0 rounded-4 mb-4">
     <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
       <h5 class="mb-0 fw-bold text-dark d-flex align-items-center">
         <i class="bi bi-list-ul text-primary me-2"></i>Danh sách tài khoản
       </h5>
-      <div class="input-group shadow-sm rounded-pill overflow-hidden border" style="max-width: 400px;" title="Tìm kiếm theo tên...">
+      <div class="user-search input-group shadow-sm rounded-pill overflow-hidden border" title="Tìm kiếm theo tên...">
         <span class="input-group-text bg-light border-0 ps-4"><i class="bi bi-search text-muted"></i></span>
         <input
           type="text"
@@ -51,27 +45,32 @@
 
   <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
     <div class="card-body p-0">
+      <app-view-state
+        [empty]="filteredUsers.length === 0"
+        [card]="false"
+        emptyTitle="Chưa có dữ liệu"
+        [emptyText]="searchTerm ? 'Không tìm thấy người dùng nào phù hợp với từ khóa.' : 'Chưa có người dùng nào.'"
+        emptyIcon="bi-people">
       <div class="table-responsive">
         <table class="table table-hover table-custom align-middle mb-0">
           <thead class="table-light text-secondary text-uppercase small text-center">
             <tr class="fw-semibold">
-              <th scope="col" style="width: 10%">ID</th>
-              <th scope="col" style="width: 30%" class="text-start ps-4">Họ và Tên</th>
-              <th scope="col" style="width: 15%">Vai trò</th>
-              <th scope="col" style="width: 15%">Uy tín</th>
-              <th scope="col" style="width: 30%">Thao tác</th>
+              <th scope="col" class="user-id-column">ID</th>
+              <th scope="col" class="user-name-column text-start ps-4">Họ và Tên</th>
+              <th scope="col" class="user-role-column">Vai trò</th>
+              <th scope="col" class="user-reputation-column">Uy tín</th>
+              <th scope="col" class="user-actions-column">Thao tác</th>
             </tr>
           </thead>
           <tbody>
             @for (u of filteredUsers; track u.id) {
-              <tr (click)="viewUser(u.id)" style="cursor: pointer" class="hover-elevate">
+              <tr (click)="viewUser(u.id)" class="user-row hover-elevate">
                 <td class="text-center fw-bold text-muted">{{ u.id }}</td>
                 <td class="ps-4">
                   <div class="d-flex align-items-center">
 
-                    <div class="rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm overflow-hidden"
-                         style="width: 45px; height: 45px; flex-shrink: 0; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-weight: bold;">
-                      <img *ngIf="u.avatar_url" [src]="u.avatar_url" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="user-avatar rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm overflow-hidden">
+                      <img *ngIf="u.avatar_url" [src]="u.avatar_url" class="user-avatar-image">
                       <span *ngIf="!u.avatar_url" class="fw-bold fs-5">
                         {{ u.firstname.charAt(0) | uppercase }}
                       </span>
@@ -122,20 +121,11 @@
                   </div>
                 </td>
               </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="text-center py-5 text-muted">
-                  <div class="icon-container-primary icon-container-lg mb-3 d-inline-flex" style="width: 80px; height: 80px; font-size: 2rem; border-radius: 50%;">
-                    <i class="bi bi-people"></i>
-                  </div>
-                  <h5 class="fw-bold text-dark">Chưa có dữ liệu</h5>
-                  <p>{{ searchTerm ? 'Không tìm thấy người dùng nào phù hợp với từ khóa.' : 'Chưa có người dùng nào.' }}</p>
-                </td>
-              </tr>
             }
           </tbody>
         </table>
       </div>
+      </app-view-state>
     </div>
   </div>
 

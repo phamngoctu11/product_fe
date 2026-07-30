@@ -27,7 +27,7 @@
 
     <div class="row g-3">
       <div class="col-lg-6 col-xl-4" *ngFor="let t of templates">
-        <div class="card shadow-sm h-100 reward-card voucher-border-left" style="border-left-color: #ffc107 !important;">
+        <div class="card shadow-sm h-100 reward-card voucher-border-left reward-card-issued">
           <div class="card-body p-3">
             <div class="reward-title-row mb-2">
               <h5 class="card-title fw-bold text-danger m-0 reward-title" [title]="t.name">{{ t.name }}</h5>
@@ -87,7 +87,7 @@
             </div>
 
 
-            <div *ngIf="isExpiringSoon(uv.expiryDate)" class="mt-2 text-danger fw-bold d-flex align-items-center gap-2" style="animation: blinker 2s linear infinite;">
+            <div *ngIf="isExpiringSoon(uv.expiryDate)" class="reward-expiring mt-2 text-danger fw-bold d-flex align-items-center gap-2">
               <i class="bi bi-exclamation-triangle-fill fs-6"></i> Sắp hết hạn! Nhanh tay sử dụng!
             </div>
           </div>

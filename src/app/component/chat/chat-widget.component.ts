@@ -8,6 +8,7 @@ import { ChatService } from '../../service/chat.service';
 import { AuthService } from '../../service/auth.service';
 import { environment } from '../../../environments/environment';
 import { ChatMessage } from '../../model/chat.model';
+import { ChatMessageListComponent } from '../shared';
 
 declare var SockJS: any;
 declare var Stomp: any;
@@ -15,13 +16,13 @@ declare var Stomp: any;
 @Component({
   selector: 'app-chat-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule], // 🚨 THÊM RouterModule
+  imports: [CommonModule, FormsModule, RouterModule, ChatMessageListComponent],
   templateUrl: './chat-widget.component.html',
-  styleUrls: ['../../app.css', './chat-widget.component.css'],
+  styleUrl: './chat-widget.component.css',
 })
 export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
   private readonly toast = injectToast(ToastService);
-  @ViewChild('chatBody') private chatBody!: ElementRef;
+  @ViewChild('chatBody', { read: ElementRef }) private chatBody!: ElementRef;
 
   isOpen = false;
   messages: ChatMessage[] = [];
@@ -194,13 +195,6 @@ export class ChatWidgetComponent implements OnInit, AfterViewChecked, DoCheck {
     setTimeout(() => this.scrollToBottom(), 100);
 
     this.newMessage = '';
-  }
-
-  getSenderLabel(message: ChatMessage): string {
-    if (!message.isShopSender) {
-      return 'Ban';
-    }
-    return message.senderName || message.assignedStaffName || 'Nhan vien tu van';
   }
 
   private scrollToBottom(): void {

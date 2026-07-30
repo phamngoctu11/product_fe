@@ -1,4 +1,6 @@
 @import './app/component/static-pages/static-info-pages.css';
+@import './app/app.css';
+@import './app/app-shell.css';
 
 /* ============================================================
    GLOBAL RESET & FONT

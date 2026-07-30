@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CartRes } from '../model/cart.model';
@@ -54,17 +54,29 @@ export class CartService {
   }
 
   // ĐÃ SỬA: Giữ nguyên tên hàm acceptCart, thêm paymentMethod vào cuối cùng để không gây lỗi các file khác
-  acceptCart(userId: string, productIds: number[], userVoucherId?: number, paymentMethod: string = 'COD', note:string = ''): Observable<any> {
+  acceptCart(
+    userId: string,
+    productIds: number[],
+    userVoucherId?: number,
+    paymentMethod: string = 'COD',
+    note:string = '',
+    idempotencyKey?: string,
+  ): Observable<any> {
     let params = new HttpParams().set('paymentMethod', paymentMethod)
     if(note)
       params = params.set('note',note)
     if (userVoucherId) {
       params = params.set('userVoucherId', userVoucherId.toString());
     }
+    const headers = idempotencyKey
+      ? new HttpHeaders({ 'Idempotency-Key': idempotencyKey })
+      : undefined;
 
     // Backend đang trả về JSON (có status, url, message) nên KHÔNG dùng responseType: 'text' nữa
     return this.http.post<ApiResponse<any> | any>(`${this.apiUrl}/approve/${userId}`, productIds, {
-      params: params
+      params: params,
+      headers,
     }).pipe(map(unwrapApiResponse));
   }
+
 }

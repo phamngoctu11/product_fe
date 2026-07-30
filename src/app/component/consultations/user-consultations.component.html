@@ -1,14 +1,12 @@
 <div class="consultation-page">
-  <section class="consultation-header">
-    <div>
-      <h1>Tư vấn sản phẩm</h1>
-      <p>Theo dõi riêng từng đoạn chat theo sản phẩm đang cần hỗ trợ.</p>
-    </div>
-    <button class="btn btn-light border rounded-circle ms-auto" (click)="loadThreads()" title="Tai lai">
-      <div class="page-section-icon">
-      <i class="bi bi-arrow-clockwise"></i></div>
+  <app-page-header
+    icon="bi-chat-heart-fill"
+    title="Tư vấn sản phẩm"
+    subtitle="Theo dõi riêng từng đoạn chat theo sản phẩm đang cần hỗ trợ.">
+    <button pageActions type="button" class="btn btn-outline-primary rounded-pill px-4" (click)="loadThreads()">
+      <i class="bi bi-arrow-clockwise me-1"></i> Tải lại
     </button>
-  </section>
+  </app-page-header>
 
   <section class="consultation-shell">
     <aside class="thread-list">
@@ -17,11 +15,14 @@
         <span class="badge text-bg-primary rounded-pill">{{ threads.length }}</span>
       </div>
 
-      <div *ngIf="isLoadingThreads" class="empty-state">Đang tải danh sách...</div>
-      <div *ngIf="!isLoadingThreads && threads.length === 0" class="empty-state">
-        Bạn chưa có yêu cầu tư vấn nào đang mở.
-      </div>
-
+      <app-view-state
+        [loading]="isLoadingThreads"
+        [empty]="threads.length === 0"
+        [card]="false"
+        loadingText="Đang tải danh sách..."
+        emptyTitle="Chưa có yêu cầu tư vấn"
+        emptyText="Bạn chưa có yêu cầu tư vấn nào đang mở."
+        emptyIcon="bi-chat-square-text">
       <button *ngFor="let thread of threads"
               class="thread-item"
               [class.active]="getThreadKey(thread) === getThreadKey(selectedThread)"
@@ -33,6 +34,7 @@
           <small>{{ thread.assignedStaffName ? 'Staff: ' + thread.assignedStaffName : 'Đang chờ staff phụ trách' }}</small>
         </span>
       </button>
+      </app-view-state>
     </aside>
 
     <main class="chat-panel">
@@ -58,36 +60,12 @@
           </button>
         </header>
 
-        <div class="chat-body" #chatBody>
-          <div *ngIf="isLoadingMessages" class="empty-state">Đang tải lịch sử...</div>
-
-          <div *ngFor="let msg of messages" class="message-row" [class.from-shop]="msg.isShopSender">
-            <span class="message-meta">{{ getSenderLabel(msg) }} - {{ msg.timestamp | date:'HH:mm' }}</span>
-            <div *ngIf="!msg.messageType || msg.messageType === 'TEXT'" class="message-bubble">
-              {{ msg.content }}
-            </div>
-            <div *ngIf="msg.messageType === 'PRODUCT' && msg.productData" class="product-card">
-              <div class="product-card-media">
-                <img [src]="msg.productData.imageUrl" alt="">
-                <span *ngIf="msg.productData.variantsCount > 0" class="product-variant-badge">
-                  {{ msg.productData.variantsCount }} phan loai
-                </span>
-              </div>
-              <div class="product-card-body">
-                <strong [title]="msg.productData.name">{{ msg.productData.name }}</strong>
-                <div class="product-tags" *ngIf="msg.productData.tags">
-                  <ng-container *ngFor="let tag of msg.productData.tags.split(',')">
-                    <span *ngIf="tag.trim()">{{ tag.trim() }}</span>
-                  </ng-container>
-                </div>
-                <p>{{ msg.productData.price | number }} d</p>
-                <a [routerLink]="['/product', msg.productData.id]" class="btn btn-sm btn-primary">
-                  <i class="bi bi-eye me-1"></i> Xem chi tiết
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+        <app-chat-message-list
+          class="chat-body"
+          #chatBody
+          [messages]="messages"
+          [loading]="isLoadingMessages">
+        </app-chat-message-list>
 
         <footer class="chat-input">
           <input type="text"

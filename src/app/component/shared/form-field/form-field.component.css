@@ -1,0 +1,23 @@
+:host {
+  display: block;
+}
+
+.app-form-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-form-required,
+.app-form-error {
+  color: #fb7185;
+}
+
+.app-form-required {
+  margin-left: 0.2rem;
+}
+
+.app-form-error {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+}

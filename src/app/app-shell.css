@@ -1,6 +1,31 @@
-:host {
+app-root {
   display: block;
   min-height: 100vh;
+}
+
+app-sidebar {
+  display: contents;
+}
+
+app-footer {
+  display: block;
+}
+
+.notification-item {
+  cursor: pointer;
+  white-space: normal;
+}
+
+.notification-time {
+  color: var(--app-primary);
+}
+
+.notification-badge {
+  font-size: 0.6rem;
+}
+
+.user-dropdown .dropdown-item {
+  cursor: pointer;
 }
 
 /* ============================================================
@@ -286,4 +311,3 @@
   .footer-main { grid-template-columns: 1fr; }
   .footer-brand, .footer-contact { grid-column: auto; }
 }
-

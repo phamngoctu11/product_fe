@@ -13,17 +13,18 @@ import { ConsultationService } from '../../../service/consultation.service';
 import { ToastService } from '../../../service/toast.service';
 import { UserService } from '../../../service/user.service';
 import { UserResListDTO } from '../../../model/user.model';
+import { ChatMessageListComponent } from '../../shared';
 
 @Component({
   selector: 'app-admin-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ChatMessageListComponent],
   templateUrl: './admin-chat.component.html',
-  styleUrls: ['../../../app.css', './admin-chat.component.css'],
+  styleUrl: './admin-chat.component.css',
 })
 export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   private readonly toast = injectToast(ToastService);
-  @ViewChild('chatBody') private chatBody!: ElementRef;
+  @ViewChild('chatBody', { read: ElementRef }) private chatBody!: ElementRef;
 
   users: ChatUser[] = [];
   selectedUser: ChatUser | null = null;
@@ -265,16 +266,6 @@ export class AdminChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     return this.selectedUser?.assignedStaffName
       || this.selectedConsultation?.assignedStaffName
       || 'Chua co nhan vien phu trach';
-  }
-
-  getSenderLabel(message: ChatMessage): string {
-    if (!message.isShopSender) {
-      return this.getUserDisplayName(this.selectedUser);
-    }
-    if (this.authService.isStaff() && message.senderId === this.authService.getUserId()) {
-      return 'Ban';
-    }
-    return message.senderName || message.assignedStaffName || this.getStaffDisplayName();
   }
 
   private loadSelectedUserHistory() {

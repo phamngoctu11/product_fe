@@ -1,0 +1,37 @@
+:host {
+  display: block;
+}
+
+.view-state {
+  display: flex;
+  min-height: 10rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2.5rem;
+  color: var(--app-muted-text);
+  text-align: center;
+}
+
+.view-state-card {
+  border: 1px solid var(--app-border);
+  border-radius: 1rem;
+  background: var(--app-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.view-state strong {
+  color: var(--app-text);
+  font-size: 1.05rem;
+}
+
+.view-state-icon,
+.view-state-error > i {
+  font-size: 2.5rem;
+  opacity: 0.65;
+}
+
+.view-state-error > i {
+  color: #fb7185;
+}
