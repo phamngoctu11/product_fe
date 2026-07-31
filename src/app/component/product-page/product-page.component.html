@@ -28,7 +28,7 @@
             <i *ngIf="!product.image_url" class="bi bi-image icon-3xl icon-color-muted-darker"></i>
           </div>
 
-          <button class="pd-consult-btn" *ngIf="!authService.isAdmin()" (click)="askAboutProduct()">
+          <button class="pd-consult-btn" *ngIf="authService.isCustomer()" (click)="askAboutProduct()">
             <i class="bi bi-chat-heart-fill"></i> Cần tư vấn thêm về sản phẩm?
           </button>
         </div>

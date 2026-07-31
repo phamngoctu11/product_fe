@@ -6,9 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { Userdetail } from '../userdetail/userdetail';
-import { CartModalComponent } from '../cart/cart-modal';
 import { UserResListDTO } from '../../model/user.model';
-import { CartRes } from '../../model/cart.model';
 
 import { UserService } from '../../service/user.service';
 import { AuthService } from '../../service/auth.service';
@@ -33,7 +31,6 @@ export class UserComponent implements OnInit {
   private readonly actionDialog = injectActionDialog(ActionDialogService);
   users: UserResListDTO[] = [];
   filteredUsers: UserResListDTO[] = [];
-  cartData?: CartRes;
   searchTerm: string = '';
   currentPage: number = 0;
   pageSize: number = 10;
@@ -159,13 +156,6 @@ export class UserComponent implements OnInit {
       this.userService.delete(id).subscribe(() => {
         this.loadUsers(this.currentPage, this.pageSize);
       });
-    });
-  }
-
-  openCartModal(userId: string) {
-    this.dialog.open(CartModalComponent, {
-      ...APP_DIALOG_SIZE.cartPreview,
-      data: userId,
     });
   }
 }

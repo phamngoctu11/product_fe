@@ -9,6 +9,7 @@ import {
   ReceiptComplaintRequest,
   ReceiptConfirmRequest,
   ReceiptConfirmResponse,
+  ReorderResponse,
 } from '../model/order.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { PageResponse } from '../model/page-response.model';
@@ -80,6 +81,12 @@ export class OrderService {
       params,
       responseType: 'text',
     });
+  }
+
+  reorderOrder(orderId: number): Observable<ReorderResponse> {
+    return this.http
+      .post<ApiResponse<ReorderResponse> | ReorderResponse>(`${this.apiUrl}/${orderId}/reorder`, null)
+      .pipe(map(unwrapApiResponse));
   }
 
   confirmReceipt(orderId: number, request: ReceiptConfirmRequest): Observable<ReceiptConfirmResponse> {

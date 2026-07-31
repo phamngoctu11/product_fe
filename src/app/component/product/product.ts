@@ -7,10 +7,11 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CartService } from '../../service/cart.service';
 import { AuthService } from '../../service/auth.service';
 import { ProductService } from '../../service/product.service';
+import { WishlistService } from '../../service/wishlist.service';
 import { ProductDetailComponent } from './productdetail/product-detail';
 import { AddToCartModalComponent } from './add-to-cart-modal/add-to-cart-modal';
 import { Product } from '../../model/product.model';
-import { Subscription } from 'rxjs';
+import { debounceTime, Observable, Subject, Subscription } from 'rxjs';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import {
   AppPaginationComponent,
@@ -47,6 +48,10 @@ export class ProductComponent implements OnInit, OnDestroy {
   currentUserId: any;
   isAdmin: boolean = false;
   isStaff: boolean = false;
+  canPurchase = false;
+  canUseWishlist = false;
+  favoriteProductIds = new Set<number>();
+  favoriteBusyProductIds = new Set<number>();
 
   currentPage: number = 0;
   pageSize: number = 10;
@@ -56,12 +61,14 @@ export class ProductComponent implements OnInit, OnDestroy {
   isLoading = false;
   loadError = '';
 
-  private cartSubscription!: Subscription;
+  private readonly subscriptions = new Subscription();
+  private readonly filterChanges = new Subject<void>();
 
   constructor(
     private cartService: CartService,
     private authService: AuthService,
     private productService: ProductService,
+    private wishlistService: WishlistService,
     private dialog: MatDialog
   ) {}
 
@@ -69,21 +76,30 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.currentUserId = this.authService.getUserId();
     this.isAdmin = this.authService.isAdmin();
     this.isStaff = this.authService.isStaff();
+    this.canPurchase = this.authService.isCustomer();
+    this.canUseWishlist = !!this.currentUserId && this.canPurchase;
     this.getAll(this.currentPage, this.pageSize);
 
-    this.cartSubscription = this.cartService.checkoutSuccess$.subscribe(() => {
+    this.subscriptions.add(this.filterChanges.pipe(debounceTime(350)).subscribe(() => {
+      this.getAll(0, this.pageSize);
+    }));
+
+    this.subscriptions.add(this.cartService.checkoutSuccess$.subscribe(() => {
       this.getAll(this.currentPage, this.pageSize);
-    });
+    }));
   }
 
   ngOnDestroy(): void {
-    if (this.cartSubscription) this.cartSubscription.unsubscribe();
+    this.subscriptions.unsubscribe();
   }
 
   getAll(page: number = 0, size: number = 10) {
     this.isLoading = true;
     this.loadError = '';
-    this.productService.getAll(page, size).subscribe({
+    this.productService.getAll(page, size, {
+      keyword: this.searchTerm,
+      maxPrice: this.searchPrice,
+    }).subscribe({
       next: (res: any) => {
         this.plist = res.content || [];
         this.filteredProducts = [...this.plist];
@@ -91,7 +107,7 @@ export class ProductComponent implements OnInit, OnDestroy {
         this.pageSize = res.size || 10;
         this.totalPages = res.totalPages || 0;
         this.totalElements = res.totalElements || 0;
-        this.filterProducts();
+        if (this.canUseWishlist) this.loadFavoriteStatusesForProducts(this.plist);
         this.isLoading = false;
       },
       error: (err) => {
@@ -103,25 +119,13 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   filterProducts() {
-    let tempArray = [...this.plist];
-    if (this.searchTerm.trim()) {
-      const term = this.searchTerm.toLowerCase().trim();
-      if (term.startsWith('#')) {
-        tempArray = tempArray.filter(p => p.tags?.toLowerCase().includes(term));
-      } else {
-        tempArray = tempArray.filter(p => p.product_name?.toLowerCase().includes(term));
-      }
-    }
-    if (this.searchPrice !== null && this.searchPrice > 0) {
-      tempArray = tempArray.filter(p => p.price <= this.searchPrice!);
-    }
-    this.filteredProducts = tempArray;
+    this.filterChanges.next();
   }
 
   clearFilters(): void {
     this.searchTerm = '';
     this.searchPrice = null;
-    this.filterProducts();
+    this.getAll(0, this.pageSize);
   }
 
   getAvailableTags(): string[] {
@@ -167,6 +171,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   openAddToCartModal(product: Product) {
+    if (!this.canPurchase) { this.toast.notify('Chỉ tài khoản user mới có quyền mua hàng.'); return; }
     if (!this.currentUserId) { this.toast.notify('Vui lòng đăng nhập để mua hàng!'); return; }
     if (!product.variants || product.variants.length === 0) { this.toast.notify('Sản phẩm này hiện tại chưa có phân loại hàng!'); return; }
 
@@ -185,6 +190,72 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.cartService.addToCart(this.currentUserId, variantId, quantity).subscribe({
       next: () => this.toast.notify('Đã thêm vào giỏ hàng thành công!'),
       error: (err) => this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể thêm'))
+    });
+  }
+
+  loadFavoriteStatusesForProducts(products: Product[]): void {
+    const productIds = products
+      .map((product) => product.id)
+      .filter((id): id is number => typeof id === 'number');
+
+    if (productIds.length === 0) {
+      this.favoriteProductIds.clear();
+      return;
+    }
+
+    this.wishlistService.existsBatch(productIds).subscribe({
+      next: (statusByProductId) => {
+        this.favoriteProductIds = new Set(
+          Object.entries(statusByProductId)
+            .filter(([, isFavorite]) => isFavorite)
+            .map(([productId]) => Number(productId))
+            .filter((productId) => Number.isFinite(productId))
+        );
+      },
+      error: () => {
+        this.favoriteProductIds.clear();
+      },
+    });
+  }
+
+  isFavorite(product: Product): boolean {
+    return typeof product.id === 'number' && this.favoriteProductIds.has(product.id);
+  }
+
+  isFavoriteBusy(product: Product): boolean {
+    return typeof product.id === 'number' && this.favoriteBusyProductIds.has(product.id);
+  }
+
+  toggleFavorite(product: Product): void {
+    if (!this.canUseWishlist || typeof product.id !== 'number') {
+      this.toast.notify('Vui lòng đăng nhập bằng tài khoản user để sử dụng yêu thích.');
+      return;
+    }
+
+    const productId = product.id;
+    if (this.favoriteBusyProductIds.has(productId)) return;
+
+    const wasFavorite = this.favoriteProductIds.has(productId);
+    this.favoriteBusyProductIds.add(productId);
+    const request: Observable<unknown> = wasFavorite
+      ? this.wishlistService.remove(productId)
+      : this.wishlistService.add(productId);
+
+    request.subscribe({
+      next: () => {
+        if (wasFavorite) {
+          this.favoriteProductIds.delete(productId);
+          this.toast.notify('Đã bỏ sản phẩm khỏi danh sách yêu thích.');
+        } else {
+          this.favoriteProductIds.add(productId);
+          this.toast.notify('Đã thêm sản phẩm vào danh sách yêu thích.');
+        }
+        this.favoriteBusyProductIds.delete(productId);
+      },
+      error: (err: any) => {
+        this.favoriteBusyProductIds.delete(productId);
+        this.toast.notify(getApiErrorMessage(err, 'Không thể cập nhật yêu thích.'));
+      },
     });
   }
 

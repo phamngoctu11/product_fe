@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { VoucherTemplate, VoucherTemplateRequest, UserVoucher } from '../model/voucher.model';
+import { CartVoucherOptions, VoucherTemplate, VoucherTemplateRequest, UserVoucher } from '../model/voucher.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
@@ -29,14 +29,20 @@ export class VoucherService {
   }
 
   // Thực hiện đổi điểm lấy mã
-  redeemVoucher(templateId: number): Observable<string> {
+  redeemVoucher(templateId: number): Observable<UserVoucher> {
     const params = new HttpParams()
       .set('templateId', templateId.toString());
 
-    return this.http.post(`${this.apiUrl}/me/redeem`, null, {
-      params,
-      responseType: 'text',
-    });
+    return this.http
+      .post<ApiResponse<UserVoucher> | UserVoucher>(`${this.apiUrl}/me/redeem`, null, { params })
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getCartOptions(subtotal: number): Observable<CartVoucherOptions> {
+    const params = new HttpParams().set('subtotal', Math.max(0, subtotal).toString());
+    return this.http
+      .get<ApiResponse<CartVoucherOptions> | CartVoucherOptions>(`${this.apiUrl}/me/cart-options`, { params })
+      .pipe(map(unwrapApiResponse));
   }
 
   createCampaign(template: VoucherTemplateRequest): Observable<VoucherTemplate> {

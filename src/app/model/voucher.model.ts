@@ -22,3 +22,25 @@ export interface UserVoucher {
   usedDate: string | null;
   expiryDate: string;
 }
+
+export interface VoucherCartOption {
+  userVoucherId: number | null;
+  templateId: number;
+  source: 'WALLET' | 'REDEEMABLE' | string;
+  template: VoucherTemplate;
+  applicable: boolean;
+  best: boolean;
+  discountAmount: number;
+  finalPrice: number;
+  unavailableReason: string | null;
+}
+
+export interface CartVoucherOptions {
+  subtotal: number;
+  currentReputation: number;
+  redeemableReputation: number;
+  bestWalletVoucher: VoucherCartOption | null;
+  bestRedeemableVoucher: VoucherCartOption | null;
+  walletVouchers: VoucherCartOption[];
+  redeemableVouchers: VoucherCartOption[];
+}

@@ -2,7 +2,6 @@ import { Component, HostListener, inject, OnInit, OnDestroy } from '@angular/cor
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './service/auth.service';
 import { MatDialog } from '@angular/material/dialog';
-import { CartModalComponent } from './component/cart/cart-modal';
 import { RewardDialogComponent } from './component/reward/reward-dialog';
 import { SettingsModalComponent } from './component/setting/settings-modal';
 import { ThemeService } from './service/theme.service';
@@ -44,7 +43,13 @@ export class App implements OnInit, OnDestroy {
   isMobileSidebarOpen = false;
   notifications: any[] = [];
   unreadCount: number = 0;
+  isMarkingNotificationsRead = false;
+  isLoadingNotifications = false;
   private activeSessionUserId: string | null = null;
+  private notificationPage = -1;
+  private notificationTotalPages = 0;
+  private readonly notificationPageSize = 10;
+  private hasMoreNotifications = true;
   private readonly appSubscriptions = new Subscription();
   private sessionSubscriptions = new Subscription();
 
@@ -60,6 +65,17 @@ export class App implements OnInit, OnDestroy {
 
   get displayName(): string {
     return this.currentUserDisplayName;
+  }
+
+  get isCustomer(): boolean {
+    return this.authService.isCustomer();
+  }
+
+  get notificationRoute(): string {
+    if (this.authService.isCustomer()) return '/orders';
+    if (this.authService.isStaff()) return '/staff-orders';
+    if (this.authService.isAdmin()) return '/admin-orders';
+    return '/product';
   }
 
   toggleSidebar() {
@@ -86,16 +102,15 @@ export class App implements OnInit, OnDestroy {
   }
 
   openCart() {
+    if (!this.authService.isCustomer()) return;
     const userId = this.authService.getUserId();
     if (userId) {
-      this.dialog.open(CartModalComponent, {
-        data: userId,
-        ...APP_DIALOG_SIZE.cart,
-      });
+      this.router.navigate(['/cart']);
     }
   }
 
   openOrders() {
+    if (!this.authService.isCustomer()) return;
     const userId = this.authService.getUserId();
     if (userId) {
      this.router.navigate(['/orders']);
@@ -103,6 +118,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   openRewards() {
+    if (!this.authService.isCustomer()) return;
     const userId = this.authService.getUserId();
     if (userId) {
       this.dialog.open(RewardDialogComponent, {
@@ -151,17 +167,19 @@ export class App implements OnInit, OnDestroy {
     this.isCurrentUserLoading = true;
     const isAdmin = this.authService.isAdmin();
 
-    this.sessionSubscriptions.add(this.notificationService.getMyHistory(isAdmin).subscribe({
-      next: (data) => {
-        this.notifications = data;
-        this.unreadCount = data.filter((notification) => !notification.read).length;
-      },
-    }));
+    this.loadNotifications(true);
+    this.loadNotificationUnreadCount();
 
     this.websocketService.connect(isAdmin, userId);
     this.sessionSubscriptions.add(this.websocketService.notifications$.subscribe((notification) => {
+      if (notification?.id && this.notifications.some((item) => item.id === notification.id)) {
+        return;
+      }
+
       this.notifications.unshift(notification);
-      this.unreadCount++;
+      if (!notification?.read) {
+        this.unreadCount++;
+      }
     }));
 
     this.sessionSubscriptions.add(this.userService.getMe().subscribe({
@@ -179,17 +197,80 @@ export class App implements OnInit, OnDestroy {
     this.activeSessionUserId = null;
     this.notifications = [];
     this.unreadCount = 0;
+    this.isMarkingNotificationsRead = false;
+    this.isLoadingNotifications = false;
+    this.notificationPage = -1;
+    this.notificationTotalPages = 0;
+    this.hasMoreNotifications = true;
     this.isCurrentUserLoading = false;
     this.userService.clearCurrentUser();
+  }
+
+  loadNotifications(reset: boolean = false): void {
+    if (!this.activeSessionUserId || this.isLoadingNotifications) return;
+    if (!reset && !this.hasMoreNotifications) return;
+
+    const nextPage = reset ? 0 : this.notificationPage + 1;
+    this.isLoadingNotifications = true;
+    this.sessionSubscriptions.add(this.notificationService
+      .getMyHistory(this.authService.isAdmin(), nextPage, this.notificationPageSize)
+      .subscribe({
+        next: (page) => {
+          const content = page.content || [];
+          this.notifications = reset
+            ? content
+            : [
+                ...this.notifications,
+                ...content.filter((notification) =>
+                  !notification?.id || !this.notifications.some((item) => item.id === notification.id)
+                ),
+              ];
+          this.notificationPage = page.number ?? nextPage;
+          this.notificationTotalPages = page.totalPages ?? 0;
+          this.hasMoreNotifications = this.notificationPage + 1 < this.notificationTotalPages;
+          this.isLoadingNotifications = false;
+        },
+        error: () => {
+          this.isLoadingNotifications = false;
+        },
+      }));
+  }
+
+  private loadNotificationUnreadCount(): void {
+    this.sessionSubscriptions.add(this.notificationService
+      .getMyUnreadCount(this.authService.isAdmin())
+      .subscribe({
+        next: (count) => {
+          this.unreadCount = Math.max(0, Number(count) || 0);
+        },
+      }));
+  }
+
+  onNotificationsScroll(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    const distanceToBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+    if (distanceToBottom <= 48) {
+      this.loadNotifications(false);
+    }
   }
 
   markAsRead() {
     const userId = this.authService.getUserId();
     const isAdmin = this.authService.isAdmin();
-    if (this.unreadCount > 0 && userId) {
-      this.unreadCount = 0;
-      this.notificationService.markMyHistoryAsRead(isAdmin).subscribe();
-      this.notifications.forEach(n => n.read = true);
+    if (this.unreadCount > 0 && userId && !this.isMarkingNotificationsRead) {
+      this.isMarkingNotificationsRead = true;
+      this.notificationService.markMyHistoryAsRead(isAdmin).subscribe({
+        next: () => {
+          this.unreadCount = 0;
+          this.notifications.forEach(n => n.read = true);
+          this.isMarkingNotificationsRead = false;
+        },
+        error: () => {
+          this.isMarkingNotificationsRead = false;
+        },
+      });
     }
   }
 

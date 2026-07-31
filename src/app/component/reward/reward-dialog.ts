@@ -88,8 +88,8 @@ isExpiringSoon(dateString: string): boolean {
     }).subscribe((confirmed) => {
       if (!confirmed) return;
       this.voucherService.redeemVoucher(template.id).subscribe({
-        next: (res) => {
-          this.toast.notify(res);
+        next: () => {
+          this.toast.notify('Đổi mã giảm giá thành công! Đã thêm vào ví của bạn.');
           this.loadData(); // Tải lại dữ liệu ngay lập tức
         },
         error: (err) => this.toast.notify(getApiErrorMessage(err, 'Lỗi không thể đổi mã'))

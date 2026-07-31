@@ -90,4 +90,16 @@ export interface ReceiptConfirmResponse {
   mismatches: ReceiptMismatchDTO[];
 }
 
+export interface ReorderItem {
+  variantId: number | null;
+  variantName: string;
+  quantity: number;
+  skipReason?: string | null;
+}
 
+export interface ReorderResponse {
+  addedItemCount: number;
+  skippedItemCount: number;
+  addedItems: ReorderItem[];
+  skippedItems: ReorderItem[];
+}

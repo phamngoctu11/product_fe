@@ -1,0 +1,46 @@
+<div class="container-fluid wishlist-page mt-4 mb-5 app-fade-in">
+  <app-page-header
+    icon="bi-heart-fill"
+    title="Sản phẩm yêu thích"
+    subtitle="Các sản phẩm bạn đã lưu để xem lại và mua sau">
+  </app-page-header>
+
+  <app-view-state
+    [loading]="isLoading"
+    [error]="loadError"
+    [empty]="products.length === 0"
+    loadingText="Đang tải danh sách yêu thích..."
+    emptyTitle="Chưa có sản phẩm yêu thích"
+    emptyText="Nhấn biểu tượng trái tim trên sản phẩm để lưu vào danh sách này."
+    emptyIcon="bi-heart"
+    [actionLabel]="loadError ? 'Thử lại' : ''"
+    (action)="loadError ? loadWishlist(currentPage) : null">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+      @for (product of products; track product.id) {
+        <div class="col product-grid-enter">
+          <app-product-card
+            [product]="product"
+            [showFavorite]="true"
+            [favorite]="true"
+            [favoriteBusy]="isFavoriteBusy(product)"
+            (viewed)="viewProduct($event.id)"
+            (purchased)="openAddToCartModal($event)"
+            (favoriteToggled)="removeFavorite($event)">
+          </app-product-card>
+        </div>
+      }
+    </div>
+
+    <app-pagination
+      *ngIf="products.length > 0"
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalElements]="totalElements"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [disabled]="isLoading"
+      (pageChange)="changePage($event)"
+      (pageSizeChange)="changePageSize($event)">
+    </app-pagination>
+  </app-view-state>
+</div>

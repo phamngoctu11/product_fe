@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
+import { PageResponse } from '../model/page-response.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -13,43 +14,53 @@ export class NotificationService {
 
   constructor(private http: HttpClient) {}
 
-  getCurrentUserHistory(): Observable<any[]> {
+  getCurrentUserHistory(page: number = 0, size: number = 10): Observable<PageResponse<any>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http
-      .get<ApiResponse<any[]> | any[]>(`${this.apiUrl}/me`)
+      .get<ApiResponse<PageResponse<any>> | PageResponse<any>>(`${this.apiUrl}/me`, { params })
       .pipe(map(unwrapApiResponse));
   }
 
-  getAdminHistory(): Observable<any[]> {
+  getAdminHistory(page: number = 0, size: number = 10): Observable<PageResponse<any>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http
-      .get<ApiResponse<any[]> | any[]>(`${this.apiUrl}/admin`)
+      .get<ApiResponse<PageResponse<any>> | PageResponse<any>>(`${this.apiUrl}/admin`, { params })
       .pipe(map(unwrapApiResponse));
   }
 
-  getMyHistory(useAdminFeed: boolean): Observable<any[]> {
-    return useAdminFeed ? this.getAdminHistory() : this.getCurrentUserHistory();
+  getMyHistory(useAdminFeed: boolean, page: number = 0, size: number = 10): Observable<PageResponse<any>> {
+    return useAdminFeed ? this.getAdminHistory(page, size) : this.getCurrentUserHistory(page, size);
   }
 
-  // Lấy danh sách thông báo cũ từ Database
-  getHistory(userId: string, isAdmin: boolean): Observable<any[]> {
+  getCurrentUserUnreadCount(): Observable<number> {
     return this.http
-      .get<ApiResponse<any[]> | any[]>(`${this.apiUrl}/${userId}?isAdmin=${isAdmin}`)
+      .get<ApiResponse<number> | number>(`${this.apiUrl}/me/unread-count`)
       .pipe(map(unwrapApiResponse));
   }
 
-  // Đánh dấu tất cả là đã đọc
-  markCurrentUserAsRead(): Observable<any> {
-    return this.http.put(`${this.apiUrl}/read-all/me`, {}, { responseType: 'text' });
+  getAdminUnreadCount(): Observable<number> {
+    return this.http
+      .get<ApiResponse<number> | number>(`${this.apiUrl}/admin/unread-count`)
+      .pipe(map(unwrapApiResponse));
   }
 
-  markAdminAsRead(): Observable<any> {
-    return this.http.put(`${this.apiUrl}/read-all/admin`, {}, { responseType: 'text' });
+  getMyUnreadCount(useAdminFeed: boolean): Observable<number> {
+    return useAdminFeed ? this.getAdminUnreadCount() : this.getCurrentUserUnreadCount();
   }
 
-  markMyHistoryAsRead(useAdminFeed: boolean): Observable<any> {
+  markCurrentUserAsRead(): Observable<void> {
+    return this.http
+      .put<ApiResponse<void> | void>(`${this.apiUrl}/read-all/me`, {})
+      .pipe(map(unwrapApiResponse));
+  }
+
+  markAdminAsRead(): Observable<void> {
+    return this.http
+      .put<ApiResponse<void> | void>(`${this.apiUrl}/read-all/admin`, {})
+      .pipe(map(unwrapApiResponse));
+  }
+
+  markMyHistoryAsRead(useAdminFeed: boolean): Observable<void> {
     return useAdminFeed ? this.markAdminAsRead() : this.markCurrentUserAsRead();
-  }
-
-  markAllAsRead(userId: string, isAdmin: boolean): Observable<any> {
-    return this.http.put(`${this.apiUrl}/read-all/${userId}?isAdmin=${isAdmin}`, {}, { responseType: 'text' });
   }
 }

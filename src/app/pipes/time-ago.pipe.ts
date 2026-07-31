@@ -2,15 +2,17 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'timeAgo',
-  standalone: true // Khai báo standalone để dễ dàng import
+  standalone: true
 })
 export class TimeAgoPipe implements PipeTransform {
   transform(value: any): string {
     if (!value) return 'Vừa xong';
 
-    const time = new Date(value).getTime();
-    const now = new Date().getTime();
-    const diff = Math.floor((now - time) / 1000);
+    const time = this.parseTime(value);
+    if (!Number.isFinite(time)) return 'Vừa xong';
+
+    const now = Date.now();
+    const diff = Math.max(0, Math.floor((now - time) / 1000));
 
     if (diff < 60) return 'Vừa xong';
 
@@ -27,5 +29,17 @@ export class TimeAgoPipe implements PipeTransform {
     if (months < 12) return `${months} tháng trước`;
 
     return `${Math.floor(months / 12)} năm trước`;
+  }
+
+  private parseTime(value: any): number {
+    if (typeof value === 'string' && this.isIsoWithoutTimezone(value)) {
+      return new Date(`${value}Z`).getTime();
+    }
+
+    return new Date(value).getTime();
+  }
+
+  private isIsoWithoutTimezone(value: string): boolean {
+    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(value);
   }
 }

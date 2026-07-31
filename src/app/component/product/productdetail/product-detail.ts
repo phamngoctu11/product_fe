@@ -173,6 +173,11 @@ export class ProductDetailComponent implements OnInit {
       return;
     }
 
+    if (!this.authService.isCustomer()) {
+      this.toast.notify('Chỉ tài khoản user mới có thể gửi yêu cầu tư vấn sản phẩm.');
+      return;
+    }
+
     // Dùng getRawValue() để lấy dữ liệu kể cả khi Form bị disable (isView = true)
     const formValue = this.productForm.getRawValue();
 

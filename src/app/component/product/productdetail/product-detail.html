@@ -152,7 +152,7 @@
         </div>
 
         <div class="detail-footer">
-          @if (!authService.isAdmin() && !authService.isStaff()) {
+          @if (authService.isCustomer()) {
             <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold me-auto" (click)="askAboutProduct()">
               <i class="bi bi-chat-heart-fill me-2"></i> Tư vấn sản phẩm
             </button>

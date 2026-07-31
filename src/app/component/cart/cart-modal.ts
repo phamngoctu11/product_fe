@@ -8,7 +8,7 @@ import { CartService } from '../../service/cart.service';
 import { CartPaymentData, CartRes } from '../../model/cart.model';
 import { forkJoin, Observable, of } from 'rxjs';
 import { VoucherService } from '../../service/voucher.service';
-import { UserVoucher } from '../../model/voucher.model';
+import { CartVoucherOptions, VoucherCartOption } from '../../model/voucher.model';
 import { getApiErrorMessage } from '../../model/api-response.model';
 import * as QRCode from 'qrcode';
 import { HttpClient } from '@angular/common/http';
@@ -17,6 +17,11 @@ import { AuthService } from '../../service/auth.service';
 import { CartItemRowComponent } from './cart-item-row/cart-item-row.component';
 import { CartPaymentPanelComponent } from './cart-payment-panel/cart-payment-panel.component';
 import { ViewStateComponent } from '../shared';
+
+type WalletVoucherGroup = VoucherCartOption & {
+  quantity: number;
+  voucherIds: number[];
+};
 
 @Component({
   selector: 'app-cart-modal',
@@ -35,15 +40,20 @@ export class CartModalComponent implements OnInit {
   deletingProductIds: number[] = [];
   listCurQuan: number[] = [];
   public cartData?: CartRes;
-  public userId = inject(MAT_DIALOG_DATA);
+  private readonly dialogUserId = inject<string | null>(MAT_DIALOG_DATA, { optional: true });
+  private readonly dialogRef = inject<MatDialogRef<CartModalComponent> | null>(MatDialogRef, { optional: true });
+  public userId = '';
   isOwner: boolean = false;
   selectedProductIds: number[] = [];
   note:any;
-  myWallet: UserVoucher[] = [];
   selectedVoucherId: number = 0;
   tempTotalPrice: number = 0;
   tempDiscountAmount: number = 0;
   tempFinalPrice: number = 0;
+  voucherOptions?: CartVoucherOptions;
+  groupedWalletVouchers: WalletVoucherGroup[] = [];
+  isLoadingVouchers = false;
+  redeemingTemplateIds = new Set<number>();
   onlinePaymentData?: CartPaymentData;
   paymentQrDataUrl: string = '';
   isGeneratingPaymentQr = false;
@@ -52,23 +62,30 @@ export class CartModalComponent implements OnInit {
   constructor(
     private cartService: CartService,
     private voucherService: VoucherService,
-    public dialogRef: MatDialogRef<CartModalComponent>,
   ) {}
 
   ngOnInit(): void {
-    const userStr = this.authService.getUserId();
-    this.isOwner = userStr === this.userId.toString();
-    this.loadCart();
-    if (this.isOwner) {
-      this.loadWallet();
+    if (!this.authService.isCustomer()) {
+      this.toast.notify('Chỉ tài khoản user mới có quyền sử dụng giỏ hàng.');
+      if (this.dialogRef) {
+        this.dialogRef.close();
+      } else {
+        this.router.navigate(['/product']);
+      }
+      return;
     }
-  }
 
-  loadWallet() {
-    this.voucherService.getMyWallet().subscribe({
-      next: (data) => this.myWallet = data,
-      error: (err) => console.error('Lỗi tải ví:', err)
-    });
+    const userStr = this.authService.getUserId();
+    const targetUserId = this.dialogUserId || userStr;
+    if (!targetUserId) {
+      this.toast.notify('Vui lòng đăng nhập để xem giỏ hàng.');
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.userId = targetUserId.toString();
+    this.isOwner = userStr === this.userId;
+    this.loadCart();
   }
 
   loadCart() {
@@ -81,6 +98,7 @@ export class CartModalComponent implements OnInit {
         }
         this.isLoading = false;
         this.calculateInvoice();
+        this.loadVoucherOptions();
       },
       error: (err) => {
         console.error('Lỗi khi tải giỏ hàng:', err);
@@ -168,25 +186,16 @@ export class CartModalComponent implements OnInit {
       }, 0);
     }
 
+    this.refreshVoucherOptionsForSubtotal();
     this.tempDiscountAmount = 0;
 
     if (this.selectedVoucherId !== 0) {
-      const voucher = this.myWallet.find(v => v.id === this.selectedVoucherId);
+      const selectedVoucher = this.getSelectedWalletOption();
 
-      if (voucher) {
-        if (this.tempTotalPrice < voucher.template.minOrderValue) {
-          this.selectedVoucherId = 0;
-        } else {
-          if (voucher.template.discountPercent > 0) {
-            let discount = (this.tempTotalPrice * voucher.template.discountPercent) / 100;
-            if (voucher.template.maxDiscountAmount > 0 && discount > voucher.template.maxDiscountAmount) {
-              discount = voucher.template.maxDiscountAmount;
-            }
-            this.tempDiscountAmount = discount;
-          } else {
-            this.tempDiscountAmount = voucher.template.maxDiscountAmount;
-          }
-        }
+      if (!selectedVoucher || !selectedVoucher.applicable) {
+        this.selectedVoucherId = 0;
+      } else {
+        this.tempDiscountAmount = selectedVoucher.discountAmount;
       }
     }
 
@@ -201,12 +210,197 @@ export class CartModalComponent implements OnInit {
     this.calculateInvoice();
   }
 
-  private getUpdateRequests(): Observable<any>[] {
+  loadVoucherOptions(force: boolean = false) {
+    if (!this.isOwner || this.tempTotalPrice <= 0) {
+      this.voucherOptions = undefined;
+      this.groupedWalletVouchers = [];
+      return;
+    }
+    if (!force && this.voucherOptions) {
+      return;
+    }
+
+    this.isLoadingVouchers = true;
+    this.voucherService.getCartOptions(this.tempTotalPrice).subscribe({
+      next: (options) => {
+        this.voucherOptions = options;
+        this.calculateInvoice();
+        this.isLoadingVouchers = false;
+      },
+      error: () => {
+        this.voucherOptions = undefined;
+        this.groupedWalletVouchers = [];
+        this.isLoadingVouchers = false;
+      },
+    });
+  }
+
+  private refreshVoucherOptionsForSubtotal(): void {
+    if (!this.voucherOptions) return;
+
+    const walletVouchers = (this.voucherOptions.walletVouchers || [])
+      .map((option) => this.recalculateVoucherOption(option));
+    const ownedTemplateIds = new Set(walletVouchers.map((option) => option.templateId));
+    const redeemableVouchers = (this.voucherOptions.redeemableVouchers || [])
+      .filter((option) => !ownedTemplateIds.has(option.templateId))
+      .map((option) => this.recalculateVoucherOption(option));
+
+    const bestWalletVoucher = this.markBestVoucher(walletVouchers);
+    const bestRedeemableVoucher = this.markBestVoucher(redeemableVouchers);
+
+    this.voucherOptions = {
+      ...this.voucherOptions,
+      subtotal: this.tempTotalPrice,
+      bestWalletVoucher,
+      bestRedeemableVoucher,
+      walletVouchers,
+      redeemableVouchers,
+    };
+    this.groupedWalletVouchers = this.groupWalletVouchers(walletVouchers);
+  }
+
+  private recalculateVoucherOption(option: VoucherCartOption): VoucherCartOption {
+    const applicable = this.tempTotalPrice >= option.template.minOrderValue;
+    const discountAmount = applicable ? this.calculateVoucherDiscount(option) : 0;
+    return {
+      ...option,
+      applicable,
+      best: false,
+      discountAmount,
+      finalPrice: Math.max(0, this.tempTotalPrice - discountAmount),
+      unavailableReason: applicable
+        ? null
+        : `Cần thêm ${Math.ceil(option.template.minOrderValue - this.tempTotalPrice).toLocaleString('vi-VN')}đ để áp dụng voucher này.`,
+    };
+  }
+
+  private calculateVoucherDiscount(option: VoucherCartOption): number {
+    const template = option.template;
+    if (template.discountPercent <= 0) {
+      return Math.min(this.tempTotalPrice, template.maxDiscountAmount);
+    }
+
+    let discountAmount = (this.tempTotalPrice * template.discountPercent) / 100;
+    if (template.maxDiscountAmount > 0 && discountAmount > template.maxDiscountAmount) {
+      discountAmount = template.maxDiscountAmount;
+    }
+    return Math.min(this.tempTotalPrice, discountAmount);
+  }
+
+  private groupWalletVouchers(options: VoucherCartOption[]): WalletVoucherGroup[] {
+    const grouped = new Map<number, WalletVoucherGroup>();
+
+    for (const option of options) {
+      const existing = grouped.get(option.templateId);
+      if (!existing) {
+        grouped.set(option.templateId, {
+          ...option,
+          quantity: 1,
+          voucherIds: option.userVoucherId ? [option.userVoucherId] : [],
+        });
+        continue;
+      }
+
+      existing.quantity += 1;
+      if (option.userVoucherId) {
+        existing.voucherIds.push(option.userVoucherId);
+      }
+      existing.best = existing.best || option.best;
+      if (!existing.userVoucherId && option.userVoucherId) {
+        existing.userVoucherId = option.userVoucherId;
+      }
+    }
+
+    return Array.from(grouped.values());
+  }
+
+  private markBestVoucher(options: VoucherCartOption[]): VoucherCartOption | null {
+    const bestOption = options
+      .filter((option) => option.applicable)
+      .sort((left, right) => {
+        const discountDiff = right.discountAmount - left.discountAmount;
+        if (discountDiff !== 0) return discountDiff;
+        return right.template.minOrderValue - left.template.minOrderValue;
+      })[0] || null;
+
+    if (!bestOption) return null;
+
+    const bestKey = `${bestOption.source}-${bestOption.userVoucherId ?? bestOption.templateId}`;
+    options.forEach((option) => {
+      option.best = `${option.source}-${option.userVoucherId ?? option.templateId}` === bestKey;
+    });
+
+    return bestOption;
+  }
+
+  getSelectedWalletOption(): VoucherCartOption | null {
+    return this.voucherOptions?.walletVouchers?.find((option) => option.userVoucherId === this.selectedVoucherId) || null;
+  }
+
+  selectWalletVoucher(option: VoucherCartOption) {
+    if (!option.userVoucherId || !option.applicable) {
+      if (option.unavailableReason) this.toast.notify(option.unavailableReason);
+      return;
+    }
+    this.selectedVoucherId = this.selectedVoucherId === option.userVoucherId ? 0 : option.userVoucherId;
+    this.calculateInvoice();
+  }
+
+  isWalletGroupSelected(group: WalletVoucherGroup): boolean {
+    return this.selectedVoucherId !== 0 && group.voucherIds.includes(this.selectedVoucherId);
+  }
+
+  selectWalletVoucherGroup(group: WalletVoucherGroup) {
+    if (!group.userVoucherId || !group.applicable) {
+      if (group.unavailableReason) this.toast.notify(group.unavailableReason);
+      return;
+    }
+    this.selectedVoucherId = this.isWalletGroupSelected(group) ? 0 : group.userVoucherId;
+    this.calculateInvoice();
+  }
+
+  applyBestWalletVoucher() {
+    const bestVoucher = this.voucherOptions?.bestWalletVoucher;
+    if (bestVoucher) {
+      this.selectWalletVoucher(bestVoucher);
+    }
+  }
+
+  isRedeeming(templateId: number): boolean {
+    return this.redeemingTemplateIds.has(templateId);
+  }
+
+  redeemAndUse(option: VoucherCartOption) {
+    if (!option.templateId || !option.applicable || this.isRedeeming(option.templateId)) {
+      if (option.unavailableReason) this.toast.notify(option.unavailableReason);
+      return;
+    }
+
+    this.redeemingTemplateIds.add(option.templateId);
+    this.voucherService.redeemVoucher(option.templateId).subscribe({
+      next: (userVoucher) => {
+        this.selectedVoucherId = userVoucher.id;
+        this.loadVoucherOptions(true);
+        this.toast.notify('Đã đổi và áp dụng voucher cho giỏ hàng.');
+        this.redeemingTemplateIds.delete(option.templateId);
+      },
+      error: (err) => {
+        this.toast.notify(getApiErrorMessage(err, 'Không thể đổi voucher này.'));
+        this.redeemingTemplateIds.delete(option.templateId);
+      },
+    });
+  }
+
+  private getUpdateRequests(variantIdsToSync?: Set<number>): Observable<any>[] {
     const requests: Observable<any>[] = [];
     if (this.cartData?.items) {
       this.cartData.items.forEach((item: any, i: number) => {
+        const itemId = this.getCartItemId(item);
+        if (variantIdsToSync && !variantIdsToSync.has(itemId)) {
+          return;
+        }
         if (item.quantity !== this.listCurQuan[i]) {
-          requests.push(this.cartService.updateQuantity(this.userId, this.getCartItemId(item), this.listCurQuan[i]));
+          requests.push(this.cartService.updateQuantity(this.userId, itemId, this.listCurQuan[i]));
         }
       });
     }
@@ -236,7 +430,7 @@ export class CartModalComponent implements OnInit {
 
     this.isLoading = true;
 
-    const updates = this.getUpdateRequests();
+    const updates = this.getUpdateRequests(new Set(productIdsToCheckout));
     const performUpdate$: Observable<any> = updates.length > 0 ? forkJoin(updates) : of(null);
 
     performUpdate$.subscribe({
@@ -257,7 +451,7 @@ export class CartModalComponent implements OnInit {
               this.http.get(res.payUrl).subscribe({
                 next: () => {
                   this.cartService.notifyCheckoutSuccess();
-                  this.dialogRef.close();
+                  this.closeCart(undefined, false);
 
                   // Trích xuất orderId từ cái payUrl mà backend trả về
                   const urlObj = new URL(res.payUrl);
@@ -278,7 +472,7 @@ export class CartModalComponent implements OnInit {
               // Xử lý luồng COD như bình thường
               this.toast.notify(res?.message || 'Đặt hàng thành công.');
               this.cartService.notifyCheckoutSuccess();
-              this.dialogRef.close();
+              this.closeCart(undefined, false);
               this.router.navigate(['/orders']);
             }
           },
@@ -299,7 +493,7 @@ export class CartModalComponent implements OnInit {
     });
   }
 openModal(data:any){
-this.dialogRef.close(data);
+this.closeCart(data);
 }
   async showOnlinePayment(paymentData: CartPaymentData) {
     this.onlinePaymentData = paymentData;
@@ -349,6 +543,16 @@ this.dialogRef.close(data);
     }
   }
 
+  private closeCart(result?: any, navigateBack: boolean = true): void {
+    if (this.dialogRef) {
+      this.dialogRef.close(result);
+      return;
+    }
+    if (navigateBack) {
+      this.router.navigate(['/product']);
+    }
+  }
+
   onClose(): void {
     const updates = this.getUpdateRequests();
     if (updates.length > 0) {
@@ -361,23 +565,25 @@ this.dialogRef.close(data);
         icon: 'bi-floppy-fill',
       }).subscribe((confirmed) => {
         if (!confirmed) {
-          this.dialogRef.close();
+          this.closeCart();
           return;
         }
+
         this.isLoading = true;
         forkJoin(updates).subscribe({
           next: () => {
             this.isLoading = false;
-            this.dialogRef.close(true);
+            this.closeCart(true);
           },
-          error: () => {
+          error: (err) => {
             this.isLoading = false;
-            this.dialogRef.close();
+            this.toast.notify('Không thể lưu thay đổi giỏ hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
           },
         });
       });
       return;
     }
-    this.dialogRef.close();
+
+    this.closeCart();
   }
 }

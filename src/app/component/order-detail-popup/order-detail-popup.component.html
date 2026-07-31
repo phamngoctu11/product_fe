@@ -71,7 +71,7 @@
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Tổng tiền gốc</div>
-            <div class="fw-bold">{{ orderDetail.totalPrice | number: '1.0-0' }} đ</div>
+            <div class="fw-bold">{{ getOriginalTotal(orderDetail) | number: '1.0-0' }} đ</div>
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Giảm giá</div>
@@ -79,7 +79,7 @@
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Tổng thanh toán</div>
-            <div class="fw-bold text-danger">{{ orderDetail.finalPrice | number: '1.0-0' }} đ</div>
+            <div class="fw-bold text-danger">{{ getFinalTotal(orderDetail) | number: '1.0-0' }} đ</div>
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Voucher</div>

@@ -2,7 +2,7 @@
   <app-page-header
     icon="bi-people"
     title="Quản lý người dùng"
-    subtitle="Quản lý tài khoản, vai trò và giỏ hàng của người dùng">
+    subtitle="Quản lý tài khoản, vai trò và trạng thái người dùng">
     <button pageActions class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center" (click)="openUserDialog()">
       <i class="bi bi-person-plus-fill me-2 fs-5"></i> Thêm Người Dùng
     </button>
@@ -92,14 +92,6 @@
                 </td>
                 <td class="text-center">
                   <div class="d-flex gap-2 justify-content-center">
-                    <button
-                      (click)="openCartModal(u.id); $event.stopPropagation()"
-                      class="btn-add-cart"
-                      title="Xem giỏ hàng"
-                    >
-                      <i class="bi bi-cart3 me-1"></i> Giỏ hàng
-                    </button>
-
                     @if(isAdmin){
                       <div class="d-flex gap-2">
                         <button

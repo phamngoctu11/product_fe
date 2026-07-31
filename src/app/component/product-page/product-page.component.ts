@@ -90,6 +90,10 @@ export class ProductPageComponent implements OnInit {
       this.toast.notify("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
       return;
     }
+    if (!this.authService.isCustomer()) {
+      this.toast.notify('Chỉ tài khoản user mới có thể gửi yêu cầu tư vấn sản phẩm.');
+      return;
+    }
 
     const productInfo = {
       id: this.product.id,

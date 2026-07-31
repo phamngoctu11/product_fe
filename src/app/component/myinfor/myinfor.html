@@ -43,9 +43,11 @@
                 <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-50 shadow-sm px-3 py-2 rounded-pill fs-6 d-flex align-items-center">
                   <i class="bi bi-star-fill text-warning me-2"></i> Uy tín: <span class="text-dark ms-1">{{ userInfo.reputation }}</span>
                 </span>
-                <button class="btn btn-primary shadow-sm fw-bold px-4 rounded-pill d-flex align-items-center" (click)="openCart()">
-                  <i class="bi bi-cart3 me-2"></i> Giỏ hàng
-                </button>
+                @if (isCustomer) {
+                  <button class="btn btn-primary shadow-sm fw-bold px-4 rounded-pill d-flex align-items-center" (click)="openCart()">
+                    <i class="bi bi-cart3 me-2"></i> Giỏ hàng
+                  </button>
+                }
                 <button class="btn btn-outline-primary shadow-sm fw-bold px-4 rounded-pill d-flex align-items-center" (click)="startEditing()">
                   <i class="bi bi-pencil-square me-2"></i> Chỉnh sửa
                 </button>
@@ -97,6 +99,57 @@
             </div>
           }
           </app-view-state>
+        </div>
+      </div>
+
+      <div class="card shadow border-0 profile-card mt-4 overflow-hidden">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 px-4 py-3">
+          <div>
+            <h4 class="fw-bold mb-1 fs-5">Lịch sử điểm uy tín</h4>
+            <p class="text-muted small mb-0">Các lần cộng/trừ điểm từ đơn hàng và voucher.</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" (click)="loadReputationHistory()">
+            <i class="bi bi-arrow-clockwise"></i> Làm mới
+          </button>
+        </div>
+        <div class="card-body p-0">
+          @if (isLoadingReputationHistory) {
+            <div class="text-center text-muted py-4">
+              <div class="spinner-border text-primary mb-2" role="status"></div>
+              <p class="mb-0">Đang tải lịch sử điểm...</p>
+            </div>
+          } @else if (reputationHistoryError) {
+            <div class="alert alert-danger border-0 rounded-0 mb-0">
+              {{ reputationHistoryError }}
+            </div>
+          } @else if (reputationHistory.length === 0) {
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-clock-history fs-3 d-block mb-2"></i>
+              Chưa có lịch sử điểm uy tín.
+            </div>
+          } @else {
+            <div class="list-group list-group-flush">
+              @for (item of reputationHistory; track item.id) {
+                <div class="list-group-item d-flex justify-content-between align-items-start gap-3 px-4 py-3">
+                  <div class="min-w-0">
+                    <div class="fw-bold text-dark">{{ item.reason }}</div>
+                    <div class="text-muted small">
+                      <i class="bi bi-calendar3 me-1"></i>{{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                      @if (item.referenceType && item.referenceId) {
+                        <span class="ms-2">#{{ item.referenceId }}</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="text-end flex-shrink-0">
+                    <div class="fw-bold fs-5" [ngClass]="getDeltaClass(item.delta)">
+                      {{ formatDelta(item.delta) }}
+                    </div>
+                    <div class="text-muted small">Còn {{ item.balanceAfter }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
         </div>
       </div>
     </div>

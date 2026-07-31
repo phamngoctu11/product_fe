@@ -6,6 +6,12 @@ import { BestSellingProduct, Product, PageResponse, ProductVariant, StockImportR
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
+export interface ProductQueryParams {
+  keyword?: string | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -20,8 +26,20 @@ export class ProductService {
       .pipe(map(unwrapApiResponse));
   }
 
-  getAll(page: number = 0, size: number = 10): Observable<PageResponse<Product>> {
-    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+  getAll(page: number = 0, size: number = 10, filters: ProductQueryParams = {}): Observable<PageResponse<Product>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    const keyword = filters.keyword?.trim();
+
+    if (keyword) {
+      params = params.set('keyword', keyword);
+    }
+    if (filters.minPrice !== null && filters.minPrice !== undefined && filters.minPrice >= 0) {
+      params = params.set('minPrice', filters.minPrice.toString());
+    }
+    if (filters.maxPrice !== null && filters.maxPrice !== undefined && filters.maxPrice > 0) {
+      params = params.set('maxPrice', filters.maxPrice.toString());
+    }
+
     return this.http
       .get<ApiResponse<PageResponse<Product>> | PageResponse<Product>>(this.apiUrl, { params })
       .pipe(map(unwrapApiResponse));

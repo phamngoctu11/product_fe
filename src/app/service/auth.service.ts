@@ -72,6 +72,10 @@ export class AuthService {
     return this.getUserRole() === 'STAFF';
   }
 
+  isCustomer(): boolean {
+    return this.getUserRole() === 'USER';
+  }
+
   isLoggedIn(): boolean {
     if (isJwtExpired(this.getDecodedToken())) {
       clearAuthStorage();

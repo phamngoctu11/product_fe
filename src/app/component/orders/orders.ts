@@ -55,6 +55,7 @@ export class Orders implements OnInit {
   modalTitle = '';
   isLoadingOrders = false;
   isLoadingCancelledOrders = false;
+  reorderingOrderIds = new Set<number>();
   currentPage = 0;
   cancelledPage = 0;
   pageSize = 20;
@@ -363,6 +364,38 @@ export class Orders implements OnInit {
 
   canCancelOrder(order: OrderListDTO): boolean {
     return order.status === 'PENDING_PAYMENT' || order.status === 'PENDING_APPROVAL';
+  }
+
+  canReorderOrder(order: OrderListDTO): boolean {
+    return order.status === 'DELIVERED' || order.status === 'CANCELLED';
+  }
+
+  isReorderingOrder(orderId: number): boolean {
+    return this.reorderingOrderIds.has(orderId);
+  }
+
+  reorderOrder(order: OrderListDTO): void {
+    if (!this.canReorderOrder(order) || this.reorderingOrderIds.has(order.id)) return;
+
+    this.reorderingOrderIds.add(order.id);
+    this.orderService.reorderOrder(order.id).subscribe({
+      next: (response) => {
+        this.reorderingOrderIds.delete(order.id);
+        if (response.addedItemCount > 0 && response.skippedItemCount === 0) {
+          this.toast.notify(`Đã thêm ${response.addedItemCount} sản phẩm vào giỏ hàng.`);
+          return;
+        }
+        if (response.addedItemCount > 0) {
+          this.toast.notify(`Đã thêm ${response.addedItemCount} sản phẩm, bỏ qua ${response.skippedItemCount} sản phẩm không còn phù hợp.`);
+          return;
+        }
+        this.toast.notify('Không có sản phẩm nào trong đơn cũ có thể mua lại.');
+      },
+      error: (err) => {
+        this.reorderingOrderIds.delete(order.id);
+        this.toast.notify(getApiErrorMessage(err, 'Không thể mua lại đơn hàng này.'));
+      },
+    });
   }
 
   cancelOrder(order: OrderListDTO): void {

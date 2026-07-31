@@ -27,7 +27,18 @@ export const routes: Routes = [
       },
       {
         path: 'orders',
+        data: { roles: ROUTE_ACCESS.customer },
         loadComponent: () => import('./component/orders/orders').then((module) => module.Orders),
+      },
+      {
+        path: 'cart',
+        data: { roles: ROUTE_ACCESS.customer },
+        loadComponent: () => import('./component/cart/cart-modal').then((module) => module.CartModalComponent),
+      },
+      {
+        path: 'wishlist',
+        data: { roles: ROUTE_ACCESS.customer },
+        loadComponent: () => import('./component/wishlist/wishlist.component').then((module) => module.WishlistComponent),
       },
       {
         path: 'consultations',
@@ -70,6 +81,7 @@ export const routes: Routes = [
       },
       {
         path: 'payment-success',
+        data: { roles: ROUTE_ACCESS.customer },
         loadComponent: () => import('./component/payment-success/payment-success').then((module) => module.PaymentSuccessComponent),
       },
       {

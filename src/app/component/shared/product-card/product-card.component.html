@@ -15,6 +15,22 @@
       </div>
     }
     <div class="product-overlay"></div>
+    @if (showFavorite) {
+      <button
+        type="button"
+        class="favorite-button"
+        [class.active]="favorite"
+        [disabled]="favoriteBusy"
+        [attr.aria-label]="favorite ? 'Bo yeu thich' : 'Them vao yeu thich'"
+        [title]="favorite ? 'Bo yeu thich' : 'Them vao yeu thich'"
+        (click)="$event.stopPropagation(); toggleFavorite()">
+        @if (favoriteBusy) {
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        } @else {
+          <i class="bi" [ngClass]="favorite ? 'bi-heart-fill' : 'bi-heart'"></i>
+        }
+      </button>
+    }
     @if (isOutOfStock) {
       <span class="badge-oos">Hết hàng</span>
     }
@@ -48,13 +64,15 @@
   </div>
 
   <footer class="card-footer product-actions p-3">
-    <button
-      type="button"
-      class="btn-add-cart flex-grow-1"
-      [disabled]="isOutOfStock"
-      (click)="$event.stopPropagation(); purchased.emit(product)">
-      <i class="bi bi-cart-plus-fill"></i> Chọn mua
-    </button>
+    @if (canPurchase) {
+      <button
+        type="button"
+        class="btn-add-cart flex-grow-1"
+        [disabled]="isOutOfStock"
+        (click)="$event.stopPropagation(); purchased.emit(product)">
+        <i class="bi bi-cart-plus-fill"></i> Chọn mua
+      </button>
+    }
     @if (canEdit) {
       <button
         type="button"

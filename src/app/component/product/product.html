@@ -63,8 +63,13 @@
             [product]="product"
             [canEdit]="isAdmin || isStaff"
             [canDelete]="isAdmin"
+            [canPurchase]="canPurchase"
+            [showFavorite]="canUseWishlist"
+            [favorite]="isFavorite(product)"
+            [favoriteBusy]="isFavoriteBusy(product)"
             (viewed)="viewProduct($event.id)"
             (purchased)="openAddToCartModal($event)"
+            (favoriteToggled)="toggleFavorite($event)"
             (edited)="openProductDialog($event.id)"
             (deleted)="delete($event)">
           </app-product-card>

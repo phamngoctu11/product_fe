@@ -3,6 +3,7 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,7 @@ export class WebsocketService {
   private notificationSubject = new Subject<any>();
   public notifications$ = this.notificationSubject.asObservable();
 
-  constructor() {
+  constructor(private authService: AuthService) {
     this.client = new Client({
       webSocketFactory: () => new SockJS(environment.wsUrl),
       debug: (str) => {},
@@ -24,6 +25,9 @@ export class WebsocketService {
 
   connect(isAdmin: boolean, userId: string | null) {
     if (!this.client.active) {
+      const token = this.authService.getToken();
+      this.client.connectHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
       this.client.onConnect = (frame) => {
         console.log('Đã kết nối WebSocket thành công!');
 

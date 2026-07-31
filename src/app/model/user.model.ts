@@ -55,3 +55,13 @@ export interface UserProfileUpdateDTO {
   avatar_url?: string;
   email: string;
 }
+
+export interface ReputationHistory {
+  id: number;
+  delta: number;
+  balanceAfter: number;
+  reason: string;
+  referenceType?: string | null;
+  referenceId?: string | null;
+  createdAt: string;
+}

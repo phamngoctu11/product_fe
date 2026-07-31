@@ -38,4 +38,25 @@ export class OrderDetailPopupComponent {
   updateReceivedQuantity(change: OrderItemQuantityChange): void {
     this.receivedQuantities[change.variantId] = change.quantity;
   }
+
+  getOriginalTotal(order: Order): number {
+    const items = order.items || order.orderItems || order.details || [];
+    const itemTotal = items.reduce((total, item) => {
+      const price = Number(item.price || 0);
+      const quantity = Number(item.quantity || 0);
+      return total + price * quantity;
+    }, 0);
+
+    if (itemTotal > 0) {
+      return itemTotal;
+    }
+    return Number(order.totalPrice || 0);
+  }
+
+  getFinalTotal(order: Order): number {
+    if (order.finalPrice !== null && order.finalPrice !== undefined) {
+      return Number(order.finalPrice || 0);
+    }
+    return Math.max(0, this.getOriginalTotal(order) - Number(order.discountAmount || 0));
+  }
 }

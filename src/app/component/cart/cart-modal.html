@@ -1,135 +1,215 @@
-<div class="cart-backdrop" tabindex="-1">
-  <div class="cart-modal">
-
-    <!-- Header -->
-    <div class="cart-header">
+<div class="cart-page" tabindex="-1">
+  <div class="cart-shell">
+    <header class="cart-header">
       <div class="cart-header-title">
         <div class="cart-header-icon">
           <i class="bi bi-bag-check-fill"></i>
         </div>
         <div>
           <h5>Giỏ hàng của tôi</h5>
-          <p class="cart-header-sub">Xem lại và xác nhận đơn hàng</p>
+          <p class="cart-header-sub">Xem lại sản phẩm, voucher và xác nhận thanh toán</p>
         </div>
       </div>
       <button type="button" class="cart-close-btn" (click)="onClose()" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
       </button>
-    </div>
+    </header>
 
-    <!-- Body -->
-    <div class="cart-body">
+    <main class="cart-layout">
+      <section class="cart-main">
+        <div *ngIf="checkoutErrorMessage && !isLoading" class="cart-inline-alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>{{ checkoutErrorMessage }}</span>
+        </div>
 
-      <div *ngIf="checkoutErrorMessage && !isLoading" class="cart-inline-alert">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        <span>{{ checkoutErrorMessage }}</span>
-      </div>
-
-      <app-view-state
-        [loading]="isLoading"
-        [empty]="!cartData?.items || (cartData?.items?.length ?? 0) === 0"
-        [card]="false"
-        loadingText="Đang tải giỏ hàng..."
-        emptyTitle="Giỏ hàng trống"
-        emptyText="Thêm sản phẩm vào giỏ hàng để tiến hành đặt hàng."
-        emptyIcon="bi-bag-x">
-      <div class="cart-items">
-        @for (item of cartData?.items; track getCartItemId(item); let index = $index) {
-          <app-cart-item-row
-            [item]="item"
-            [quantity]="listCurQuan[index]"
-            [owner]="isOwner"
-            [selected]="selectedProductIds.includes(getCartItemId(item))"
-            [deleting]="isDeleting(getCartItemId(item))"
-            (selectionToggle)="toggleSelection($event)"
-            (quantityDelta)="changeQuantity(index, $event)"
-            (remove)="removeItem($event)">
-          </app-cart-item-row>
-        }
-      </div>
-      </app-view-state>
-
-      @if (onlinePaymentData) {
-        <app-cart-payment-panel
-          [payment]="onlinePaymentData"
-          [qrDataUrl]="paymentQrDataUrl"
-          [generatingQr]="isGeneratingPaymentQr"
-          (openPayment)="openPaymentUrl()"
-          (openDeeplink)="openDeeplink()">
-        </app-cart-payment-panel>
-      }
-    </div>
-
-    <!-- Summary -->
-    <div class="cart-summary" *ngIf="!isLoading && cartData?.items && (cartData?.items?.length ?? 0) > 0">
-      <div class="cart-summary-row">
-        <span class="cart-summary-label">Tạm tính</span>
-        <span class="cart-summary-val">{{ tempTotalPrice | number }}đ</span>
-      </div>
-
-      @if (isOwner) {
-        <div class="cart-voucher-row">
-          <span class="cart-voucher-label">
-            <i class="bi bi-ticket-perforated-fill"></i> Mã giảm giá:
-          </span>
-          <select
-            class="cart-voucher-select"
-            [(ngModel)]="selectedVoucherId"
-            (ngModelChange)="onVoucherChange()">
-            <option [ngValue]="0">-- Không sử dụng mã giảm giá --</option>
-            @for (uv of myWallet; track uv.id) {
-              <option [ngValue]="uv.id" [disabled]="tempTotalPrice < uv.template.minOrderValue">
-                {{ uv.template.name }} (Đơn từ {{ uv.template.minOrderValue | number }}đ)
-              </option>
+        <app-view-state
+          [loading]="isLoading"
+          [empty]="!cartData?.items || (cartData?.items?.length ?? 0) === 0"
+          [card]="false"
+          loadingText="Đang tải giỏ hàng..."
+          emptyTitle="Giỏ hàng trống"
+          emptyText="Thêm sản phẩm vào giỏ hàng để tiến hành đặt hàng."
+          emptyIcon="bi-bag-x">
+          <div class="cart-items">
+            @for (item of cartData?.items; track getCartItemId(item); let index = $index) {
+              <app-cart-item-row
+                [item]="item"
+                [quantity]="listCurQuan[index]"
+                [owner]="isOwner"
+                [selected]="selectedProductIds.includes(getCartItemId(item))"
+                [deleting]="isDeleting(getCartItemId(item))"
+                (selectionToggle)="toggleSelection($event)"
+                (quantityDelta)="changeQuantity(index, $event)"
+                (remove)="removeItem($event)">
+              </app-cart-item-row>
             }
-          </select>
-        </div>
+          </div>
+        </app-view-state>
 
-        <div class="cart-summary-row" *ngIf="tempDiscountAmount > 0">
-          <span class="cart-summary-label">Giảm giá</span>
-          <span class="cart-summary-val discount">-{{ tempDiscountAmount | number }}đ</span>
-        </div>
-      }
-
-      <hr class="cart-divider">
-
-      <div class="cart-total-row">
-        <span class="cart-total-label">Tổng thanh toán</span>
-        <span class="cart-total-final">{{ tempFinalPrice | number }}đ</span>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="cart-footer">
-      <div class="cart-note-wrap">
-        <i class="bi bi-pencil-square cart-note-icon"></i>
-        <input
-          type="text"
-          class="cart-note-input"
-          placeholder="Ghi chú cho đơn hàng..."
-          [(ngModel)]="note" />
-      </div>
-
-      <div class="cart-footer-actions">
-        <button type="button" class="cart-btn cart-btn-close" (click)="onClose()">Đóng</button>
-        @if (isOwner) {
-          <button
-            type="button"
-            class="cart-btn cart-btn-momo"
-            (click)="approve('ONLINE')"
-            [disabled]="isLoading || !!onlinePaymentData">
-            <i class="bi bi-wallet2"></i> Thanh toán MoMo
-          </button>
-          <button
-            type="button"
-            class="cart-btn cart-btn-cod"
-            (click)="approve('COD')"
-            [disabled]="isLoading || !!onlinePaymentData">
-            <i class="bi bi-truck-front-fill"></i> Thanh toán COD
-          </button>
+        @if (onlinePaymentData) {
+          <app-cart-payment-panel
+            [payment]="onlinePaymentData"
+            [qrDataUrl]="paymentQrDataUrl"
+            [generatingQr]="isGeneratingPaymentQr"
+            (openPayment)="openPaymentUrl()"
+            (openDeeplink)="openDeeplink()">
+          </app-cart-payment-panel>
         }
-      </div>
-    </div>
+      </section>
 
+      <aside class="cart-side" *ngIf="!isLoading && cartData?.items && (cartData?.items?.length ?? 0) > 0">
+        <section class="cart-summary">
+          <div class="cart-summary-row">
+            <span class="cart-summary-label">Tạm tính</span>
+            <span class="cart-summary-val">{{ tempTotalPrice | number }}đ</span>
+          </div>
+
+          <div class="cart-summary-row" *ngIf="tempDiscountAmount > 0">
+            <span class="cart-summary-label">Giảm giá</span>
+            <span class="cart-summary-val discount">-{{ tempDiscountAmount | number }}đ</span>
+          </div>
+
+          <div class="cart-total-row">
+            <span class="cart-total-label">Tổng thanh toán</span>
+            <span class="cart-total-final">{{ tempFinalPrice | number }}đ</span>
+          </div>
+
+          @if (voucherOptions?.bestWalletVoucher && selectedVoucherId !== voucherOptions?.bestWalletVoucher?.userVoucherId) {
+            <button type="button" class="cart-best-btn" (click)="applyBestWalletVoucher()">
+              <i class="bi bi-stars"></i>
+              Áp dụng voucher tốt nhất trong ví
+            </button>
+          }
+        </section>
+
+        @if (isOwner) {
+          <section class="cart-voucher-panel">
+            <div class="cart-voucher-heading">
+              <div>
+                <h6>Voucher cho giỏ hàng</h6>
+                <p>Điểm có thể đổi: {{ voucherOptions?.redeemableReputation ?? 0 }}</p>
+              </div>
+              <i class="bi bi-ticket-perforated-fill"></i>
+            </div>
+
+            @if (isLoadingVouchers) {
+              <div class="voucher-loading">
+                <span class="cart-spinner"></span>
+                <span>Đang kiểm tra voucher...</span>
+              </div>
+            } @else {
+              <div class="voucher-group">
+                <div class="voucher-group-title">
+                  <span>Voucher trong ví</span>
+                  <small>{{ groupedWalletVouchers.length || 0 }} loại · {{ voucherOptions?.walletVouchers?.length || 0 }} mã</small>
+                </div>
+
+                @if (!groupedWalletVouchers.length) {
+                  <div class="voucher-empty">Bạn chưa có voucher khả dụng cho giỏ hàng này.</div>
+                }
+
+                @for (voucher of groupedWalletVouchers; track voucher.templateId) {
+                  <button
+                    type="button"
+                    class="voucher-option"
+                    [class.active]="isWalletGroupSelected(voucher)"
+                    [class.disabled]="!voucher.applicable"
+                    (click)="selectWalletVoucherGroup(voucher)">
+                    <span class="voucher-main">
+                      <strong>{{ voucher.template.name }}</strong>
+                      <small>{{ voucher.template.code }} · Đơn từ {{ voucher.template.minOrderValue | number }}đ</small>
+                      @if (voucher.unavailableReason) {
+                        <em>{{ voucher.unavailableReason }}</em>
+                      }
+                    </span>
+                    <span class="voucher-meta">
+                      @if (voucher.quantity > 1) {
+                        <small class="quantity-badge">x{{ voucher.quantity }}</small>
+                      }
+                      @if (voucher.best) {
+                        <small class="best-badge">Tốt nhất</small>
+                      }
+                      @if (voucher.applicable) {
+                        <strong>-{{ voucher.discountAmount | number }}đ</strong>
+                      }
+                    </span>
+                  </button>
+                }
+              </div>
+
+              <div class="voucher-group">
+                <div class="voucher-group-title">
+                  <span>Có thể đổi ngay</span>
+                  <small>{{ voucherOptions?.redeemableVouchers?.length || 0 }} mã</small>
+                </div>
+
+                @if (!(voucherOptions?.redeemableVouchers?.length)) {
+                  <div class="voucher-empty">Chưa có voucher phù hợp với điểm uy tín hiện tại.</div>
+                }
+
+                @for (voucher of voucherOptions?.redeemableVouchers || []; track voucher.templateId) {
+                  <div class="voucher-option redeemable" [class.disabled]="!voucher.applicable">
+                    <span class="voucher-main">
+                      <strong>{{ voucher.template.name }}</strong>
+                      <small>{{ voucher.template.pointCost }} điểm · Đơn từ {{ voucher.template.minOrderValue | number }}đ</small>
+                      @if (voucher.unavailableReason) {
+                        <em>{{ voucher.unavailableReason }}</em>
+                      }
+                    </span>
+                    <span class="voucher-meta">
+                      @if (voucher.best) {
+                        <small class="best-badge">Tốt nhất</small>
+                      }
+                      @if (voucher.applicable) {
+                        <strong>-{{ voucher.discountAmount | number }}đ</strong>
+                      }
+                      <button
+                        type="button"
+                        class="voucher-redeem-btn"
+                        (click)="redeemAndUse(voucher)"
+                        [disabled]="!voucher.applicable || isRedeeming(voucher.templateId)">
+                        <i class="bi" [ngClass]="isRedeeming(voucher.templateId) ? 'bi-arrow-repeat' : 'bi-gift-fill'"></i>
+                        {{ isRedeeming(voucher.templateId) ? 'Đang đổi' : 'Đổi & áp dụng' }}
+                      </button>
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+        }
+
+        <section class="cart-checkout-panel">
+          <div class="cart-note-wrap">
+            <i class="bi bi-pencil-square cart-note-icon"></i>
+            <input
+              type="text"
+              class="cart-note-input"
+              placeholder="Ghi chú cho đơn hàng..."
+              [(ngModel)]="note" />
+          </div>
+
+          <div class="cart-footer-actions">
+            <button type="button" class="cart-btn cart-btn-close" (click)="onClose()">Đóng</button>
+            @if (isOwner) {
+              <button
+                type="button"
+                class="cart-btn cart-btn-momo"
+                (click)="approve('ONLINE')"
+                [disabled]="isLoading || !!onlinePaymentData">
+                <i class="bi bi-wallet2"></i> MoMo
+              </button>
+              <button
+                type="button"
+                class="cart-btn cart-btn-cod"
+                (click)="approve('COD')"
+                [disabled]="isLoading || !!onlinePaymentData">
+                <i class="bi bi-truck-front-fill"></i> COD
+              </button>
+            }
+          </div>
+        </section>
+      </aside>
+    </main>
   </div>
 </div>

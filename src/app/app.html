@@ -33,14 +33,16 @@
       </div>
 
       <div class="topbar-actions">
-        <button
-          type="button"
-          class="topbar-icon-button"
-          title="Giỏ hàng"
-          aria-label="Giỏ hàng"
-          (click)="openCart()">
-          <i class="bi bi-bag-check"></i>
-        </button>
+        @if (isCustomer) {
+          <button
+            type="button"
+            class="topbar-icon-button"
+            title="Giỏ hàng"
+            aria-label="Giỏ hàng"
+            (click)="openCart()">
+            <i class="bi bi-bag-check"></i>
+          </button>
+        }
 
         <div class="dropdown">
           <button
@@ -49,8 +51,7 @@
             id="notificationMenu"
             data-bs-toggle="dropdown"
             aria-expanded="false"
-            title="Thông báo"
-            (click)="markAsRead()">
+            title="Thông báo">
             <i class="bi bi-bell"></i>
             @if (unreadCount > 0) {
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
@@ -59,10 +60,24 @@
             }
           </button>
 
-          <ul class="dropdown-menu dropdown-menu-end mt-2 p-0 notification-menu" aria-labelledby="notificationMenu">
+          <ul
+            class="dropdown-menu dropdown-menu-end mt-2 p-0 notification-menu"
+            aria-labelledby="notificationMenu"
+            (scroll)="onNotificationsScroll($event)">
             <li class="dropdown-header notification-header">
               <span>Thông báo</span>
-              <span class="badge rounded-pill text-bg-primary">{{ notifications.length }}</span>
+              <div class="d-flex align-items-center gap-2">
+                @if (unreadCount > 0) {
+                  <button
+                    class="btn btn-link btn-sm p-0 text-decoration-none"
+                    type="button"
+                    [disabled]="isMarkingNotificationsRead"
+                    (click)="markAsRead()">
+                    Đánh dấu đã đọc
+                  </button>
+                }
+                <span class="badge rounded-pill text-bg-primary">{{ notifications.length }}</span>
+              </div>
             </li>
             @if (notifications.length === 0) {
               <li class="text-center py-5 text-muted small">
@@ -72,7 +87,7 @@
             }
             @for (notification of notifications; track notification.id ?? $index) {
               <li>
-                <a class="dropdown-item notification-item" routerLink="/orders">
+                <a class="dropdown-item notification-item" [routerLink]="notificationRoute">
                   <div class="notification-icon"><i class="bi bi-box-seam-fill"></i></div>
                   <div class="min-w-0">
                     <h6 class="mb-1 fw-bold text-dark fs-6">{{ notification.title }}</h6>
@@ -82,6 +97,12 @@
                     </small>
                   </div>
                 </a>
+              </li>
+            }
+            @if (isLoadingNotifications && notifications.length > 0) {
+              <li class="text-center py-3 text-muted small">
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                Đang tải thêm...
               </li>
             }
           </ul>
@@ -112,9 +133,11 @@
 
           <ul class="dropdown-menu dropdown-menu-end mt-2 user-dropdown" aria-labelledby="userMenu">
             <li><a class="dropdown-item custom-hover" routerLink="/myinfor"><i class="bi bi-person-badge text-primary"></i>Thông tin cá nhân</a></li>
-            <li><button class="dropdown-item custom-hover" type="button" (click)="openRewards()"><i class="bi bi-gift-fill text-warning"></i>Đổi voucher</button></li>
-            <li><button class="dropdown-item custom-hover" type="button" (click)="openOrders()"><i class="bi bi-bag-heart text-primary"></i>Đơn hàng của tôi</button></li>
-            <li><button class="dropdown-item custom-hover" type="button" (click)="openCart()"><i class="bi bi-bag-check-fill text-success"></i>Giỏ hàng của tôi</button></li>
+            @if (isCustomer) {
+              <li><button class="dropdown-item custom-hover" type="button" (click)="openRewards()"><i class="bi bi-gift-fill text-warning"></i>Đổi voucher</button></li>
+              <li><button class="dropdown-item custom-hover" type="button" (click)="openOrders()"><i class="bi bi-bag-heart text-primary"></i>Đơn hàng của tôi</button></li>
+              <li><button class="dropdown-item custom-hover" type="button" (click)="openCart()"><i class="bi bi-bag-check-fill text-success"></i>Giỏ hàng của tôi</button></li>
+            }
             <li><button class="dropdown-item custom-hover" type="button" (click)="openSettings()"><i class="bi bi-palette2 text-secondary"></i>Cài đặt giao diện</button></li>
             <li><hr class="dropdown-divider opacity-25 my-1"></li>
             <li><button class="dropdown-item custom-hover-danger" type="button" (click)="logout()"><i class="bi bi-box-arrow-right"></i>Đăng xuất</button></li>
