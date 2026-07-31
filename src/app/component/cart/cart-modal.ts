@@ -65,7 +65,7 @@ export class CartModalComponent implements OnInit {
   }
 
   loadWallet() {
-    this.voucherService.getMyWallet(this.userId).subscribe({
+    this.voucherService.getMyWallet().subscribe({
       next: (data) => this.myWallet = data,
       error: (err) => console.error('Lỗi tải ví:', err)
     });

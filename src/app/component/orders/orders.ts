@@ -83,7 +83,6 @@ export class Orders implements OnInit {
   receiptResponse: ReceiptConfirmResponse | null = null;
   complaintNote = '';
 
-  userId!: string;
   userInfo?: UserInforDTO;
 
   constructor(
@@ -95,7 +94,6 @@ export class Orders implements OnInit {
   ngOnInit(): void {
     const id = this.authService.getUserId();
     if (id !== null) {
-      this.userId = id;
       this.loadMyOrders();
       this.loadCancelledOrders();
       this.loadUserInfo();
@@ -108,8 +106,7 @@ export class Orders implements OnInit {
     this.isLoadingOrders = true;
     this.currentPage = pageNumber;
     const priceRange = this.getSelectedPriceRange();
-    this.orderService.getOrdersByUserId(
-      this.userId,
+    this.orderService.getMyOrders(
       this.currentPage,
       this.pageSize,
       priceRange.min,
@@ -183,8 +180,7 @@ export class Orders implements OnInit {
     this.isLoadingCancelledOrders = true;
     this.cancelledPage = pageNumber;
     const priceRange = this.getSelectedPriceRange();
-    this.orderService.getCancelledOrdersByUserId(
-      this.userId,
+    this.orderService.getMyCancelledOrders(
       this.cancelledPage,
       this.pageSize,
       priceRange.min,

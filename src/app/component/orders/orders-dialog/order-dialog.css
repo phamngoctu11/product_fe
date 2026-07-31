@@ -1,3 +1,0 @@
-/* Delivered/cancelled order dialog styles */
-  .order-dialog-title { min-width: 0; overflow-wrap: break-word; word-break: normal; }
-  .order-dialog-content { max-height: 70vh; overflow-y: auto; }

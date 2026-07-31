@@ -22,19 +22,18 @@ export class VoucherService {
   }
 
   // Lấy ví Voucher của người dùng
-  getMyWallet(userId: string): Observable<UserVoucher[]> {
+  getMyWallet(): Observable<UserVoucher[]> {
     return this.http
-      .get<ApiResponse<UserVoucher[]> | UserVoucher[]>(`${this.apiUrl}/wallet/${userId}`)
+      .get<ApiResponse<UserVoucher[]> | UserVoucher[]>(`${this.apiUrl}/me/wallet`)
       .pipe(map(unwrapApiResponse));
   }
 
   // Thực hiện đổi điểm lấy mã
-  redeemVoucher(userId: string, templateId: number): Observable<string> {
+  redeemVoucher(templateId: number): Observable<string> {
     const params = new HttpParams()
-      .set('userId', userId.toString())
       .set('templateId', templateId.toString());
 
-    return this.http.post(`${this.apiUrl}/redeem`, null, {
+    return this.http.post(`${this.apiUrl}/me/redeem`, null, {
       params,
       responseType: 'text',
     });

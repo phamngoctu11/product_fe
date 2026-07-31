@@ -38,7 +38,7 @@
     "bootstrap-icons": "^1.13.1",
     "chart.js": "^4.5.1",
     "cloudinary": "^2.9.0",
-    "ng2-charts": "^10.0.0",
+    "ng2-charts": "9.0.0",
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "sockjs-client": "^1.6.1",

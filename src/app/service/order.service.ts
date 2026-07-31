@@ -22,8 +22,7 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  getOrdersByUserId(
-    userId: string,
+  getMyOrders(
     page: number = 0,
     size: number = 20,
     minPrice: number | null = null,
@@ -33,12 +32,11 @@ export class OrderService {
     if (minPrice !== null) params = params.set('minPrice', minPrice.toString());
     if (maxPrice !== null) params = params.set('maxPrice', maxPrice.toString());
     return this.http
-      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/user/${userId}`, { params })
+      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/me`, { params })
       .pipe(map(unwrapApiResponse));
   }
 
-  getCancelledOrdersByUserId(
-    userId: string,
+  getMyCancelledOrders(
     page: number = 0,
     size: number = 20,
     minPrice: number | null = null,
@@ -48,7 +46,7 @@ export class OrderService {
     if (minPrice !== null) params = params.set('minPrice', minPrice.toString());
     if (maxPrice !== null) params = params.set('maxPrice', maxPrice.toString());
     return this.http
-      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/user/${userId}/cancelled`, { params })
+      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/me/cancelled`, { params })
       .pipe(map(unwrapApiResponse));
   }
 

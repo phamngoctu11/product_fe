@@ -1,10 +1,10 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { inject as injectActionDialog } from '@angular/core';
 import { ActionDialogService } from '../../service/action-dialog.service';
 import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../service/toast.service';
-import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { VoucherTemplate, UserVoucher } from '../../model/voucher.model';
 import { UserService } from '../../service/user.service';
 import { VoucherService } from '../../service/voucher.service';
@@ -25,7 +25,6 @@ export class RewardDialogComponent implements OnInit {
   currentReputation: number = 0;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public userId: string,
     private voucherService: VoucherService,
     private userService: UserService
   ) {}
@@ -40,7 +39,7 @@ export class RewardDialogComponent implements OnInit {
     });
 
     this.voucherService.getTemplates().subscribe(data => this.templates = data);
-    this.voucherService.getMyWallet(this.userId).subscribe(data => this.myWallet = data);
+    this.voucherService.getMyWallet().subscribe(data => this.myWallet = data);
   }
 isExpiringSoon(dateString: string): boolean {
     if (!dateString) return false;
@@ -88,7 +87,7 @@ isExpiringSoon(dateString: string): boolean {
       ],
     }).subscribe((confirmed) => {
       if (!confirmed) return;
-      this.voucherService.redeemVoucher(this.userId, template.id).subscribe({
+      this.voucherService.redeemVoucher(template.id).subscribe({
         next: (res) => {
           this.toast.notify(res);
           this.loadData(); // Tải lại dữ liệu ngay lập tức
