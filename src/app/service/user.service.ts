@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { ReputationHistory, UserCreDTO, UserInforDTO, UserProfileUpdateDTO, UserResListDTO } from '../model/user.model';
+import { ChangePasswordRequest, ReputationHistory, UserCreDTO, UserInforDTO, UserProfileUpdateDTO, UserResListDTO } from '../model/user.model';
 import { PageResponse } from '../model/page-response.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
@@ -47,7 +47,7 @@ export class UserService {
     return this.getInfor();
   }
 
-  getMyReputationHistory(page: number = 0, size: number = 20): Observable<PageResponse<ReputationHistory>> {
+  getMyReputationHistory(page: number = 0, size: number = 5): Observable<PageResponse<ReputationHistory>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http
       .get<ApiResponse<PageResponse<ReputationHistory>> | PageResponse<ReputationHistory>>(`${this.apiUrl}/me/reputation-history`, { params })
@@ -73,6 +73,12 @@ export class UserService {
         map(unwrapApiResponse),
         tap((updatedUser) => this.currentUserSubject.next(updatedUser)),
       );
+  }
+
+  changeMyPassword(request: ChangePasswordRequest): Observable<void> {
+    return this.http
+      .put<ApiResponse<void> | void>(`${this.apiUrl}/me/password`, request)
+      .pipe(map(unwrapApiResponse));
   }
 
   clearCurrentUser(): void {

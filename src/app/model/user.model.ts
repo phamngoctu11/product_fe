@@ -30,6 +30,23 @@ export interface LoginRequest {
   username: string;
   password?: string;
 }
+
+export interface ForgotPasswordRequest {
+  identifier: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export interface UserInforDTO {
   id: string;
   username: string;

@@ -358,6 +358,17 @@
   border: 1px solid rgba(245, 158, 11, 0.24);
 }
 
+.auth-alert-success {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+}
+
+.auth-form-note {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+}
+
 /* Primary submit button */
 .auth-btn {
   width: 100%;

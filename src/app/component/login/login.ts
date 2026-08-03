@@ -1,11 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core'; // Thêm OnInit
-import { FormsModule, NgForm } from '@angular/forms';
-import { inject as injectToast } from '@angular/core';
-import { ToastService } from '../../service/toast.service';
-import { Router, ActivatedRoute } from '@angular/router'; // Thêm ActivatedRoute
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../service/auth.service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { inject as injectToast } from '@angular/core';
+import { FormsModule, NgForm } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { formatRateLimitDelay, getApiErrorMessage, getRetryAfterSeconds } from '../../model/api-response.model';
+import { AuthService } from '../../service/auth.service';
+import { ToastService } from '../../service/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -19,11 +19,17 @@ export class LoginComponent implements OnInit, OnDestroy {
   private loginRateLimitBaseMessage = '';
   private loginRateLimitRetryAt = 0;
   private loginRateLimitTimer?: ReturnType<typeof setInterval>;
+
   isLoginMode = true;
+  isForgotMode = false;
   isSubmittingLogin = false;
+  isSubmittingForgot = false;
   loginErrorMessage = '';
+  forgotSuccessMessage = '';
+  forgotErrorMessage = '';
 
   loginData = { username: '', password: '' };
+  forgotData = { identifier: '' };
 
   registerData = {
     username: '',
@@ -41,10 +47,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private route: ActivatedRoute // Inject thêm dòng này
+    private route: ActivatedRoute
   ) {}
 
-  // LẮNG NGHE URL KHI COMPONENT VỪA KHỞI TẠO
   ngOnInit() {
     if (this.auth.isLoggedIn()) {
       this.router.navigate(['/product']);
@@ -52,9 +57,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
     this.route.queryParams.subscribe(params => {
       if (params['mode'] === 'signup') {
-        this.isLoginMode = false; // Mở form đăng ký
+        this.isLoginMode = false;
+        this.isForgotMode = false;
+      } else if (params['mode'] === 'forgot') {
+        this.isLoginMode = true;
+        this.isForgotMode = true;
       } else {
-        this.isLoginMode = true;  // Mở form đăng nhập
+        this.isLoginMode = true;
+        this.isForgotMode = false;
       }
     });
   }
@@ -65,9 +75,28 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   toggleMode() {
     this.isLoginMode = !this.isLoginMode;
+    this.isForgotMode = false;
     this.clearLoginRateLimitCountdown();
     this.loginErrorMessage = '';
-    // Tùy chọn: Xóa tham số trên URL để nhìn sạch sẽ hơn khi user bấm lật form tay
+    this.router.navigate([], { queryParams: {} });
+  }
+
+  openForgotPassword() {
+    this.isLoginMode = true;
+    this.isForgotMode = true;
+    this.clearLoginRateLimitCountdown();
+    this.loginErrorMessage = '';
+    this.forgotSuccessMessage = '';
+    this.forgotErrorMessage = '';
+    this.forgotData.identifier = this.loginData.username || '';
+    this.router.navigate([], { queryParams: { mode: 'forgot' } });
+  }
+
+  backToLogin() {
+    this.isLoginMode = true;
+    this.isForgotMode = false;
+    this.forgotSuccessMessage = '';
+    this.forgotErrorMessage = '';
     this.router.navigate([], { queryParams: {} });
   }
 
@@ -94,7 +123,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.isSubmittingLogin = false;
         const errorMessage = getApiErrorMessage(
           err,
-        'Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.',
+          'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.',
         );
         const retryAfterSeconds = getRetryAfterSeconds(err);
         if (retryAfterSeconds) {
@@ -103,6 +132,27 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.loginErrorMessage = errorMessage;
         }
         this.toast.warning(this.loginErrorMessage);
+      },
+    });
+  }
+
+  handleForgotPassword(form?: NgForm) {
+    this.forgotSuccessMessage = '';
+    this.forgotErrorMessage = '';
+    if (form?.invalid) {
+      form.control.markAllAsTouched();
+      return;
+    }
+
+    this.isSubmittingForgot = true;
+    this.auth.requestPasswordReset(this.forgotData).subscribe({
+      next: () => {
+        this.isSubmittingForgot = false;
+        this.forgotSuccessMessage = 'Nếu tài khoản tồn tại, liên kết đặt lại mật khẩu đã được gửi qua email.';
+      },
+      error: (err) => {
+        this.isSubmittingForgot = false;
+        this.forgotErrorMessage = getApiErrorMessage(err, 'Không thể gửi yêu cầu đặt lại mật khẩu.');
       },
     });
   }
@@ -135,12 +185,13 @@ export class LoginComponent implements OnInit, OnDestroy {
     };
 
     this.auth.register(payload).subscribe({
-      next: (res) => {
-        this.toast.notify('Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay.');
+      next: () => {
+        this.toast.notify('Đăng ký tài khoản thành công. Bạn có thể đăng nhập ngay.');
         this.loginData.username = this.registerData.username;
         this.loginData.password = '';
         this.isLoginMode = true;
-        this.router.navigate([], { queryParams: {} }); // Xóa param signup trên url
+        this.isForgotMode = false;
+        this.router.navigate([], { queryParams: {} });
       },
       error: (err) => {
         this.toast.notify('Đăng ký thất bại: ' + getApiErrorMessage(err, 'Tên đăng nhập hoặc SĐT có thể đã tồn tại.'));

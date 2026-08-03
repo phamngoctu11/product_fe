@@ -39,7 +39,7 @@
               <h3 class="fw-bold mb-1 text-dark fs-4">{{ userInfo.lastname }} {{ userInfo.firstname }}</h3>
               <p class="text-muted mb-3 fw-medium">@{{ userInfo.username }}</p>
 
-              <div class="d-flex gap-2">
+              <div class="d-flex flex-wrap justify-content-center gap-2">
                 <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-50 shadow-sm px-3 py-2 rounded-pill fs-6 d-flex align-items-center">
                   <i class="bi bi-star-fill text-warning me-2"></i> Uy tín: <span class="text-dark ms-1">{{ userInfo.reputation }}</span>
                 </span>
@@ -50,6 +50,9 @@
                 }
                 <button class="btn btn-outline-primary shadow-sm fw-bold px-4 rounded-pill d-flex align-items-center" (click)="startEditing()">
                   <i class="bi bi-pencil-square me-2"></i> Chỉnh sửa
+                </button>
+                <button class="btn btn-outline-secondary shadow-sm fw-bold px-4 rounded-pill d-flex align-items-center" (click)="toggleChangePassword()">
+                  <i class="bi bi-key-fill me-2"></i> Đổi mật khẩu
                 </button>
               </div>
             </div>
@@ -97,6 +100,94 @@
                 </div>
               </div>
             </div>
+
+            @if (showChangePassword) {
+              <hr class="text-muted opacity-10 my-4" />
+              <form #passwordForm="ngForm" (ngSubmit)="changePassword(passwordForm)" class="border rounded-3 p-3 p-md-4 bg-light bg-opacity-25 text-start" novalidate>
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                  <div>
+                    <h4 class="fw-bold fs-5 mb-1">Đổi mật khẩu</h4>
+                    <p class="text-muted small mb-0">Xác nhận mật khẩu hiện tại trước khi cập nhật mật khẩu mới.</p>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" (click)="toggleChangePassword()">
+                    <i class="bi bi-x-lg me-1"></i> Đóng
+                  </button>
+                </div>
+
+                @if (changePasswordSuccess) {
+                  <div class="alert alert-success border-0 py-2 mb-3">
+                    <i class="bi bi-check-circle-fill me-2"></i>{{ changePasswordSuccess }}
+                  </div>
+                }
+                @if (changePasswordError) {
+                  <div class="alert alert-danger border-0 py-2 mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ changePasswordError }}
+                  </div>
+                }
+
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label fw-semibold">Mật khẩu hiện tại</label>
+                    <input
+                      type="password"
+                      class="form-control"
+                      name="currentPassword"
+                      #currentPassword="ngModel"
+                      [(ngModel)]="passwordData.currentPassword"
+                      required
+                      maxlength="100"
+                      autocomplete="current-password" />
+                    @if (currentPassword.invalid && currentPassword.touched) {
+                      <div class="text-danger small mt-1">Vui lòng nhập mật khẩu hiện tại.</div>
+                    }
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Mật khẩu mới</label>
+                    <input
+                      type="password"
+                      class="form-control"
+                      name="newPassword"
+                      #newPassword="ngModel"
+                      [(ngModel)]="passwordData.newPassword"
+                      required
+                      minlength="6"
+                      maxlength="100"
+                      autocomplete="new-password" />
+                    @if (newPassword.invalid && newPassword.touched) {
+                      <div class="text-danger small mt-1">Mật khẩu mới phải có từ 6 đến 100 ký tự.</div>
+                    }
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Xác nhận mật khẩu mới</label>
+                    <input
+                      type="password"
+                      class="form-control"
+                      name="confirmPassword"
+                      #confirmPassword="ngModel"
+                      [(ngModel)]="passwordData.confirmPassword"
+                      required
+                      autocomplete="new-password" />
+                    @if (confirmPassword.touched && passwordData.newPassword !== passwordData.confirmPassword) {
+                      <div class="text-danger small mt-1">Mật khẩu xác nhận không khớp.</div>
+                    }
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-3">
+                  <button
+                    type="submit"
+                    class="btn btn-primary rounded-pill fw-bold px-4"
+                    [disabled]="isChangingPassword || passwordForm.invalid || passwordData.newPassword !== passwordData.confirmPassword">
+                    @if (isChangingPassword) {
+                      <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Đang cập nhật...
+                    } @else {
+                      <i class="bi bi-check2-circle me-2"></i> Cập nhật mật khẩu
+                    }
+                  </button>
+                </div>
+              </form>
+            }
           }
           </app-view-state>
         </div>
@@ -108,12 +199,12 @@
             <h4 class="fw-bold mb-1 fs-5">Lịch sử điểm uy tín</h4>
             <p class="text-muted small mb-0">Các lần cộng/trừ điểm từ đơn hàng và voucher.</p>
           </div>
-          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" (click)="loadReputationHistory()">
+          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" (click)="loadReputationHistory(true)" [disabled]="isLoadingReputationHistory">
             <i class="bi bi-arrow-clockwise"></i> Làm mới
           </button>
         </div>
         <div class="card-body p-0">
-          @if (isLoadingReputationHistory) {
+          @if (isLoadingReputationHistory && reputationHistory.length === 0) {
             <div class="text-center text-muted py-4">
               <div class="spinner-border text-primary mb-2" role="status"></div>
               <p class="mb-0">Đang tải lịch sử điểm...</p>
@@ -149,6 +240,23 @@
                 </div>
               }
             </div>
+            @if (isLoadingReputationHistory) {
+              <div class="text-center text-muted py-3 border-top">
+                <span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>
+                Đang tải thêm...
+              </div>
+            }
+            @if (hasMoreReputationHistory) {
+              <div class="text-center py-3 border-top">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary rounded-pill px-4 fw-semibold"
+                  (click)="loadMoreReputationHistory()"
+                  [disabled]="isLoadingReputationHistory">
+                  <i class="bi bi-chevron-down me-2"></i> Xem thêm
+                </button>
+              </div>
+            }
           }
         </div>
       </div>

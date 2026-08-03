@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
-import { LoginRequest, LoginResponse } from '../model/user.model';
+import { ForgotPasswordRequest, LoginRequest, LoginResponse, ResetPasswordRequest } from '../model/user.model';
 import {
   clearAuthStorage,
   decodeJwtPayload,
@@ -35,6 +35,18 @@ export class AuthService {
   register(userData: unknown): Observable<unknown> {
     return this.http
       .post<ApiResponse<unknown> | unknown>(this.userUrl, userData)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  requestPasswordReset(request: ForgotPasswordRequest): Observable<void> {
+    return this.http
+      .post<ApiResponse<void> | void>(`${this.apiUrl}/forgot-password`, request)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<void> {
+    return this.http
+      .post<ApiResponse<void> | void>(`${this.apiUrl}/reset-password`, request)
       .pipe(map(unwrapApiResponse));
   }
 
