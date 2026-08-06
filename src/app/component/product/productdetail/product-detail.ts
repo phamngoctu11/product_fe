@@ -10,7 +10,9 @@ import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../service/auth.service';
 import { ChatService } from '../../../service/chat.service';
 import { ConsultationService } from '../../../service/consultation.service';
-import { ApiResponse, unwrapApiResponse } from '../../../model/api-response.model';
+import { ApiResponse, getApiErrorMessage, unwrapApiResponse } from '../../../model/api-response.model';
+import { ProductReview, ProductReviewSummary } from '../../../model/product-review.model';
+import { ProductReviewService } from '../../../service/product-review.service';
 import { environment } from '../../../../environments/environment';
 import { ProductVariantEditorComponent } from './product-variant-editor/product-variant-editor.component';
 
@@ -50,12 +52,24 @@ export class ProductDetailComponent implements OnInit {
   isUploadingVariantImage: boolean[] = [];
   staffRestockQuantities: number[] = [];
   isRestockingVariant: boolean[] = [];
+  readonly reviewStars = [1, 2, 3, 4, 5];
+  selectedReviewVariantId: number | null = null;
+  selectedReviewVariantName = '';
+  variantReviews: ProductReview[] = [];
+  variantReviewSummary: ProductReviewSummary | null = null;
+  variantReviewPage = 0;
+  variantReviewSize = 20;
+  variantReviewTotalPages = 0;
+  isLoadingVariantReviews = false;
+  isLoadingMoreVariantReviews = false;
+  variantReviewError = '';
 
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<ProductDetailComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { id: number | null, availableTags: string[], isView?: boolean, staffMode?: boolean },
     private productService: ProductService,
+    private productReviewService: ProductReviewService,
     private http: HttpClient,
     private chatService: ChatService,
     private consultationService: ConsultationService,
@@ -101,6 +115,18 @@ export class ProductDetailComponent implements OnInit {
   get primaryImageUrl(): string {
     const variantImage = (this.rawProduct.variants || []).find((variant: any) => variant.image_url)?.image_url;
     return this.uploadedImageUrl || this.rawProduct.image_url || variantImage || '';
+  }
+
+  get canManageVariantReviews(): boolean {
+    return this.authService.isStaff() || this.authService.isAdmin();
+  }
+
+  get canViewVariantReviews(): boolean {
+    return this.canManageVariantReviews || this.isView;
+  }
+
+  get hasMoreVariantReviews(): boolean {
+    return this.variantReviewPage + 1 < this.variantReviewTotalPages;
   }
 
   getVariantAttributes(index: number): { label: string; value: string }[] {
@@ -376,6 +402,104 @@ export class ProductDetailComponent implements OnInit {
       error: () => {
         this.isRestockingVariant[index] = false;
         this.toast.notify('Không thể nhập kho cho phân loại này.');
+      },
+    });
+  }
+
+  openVariantReviews(index: number): void {
+    if (!this.canViewVariantReviews) {
+      this.toast.notify('Không thể xem review trong chế độ hiện tại.');
+      return;
+    }
+
+    const variant = this.variants.at(index);
+    const variantId = Number(variant?.get('id')?.value || 0);
+    if (!variantId) {
+      this.toast.notify('Chỉ xem được review của phân loại đã tồn tại.');
+      return;
+    }
+
+    this.selectedReviewVariantId = variantId;
+    this.selectedReviewVariantName = variant?.get('variantName')?.value || `Phân loại #${index + 1}`;
+    this.variantReviews = [];
+    this.variantReviewSummary = null;
+    this.variantReviewPage = 0;
+    this.variantReviewTotalPages = 0;
+    this.loadVariantReviews(true);
+  }
+
+  loadMoreVariantReviews(): void {
+    if (!this.hasMoreVariantReviews || this.isLoadingMoreVariantReviews || this.isLoadingVariantReviews) {
+      return;
+    }
+    this.loadVariantReviews(false);
+  }
+
+  closeVariantReviews(): void {
+    this.selectedReviewVariantId = null;
+    this.selectedReviewVariantName = '';
+    this.variantReviews = [];
+    this.variantReviewSummary = null;
+    this.variantReviewPage = 0;
+    this.variantReviewTotalPages = 0;
+    this.variantReviewError = '';
+  }
+
+  getReviewUserName(review: ProductReview): string {
+    return review.userDisplayName || review.username || 'Khách hàng';
+  }
+
+  getReviewInitial(review: ProductReview): string {
+    return this.getReviewUserName(review).trim().charAt(0).toUpperCase() || 'U';
+  }
+
+  getStarCount(star: number): number {
+    if (!this.variantReviewSummary) return 0;
+    const counts: Record<number, number> = {
+      5: this.variantReviewSummary.fiveStarCount,
+      4: this.variantReviewSummary.fourStarCount,
+      3: this.variantReviewSummary.threeStarCount,
+      2: this.variantReviewSummary.twoStarCount,
+      1: this.variantReviewSummary.oneStarCount,
+    };
+    return counts[star] || 0;
+  }
+
+  getStarPercent(star: number): number {
+    const total = this.variantReviewSummary?.ratingCount || 0;
+    return total > 0 ? Math.round((this.getStarCount(star) / total) * 100) : 0;
+  }
+
+  private loadVariantReviews(reset: boolean): void {
+    const variantId = this.selectedReviewVariantId;
+    if (!variantId) {
+      return;
+    }
+
+    const page = reset ? 0 : this.variantReviewPage + 1;
+    this.variantReviewError = '';
+    this.isLoadingVariantReviews = reset;
+    this.isLoadingMoreVariantReviews = !reset;
+
+    forkJoin({
+      reviews: this.canManageVariantReviews
+        ? this.productReviewService.getVariantReviews(variantId, page, this.variantReviewSize)
+        : this.productReviewService.getVisibleVariantReviews(variantId, page, this.variantReviewSize),
+      summary: this.productReviewService.getVariantSummary(variantId),
+    }).subscribe({
+      next: ({ reviews, summary }) => {
+        const content = reviews.content || [];
+        this.variantReviews = reset ? content : [...this.variantReviews, ...content];
+        this.variantReviewSummary = summary;
+        this.variantReviewPage = reviews.number ?? page;
+        this.variantReviewTotalPages = reviews.totalPages ?? 0;
+        this.isLoadingVariantReviews = false;
+        this.isLoadingMoreVariantReviews = false;
+      },
+      error: (error) => {
+        this.variantReviewError = getApiErrorMessage(error, 'Không thể tải đánh giá của phân loại này.');
+        this.isLoadingVariantReviews = false;
+        this.isLoadingMoreVariantReviews = false;
       },
     });
   }

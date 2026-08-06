@@ -72,6 +72,13 @@
   font-weight: 700;
 }
 
+.variant-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .variant-form-grid,
 .attribute-grid,
 .variant-summary-grid {

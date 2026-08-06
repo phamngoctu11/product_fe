@@ -20,12 +20,14 @@ export class ProductVariantEditorComponent {
   @Input() uploading = false;
   @Input() restocking = false;
   @Input() restockQuantity = 0;
+  @Input() showReviews = false;
   @Input() dynamicFields: readonly string[] = [];
   @Input() fieldLabels: Readonly<Record<string, string>> = {};
   @Output() imageSelected = new EventEmitter<Event>();
   @Output() remove = new EventEmitter<void>();
   @Output() restock = new EventEmitter<void>();
   @Output() restockQuantityChange = new EventEmitter<number>();
+  @Output() viewReviews = new EventEmitter<void>();
 
   isInvalid(controlName: string): boolean {
     const control = this.group.get(controlName);

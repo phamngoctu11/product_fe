@@ -21,10 +21,23 @@
       }
     </div>
 
-    @if (removable) {
-      <button type="button" class="btn btn-sm btn-outline-danger rounded-pill ms-auto" (click)="remove.emit()">
-        <i class="bi bi-trash"></i>
-      </button>
+    @if ((showReviews && existing && group.get('id')?.value) || removable) {
+      <div class="variant-actions ms-auto">
+        @if (showReviews && existing && group.get('id')?.value) {
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-info rounded-pill"
+            title="Xem đánh giá của người mua"
+            (click)="viewReviews.emit()">
+            <i class="bi bi-chat-square-heart"></i>
+          </button>
+        }
+        @if (removable) {
+          <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" (click)="remove.emit()">
+            <i class="bi bi-trash"></i>
+          </button>
+        }
+      </div>
     }
   </div>
 

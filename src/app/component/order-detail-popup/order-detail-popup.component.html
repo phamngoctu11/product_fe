@@ -106,6 +106,136 @@
           (quantityChange)="updateReceivedQuantity($event)">
         </app-order-items-table>
 
+        <section *ngIf="canShowReviewSection(orderDetail)" class="review-section mt-4">
+          <div class="review-section-heading">
+            <div>
+              <div class="text-muted small fw-semibold">Đánh giá sau mua</div>
+              <h5 class="mb-0">Chia sẻ trải nghiệm theo từng sản phẩm</h5>
+            </div>
+            <span class="review-count-chip">
+              {{ getOrderItems(orderDetail).length }} item
+            </span>
+          </div>
+
+          <div class="review-item-list">
+            <div
+              *ngFor="let item of getOrderItems(orderDetail)"
+              class="review-item-card"
+              [class.is-reviewed]="item.reviewed">
+              <div class="review-item-main">
+                <img *ngIf="getItemImage(item); else noReviewImage" [src]="getItemImage(item)" [alt]="getItemName(item)">
+                <ng-template #noReviewImage>
+                  <span class="review-image-placeholder"><i class="bi bi-image"></i></span>
+                </ng-template>
+                <div class="min-w-0">
+                  <div class="fw-bold text-dark text-truncate">{{ getItemName(item) }}</div>
+                  <div class="text-muted small text-truncate">{{ getItemVariantLabel(item) }}</div>
+                  <div class="text-muted small">Số lượng nhận: {{ getReceivedQuantity(item) }}</div>
+                </div>
+              </div>
+
+              <div class="review-item-action">
+                <span *ngIf="item.reviewed" class="badge text-bg-success">Đã đánh giá</span>
+                <span *ngIf="!item.reviewed && !canReviewItem(item)" class="badge text-bg-secondary">Không thể đánh giá</span>
+                <button
+                  *ngIf="canReviewItem(item)"
+                  type="button"
+                  class="btn btn-outline-primary rounded-pill fw-bold px-3"
+                  (click)="openReview(item)">
+                  <i class="bi bi-star me-1"></i>
+                  Đánh giá
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="reviewingItem" class="review-editor">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+              <div>
+                <div class="text-muted small fw-semibold">Đang đánh giá</div>
+                <div class="fw-bold text-dark">{{ getItemName(reviewingItem) }}</div>
+                <div class="text-muted small">{{ getItemVariantLabel(reviewingItem) }}</div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary rounded-circle"
+                [disabled]="isSubmittingReview || isUploadingReviewImage"
+                (click)="closeReviewForm()">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div class="rating-row mb-3" (mouseleave)="hoveredRating = 0">
+              <button
+                *ngFor="let star of reviewStars"
+                type="button"
+                class="star-button"
+                [class.is-active]="star <= getDisplayRating()"
+                (mouseenter)="hoveredRating = star"
+                (click)="setRating(star)"
+                [attr.aria-label]="'Chọn ' + star + ' sao'">
+                <i class="bi" [ngClass]="star <= getDisplayRating() ? 'bi-star-fill' : 'bi-star'"></i>
+              </button>
+              <span class="text-muted small">Có thể bỏ trống nếu chỉ muốn bình luận hoặc gửi ảnh.</span>
+            </div>
+
+            <textarea
+              class="form-control review-comment-input"
+              rows="4"
+              maxlength="1000"
+              [value]="reviewComment"
+              [disabled]="isSubmittingReview"
+              placeholder="Cảm nhận của bạn về sản phẩm, đóng gói, chất lượng..."
+              (input)="updateReviewComment($event)"
+              (click)="$event.stopPropagation()"
+              (keydown)="$event.stopPropagation()"></textarea>
+
+
+            <div class="review-image-toolbar mt-3">
+              <label class="btn btn-outline-secondary rounded-pill fw-bold px-3 mb-0" [class.disabled]="isUploadingReviewImage || isSubmittingReview || reviewImageUrls.length >= 5">
+                <span *ngIf="!isUploadingReviewImage"><i class="bi bi-image me-1"></i> Thêm ảnh</span>
+                <span *ngIf="isUploadingReviewImage"><span class="spinner-border spinner-border-sm me-2"></span>Đang tải</span>
+                <input
+                  type="file"
+                  class="d-none"
+                  accept="image/*"
+                  [disabled]="isUploadingReviewImage || isSubmittingReview || reviewImageUrls.length >= 5"
+                  (change)="onReviewImageSelected($event)">
+              </label>
+              <span class="text-muted small">{{ reviewImageUrls.length }}/5 ảnh</span>
+            </div>
+
+            <div *ngIf="reviewImageUrls.length > 0" class="review-image-list mt-3">
+              <div *ngFor="let imageUrl of reviewImageUrls; let imageIndex = index" class="review-thumb">
+                <img [src]="imageUrl" alt="Ảnh đánh giá">
+                <button type="button" (click)="removeReviewImage(imageIndex)" [disabled]="isSubmittingReview">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="reviewError" class="alert alert-warning mt-3 mb-0">{{ reviewError }}</div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              <button
+                type="button"
+                class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+                [disabled]="isSubmittingReview || isUploadingReviewImage"
+                (click)="closeReviewForm()">
+                Hủy
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary rounded-pill px-4 fw-bold"
+                [disabled]="isSubmittingReview || isUploadingReviewImage"
+                (click)="submitReview()">
+                <span *ngIf="!isSubmittingReview">Gửi đánh giá</span>
+                <span *ngIf="isSubmittingReview"><span class="spinner-border spinner-border-sm me-2"></span>Đang gửi</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
         <div *ngIf="receiptMode && receiptResponse && !receiptResponse.confirmed && receiptResponse.mismatches?.length" class="border rounded-3 p-3 mt-4 bg-light">
           <div class="fw-bold text-danger mb-3">Số lượng thực nhận đang lệch với số lượng xuất kho</div>
           <div class="table-responsive">

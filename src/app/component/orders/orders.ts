@@ -211,6 +211,7 @@ export class Orders implements OnInit {
   }
 
   openOrderDetail(order: OrderListDTO): void {
+    this.hideHistoryModalIfOpen();
     this.receiptMode = false;
     this.resetReceiptState(false);
     this.selectedOrderDetail = null;
@@ -233,6 +234,7 @@ export class Orders implements OnInit {
   }
 
   openReceiptConfirm(order: OrderListDTO): void {
+    this.hideHistoryModalIfOpen();
     this.receiptMode = true;
     this.resetReceiptState(false);
     this.selectedOrderDetail = null;
@@ -466,5 +468,27 @@ export class Orders implements OnInit {
         this.isLoadingTimeline = false;
       },
     });
+  }
+
+  private hideHistoryModalIfOpen(): void {
+    const modalElement = document.getElementById('historyModal');
+    if (!modalElement?.classList.contains('show')) {
+      return;
+    }
+
+    const bootstrapModal = (window as any).bootstrap?.Modal?.getInstance(modalElement)
+      || (window as any).bootstrap?.Modal?.getOrCreateInstance(modalElement);
+
+    if (bootstrapModal) {
+      bootstrapModal.hide();
+      return;
+    }
+
+    modalElement.classList.remove('show');
+    modalElement.setAttribute('aria-hidden', 'true');
+    modalElement.removeAttribute('aria-modal');
+    modalElement.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
   }
 }

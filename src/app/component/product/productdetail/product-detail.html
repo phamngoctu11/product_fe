@@ -141,15 +141,131 @@
               [removable]="canRemoveVariant(index)"
               [uploading]="isUploadingVariantImage[index]"
               [restocking]="isRestockingVariant[index]"
+              [showReviews]="canViewVariantReviews"
               [dynamicFields]="dynamicFields"
               [fieldLabels]="attributeDictionary"
               [(restockQuantity)]="staffRestockQuantities[index]"
               (imageSelected)="onVariantFileSelected($event, index)"
               (remove)="removeVariant(index)"
-              (restock)="restockVariant(index)">
+              (restock)="restockVariant(index)"
+              (viewReviews)="openVariantReviews(index)">
             </app-product-variant-editor>
           }
         </div>
+
+        @if (selectedReviewVariantId) {
+          <section class="variant-review-panel">
+            <div class="review-panel-header">
+              <div>
+                <span class="detail-kicker"><i class="bi bi-chat-square-heart"></i> Review người mua</span>
+                <h3>{{ selectedReviewVariantName }}</h3>
+              </div>
+              <button type="button" class="detail-close review-close" aria-label="Đóng review" (click)="closeVariantReviews()">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div class="review-summary-grid">
+              <div class="review-score">
+                <strong>{{ (variantReviewSummary?.averageRating || 0) | number: '1.1-1' }}</strong>
+                <span>/ 5</span>
+                <small>{{ variantReviewSummary?.reviewCount || 0 }} đánh giá</small>
+              </div>
+              <div class="review-bars">
+                @for (star of reviewStars.slice().reverse(); track star) {
+                  <div class="review-bar-row">
+                    <span>{{ star }} <i class="bi bi-star-fill"></i></span>
+                    <div class="review-bar-track">
+                      <div class="review-bar-fill" [style.width.%]="getStarPercent(star)"></div>
+                    </div>
+                    <strong>{{ getStarCount(star) }}</strong>
+                  </div>
+                }
+              </div>
+            </div>
+
+            @if (variantReviewError) {
+              <div class="alert alert-warning mb-0">{{ variantReviewError }}</div>
+            } @else if (isLoadingVariantReviews) {
+              <div class="review-loading">
+                <span class="spinner-border spinner-border-sm"></span>
+                Đang tải đánh giá...
+              </div>
+            } @else {
+              <div class="review-feed">
+                @for (review of variantReviews; track review.id) {
+                  <article class="review-comment" [class.is-hidden]="review.status === 'HIDDEN'">
+                    <div class="review-avatar">
+                      @if (review.userAvatarUrl) {
+                        <img [src]="review.userAvatarUrl" [alt]="getReviewUserName(review)">
+                      } @else {
+                        <span>{{ getReviewInitial(review) }}</span>
+                      }
+                    </div>
+
+                    <div class="review-comment-body">
+                      <div class="review-comment-meta">
+                        <div>
+                          <strong>{{ getReviewUserName(review) }}</strong>
+                          <span>{{ review.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                        </div>
+                        <div class="review-status-row">
+                          @if (review.verifiedPurchase) {
+                            <span class="review-verified"><i class="bi bi-patch-check-fill"></i> Đã mua hàng</span>
+                          }
+                          @if (canManageVariantReviews) {
+                            <span class="review-status" [class.is-hidden]="review.status === 'HIDDEN'">
+                              {{ review.status === 'HIDDEN' ? 'Đã ẩn' : 'Hiển thị' }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+
+                      @if (review.rating) {
+                        <div class="review-stars">
+                          @for (star of reviewStars; track star) {
+                            <i class="bi" [ngClass]="star <= (review.rating || 0) ? 'bi-star-fill' : 'bi-star'"></i>
+                          }
+                        </div>
+                      }
+
+                      @if (review.comment) {
+                        <p>{{ review.comment }}</p>
+                      }
+
+                      @if (review.imageUrls && review.imageUrls.length > 0) {
+                        <div class="review-photo-grid">
+                          @for (imageUrl of review.imageUrls; track imageUrl) {
+                            <img [src]="imageUrl" alt="Ảnh đánh giá">
+                          }
+                        </div>
+                      }
+                    </div>
+                  </article>
+                } @empty {
+                  <div class="review-empty">Phân loại này chưa có đánh giá từ người mua.</div>
+                }
+              </div>
+
+              @if (hasMoreVariantReviews) {
+                <div class="text-center mt-3">
+                  <button
+                    type="button"
+                    class="btn btn-outline-light rounded-pill px-4 fw-bold"
+                    [disabled]="isLoadingMoreVariantReviews"
+                    (click)="loadMoreVariantReviews()">
+                    @if (isLoadingMoreVariantReviews) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Đang tải
+                    } @else {
+                      Xem thêm review
+                    }
+                  </button>
+                </div>
+              }
+            }
+          </section>
+        }
 
         <div class="detail-footer">
           @if (authService.isCustomer()) {

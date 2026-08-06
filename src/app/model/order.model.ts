@@ -14,6 +14,8 @@ export interface OrderItem {
 
   exportedQuantity?: number | null;
   receivedQuantity?: number | null;
+  reviewed?: boolean;
+  reviewId?: number | null;
 }
 
 export interface Order {
