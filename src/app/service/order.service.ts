@@ -67,14 +67,6 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  updateOrderStatus(orderId: number, status: string): Observable<string> {
-    const params = new HttpParams().set('status', status);
-    return this.http.put(`${this.apiUrl}/${orderId}/status`, null, {
-      params,
-      responseType: 'text',
-    });
-  }
-
   cancelOrder(orderId: number, reason: string): Observable<string> {
     const params = new HttpParams().set('reason', reason);
     return this.http.put(`${this.apiUrl}/${orderId}/cancel`, null, {

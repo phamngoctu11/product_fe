@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Observable, map } from 'rxjs';
-import { ActionDialogComponent, ActionDialogData } from '../component/action-dialog/action-dialog.component';
+import { ActionDialogComponent, ActionDialogData } from '../features/shared/action-dialog/action-dialog.component';
 import { APP_DIALOG_SIZE } from '../config/dialog.config';
 
 @Injectable({ providedIn: 'root' })

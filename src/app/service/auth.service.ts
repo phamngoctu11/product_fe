@@ -88,6 +88,10 @@ export class AuthService {
     return this.getUserRole() === 'USER';
   }
 
+  getHomeRoute(): string {
+    return this.isCustomer() ? '/store/product' : '/management/product';
+  }
+
   isLoggedIn(): boolean {
     if (isJwtExpired(this.getDecodedToken())) {
       clearAuthStorage();

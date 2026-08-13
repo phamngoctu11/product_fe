@@ -1,0 +1,95 @@
+<div class="container-fluid management-products app-fade-in">
+  <app-page-header
+    icon="bi-boxes"
+    title="Quản lý sản phẩm"
+    subtitle="Quản lý sản phẩm theo từng danh mục">
+    @if (canCreateOrDelete) {
+      <button pageActions type="button" class="add-product-button" (click)="addProduct()">
+        <i class="bi bi-plus-circle-fill"></i> Thêm sản phẩm
+      </button>
+    }
+  </app-page-header>
+
+  <app-view-state
+    [loading]="isLoading"
+    [error]="loadError"
+    [empty]="!isLoading && !loadError && products.length === 0"
+    loadingText="Đang tải danh mục sản phẩm..."
+    emptyTitle="Chưa có sản phẩm"
+    emptyText="Danh mục sẽ xuất hiện khi có dữ liệu sản phẩm."
+    emptyIcon="bi-box-seam"
+    [actionLabel]="loadError ? 'Thử lại' : ''"
+    (action)="loadProducts()">
+
+    @if (!selectedCategory) {
+      <section class="category-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Danh mục</span>
+            <h2>Chọn loại sản phẩm cần quản lý</h2>
+          </div>
+          <span class="category-total">{{ categories.length }} danh mục</span>
+        </div>
+
+        <div class="category-grid">
+          @for (category of categories; track category.key) {
+            <button type="button" class="category-card" (click)="selectCategory(category)">
+              <span class="category-icon"><i class="bi" [class]="'bi ' + category.icon"></i></span>
+              <span class="category-copy">
+                <strong>{{ category.label }}</strong>
+                <small>{{ productCount(category) }} sản phẩm</small>
+              </span>
+              <i class="bi bi-arrow-right category-arrow"></i>
+            </button>
+          }
+        </div>
+      </section>
+    } @else {
+      <section class="product-section">
+        <div class="product-toolbar">
+          <button type="button" class="back-button" (click)="closeCategory()">
+            <i class="bi bi-arrow-left"></i> Danh mục
+          </button>
+          <div class="selected-category-title">
+            <span class="category-icon small"><i class="bi" [class]="'bi ' + selectedCategory.icon"></i></span>
+            <div><span class="eyebrow">Danh mục đang chọn</span><h2>{{ selectedCategory.label }}</h2></div>
+          </div>
+          <label class="product-search">
+            <i class="bi bi-search"></i>
+            <input type="search" [(ngModel)]="searchTerm" placeholder="Tìm tên sản phẩm...">
+          </label>
+        </div>
+
+        @if (visibleProducts.length > 0) {
+          <div class="product-name-grid">
+            @for (product of visibleProducts; track product.id) {
+              <article class="product-name-card" role="button" tabindex="0" (click)="openProduct(product)" (keydown.enter)="openProduct(product)">
+                <span class="product-thumb">
+                  @if (product.image_url) { <img [src]="product.image_url" [alt]="product.product_name"> }
+                  @else { <i class="bi bi-image"></i> }
+                </span>
+                <span class="product-name-copy">
+                  <strong>{{ product.product_name }}</strong>
+                  <small>{{ product.variants?.length || 0 }} phân loại</small>
+                </span>
+                <span class="product-actions">
+                  <button type="button" class="card-action edit" title="Chỉnh sửa sản phẩm" (click)="editProduct(product, $event)">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  @if (canCreateOrDelete) {
+                    <button type="button" class="card-action delete" title="Xóa sản phẩm" (click)="deleteProduct(product, $event)">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  }
+                  <i class="bi bi-eye"></i>
+                </span>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="category-empty"><i class="bi bi-search"></i><strong>Không tìm thấy sản phẩm</strong><span>Thử lại với một tên khác.</span></div>
+        }
+      </section>
+    }
+  </app-view-state>
+</div>

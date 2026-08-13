@@ -11,6 +11,124 @@ app-footer {
   display: block;
 }
 
+/* Customer pages do not inherit the back-office sidebar/grid layout. */
+.storefront-shell {
+  --storefront-topbar-height: 68px;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  background: var(--app-shell-bg);
+}
+
+.storefront-main {
+  flex: 1 0 auto;
+  min-width: 0;
+  padding-top: var(--storefront-topbar-height);
+}
+
+.storefront-shell .storefront-topbar {
+  position: fixed;
+  z-index: 1050;
+  top: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  height: var(--storefront-topbar-height);
+}
+
+.storefront-brand {
+  color: var(--app-text);
+  text-decoration: none;
+}
+
+.storefront-topbar .topbar-icon-button {
+  text-decoration: none;
+}
+
+.storefront-brand-block { flex: 0 0 auto; }
+
+.storefront-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--app-text);
+  text-decoration: none;
+}
+
+.storefront-logo-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(99,102,241,0.3);
+}
+
+.storefront-logo > span:last-child { display: flex; flex-direction: column; line-height: 1.1; }
+.storefront-logo strong { font-size: 1rem; }
+.storefront-logo small { margin-top: 0.2rem; color: var(--app-muted-text); font-size: 0.68rem; }
+
+.storefront-nav {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-inline: auto;
+}
+
+.storefront-nav a {
+  position: relative;
+  display: inline-flex;
+  height: 42px;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.85rem;
+  border-radius: 0.65rem;
+  color: var(--app-muted-text);
+  font-size: 0.87rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.18s ease;
+}
+
+.storefront-nav a:hover,
+.storefront-nav a.active {
+  background: rgba(99,102,241,0.12);
+  color: var(--app-primary);
+}
+
+.storefront-nav a.active::after {
+  position: absolute;
+  right: 0.8rem;
+  bottom: -13px;
+  left: 0.8rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--app-primary);
+  content: '';
+}
+
+.storefront-actions { flex: 0 0 auto; }
+
+@media (max-width: 900px) {
+  .storefront-logo small { display: none; }
+  .storefront-nav a span { display: none; }
+  .storefront-nav a { padding-inline: 0.75rem; font-size: 1rem; }
+}
+
+@media (max-width: 575.98px) {
+  .storefront-shell { --storefront-topbar-height: 62px; }
+  .storefront-topbar { padding-inline: 0.75rem; }
+  .storefront-topbar .user-summary,
+  .storefront-topbar .user-chevron { display: none; }
+  .storefront-logo > span:last-child { display: none; }
+  .storefront-nav { gap: 0; }
+  .storefront-nav a { padding-inline: 0.6rem; }
+}
+
 .notification-item {
   cursor: pointer;
   white-space: normal;

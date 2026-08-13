@@ -23,34 +23,33 @@ export class CartService {
 
   getCartByUserId(userId: string): Observable<CartRes> {
     return this.http
-      .get<ApiResponse<CartRes> | CartRes>(`${this.apiUrl}/${userId}`)
+      .get<ApiResponse<CartRes> | CartRes>(this.apiUrl)
       .pipe(map(unwrapApiResponse));
   }
 
   addToCart(userId: string, variantId: number, quantity: number): Observable<any> {
     const params = new HttpParams()
-      .set('userId', userId.toString())
       .set('variantId', variantId.toString())
       .set('quantity', quantity.toString());
 
-    return this.http.post(`${this.apiUrl}/add`, null, { params, responseType: 'text' as 'json' });
+    return this.http
+      .post<ApiResponse<void> | void>(`${this.apiUrl}/items`, null, { params })
+      .pipe(map(unwrapApiResponse));
   }
 
   updateQuantity(userId: string, variantId: number, quantity: number): Observable<any> {
     const params = new HttpParams()
-      .set('userId', userId.toString())
-      .set('variantId', variantId.toString())
       .set('quantity', quantity.toString());
 
-    return this.http.put(`${this.apiUrl}/update`, null, { params, responseType: 'text' as 'json' });
+    return this.http
+      .put<ApiResponse<void> | void>(`${this.apiUrl}/items/${variantId}`, null, { params })
+      .pipe(map(unwrapApiResponse));
   }
 
   removeFromCart(userId: string, variantId: number): Observable<any> {
-    const params = new HttpParams()
-      .set('userId', userId.toString())
-      .set('variantId', variantId.toString());
-
-    return this.http.delete(`${this.apiUrl}/remove`, { params, responseType: 'text' as 'json' });
+    return this.http
+      .delete<ApiResponse<void> | void>(`${this.apiUrl}/items/${variantId}`)
+      .pipe(map(unwrapApiResponse));
   }
 
   // ĐÃ SỬA: Giữ nguyên tên hàm acceptCart, thêm paymentMethod vào cuối cùng để không gây lỗi các file khác

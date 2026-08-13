@@ -1,0 +1,138 @@
+  <div
+    class="app-shell"
+    [class.sidebar-collapsed]="isSidebarCollapsed"
+    [class.mobile-sidebar-open]="isMobileSidebarOpen">
+    <app-sidebar
+      [collapsed]="isSidebarCollapsed"
+      (toggleCollapsed)="toggleSidebar()"
+      (navigationSelected)="closeMobileSidebar()">
+    </app-sidebar>
+
+    <button
+      type="button"
+      class="sidebar-backdrop"
+      aria-label="Đóng menu"
+      (click)="closeMobileSidebar()">
+    </button>
+
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button
+          type="button"
+          class="topbar-hamburger"
+          aria-label="Mở menu"
+          (click)="isMobileSidebarOpen = true">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+
+        <div class="topbar-heading">
+          <span class="topbar-title">Bảng điều khiển</span>
+          <span class="topbar-subtitle">Quản lý đơn hàng, sản phẩm và thông báo</span>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="dropdown">
+          <button
+            class="topbar-icon-button position-relative"
+            type="button"
+            id="notificationMenu"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            title="Thông báo">
+            <i class="bi bi-bell"></i>
+            @if (unreadCount > 0) {
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            }
+          </button>
+
+          <ul
+            class="dropdown-menu dropdown-menu-end mt-2 p-0 notification-menu"
+            aria-labelledby="notificationMenu"
+            (scroll)="onNotificationsScroll($event)">
+            <li class="dropdown-header notification-header">
+              <span>Thông báo</span>
+              <div class="d-flex align-items-center gap-2">
+                @if (unreadCount > 0) {
+                  <button
+                    class="btn btn-link btn-sm p-0 text-decoration-none"
+                    type="button"
+                    [disabled]="isMarkingNotificationsRead"
+                    (click)="markAsRead()">
+                    Đánh dấu đã đọc
+                  </button>
+                }
+                <span class="badge rounded-pill text-bg-primary">{{ notifications.length }}</span>
+              </div>
+            </li>
+            @if (notifications.length === 0) {
+              <li class="text-center py-5 text-muted small">
+                <i class="bi bi-bell-slash fs-2 d-block mb-3 opacity-25"></i>
+                Bạn không có thông báo nào.
+              </li>
+            }
+            @for (notification of notifications; track notification.id ?? $index) {
+              <li>
+                <a class="dropdown-item notification-item" [routerLink]="notificationRoute">
+                  <div class="notification-icon"><i class="bi bi-box-seam-fill"></i></div>
+                  <div class="min-w-0">
+                    <h6 class="mb-1 fw-bold text-dark fs-6">{{ notification.title }}</h6>
+                    <p class="mb-0 text-muted small">{{ notification.content }}</p>
+                    <small class="notification-time fw-semibold mt-1 d-block">
+                      {{ notification.createdAt | timeAgo }}
+                    </small>
+                  </div>
+                </a>
+              </li>
+            }
+            @if (isLoadingNotifications && notifications.length > 0) {
+              <li class="text-center py-3 text-muted small">
+                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                Đang tải thêm...
+              </li>
+            }
+          </ul>
+        </div>
+
+        <div class="dropdown">
+          <button
+            class="user-menu-button"
+            type="button"
+            id="userMenu"
+            data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <span class="user-avatar">
+              @if (isCurrentUserLoading) {
+                <span class="spinner-border spinner-border-sm" aria-label="Đang tải thông tin người dùng"></span>
+              } @else if (userAvatarUrl) {
+                <img [src]="userAvatarUrl" alt="Ảnh đại diện">
+              } @else {
+                <i class="bi bi-person-fill"></i>
+              }
+            </span>
+            <span class="user-summary">
+              <span class="user-name">{{ isCurrentUserLoading ? 'Đang tải...' : displayName }}</span>
+              <span class="user-role">{{ currentRole }}</span>
+            </span>
+            <i class="bi bi-chevron-down user-chevron"></i>
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end mt-2 user-dropdown" aria-labelledby="userMenu">
+            <li><a class="dropdown-item custom-hover" routerLink="/management/myinfor"><i class="bi bi-person-badge text-primary"></i>Thông tin cá nhân</a></li>
+            <li><button class="dropdown-item custom-hover" type="button" (click)="openSettings()"><i class="bi bi-palette2 text-secondary"></i>Cài đặt giao diện</button></li>
+            <li><hr class="dropdown-divider opacity-25 my-1"></li>
+            <li><button class="dropdown-item custom-hover-danger" type="button" (click)="logout()"><i class="bi bi-box-arrow-right"></i>Đăng xuất</button></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <div class="app-content">
+        <router-outlet></router-outlet>
+      </div>
+      <app-footer></app-footer>
+    </main>
+  </div>

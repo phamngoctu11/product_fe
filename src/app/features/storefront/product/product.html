@@ -1,0 +1,85 @@
+<div class="container-fluid product-page mt-4 mb-5 app-fade-in">
+  <app-page-header
+    icon="bi-grid-fill"
+    title="Cửa hàng"
+    subtitle="Khám phá các sản phẩm chất lượng">
+  </app-page-header>
+
+  <section class="filter-card" aria-label="Bộ lọc sản phẩm">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-4 col-lg-3">
+        <label class="filter-label" for="productMaxPrice">Mức giá tối đa</label>
+        <div class="filter-input-wrap">
+          <i class="bi bi-currency-exchange filter-input-icon"></i>
+          <input
+            id="productMaxPrice"
+            type="number"
+            class="form-control filter-input"
+            placeholder="VD: 500.000"
+            [(ngModel)]="searchPrice"
+            (ngModelChange)="filterProducts()">
+        </div>
+      </div>
+      <div class="col-md-8 col-lg-9">
+        <label
+          class="filter-label"
+          for="productSearch"
+          title="Gợi ý: thêm # vào đầu để lọc theo thẻ, ví dụ #quanao">
+          Tìm kiếm sản phẩm
+        </label>
+        <div class="filter-input-wrap">
+          <i class="bi bi-search filter-input-icon"></i>
+          <input
+            id="productSearch"
+            type="search"
+            class="form-control filter-input"
+            placeholder="Nhập tên sản phẩm hoặc #hashtag..."
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="filterProducts()">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <app-view-state
+    [loading]="isLoading"
+    [error]="loadError"
+    [empty]="filteredProducts.length === 0"
+    loadingText="Đang tải sản phẩm..."
+    emptyTitle="Không tìm thấy sản phẩm"
+    emptyText="Không có sản phẩm nào khớp với điều kiện lọc của bạn."
+    emptyIcon="bi-search"
+    [actionLabel]="loadError ? 'Thử lại' : 'Xóa bộ lọc'"
+    (action)="loadError ? getAll(currentPage, pageSize) : clearFilters()">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+      @for (product of filteredProducts; track product.id) {
+        <div class="col product-grid-enter">
+          <app-product-card
+            [product]="product"
+            [canEdit]="false"
+            [canDelete]="false"
+            [canPurchase]="canPurchase"
+            [showFavorite]="canUseWishlist"
+            [favorite]="isFavorite(product)"
+            [favoriteBusy]="isFavoriteBusy(product)"
+            (viewed)="viewProduct($event.id)"
+            (purchased)="openAddToCartModal($event)"
+            (favoriteToggled)="toggleFavorite($event)"
+            >
+          </app-product-card>
+        </div>
+      }
+    </div>
+
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalElements]="totalElements"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [disabled]="isLoading"
+      (pageChange)="changePage($event)"
+      (pageSizeChange)="changePageSize($event)">
+    </app-pagination>
+  </app-view-state>
+</div>
