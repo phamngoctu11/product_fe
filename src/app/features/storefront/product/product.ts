@@ -76,8 +76,8 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.currentUserId = this.authService.getUserId();
     this.isAdmin = false;
     this.isStaff = false;
-    this.canPurchase = true;
-    this.canUseWishlist = !!this.currentUserId && this.canPurchase;
+    this.canPurchase = !this.authService.isLoggedIn() || this.authService.isCustomer();
+    this.canUseWishlist = !!this.currentUserId && this.authService.isCustomer();
     this.getAll(this.currentPage, this.pageSize);
 
     this.subscriptions.add(this.filterChanges.pipe(debounceTime(350)).subscribe(() => {
@@ -172,7 +172,6 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   openAddToCartModal(product: Product) {
     if (!this.canPurchase) { this.toast.notify('Chỉ tài khoản user mới có quyền mua hàng.'); return; }
-    if (!this.currentUserId) { this.toast.notify('Vui lòng đăng nhập để mua hàng!'); return; }
     if (!product.variants || product.variants.length === 0) { this.toast.notify('Sản phẩm này hiện tại chưa có phân loại hàng!'); return; }
 
     const dialogRef = this.dialog.open(AddToCartModalComponent, {

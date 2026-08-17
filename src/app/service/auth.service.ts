@@ -89,7 +89,7 @@ export class AuthService {
   }
 
   getHomeRoute(): string {
-    return this.isCustomer() ? '/store/product' : '/management/product';
+    return !this.isLoggedIn() || this.isCustomer() ? '/store/product' : '/management/product';
   }
 
   isLoggedIn(): boolean {

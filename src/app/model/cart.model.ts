@@ -8,7 +8,7 @@ export interface CartItemRes {
   image_url?: string;
 }
 export interface CartRes {
-  user_id: number;
+  user_id?: string | null;
   items: CartItemRes[];
   totalPrice: number;
 }
@@ -21,4 +21,20 @@ export interface CartPaymentData {
   payUrl?: string;
   deeplink?: string;
   qrCodeUrl?: string;
+}
+
+export interface CheckoutResponse extends CartPaymentData {
+  orderId?: number;
+  totalPrice?: number;
+  finalPrice?: number;
+  paymentMethod?: string;
+}
+
+export interface GuestCheckoutRequest {
+  customerName: string;
+  phone: string;
+  email: string;
+  shippingAddress: string;
+  note?: string;
+  variantIds: number[];
 }

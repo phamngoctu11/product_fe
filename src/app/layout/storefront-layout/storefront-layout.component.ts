@@ -22,6 +22,7 @@ export class StorefrontLayoutComponent implements OnInit, OnDestroy {
   displayName = '';
   avatarUrl = '';
   isUserLoading = true;
+  isCustomerSession = false;
   notifications: any[] = [];
   unreadCount = 0;
   isLoadingNotifications = false;
@@ -41,6 +42,13 @@ export class StorefrontLayoutComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.isCustomerSession = this.authService.isCustomer();
+    if (!this.isCustomerSession) {
+      this.displayName = 'Khách';
+      this.isUserLoading = false;
+      return;
+    }
+
     this.subscriptions.add(this.userService.currentUser$.subscribe((user) => {
       if (!user) return;
       this.displayName = [user.lastname, user.firstname].filter(Boolean).join(' ');
@@ -99,6 +107,10 @@ export class StorefrontLayoutComponent implements OnInit, OnDestroy {
   }
 
   openRewards(): void {
+    if (!this.isCustomerSession) {
+      this.router.navigate(['/login'], { queryParams: { mode: 'signup' } });
+      return;
+    }
     const userId = this.authService.getUserId();
     if (userId) this.dialog.open(RewardDialogComponent, { data: userId, ...APP_DIALOG_SIZE.reward });
   }

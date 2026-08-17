@@ -5,7 +5,7 @@ import { ToastService } from '../../../service/toast.service';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { CartService } from '../../../service/cart.service';
-import { CartPaymentData, CartRes } from '../../../model/cart.model';
+import { CartPaymentData, CartRes, CheckoutResponse } from '../../../model/cart.model';
 import { forkJoin, Observable, of } from 'rxjs';
 import { VoucherService } from '../../../service/voucher.service';
 import { CartVoucherOptions, VoucherCartOption } from '../../../model/voucher.model';
@@ -42,6 +42,8 @@ export class CartModalComponent implements OnInit {
   private readonly dialogRef = inject<MatDialogRef<CartModalComponent> | null>(MatDialogRef, { optional: true });
   public userId = '';
   isOwner: boolean = false;
+  isCustomerCart = false;
+  isGuestCart = false;
   selectedProductIds: number[] = [];
   note:any;
   selectedVoucherId: number = 0;
@@ -56,6 +58,14 @@ export class CartModalComponent implements OnInit {
   paymentQrDataUrl: string = '';
   isGeneratingPaymentQr = false;
   checkoutErrorMessage = '';
+  guestCheckoutSubmitted = false;
+  guestCheckoutResponse?: CheckoutResponse;
+  guestCheckoutForm = {
+    customerName: '',
+    phone: '',
+    email: '',
+    shippingAddress: '',
+  };
 
   constructor(
     private cartService: CartService,
@@ -63,26 +73,31 @@ export class CartModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (!this.authService.isCustomer()) {
-      this.toast.notify('Chá»‰ tÃ i khoáº£n user má»›i cÃ³ quyá»n sá»­ dá»¥ng giá» hÃ ng.');
-      if (this.dialogRef) {
-        this.dialogRef.close();
-      } else {
-        this.router.navigate(['/store/product']);
-      }
-      return;
-    }
-
     const userStr = this.authService.getUserId();
-    const targetUserId = this.dialogUserId || userStr;
-    if (!targetUserId) {
-      this.toast.notify('Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ xem giá» hÃ ng.');
-      this.router.navigate(['/login']);
+    this.isCustomerCart = this.authService.isCustomer();
+    this.isGuestCart = !this.isCustomerCart;
+
+    if (this.authService.isLoggedIn() && !this.isCustomerCart) {
+      this.toast.notify('Tài khoản quản trị/nhân viên không sử dụng giỏ hàng mua sắm.');
+      this.router.navigate([this.authService.getHomeRoute()]);
       return;
     }
 
-    this.userId = targetUserId.toString();
-    this.isOwner = userStr === this.userId;
+    if (this.isCustomerCart) {
+      const targetUserId = this.dialogUserId || userStr;
+      if (!targetUserId) {
+        this.toast.notify('Vui lòng đăng nhập để xem giỏ hàng.');
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      this.userId = targetUserId.toString();
+      this.isOwner = userStr === this.userId;
+    } else {
+      this.userId = '';
+      this.isOwner = true;
+    }
+
     this.loadCart();
   }
 
@@ -209,9 +224,10 @@ export class CartModalComponent implements OnInit {
   }
 
   loadVoucherOptions(force: boolean = false) {
-    if (!this.isOwner || this.tempTotalPrice <= 0) {
+    if (!this.isCustomerCart || !this.isOwner || this.tempTotalPrice <= 0) {
       this.voucherOptions = undefined;
       this.groupedWalletVouchers = [];
+      this.selectedVoucherId = 0;
       return;
     }
     if (!force && this.voucherOptions) {
@@ -408,10 +424,15 @@ export class CartModalComponent implements OnInit {
   private createCheckoutIdempotencyKey(paymentMethod: string): string {
     const randomPart = globalThis.crypto?.randomUUID?.()
       ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    return `checkout-${this.userId}-${paymentMethod.toLowerCase()}-${randomPart}`;
+    const ownerKey = this.isGuestCart ? 'guest' : this.userId;
+    return `checkout-${ownerKey}-${paymentMethod.toLowerCase()}-${randomPart}`;
   }
 
   approve(paymentMethod: string) {
+    if (!this.isCustomerCart) {
+      this.submitGuestCheckout();
+      return;
+    }
     if (!this.cartData?.user_id) return;
     this.onlinePaymentData = undefined;
     this.paymentQrDataUrl = '';
@@ -468,6 +489,77 @@ export class CartModalComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  submitGuestCheckout(): void {
+    this.guestCheckoutSubmitted = true;
+    this.checkoutErrorMessage = '';
+    this.guestCheckoutResponse = undefined;
+
+    if (!this.isGuestCheckoutFormValid()) {
+      this.toast.notify('Vui lòng điền đầy đủ thông tin nhận hàng hợp lệ.');
+      return;
+    }
+
+    const variantIdsToCheckout = this.getVariantIdsToCheckout();
+    if (variantIdsToCheckout.length === 0) {
+      this.toast.notify('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!');
+      return;
+    }
+
+    this.isLoading = true;
+    const updates = this.getUpdateRequests(new Set(variantIdsToCheckout));
+    const performUpdate$: Observable<any> = updates.length > 0 ? forkJoin(updates) : of(null);
+
+    performUpdate$.subscribe({
+      next: () => {
+        this.cartService.guestCheckout({
+          customerName: this.guestCheckoutForm.customerName.trim(),
+          phone: this.guestCheckoutForm.phone.trim(),
+          email: this.guestCheckoutForm.email.trim(),
+          shippingAddress: this.guestCheckoutForm.shippingAddress.trim(),
+          note: typeof this.note === 'string' && this.note.trim() ? this.note.trim() : undefined,
+          variantIds: variantIdsToCheckout,
+        }, this.createCheckoutIdempotencyKey('COD')).subscribe({
+          next: (response) => {
+            this.isLoading = false;
+            this.guestCheckoutResponse = response;
+            this.selectedProductIds = [];
+            this.toast.notify(response.message || 'Đặt hàng thành công. Đơn đang chờ shop duyệt.');
+            this.cartService.notifyCheckoutSuccess();
+            this.loadCart();
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.checkoutErrorMessage = getApiErrorMessage(err, 'Không thể tạo đơn guest. Vui lòng kiểm tra lại thông tin và giỏ hàng.');
+            this.toast.notify(this.checkoutErrorMessage);
+          },
+        });
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.checkoutErrorMessage = getApiErrorMessage(err, 'Không thể cập nhật số lượng trước khi đặt hàng.');
+        this.toast.notify(this.checkoutErrorMessage);
+      },
+    });
+  }
+
+  isGuestCheckoutFormValid(): boolean {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phonePattern = /^[0-9+().\-\s]{8,30}$/;
+    return !!this.guestCheckoutForm.customerName.trim()
+      && phonePattern.test(this.guestCheckoutForm.phone.trim())
+      && emailPattern.test(this.guestCheckoutForm.email.trim())
+      && !!this.guestCheckoutForm.shippingAddress.trim();
+  }
+
+  private getVariantIdsToCheckout(): number[] {
+    if (!this.cartData?.items?.length) {
+      return [];
+    }
+    return this.selectedProductIds.length > 0
+      ? [...this.selectedProductIds]
+      : this.cartData.items.map((item: any) => this.getCartItemId(item));
   }
 openModal(data:any){
 this.closeCart(data);

@@ -37,12 +37,28 @@ export interface Order {
   cancelReason: string | null;
   note: string | null;
   paymentMethod?: string;
+  email?: string | null;
+  guestSessionId?: string | null;
+  recipientName?: string | null;
+  recipientPhone?: string | null;
+  shippingAddress?: string | null;
   approvedById?: number | null;
   approvedByFullName?: string | null;
+  customer?: OrderCustomerInfo | null;
   managerId?: number | null;
   managerName?: string | null;
   staffId?: number | null;
   staffName?: string | null;
+}
+
+export interface OrderCustomerInfo {
+  guest: boolean;
+  userId?: string | null;
+  guestSessionId?: string | null;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
 }
 export interface OrderListDTO {
   id: number;

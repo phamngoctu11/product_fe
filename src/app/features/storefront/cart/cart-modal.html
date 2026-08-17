@@ -82,7 +82,7 @@
           }
         </section>
 
-        @if (isOwner) {
+        @if (isCustomerCart && isOwner) {
           <section class="cart-voucher-panel">
             <div class="cart-voucher-heading">
               <div>
@@ -189,9 +189,62 @@
               [(ngModel)]="note" />
           </div>
 
-          <div class="cart-footer-actions">
+          @if (isGuestCart) {
+            <div class="cart-guest-form">
+              <div class="cart-guest-heading">
+                <div>
+                  <h6>Thông tin nhận hàng</h6>
+                  <p>Khách vãng lai cần cung cấp thông tin để shop tạo và xử lý đơn.</p>
+                </div>
+                <i class="bi bi-person-lines-fill"></i>
+              </div>
+
+              @if (guestCheckoutResponse) {
+                <div class="cart-inline-alert success">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>Đã tạo đơn #{{ guestCheckoutResponse.orderId }}. Shop sẽ gửi cập nhật qua email {{ guestCheckoutForm.email }}.</span>
+                </div>
+              }
+
+              <div class="cart-guest-grid">
+                <label class="cart-guest-field">
+                  <span>Họ tên</span>
+                  <input type="text" [(ngModel)]="guestCheckoutForm.customerName" maxlength="120" placeholder="Nguyễn Văn A">
+                  @if (guestCheckoutSubmitted && !guestCheckoutForm.customerName.trim()) {
+                    <small>Vui lòng nhập họ tên.</small>
+                  }
+                </label>
+
+                <label class="cart-guest-field">
+                  <span>Số điện thoại</span>
+                  <input type="tel" [(ngModel)]="guestCheckoutForm.phone" maxlength="30" placeholder="0901234567">
+                  @if (guestCheckoutSubmitted && !guestCheckoutForm.phone.trim()) {
+                    <small>Vui lòng nhập số điện thoại.</small>
+                  }
+                </label>
+
+                <label class="cart-guest-field">
+                  <span>Email</span>
+                  <input type="email" [(ngModel)]="guestCheckoutForm.email" maxlength="255" placeholder="email@example.com">
+                  @if (guestCheckoutSubmitted && !guestCheckoutForm.email.trim()) {
+                    <small>Vui lòng nhập email.</small>
+                  }
+                </label>
+
+                <label class="cart-guest-field full">
+                  <span>Địa chỉ nhận hàng</span>
+                  <textarea rows="3" [(ngModel)]="guestCheckoutForm.shippingAddress" maxlength="500" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
+                  @if (guestCheckoutSubmitted && !guestCheckoutForm.shippingAddress.trim()) {
+                    <small>Vui lòng nhập địa chỉ nhận hàng.</small>
+                  }
+                </label>
+              </div>
+            </div>
+          }
+
+          <div class="cart-footer-actions" [class.guest-actions]="isGuestCart">
             <button type="button" class="cart-btn cart-btn-close" (click)="onClose()">Đóng</button>
-            @if (isOwner) {
+            @if (isCustomerCart && isOwner) {
               <button
                 type="button"
                 class="cart-btn cart-btn-momo"
@@ -205,6 +258,14 @@
                 (click)="approve('COD')"
                 [disabled]="isLoading || !!onlinePaymentData">
                 <i class="bi bi-truck-front-fill"></i> COD
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="cart-btn cart-btn-cod"
+                (click)="approve('COD')"
+                [disabled]="isLoading">
+                <i class="bi bi-truck-front-fill"></i> Đặt hàng COD
               </button>
             }
           </div>

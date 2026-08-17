@@ -55,7 +55,7 @@
         <div class="row g-3 mb-4">
           <div class="col-md-3">
             <div class="text-muted small">Khách hàng</div>
-            <div class="fw-bold">{{ orderDetail.customerName || orderDetail.lastname || 'Khách vãng lai' }}</div>
+            <div class="fw-bold">{{ orderDetail.customer?.name || orderDetail.customerName || orderDetail.lastname || 'Khách vãng lai' }}</div>
           </div>
           <div class="col-md-3">
             <div class="text-muted small">Trạng thái</div>
@@ -84,6 +84,18 @@
           <div class="col-md-3">
             <div class="text-muted small">Voucher</div>
             <div class="fw-bold">{{ orderDetail.voucherName || 'Không áp dụng' }}</div>
+          </div>
+          <div class="col-md-3" *ngIf="orderDetail.recipientPhone || orderDetail.customer?.phone">
+            <div class="text-muted small">Số điện thoại</div>
+            <div class="fw-bold">{{ orderDetail.recipientPhone || orderDetail.customer?.phone }}</div>
+          </div>
+          <div class="col-md-3" *ngIf="orderDetail.email || orderDetail.customer?.email">
+            <div class="text-muted small">Email</div>
+            <div class="fw-bold">{{ orderDetail.email || orderDetail.customer?.email }}</div>
+          </div>
+          <div class="col-12" *ngIf="orderDetail.shippingAddress || orderDetail.customer?.address">
+            <div class="text-muted small">Địa chỉ nhận hàng</div>
+            <div class="fw-medium">{{ orderDetail.shippingAddress || orderDetail.customer?.address }}</div>
           </div>
           <div class="col-12">
             <div class="text-muted small">Ghi chú</div>
