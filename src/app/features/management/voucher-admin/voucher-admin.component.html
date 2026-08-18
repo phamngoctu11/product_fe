@@ -42,7 +42,7 @@
 
               <div class="col-md-4">
                 <app-form-field label="Điểm đổi" for="voucherPointCost" [required]="true" [control]="voucherForm.controls['pointCost']">
-                  <input id="voucherPointCost" class="form-control shadow-sm" name="pointCost" type="number" min="0" required [(ngModel)]="campaign.pointCost">
+                  <input id="voucherPointCost" class="form-control shadow-sm" name="pointCost" type="number" min="0" required [disabled]="!!campaign.guestVoucher" [(ngModel)]="campaign.pointCost">
                 </app-form-field>
               </div>
 
@@ -90,6 +90,20 @@
                   </div>
                 </app-form-field>
               </div>
+
+              <div class="col-md-12">
+                <app-form-field label="Tệp khách hàng" for="voucherGuest">
+                  <div class="form-check form-switch bg-light border rounded-3 px-5 py-2 shadow-sm">
+                    <input id="voucherGuest" class="form-check-input" type="checkbox" role="switch" name="guestVoucher" [(ngModel)]="campaign.guestVoucher" (ngModelChange)="onGuestVoucherChange()">
+                    <label class="form-check-label fw-semibold" for="voucherGuest">
+                      {{ campaign.guestVoucher ? 'Voucher khách vãng lai' : 'Voucher user hệ thống' }}
+                    </label>
+                  </div>
+                  <small class="text-muted d-block mt-2">
+                    Guest voucher được áp trực tiếp khi checkout và không lưu vào ví. User voucher dùng điểm uy tín để đổi.
+                  </small>
+                </app-form-field>
+              </div>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-4">
@@ -116,13 +130,16 @@
       <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
           <h5 class="fw-bold text-dark mb-1">Xem trước</h5>
-          <small class="text-muted">Thông tin user sẽ thấy khi đổi voucher.</small>
+          <small class="text-muted">Thông tin khách hàng sẽ thấy khi chọn hoặc đổi voucher.</small>
         </div>
         <div class="card-body p-4">
           <div class="border rounded-4 p-4 bg-primary bg-opacity-10">
             <div class="d-flex justify-content-between align-items-start gap-3">
               <div>
                 <div class="badge bg-primary rounded-pill mb-2">{{ campaign.code || 'VOUCHER_CODE' }}</div>
+                <div class="badge rounded-pill mb-2" [ngClass]="campaign.guestVoucher ? 'bg-warning text-dark' : 'bg-info text-dark'">
+                  {{ campaign.guestVoucher ? 'Guest voucher' : 'User voucher' }}
+                </div>
                 <h5 class="fw-bold text-dark mb-2">{{ campaign.name || 'Tên voucher' }}</h5>
                 <p class="text-muted mb-3">{{ campaign.description || 'Mô tả voucher sẽ hiển thị tại đây.' }}</p>
               </div>
@@ -132,7 +149,13 @@
               <div class="col-6">
                 <div class="bg-white rounded-3 p-3 h-100">
                   <div class="text-muted">Điểm đổi</div>
-                  <div class="fw-bold">{{ campaign.pointCost | number }} điểm</div>
+                  <div class="fw-bold">
+                    @if (campaign.guestVoucher) {
+                      Không cần điểm
+                    } @else {
+                      {{ campaign.pointCost | number }} điểm
+                    }
+                  </div>
                 </div>
               </div>
               <div class="col-6">
@@ -161,7 +184,7 @@
       <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-0 pt-4 px-4">
           <h5 class="fw-bold text-dark mb-1">Template đang phát hành</h5>
-          <small class="text-muted">Dữ liệu lấy từ `/api/vouchers/templates`.</small>
+          <small class="text-muted">Dữ liệu lấy từ `/api/vouchers/admin/templates`.</small>
         </div>
         <div class="card-body p-0">
           <app-view-state
@@ -187,8 +210,11 @@
                   <td class="ps-4">
                     <div class="fw-bold text-dark">{{ template.code }}</div>
                     <div class="voucher-template-name text-muted small text-truncate">{{ template.name }}</div>
+                    <span class="badge rounded-pill mt-1" [ngClass]="template.guestVoucher ? 'bg-warning text-dark' : 'bg-info text-dark'">
+                      {{ template.guestVoucher ? 'Guest' : 'User' }}
+                    </span>
                   </td>
-                  <td>{{ template.pointCost | number }}</td>
+                  <td>{{ template.guestVoucher ? '-' : (template.pointCost | number) }}</td>
                   <td>{{ template.quantity | number }}</td>
                   <td class="text-end pe-4">
                     <span class="badge bg-success bg-opacity-10 text-success rounded-pill">

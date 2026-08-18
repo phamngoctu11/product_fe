@@ -26,8 +26,11 @@ export interface CartPaymentData {
 export interface CheckoutResponse extends CartPaymentData {
   orderId?: number;
   totalPrice?: number;
+  discountAmount?: number;
   finalPrice?: number;
   paymentMethod?: string;
+  voucherCode?: string;
+  voucherName?: string;
 }
 
 export interface GuestCheckoutRequest {
@@ -36,5 +39,6 @@ export interface GuestCheckoutRequest {
   email: string;
   shippingAddress: string;
   note?: string;
+  voucherCode?: string;
   variantIds: number[];
 }

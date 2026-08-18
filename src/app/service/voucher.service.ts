@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { CartVoucherOptions, VoucherTemplate, VoucherTemplateRequest, UserVoucher } from '../model/voucher.model';
+import { CartVoucherOptions, VoucherCartOption, VoucherTemplate, VoucherTemplateRequest, UserVoucher } from '../model/voucher.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
@@ -18,6 +18,12 @@ export class VoucherService {
   getTemplates(): Observable<VoucherTemplate[]> {
     return this.http
       .get<ApiResponse<VoucherTemplate[]> | VoucherTemplate[]>(`${this.apiUrl}/templates`)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getManagementTemplates(): Observable<VoucherTemplate[]> {
+    return this.http
+      .get<ApiResponse<VoucherTemplate[]> | VoucherTemplate[]>(`${this.apiUrl}/admin/templates`)
       .pipe(map(unwrapApiResponse));
   }
 
@@ -42,6 +48,13 @@ export class VoucherService {
     const params = new HttpParams().set('subtotal', Math.max(0, subtotal).toString());
     return this.http
       .get<ApiResponse<CartVoucherOptions> | CartVoucherOptions>(`${this.apiUrl}/me/cart-options`, { params })
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getGuestVouchers(subtotal: number): Observable<VoucherCartOption[]> {
+    const params = new HttpParams().set('subtotal', Math.max(0, subtotal).toString());
+    return this.http
+      .get<ApiResponse<VoucherCartOption[]> | VoucherCartOption[]>(`${this.apiUrl}/guest`, { params })
       .pipe(map(unwrapApiResponse));
   }
 

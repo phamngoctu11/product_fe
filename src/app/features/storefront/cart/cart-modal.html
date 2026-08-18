@@ -69,6 +69,13 @@
             <span class="cart-summary-val discount">-{{ tempDiscountAmount | number }}đ</span>
           </div>
 
+          @if (isGuestCart && selectedGuestVoucherCode) {
+            <div class="cart-summary-row">
+              <span class="cart-summary-label">Mã áp dụng</span>
+              <span class="cart-summary-val">{{ selectedGuestVoucherCode }}</span>
+            </div>
+          }
+
           <div class="cart-total-row">
             <span class="cart-total-label">Tổng thanh toán</span>
             <span class="cart-total-final">{{ tempFinalPrice | number }}đ</span>
@@ -179,6 +186,69 @@
           </section>
         }
 
+        @if (isGuestCart) {
+          <section class="cart-voucher-panel guest-voucher-panel">
+            <div class="cart-voucher-heading">
+              <div>
+                <h6>Voucher cho khách vãng lai</h6>
+                <p>Chọn nhanh mã còn lượt. Đăng ký tài khoản để lưu voucher và tích điểm cho lần sau.</p>
+              </div>
+              <i class="bi bi-ticket-detailed-fill"></i>
+            </div>
+
+            @if (isLoadingGuestVouchers) {
+              <div class="voucher-loading">
+                <span class="cart-spinner"></span>
+                <span>Đang kiểm tra voucher guest...</span>
+              </div>
+            } @else {
+              @if (!guestVoucherOptions.length) {
+                <div class="voucher-empty">
+                  Hiện chưa có voucher guest khả dụng. Bạn vẫn có thể đặt hàng COD bình thường.
+                  <a routerLink="/login" [queryParams]="{ mode: 'signup' }">Đăng ký tài khoản</a>
+                  để nhận nhiều ưu đãi hơn.
+                </div>
+              }
+
+              <div class="voucher-group">
+                @for (voucher of guestVoucherOptions; track voucher.templateId) {
+                  <button
+                    type="button"
+                    class="voucher-option"
+                    [class.active]="isGuestVoucherSelected(voucher)"
+                    [class.disabled]="!voucher.applicable"
+                    (click)="selectGuestVoucher(voucher)">
+                    <span class="voucher-main">
+                      <strong>{{ voucher.template.name }}</strong>
+                      <small>{{ voucher.template.code }} · Đơn từ {{ voucher.template.minOrderValue | number }}đ</small>
+                      @if (voucher.unavailableReason) {
+                        <em>{{ voucher.unavailableReason }}</em>
+                      }
+                    </span>
+                    <span class="voucher-meta">
+                      @if (voucher.best) {
+                        <small class="best-badge">Tốt nhất</small>
+                      }
+                      @if (voucher.applicable) {
+                        <strong>-{{ voucher.discountAmount | number }}đ</strong>
+                      }
+                    </span>
+                  </button>
+                }
+              </div>
+
+              @if (getBestGuestVoucherOption(); as bestGuestVoucher) {
+                @if (!isGuestVoucherSelected(bestGuestVoucher)) {
+                  <button type="button" class="cart-best-btn" (click)="applyBestGuestVoucher()">
+                    <i class="bi bi-stars"></i>
+                    Áp dụng voucher guest tốt nhất
+                  </button>
+                }
+              }
+            }
+          </section>
+        }
+
         <section class="cart-checkout-panel">
           <div class="cart-note-wrap">
             <i class="bi bi-pencil-square cart-note-icon"></i>
@@ -202,7 +272,12 @@
               @if (guestCheckoutResponse) {
                 <div class="cart-inline-alert success">
                   <i class="bi bi-check-circle-fill"></i>
-                  <span>Đã tạo đơn #{{ guestCheckoutResponse.orderId }}. Shop sẽ gửi cập nhật qua email {{ guestCheckoutForm.email }}.</span>
+                  <span>
+                    Đã tạo đơn #{{ guestCheckoutResponse.orderId }}. Shop sẽ gửi cập nhật qua email {{ guestCheckoutForm.email }}.
+                    @if ((guestCheckoutResponse.discountAmount || 0) > 0) {
+                      Đã áp dụng {{ guestCheckoutResponse.voucherCode }} giảm {{ guestCheckoutResponse.discountAmount | number }}đ.
+                    }
+                  </span>
                 </div>
               }
 

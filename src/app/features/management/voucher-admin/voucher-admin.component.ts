@@ -31,7 +31,7 @@ export class VoucherAdminComponent implements OnInit {
 
   loadTemplates(): void {
     this.isLoadingTemplates = true;
-    this.voucherService.getTemplates().subscribe({
+    this.voucherService.getManagementTemplates().subscribe({
       next: (templates) => {
         this.templates = templates || [];
         this.isLoadingTemplates = false;
@@ -87,22 +87,31 @@ export class VoucherAdminComponent implements OnInit {
       quantity: 1,
       expiryDate: this.getDefaultExpiryDate(),
       active: true,
+      guestVoucher: false,
     };
   }
 
   buildPayload(): VoucherTemplateRequest {
+    const isGuestVoucher = !!this.campaign.guestVoucher;
     return {
       code: this.campaign.code.trim().toUpperCase(),
       name: this.campaign.name.trim(),
       description: this.campaign.description?.trim() || '',
-      pointCost: Number(this.campaign.pointCost || 0),
+      pointCost: isGuestVoucher ? 0 : Number(this.campaign.pointCost || 0),
       minOrderValue: Number(this.campaign.minOrderValue || 0),
       discountPercent: Number(this.campaign.discountPercent || 0),
       maxDiscountAmount: Number(this.campaign.maxDiscountAmount || 0),
       quantity: Number(this.campaign.quantity || 0),
       expiryDate: this.campaign.expiryDate,
       active: !!this.campaign.active,
+      guestVoucher: isGuestVoucher,
     };
+  }
+
+  onGuestVoucherChange(): void {
+    if (this.campaign.guestVoucher) {
+      this.campaign.pointCost = 0;
+    }
   }
 
   getDefaultExpiryDate(): string {

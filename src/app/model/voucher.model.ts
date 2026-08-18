@@ -10,7 +10,8 @@ export interface VoucherTemplate {
   quantity: number;
   active?: boolean;
   expiryDate: string;
-  isActive?: boolean
+  isActive?: boolean;
+  guestVoucher?: boolean;
 }
 export type VoucherTemplateRequest = Omit<VoucherTemplate, 'id'> & { id?: number };
 
@@ -26,7 +27,7 @@ export interface UserVoucher {
 export interface VoucherCartOption {
   userVoucherId: number | null;
   templateId: number;
-  source: 'WALLET' | 'REDEEMABLE' | string;
+  source: 'WALLET' | 'REDEEMABLE' | 'GUEST' | string;
   template: VoucherTemplate;
   applicable: boolean;
   best: boolean;

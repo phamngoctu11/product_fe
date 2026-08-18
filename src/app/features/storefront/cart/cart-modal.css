@@ -295,6 +295,16 @@
   border: 1px dashed rgba(var(--app-primary-rgb), 0.18);
 }
 
+.voucher-empty a {
+  color: var(--app-primary-light);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.voucher-empty a:hover {
+  text-decoration: underline;
+}
+
 .voucher-option {
   width: 100%;
   min-height: 78px;

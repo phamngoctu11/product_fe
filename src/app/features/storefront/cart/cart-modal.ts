@@ -11,7 +11,7 @@ import { VoucherService } from '../../../service/voucher.service';
 import { CartVoucherOptions, VoucherCartOption } from '../../../model/voucher.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import * as QRCode from 'qrcode';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../service/auth.service';
 import { CartItemRowComponent } from './cart-item-row/cart-item-row.component';
 import { CartPaymentPanelComponent } from './cart-payment-panel/cart-payment-panel.component';
@@ -25,7 +25,7 @@ type WalletVoucherGroup = VoucherCartOption & {
 @Component({
   selector: 'app-cart-modal',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, FormsModule, CartItemRowComponent, CartPaymentPanelComponent, ViewStateComponent],
+  imports: [CommonModule, MatDialogModule, FormsModule, RouterLink, CartItemRowComponent, CartPaymentPanelComponent, ViewStateComponent],
   templateUrl: './cart-modal.html',
   styleUrl: './cart-modal.css',
 })
@@ -52,7 +52,10 @@ export class CartModalComponent implements OnInit {
   tempFinalPrice: number = 0;
   voucherOptions?: CartVoucherOptions;
   groupedWalletVouchers: WalletVoucherGroup[] = [];
+  guestVoucherOptions: VoucherCartOption[] = [];
+  selectedGuestVoucherCode = '';
   isLoadingVouchers = false;
+  isLoadingGuestVouchers = false;
   redeemingTemplateIds = new Set<number>();
   onlinePaymentData?: CartPaymentData;
   paymentQrDataUrl: string = '';
@@ -200,9 +203,18 @@ export class CartModalComponent implements OnInit {
     }
 
     this.refreshVoucherOptionsForSubtotal();
+    this.refreshGuestVoucherOptionsForSubtotal();
     this.tempDiscountAmount = 0;
 
-    if (this.selectedVoucherId !== 0) {
+    if (this.isGuestCart) {
+      const selectedGuestVoucher = this.getSelectedGuestVoucherOption();
+
+      if (this.selectedGuestVoucherCode && (!selectedGuestVoucher || !selectedGuestVoucher.applicable)) {
+        this.selectedGuestVoucherCode = '';
+      } else if (selectedGuestVoucher?.applicable) {
+        this.tempDiscountAmount = selectedGuestVoucher.discountAmount;
+      }
+    } else if (this.selectedVoucherId !== 0) {
       const selectedVoucher = this.getSelectedWalletOption();
 
       if (!selectedVoucher || !selectedVoucher.applicable) {
@@ -224,6 +236,11 @@ export class CartModalComponent implements OnInit {
   }
 
   loadVoucherOptions(force: boolean = false) {
+    if (this.isGuestCart) {
+      this.loadGuestVoucherOptions(force);
+      return;
+    }
+
     if (!this.isCustomerCart || !this.isOwner || this.tempTotalPrice <= 0) {
       this.voucherOptions = undefined;
       this.groupedWalletVouchers = [];
@@ -245,6 +262,33 @@ export class CartModalComponent implements OnInit {
         this.voucherOptions = undefined;
         this.groupedWalletVouchers = [];
         this.isLoadingVouchers = false;
+      },
+    });
+  }
+
+  private loadGuestVoucherOptions(force: boolean = false): void {
+    if (!this.isGuestCart || this.tempTotalPrice <= 0) {
+      this.guestVoucherOptions = [];
+      this.selectedGuestVoucherCode = '';
+      return;
+    }
+    if (!force && this.guestVoucherOptions.length > 0) {
+      return;
+    }
+
+    this.isLoadingGuestVouchers = true;
+    this.voucherService.getGuestVouchers(this.tempTotalPrice).subscribe({
+      next: (options) => {
+        this.guestVoucherOptions = (options || [])
+          .map((option) => this.recalculateVoucherOption(option));
+        this.markBestVoucher(this.guestVoucherOptions);
+        this.calculateInvoice();
+        this.isLoadingGuestVouchers = false;
+      },
+      error: () => {
+        this.guestVoucherOptions = [];
+        this.selectedGuestVoucherCode = '';
+        this.isLoadingGuestVouchers = false;
       },
     });
   }
@@ -271,6 +315,14 @@ export class CartModalComponent implements OnInit {
       redeemableVouchers,
     };
     this.groupedWalletVouchers = this.groupWalletVouchers(walletVouchers);
+  }
+
+  private refreshGuestVoucherOptionsForSubtotal(): void {
+    if (!this.guestVoucherOptions.length) return;
+
+    this.guestVoucherOptions = this.guestVoucherOptions
+      .map((option) => this.recalculateVoucherOption(option));
+    this.markBestVoucher(this.guestVoucherOptions);
   }
 
   private recalculateVoucherOption(option: VoucherCartOption): VoucherCartOption {
@@ -371,6 +423,44 @@ export class CartModalComponent implements OnInit {
     }
     this.selectedVoucherId = this.isWalletGroupSelected(group) ? 0 : group.userVoucherId;
     this.calculateInvoice();
+  }
+
+  getSelectedGuestVoucherOption(): VoucherCartOption | null {
+    const selectedCode = this.selectedGuestVoucherCode.trim().toUpperCase();
+    if (!selectedCode) return null;
+    return this.guestVoucherOptions.find((option) =>
+      (option.template.code || '').trim().toUpperCase() === selectedCode
+    ) || null;
+  }
+
+  getBestGuestVoucherOption(): VoucherCartOption | null {
+    return this.guestVoucherOptions.find((option) => option.best && option.applicable) || null;
+  }
+
+  isGuestVoucherSelected(option: VoucherCartOption): boolean {
+    const selectedCode = this.selectedGuestVoucherCode.trim().toUpperCase();
+    const optionCode = (option.template.code || '').trim().toUpperCase();
+    return !!selectedCode && selectedCode === optionCode;
+  }
+
+  selectGuestVoucher(option: VoucherCartOption): void {
+    if (!option.applicable) {
+      if (option.unavailableReason) this.toast.notify(option.unavailableReason);
+      return;
+    }
+
+    const code = (option.template.code || '').trim();
+    if (!code) return;
+
+    this.selectedGuestVoucherCode = this.isGuestVoucherSelected(option) ? '' : code;
+    this.calculateInvoice();
+  }
+
+  applyBestGuestVoucher(): void {
+    const bestVoucher = this.getBestGuestVoucherOption();
+    if (bestVoucher) {
+      this.selectGuestVoucher(bestVoucher);
+    }
   }
 
   applyBestWalletVoucher() {
@@ -519,12 +609,15 @@ export class CartModalComponent implements OnInit {
           email: this.guestCheckoutForm.email.trim(),
           shippingAddress: this.guestCheckoutForm.shippingAddress.trim(),
           note: typeof this.note === 'string' && this.note.trim() ? this.note.trim() : undefined,
+          voucherCode: this.selectedGuestVoucherCode.trim() || undefined,
           variantIds: variantIdsToCheckout,
         }, this.createCheckoutIdempotencyKey('COD')).subscribe({
           next: (response) => {
             this.isLoading = false;
             this.guestCheckoutResponse = response;
             this.selectedProductIds = [];
+            this.selectedGuestVoucherCode = '';
+            this.guestVoucherOptions = [];
             this.toast.notify(response.message || 'Đặt hàng thành công. Đơn đang chờ shop duyệt.');
             this.cartService.notifyCheckoutSuccess();
             this.loadCart();
@@ -532,6 +625,10 @@ export class CartModalComponent implements OnInit {
           error: (err) => {
             this.isLoading = false;
             this.checkoutErrorMessage = getApiErrorMessage(err, 'Không thể tạo đơn guest. Vui lòng kiểm tra lại thông tin và giỏ hàng.');
+            if (this.selectedGuestVoucherCode) {
+              this.selectedGuestVoucherCode = '';
+              this.loadVoucherOptions(true);
+            }
             this.toast.notify(this.checkoutErrorMessage);
           },
         });

@@ -75,6 +75,7 @@ describe('CartService guest cart', () => {
       email: 'guest@example.com',
       shippingAddress: '123 Handmade Street',
       note: 'Goi hang can than',
+      voucherCode: 'WELCOME10',
       variantIds: [12, 15],
     }, 'guest-checkout-key').subscribe((response) => {
       expect(response.orderId).toBe(99);
@@ -88,6 +89,7 @@ describe('CartService guest cart', () => {
     expect(req.request.headers.get('Idempotency-Key')).toBe('guest-checkout-key');
     expect(req.request.body.variantIds).toEqual([12, 15]);
     expect(req.request.body.email).toBe('guest@example.com');
+    expect(req.request.body.voucherCode).toBe('WELCOME10');
 
     req.flush({
       success: true,
