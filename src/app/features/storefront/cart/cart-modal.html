@@ -277,8 +277,26 @@
                     @if ((guestCheckoutResponse.discountAmount || 0) > 0) {
                       Đã áp dụng {{ guestCheckoutResponse.voucherCode }} giảm {{ guestCheckoutResponse.discountAmount | number }}đ.
                     }
+                    @if (guestCheckoutResponse.maskedEmail) {
+                      Email xác nhận được gửi tới {{ guestCheckoutResponse.maskedEmail }}.
+                    }
                   </span>
                 </div>
+                @if (guestCheckoutResponse.guestWorkflowStatus === 'START_FAILED') {
+                  <div class="cart-inline-alert">
+                    <i class="bi bi-envelope-check-fill"></i>
+                    <span>Đơn hàng đã được lưu an toàn. Email xác nhận đang được chuyển sang hàng đợi dự phòng.</span>
+                  </div>
+                }
+                @if (guestCheckoutResponse.lookupToken) {
+                  <div class="cart-inline-alert">
+                    <i class="bi bi-key-fill"></i>
+                    <span>
+                      Mã tra cứu đơn: <strong>{{ guestCheckoutResponse.lookupToken }}</strong>.
+                      Hãy lưu mã này để tra cứu đơn mà không cần đăng nhập.
+                    </span>
+                  </div>
+                }
               }
 
               <div class="cart-guest-grid">

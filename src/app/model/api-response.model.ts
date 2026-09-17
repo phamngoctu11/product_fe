@@ -80,6 +80,10 @@ function localizeApiMessage(message: string): string {
     return 'Hệ thống đang bận xử lý thanh toán.';
   }
 
+  if (normalized.includes('This public voucher has already been used by this guest.')) {
+    return 'Voucher công khai này đã được dùng với phiên, email hoặc số điện thoại của bạn.';
+  }
+
   const messages: Record<string, string> = {
     'Too many login attempts. Please retry later.':
       'Bạn đã thử đăng nhập quá nhiều lần.',

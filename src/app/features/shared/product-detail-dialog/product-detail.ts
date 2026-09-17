@@ -84,6 +84,7 @@ export class ProductDetailComponent implements OnInit {
       price: [0, [Validators.required, Validators.min(0)]],
       tags: [''],
       image_url: [''],
+      handmade: [true],
       variants: this.fb.array([])
     });
   }
@@ -151,7 +152,7 @@ export class ProductDetailComponent implements OnInit {
 
         this.productForm.patchValue({
           id: res.id, product_name: res.product_name, price: res.price,
-          tags: res.tags, image_url: this.uploadedImageUrl
+          tags: res.tags, image_url: this.uploadedImageUrl, handmade: res.handmade !== false
         });
 
         if (res.tags) this.selectedTags = res.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t !== '');

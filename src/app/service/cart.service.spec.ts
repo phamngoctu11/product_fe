@@ -80,6 +80,9 @@ describe('CartService guest cart', () => {
     }, 'guest-checkout-key').subscribe((response) => {
       expect(response.orderId).toBe(99);
       expect(response.status).toBe('PENDING_APPROVAL');
+      expect(response.lookupToken).toBe('guest-public-token');
+      expect(response.maskedEmail).toBe('g***@example.com');
+      expect(response.guestWorkflowStatus).toBe('STARTED');
     });
 
     const req = httpMock.expectOne(`${environment.apiUrl}/guest-checkout`);
@@ -101,6 +104,9 @@ describe('CartService guest cart', () => {
         totalPrice: 300000,
         finalPrice: 300000,
         paymentMethod: 'COD',
+        lookupToken: 'guest-public-token',
+        maskedEmail: 'g***@example.com',
+        guestWorkflowStatus: 'STARTED',
         message: 'OK',
       },
     });

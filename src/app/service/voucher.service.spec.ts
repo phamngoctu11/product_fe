@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../environments/environment';
 import { VoucherService } from './voucher.service';
+import { GuestSessionService } from './guest-session.service';
 
 describe('VoucherService', () => {
   let service: VoucherService;
@@ -13,6 +14,10 @@ describe('VoucherService', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        {
+          provide: GuestSessionService,
+          useValue: { getOrCreateSessionId: () => 'guest-session-0001' },
+        },
       ],
     });
     service = TestBed.inject(VoucherService);
@@ -36,6 +41,7 @@ describe('VoucherService', () => {
     );
 
     expect(req.request.method).toBe('GET');
+    expect(req.request.headers.get('X-Guest-Session-Id')).toBe('guest-session-0001');
     req.flush({
       success: true,
       status: 200,

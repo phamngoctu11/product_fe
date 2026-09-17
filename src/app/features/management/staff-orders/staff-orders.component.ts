@@ -158,6 +158,11 @@ export class StaffOrdersComponent implements OnInit {
           this.loadData();
         },
         error: (err) => {
+          if (this.isClaimConflict(err)) {
+            this.removePendingOrder(order.id);
+            this.loadData();
+            return;
+          }
           this.toast.notify('Không thể nhận đơn: ' + getApiErrorMessage(err, 'Đơn có thể đã được staff khác nhận.'));
           this.isLoading = false;
         },
@@ -256,6 +261,20 @@ export class StaffOrdersComponent implements OnInit {
 
   canExport(order: Order | null): boolean {
     return !!order && order.status === 'WAREHOUSE_ASSIGNED' && (order.items?.length || 0) > 0;
+  }
+
+  private isClaimConflict(err: any): boolean {
+    const payload = typeof err?.error === 'string'
+      ? err.error
+      : JSON.stringify(err?.error || err || {});
+    return err?.status === 409
+      || payload.includes('ORDER_ALREADY_ASSIGNED')
+      || payload.toLowerCase().includes('already assigned');
+  }
+
+  private removePendingOrder(orderId: number): void {
+    this.warehousePendingOrders = this.warehousePendingOrders.filter((item) => item.id !== orderId);
+    this.pendingTotalElements = Math.max(0, this.pendingTotalElements - 1);
   }
 
   private initExportQuantitiesForOrder(order: Order): void {

@@ -53,6 +53,7 @@ export class CartModalComponent implements OnInit {
   voucherOptions?: CartVoucherOptions;
   groupedWalletVouchers: WalletVoucherGroup[] = [];
   guestVoucherOptions: VoucherCartOption[] = [];
+  private readonly rejectedGuestVoucherCodes = new Set<string>();
   selectedGuestVoucherCode = '';
   isLoadingVouchers = false;
   isLoadingGuestVouchers = false;
@@ -280,7 +281,7 @@ export class CartModalComponent implements OnInit {
     this.voucherService.getGuestVouchers(this.tempTotalPrice).subscribe({
       next: (options) => {
         this.guestVoucherOptions = (options || [])
-          .map((option) => this.recalculateVoucherOption(option));
+          .map((option) => this.applyGuestVoucherRestriction(this.recalculateVoucherOption(option)));
         this.markBestVoucher(this.guestVoucherOptions);
         this.calculateInvoice();
         this.isLoadingGuestVouchers = false;
@@ -321,12 +322,13 @@ export class CartModalComponent implements OnInit {
     if (!this.guestVoucherOptions.length) return;
 
     this.guestVoucherOptions = this.guestVoucherOptions
-      .map((option) => this.recalculateVoucherOption(option));
+      .map((option) => this.applyGuestVoucherRestriction(this.recalculateVoucherOption(option)));
     this.markBestVoucher(this.guestVoucherOptions);
   }
 
   private recalculateVoucherOption(option: VoucherCartOption): VoucherCartOption {
-    const applicable = this.tempTotalPrice >= option.template.minOrderValue;
+    const blockedByPriorUsage = !!option.unavailableReason?.startsWith('Voucher này đã');
+    const applicable = !blockedByPriorUsage && this.tempTotalPrice >= option.template.minOrderValue;
     const discountAmount = applicable ? this.calculateVoucherDiscount(option) : 0;
     return {
       ...option,
@@ -334,9 +336,11 @@ export class CartModalComponent implements OnInit {
       best: false,
       discountAmount,
       finalPrice: Math.max(0, this.tempTotalPrice - discountAmount),
-      unavailableReason: applicable
-        ? null
-        : `Cáº§n thÃªm ${Math.ceil(option.template.minOrderValue - this.tempTotalPrice).toLocaleString('vi-VN')}Ä‘ Ä‘á»ƒ Ã¡p dá»¥ng voucher nÃ y.`,
+      unavailableReason: blockedByPriorUsage
+        ? option.unavailableReason
+        : applicable
+          ? null
+          : `Cáº§n thÃªm ${Math.ceil(option.template.minOrderValue - this.tempTotalPrice).toLocaleString('vi-VN')}Ä‘ Ä‘á»ƒ Ã¡p dá»¥ng voucher nÃ y.`,
     };
   }
 
@@ -423,6 +427,20 @@ export class CartModalComponent implements OnInit {
     }
     this.selectedVoucherId = this.isWalletGroupSelected(group) ? 0 : group.userVoucherId;
     this.calculateInvoice();
+  }
+
+  private applyGuestVoucherRestriction(option: VoucherCartOption): VoucherCartOption {
+    const code = (option.template.code || '').trim().toUpperCase();
+    if (!this.rejectedGuestVoucherCodes.has(code)) return option;
+
+    return {
+      ...option,
+      applicable: false,
+      best: false,
+      discountAmount: 0,
+      finalPrice: this.tempTotalPrice,
+      unavailableReason: 'Voucher này đã được dùng với phiên, email hoặc số điện thoại của bạn.',
+    };
   }
 
   getSelectedGuestVoucherOption(): VoucherCartOption | null {
@@ -626,6 +644,9 @@ export class CartModalComponent implements OnInit {
             this.isLoading = false;
             this.checkoutErrorMessage = getApiErrorMessage(err, 'Không thể tạo đơn guest. Vui lòng kiểm tra lại thông tin và giỏ hàng.');
             if (this.selectedGuestVoucherCode) {
+              if (err?.status === 409) {
+                this.rejectedGuestVoucherCodes.add(this.selectedGuestVoucherCode.trim().toUpperCase());
+              }
               this.selectedGuestVoucherCode = '';
               this.loadVoucherOptions(true);
             }

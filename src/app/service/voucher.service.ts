@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CartVoucherOptions, VoucherCartOption, VoucherTemplate, VoucherTemplateRequest, UserVoucher } from '../model/voucher.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
+import { GuestSessionService } from './guest-session.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +13,10 @@ import { environment } from '../../environments/environment';
 export class VoucherService {
   private apiUrl = `${environment.apiUrl}/vouchers`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private guestSessionService: GuestSessionService,
+  ) {}
 
   // Lấy danh sách mã đang phát hành
   getTemplates(): Observable<VoucherTemplate[]> {
@@ -53,8 +57,10 @@ export class VoucherService {
 
   getGuestVouchers(subtotal: number): Observable<VoucherCartOption[]> {
     const params = new HttpParams().set('subtotal', Math.max(0, subtotal).toString());
+    const headers = new HttpHeaders()
+      .set('X-Guest-Session-Id', this.guestSessionService.getOrCreateSessionId());
     return this.http
-      .get<ApiResponse<VoucherCartOption[]> | VoucherCartOption[]>(`${this.apiUrl}/guest`, { params })
+      .get<ApiResponse<VoucherCartOption[]> | VoucherCartOption[]>(`${this.apiUrl}/guest`, { params, headers })
       .pipe(map(unwrapApiResponse));
   }
 

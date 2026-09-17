@@ -31,6 +31,9 @@ export interface CheckoutResponse extends CartPaymentData {
   paymentMethod?: string;
   voucherCode?: string;
   voucherName?: string;
+  lookupToken?: string;
+  maskedEmail?: string;
+  guestWorkflowStatus?: 'PENDING_START' | 'STARTED' | 'START_FAILED';
 }
 
 export interface GuestCheckoutRequest {

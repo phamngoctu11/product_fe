@@ -4,6 +4,7 @@ export interface Product {
   price: number;
   tags?: string;
   quantity?: number;
+  handmade?: boolean;
   image_url?: string; // DUY NHẤT 1 KIỂU
   variants?: ProductVariant[];
 }
