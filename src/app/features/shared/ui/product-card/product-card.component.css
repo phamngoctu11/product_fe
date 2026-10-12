@@ -1,28 +1,37 @@
+/* ============================================================
+   PRODUCT CARD — Imperfecto Theme (Soft Creamy)
+   Gỡ bỏ màu tối, áp dụng tông kem/nâu nghệ thuật
+   Logic Angular giữ nguyên 100%
+   ============================================================ */
+
 .product-card {
   overflow: hidden;
-  border: 1px solid rgba(var(--app-primary-rgb), 0.18);
-  border-radius: 1.15rem;
-  background: linear-gradient(180deg, #10172b 0%, #0d1427 100%);
-  color: var(--app-text);
+  border: 1px solid rgba(74, 60, 49, 0.1);
+  border-radius: 1.25rem;
+  background: #FFFFFF;
+  color: #4A3C31;
   cursor: pointer;
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+  transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s ease;
 }
 
 .product-card:hover,
 .product-card:focus-visible {
   transform: translateY(-6px);
-  border-color: rgba(var(--app-primary-rgb), 0.36);
-  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(var(--app-primary-rgb), 0.22) !important;
+  border-color: rgba(74, 60, 49, 0.22);
+  box-shadow: 0 20px 48px rgba(74, 60, 49, 0.12), 0 4px 12px rgba(74, 60, 49, 0.08) !important;
   outline: none;
 }
 
+/* ---- Phần ảnh ---- */
 .product-img-wrapper {
   position: relative;
   overflow: hidden;
-  padding-top: 100%;
-  border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.14);
-  background: #070b19;
+  padding-top: 100%; /* 1:1 ratio */
+  border-bottom: 1px solid rgba(74, 60, 49, 0.08);
+  background: #F5EDE6;
 }
 
 .product-img {
@@ -37,7 +46,7 @@
 .product-img-placeholder {
   display: grid;
   place-items: center;
-  color: rgba(148, 163, 184, 0.25);
+  color: rgba(74, 60, 49, 0.2);
   font-size: 2.5rem;
 }
 
@@ -45,10 +54,11 @@
   transform: scale(1.06);
 }
 
+/* Overlay nhẹ khi hover */
 .product-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(15, 23, 42, 0.25), transparent 60%);
+  background: linear-gradient(to top, rgba(74, 60, 49, 0.12), transparent 60%);
   opacity: 0;
   transition: opacity 0.28s ease;
 }
@@ -57,90 +67,220 @@
   opacity: 1;
 }
 
+/* Badge Hết hàng / Tạm dừng */
 .badge-oos {
   position: absolute;
   z-index: 1;
   top: 0.65rem;
   right: 0.65rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 999px;
-  background: rgba(239, 68, 68, 0.9);
+  background: rgba(192, 57, 43, 0.85);
   color: #fff;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
+  font-family: var(--imperfecto-font-sans, 'Montserrat', sans-serif);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
+.badge-oos.discontinued {
+  background: rgba(100, 90, 80, 0.85);
+}
+
+/* Nút Yêu thích */
 .favorite-button {
   position: absolute;
   z-index: 2;
   top: 0.65rem;
   left: 0.65rem;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.85rem;
-  background: rgba(7, 11, 25, 0.74);
-  color: #e2e8f0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(74, 60, 49, 0.15);
+  border-radius: 50%;
+  background: rgba(253, 251, 247, 0.85);
+  backdrop-filter: blur(4px);
+  color: rgba(74, 60, 49, 0.55);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
-  transition: transform 0.18s ease, color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  box-shadow: 0 4px 12px rgba(74, 60, 49, 0.1);
+  transition: transform 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
 
 .favorite-button:hover,
 .favorite-button.active {
-  border-color: rgba(251, 113, 133, 0.55);
-  background: rgba(127, 29, 29, 0.68);
-  color: #fb7185;
-  transform: translateY(-1px);
+  background: rgba(255, 230, 230, 0.95);
+  border-color: rgba(192, 57, 43, 0.3);
+  color: #c0392b;
+  transform: scale(1.1);
 }
 
 .favorite-button:disabled {
-  opacity: 0.68;
+  opacity: 0.6;
   transform: none;
 }
 
+/* ---- Card Body ---- */
 .product-name {
-  margin: 0 0 0.5rem;
-  color: var(--app-text);
-  font-size: 0.92rem;
+  margin: 0 0 0.4rem;
+  color: #4A3C31;
+  font-size: 0.9rem;
   font-weight: 700;
+  font-family: var(--imperfecto-font-sans, 'Montserrat', sans-serif);
 }
 
 .tag-badge {
-  border: 1px solid rgba(var(--app-primary-rgb), 0.26);
-  background: rgba(var(--app-primary-rgb), 0.12);
-  color: var(--app-primary-light);
-  font-size: 0.72rem;
+  background: rgba(74, 60, 49, 0.07);
+  border: 1px solid rgba(74, 60, 49, 0.14);
+  color: #7a6658;
+  font-size: 0.68rem;
+  font-weight: 600;
 }
 
 .meta-badge {
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(148, 163, 184, 0.12);
-  color: #cbd5e1;
-  font-size: 0.7rem;
+  background: rgba(200, 215, 230, 0.3);
+  border: 1px solid rgba(74, 60, 49, 0.1);
+  color: #8a9aaa;
+  font-size: 0.66rem;
 }
 
-.product-price-label,
-.product-stock {
+.product-price-label {
   display: block;
-  color: var(--app-muted-text);
-  font-size: 0.72rem;
+  color: rgba(74, 60, 49, 0.45);
+  font-size: 0.68rem;
+  font-weight: 500;
+  font-family: var(--imperfecto-font-sans, 'Montserrat', sans-serif);
+  letter-spacing: 0.05em;
 }
 
 .product-price {
   display: block;
-  background: linear-gradient(135deg, #a5b4fc, #8b5cf6);
-  background-clip: text;
-  color: transparent;
-  font-size: 1.15rem;
+  color: #4A3C31;
+  font-size: 1.1rem;
   font-weight: 800;
+  font-family: var(--imperfecto-font-sans, 'Montserrat', sans-serif);
 }
 
+.product-availability {
+  display: block;
+  max-width: 50%;
+  text-align: right;
+  font-size: 0.68rem;
+  color: #8aaa8a;
+  font-weight: 500;
+}
+
+/* ---- Card Footer Actions ---- */
 .product-actions {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  border-top-color: rgba(var(--app-primary-rgb), 0.16) !important;
+  border-top-color: rgba(74, 60, 49, 0.08) !important;
+  background: #FDFBF7;
+}
+
+.btn-add-cart {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 38px;
+  border: none;
+  border-radius: 0.75rem;
+  background: #4A3C31;
+  color: #FDFBF7;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--imperfecto-font-sans, 'Montserrat', sans-serif);
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.btn-add-cart:hover:not(:disabled) {
+  background: #2C2724;
+  transform: translateY(-1px);
+}
+
+.btn-add-cart:disabled {
+  background: rgba(74, 60, 49, 0.2);
+  color: rgba(74, 60, 49, 0.4);
+  cursor: not-allowed;
+}
+
+.btn-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(74, 60, 49, 0.12);
+  border-radius: 0.75rem;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-icon-action.edit:hover {
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.btn-icon-action.delete:hover {
+  background: rgba(192, 57, 43, 0.08);
+}
+
+/* ---- Dark Theme ---- */
+.theme-imperfecto-dark .product-card {
+  background: #2e2638;
+  border-color: rgba(249, 246, 240, 0.08);
+  color: #F9F6F0;
+}
+
+.theme-imperfecto-dark .product-card:hover {
+  border-color: rgba(249, 246, 240, 0.16);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(249, 246, 240, 0.08) !important;
+}
+
+.theme-imperfecto-dark .product-img-wrapper {
+  background: #3a2f42;
+  border-bottom-color: rgba(249, 246, 240, 0.06);
+}
+
+.theme-imperfecto-dark .product-img-placeholder {
+  color: rgba(249, 246, 240, 0.15);
+}
+
+.theme-imperfecto-dark .product-name {
+  color: #F9F6F0;
+}
+
+.theme-imperfecto-dark .product-price {
+  color: #F9F6F0;
+}
+
+.theme-imperfecto-dark .product-actions {
+  background: #2e2638;
+  border-top-color: rgba(249, 246, 240, 0.08) !important;
+}
+
+.theme-imperfecto-dark .btn-add-cart {
+  background: #F9F6F0;
+  color: #221C27;
+}
+
+.theme-imperfecto-dark .btn-add-cart:hover:not(:disabled) {
+  background: #FDFBF7;
+}
+
+.theme-imperfecto-dark .btn-icon-action {
+  border-color: rgba(249, 246, 240, 0.12);
+}
+
+.theme-imperfecto-dark .favorite-button {
+  background: rgba(34, 28, 39, 0.85);
+  border-color: rgba(249, 246, 240, 0.12);
+  color: rgba(249, 246, 240, 0.5);
 }

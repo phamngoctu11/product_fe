@@ -12,10 +12,12 @@ import { AddToCartModalComponent } from '../product/add-to-cart-modal/add-to-car
 import { ProductDetailComponent } from '../../shared/product-detail-dialog/product-detail';
 import {
   AppPaginationComponent,
-  PageHeaderComponent,
-  ProductCardComponent,
-  ViewStateComponent,
+   ProductCardComponent, ViewStateComponent,
 } from '../../shared/ui';
+import { SfProductGridComponent } from '../ui/product-grid/sf-product-grid.component';
+import { } from '../ui/product-tile/sf-product-tile.component';
+import { SfStateComponent } from '../ui/state/sf-state.component';
+import { SfPageIntroComponent } from '../ui/page-intro/sf-page-intro.component';
 
 @Component({
   selector: 'app-wishlist',
@@ -24,16 +26,14 @@ import {
     CommonModule,
     MatDialogModule,
     AppPaginationComponent,
-    PageHeaderComponent,
-    ProductCardComponent,
-    ViewStateComponent,
-  ],
+    SfPageIntroComponent, SfProductGridComponent, SfStateComponent, ],
   templateUrl: './wishlist.component.html',
   styleUrl: './wishlist.component.css',
 })
 export class WishlistComponent implements OnInit {
   products: Product[] = [];
   favoriteBusyProductIds = new Set<number>();
+  get favoriteIds(): ReadonlySet<number> { return new Set(this.products.map(p => p.id as number)); }
   isLoading = false;
   loadError = '';
   currentPage = 0;
@@ -86,6 +86,10 @@ export class WishlistComponent implements OnInit {
     const currentUserId = this.authService.getUserId();
     if (!currentUserId) {
       this.toast.notify('Vui lòng đăng nhập để mua hàng.');
+      return;
+    }
+    if ((product as any).availabilityStatus === "TEMPORARILY_PAUSED") {
+      this.toast.notify('Sản phẩm hiện không nhận đơn mới.');
       return;
     }
     if (!product.variants || product.variants.length === 0) {
@@ -161,3 +165,6 @@ export class WishlistComponent implements OnInit {
     this.loadWishlist(0);
   }
 }
+
+
+

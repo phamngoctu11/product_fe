@@ -1,9 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
   Order,
+  AvailableStaff,
+  ManagerOrderReviewDetail,
+  ManagerOrderReviewSummary,
+  ManagerReviewRequest,
+  ManagerReviewResult,
+  OrderAssignmentQueueItem,
+  OrderAssignmentResult,
   OrderListDTO,
   OrderStatusHistory,
   ReceiptComplaintRequest,
@@ -57,13 +64,41 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  getPendingOrders(status: string, page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
-    const params = new HttpParams()
-      .set('status', status)
-      .set('page', page.toString())
-      .set('size', size.toString());
+  getManagerReviews(page: number = 0, size: number = 20): Observable<PageResponse<ManagerOrderReviewSummary>> {
+    const params = this.pageParams(page, size);
     return this.http
-      .post<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/admin/pending`, null, { params })
+      .get<ApiResponse<PageResponse<ManagerOrderReviewSummary>> | PageResponse<ManagerOrderReviewSummary>>(
+        `${this.apiUrl}/manager/reviews`,
+        { params },
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getManagerReviewDetail(orderId: number): Observable<ManagerOrderReviewDetail> {
+    return this.http
+      .get<ApiResponse<ManagerOrderReviewDetail> | ManagerOrderReviewDetail>(
+        `${this.apiUrl}/manager/reviews/${orderId}`,
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getManagerAssignmentQueue(page: number = 0, size: number = 20): Observable<PageResponse<OrderAssignmentQueueItem>> {
+    const params = this.pageParams(page, size);
+    return this.http
+      .get<ApiResponse<PageResponse<OrderAssignmentQueueItem>> | PageResponse<OrderAssignmentQueueItem>>(
+        `${this.apiUrl}/manager/assignments`,
+        { params },
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getAvailableStaff(page: number = 0, size: number = 50): Observable<PageResponse<AvailableStaff>> {
+    const params = this.pageParams(page, size);
+    return this.http
+      .get<ApiResponse<PageResponse<AvailableStaff>> | PageResponse<AvailableStaff>>(
+        `${this.apiUrl}/manager/available-staff`,
+        { params },
+      )
       .pipe(map(unwrapApiResponse));
   }
 
@@ -99,40 +134,24 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  reviewOrder(orderId: number, approved: boolean, cancelReason: string | null = null, changerId: string, staffId?: string): Observable<string> {
-    const payload = {
-      approved: approved,
-      cancelReason: cancelReason,
-    };
-    let params = new HttpParams().set('changerId', changerId.toString());
-    if (staffId) {
-      params = params.set('staffId', staffId.toString());
-    }
-
-    return this.http.post(`${this.apiUrl}/manager/review-order/${orderId}`, payload, {
-      params,
-      responseType: 'text' as 'json',
-    }).pipe(
-      map((response: any) => {
-        if (typeof response === 'string') {
-          try {
-            const parsed = JSON.parse(response);
-            return parsed.message || response;
-          } catch {
-            return response;
-          }
-        }
-
-        return response?.message || 'Thao tác thành công!';
-      }),
-    );
+  reviewOrder(orderId: number, request: ManagerReviewRequest): Observable<ManagerReviewResult> {
+    return this.http
+      .post<ApiResponse<ManagerReviewResult> | ManagerReviewResult>(
+        `${this.apiUrl}/manager/reviews/${orderId}`,
+        request,
+        { headers: this.idempotencyHeaders('manager-review', orderId) },
+      )
+      .pipe(map(unwrapApiResponse));
   }
 
-  assignStaff(orderId: number, staffId: string): Observable<string> {
-    const params = new HttpParams().set('staffId', staffId.toString());
+  assignStaff(orderId: number, orderVersion: number, staffId: string): Observable<OrderAssignmentResult> {
     return this.http
-      .post<ApiResponse<null> | string>(`${this.apiUrl}/manager/assign-staff/${orderId}`, null, { params })
-      .pipe(map((response: any) => this.extractMessage(response, 'Gán staff thành công!')));
+      .post<ApiResponse<OrderAssignmentResult> | OrderAssignmentResult>(
+        `${this.apiUrl}/manager/assignments/${orderId}`,
+        { orderVersion, staffId },
+        { headers: this.idempotencyHeaders('manager-assignment', orderId) },
+      )
+      .pipe(map(unwrapApiResponse));
   }
 
   kcsCheck(orderId: number, isPassed: boolean, cancelReason: string = ''): Observable<string> {
@@ -144,17 +163,24 @@ export class OrderService {
       .pipe(map((response: any) => this.extractMessage(response, isPassed ? 'KCS đạt, đơn chuyển sang giao hàng!' : 'KCS không đạt, đơn đã trả về staff.')));
   }
 
-  getWarehousePendingOrders(page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
-    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+  getClaimableOrders(page: number = 0, size: number = 20): Observable<PageResponse<OrderAssignmentQueueItem>> {
+    const params = this.pageParams(page, size);
     return this.http
-      .get<ApiResponse<PageResponse<OrderListDTO>> | PageResponse<OrderListDTO>>(`${this.apiUrl}/staff/warehouse-pending`, { params })
+      .get<ApiResponse<PageResponse<OrderAssignmentQueueItem>> | PageResponse<OrderAssignmentQueueItem>>(
+        `${this.apiUrl}/staff/claimable`,
+        { params },
+      )
       .pipe(map(unwrapApiResponse));
   }
 
-  claimWarehouseOrder(orderId: number): Observable<string> {
+  claimOrder(orderId: number, orderVersion: number): Observable<OrderAssignmentResult> {
     return this.http
-      .post<ApiResponse<null> | string>(`${this.apiUrl}/staff/claim/${orderId}`, null)
-      .pipe(map((response: any) => this.extractMessage(response, 'Nhận đơn thành công!')));
+      .post<ApiResponse<OrderAssignmentResult> | OrderAssignmentResult>(
+        `${this.apiUrl}/staff/claim/${orderId}`,
+        { orderVersion },
+        { headers: this.idempotencyHeaders('staff-claim', orderId) },
+      )
+      .pipe(map(unwrapApiResponse));
   }
 
   getMyStaffOrders(page: number = 0, size: number = 20): Observable<PageResponse<OrderListDTO>> {
@@ -181,4 +207,37 @@ export class OrderService {
 
     return response?.message || fallback;
   }
+
+  getGuestOrder(orderId: number, token: string): Observable<Order> {
+    const params = new HttpParams().set('token', token);
+    return this.http
+      .get<ApiResponse<Order> | Order>(`${environment.apiUrl}/guest/orders/${orderId}`, { params })
+      .pipe(map(unwrapApiResponse));
+  }
+
+  private pageParams(page: number, size: number): HttpParams {
+    return new HttpParams().set('page', String(page)).set('size', String(size));
+  }
+
+  private idempotencyHeaders(scope: string, orderId: number): HttpHeaders {
+    const randomPart = typeof globalThis.crypto?.randomUUID === 'function'
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    return new HttpHeaders({ 'Idempotency-Key': `${scope}-${orderId}-${randomPart}` });
+  }
+
+  getGuestOrderHistory(orderId: number, token: string): Observable<OrderStatusHistory[]> {
+    const params = new HttpParams().set('token', token);
+    return this.http
+      .get<ApiResponse<OrderStatusHistory[]> | OrderStatusHistory[]>(`${environment.apiUrl}/guest/orders/${orderId}/history`, { params })
+      .pipe(map(unwrapApiResponse));
+  }
+
+  confirmGuestReceipt(orderId: number, token: string, request: ReceiptConfirmRequest): Observable<ReceiptConfirmResponse> {
+    const params = new HttpParams().set('token', token);
+    return this.http
+      .post<ApiResponse<ReceiptConfirmResponse> | ReceiptConfirmResponse>(`${environment.apiUrl}/guest/orders/${orderId}/confirm-receipt`, request, { params })
+      .pipe(map(unwrapApiResponse));
+  }
+
 }

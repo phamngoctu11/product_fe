@@ -1,0 +1,169 @@
+<div class="sf-shell custom-request-page">
+  <div class="sf-container cr-container">
+    <sf-page-intro
+      eyebrow="ĐẶT LÀM RIÊNG"
+      [title]="draftId ? 'Yêu cầu custom #' + draftId : 'Tạo yêu cầu custom'"
+      description="Mô tả sản phẩm bạn muốn đặt làm riêng. Giá sẽ được chốt sau khi quản lý duyệt và nhân viên trao đổi với bạn.">
+    </sf-page-intro>
+
+    @if (isLoading) {
+      <div class="cr-loading">
+        <span class="spinner-border"></span>
+        <p>Đang tải...</p>
+      </div>
+    } @else if (submission) {
+      <!-- Kết quả submit -->
+      <div class="cr-success-panel">
+        <i class="bi bi-check-circle fs-1"></i>
+        <h4>Đã tạo đơn #{{ submission.orderId }}</h4>
+        <p>Loại đơn: <strong>{{ submission.orderType }}</strong> · Trạng thái: <strong>Chờ quản lý duyệt</strong></p>
+        <p class="cr-success-hint">
+          Đơn chưa được nhận làm và chưa có giá chính thức. Bạn sẽ nhận email/thông báo khi quản lý duyệt.
+        </p>
+        <div class="cr-success-actions">
+          <a class="sf-btn sf-btn--outline" routerLink="/store/custom-requests">Danh sách yêu cầu</a>
+          <a sfButton routerLink="/store/orders">Xem đơn hàng</a>
+        </div>
+      </div>
+    } @else {
+      @if (isReadonly) {
+        <div class="cr-alert">
+          Yêu cầu này đã được gửi{{ currentDraft?.submittedAt ? ' lúc ' + (currentDraft?.submittedAt | date: 'dd/MM/yyyy HH:mm') : '' }}
+          và không thể chỉnh sửa.
+          @if (currentDraft?.linkedOrderId) {
+            Đơn liên kết: <a routerLink="/store/orders">#{{ currentDraft?.linkedOrderId }}</a> (chờ quản lý duyệt).
+          }
+        </div>
+      }
+
+      <div class="cr-forms">
+        <!-- BƯỚC 1: Nội dung bản nháp -->
+        <form class="cr-form-section" [formGroup]="draftForm" (ngSubmit)="saveDraft()">
+          <h5>1. Thông tin sản phẩm</h5>
+
+          <div class="cr-field">
+            <label>Mô tả chi tiết <span>*</span></label>
+            <textarea formControlName="description" rows="5"
+              placeholder="Kích thước, màu sắc, chất liệu, phong cách, mục đích sử dụng..."></textarea>
+            <div class="cr-field-footer">
+              <span class="cr-error">
+                @if (descriptionCtrl.touched && descriptionCtrl.hasError('required')) { Mô tả là bắt buộc. }
+                @if (descriptionCtrl.hasError('maxWords')) { Mô tả vượt quá {{ maxWords }} từ. }
+              </span>
+              <span class="cr-counter" [class.cr-error]="wordCount > maxWords">{{ wordCount }} / {{ maxWords }} từ</span>
+            </div>
+          </div>
+
+          <div class="cr-field cr-field--short">
+            <label>Số lượng <span>*</span></label>
+            <input type="number" formControlName="quantity" min="1" step="1">
+            @if (draftForm.get('quantity')?.touched && draftForm.get('quantity')?.invalid) {
+              <div class="cr-error">Số lượng phải là số nguyên lớn hơn 0.</div>
+            }
+          </div>
+
+          <div class="cr-field">
+            <label>Ảnh tham khảo</label>
+            <div formArrayName="imageUrls" class="cr-images-list">
+              @for (ctrl of imageUrls.controls; track ctrl; let i = $index) {
+                <div class="cr-image-row">
+                  @if (isValidUrl(ctrl.value)) {
+                    <img [src]="ctrl.value" alt="">
+                  } @else {
+                    <div class="cr-image-placeholder"><i class="bi bi-image"></i></div>
+                  }
+                  <input [formControlName]="i" type="url" placeholder="https://example.com/image.jpg" [class.is-invalid]="ctrl.invalid && ctrl.touched">
+                  @if (!isReadonly) {
+                    <button type="button" class="cr-icon-btn cr-icon-btn--danger" (click)="removeImageUrl(i)" title="Xóa ảnh">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  }
+                </div>
+                @if (ctrl.hasError('httpUrl') && ctrl.touched) {
+                  <div class="cr-error">URL phải là đường dẫn tuyệt đối http(s).</div>
+                }
+              }
+            </div>
+            @if (!isReadonly) {
+              <div class="cr-image-actions">
+                <button type="button" class="sf-btn sf-btn--outline sf-btn--sm" (click)="fileInput.click()" [disabled]="isUploading">
+                  @if (isUploading) { <span class="spinner-border spinner-border-sm"></span> } @else { <i class="bi bi-upload"></i> }
+                  Tải ảnh từ máy
+                </button>
+                <button type="button" class="sf-btn sf-btn--outline sf-btn--sm" (click)="addImageUrl()">
+                  <i class="bi bi-link-45deg"></i> Dán link ảnh
+                </button>
+                <input type="file" #fileInput class="d-none" accept="image/*" multiple (change)="onFileSelected($event)" style="display: none;">
+              </div>
+            }
+          </div>
+
+          @if (!isReadonly) {
+            <div class="cr-form-actions">
+              <button type="submit" sfButton class="sf-btn--outline" [disabled]="draftForm.invalid || isSaving || isUploading">
+                @if (isSaving) { <span class="spinner-border spinner-border-sm"></span> }
+                {{ draftId ? 'Cập nhật bản nháp' : 'Lưu bản nháp' }}
+              </button>
+              @if (currentDraft) {
+                <span class="cr-hint">Lưu lần cuối: {{ currentDraft.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              }
+            </div>
+          }
+        </form>
+
+        <!-- BƯỚC 2: Liên hệ & gửi yêu cầu -->
+        @if (draftId && !isReadonly) {
+          <form class="cr-form-section" [formGroup]="submitForm" (ngSubmit)="submitOrder()">
+            <h5>2. Thông tin liên hệ & giao hàng</h5>
+            <p class="cr-hint mb-4">
+              Thông tin được điền sẵn từ hồ sơ của bạn. Họ tên, email, số điện thoại và địa chỉ là bắt buộc.
+            </p>
+
+            <div class="cr-grid">
+              <div class="cr-field">
+                <label>Họ tên <span>*</span></label>
+                <input type="text" formControlName="fullName" maxlength="120" [class.is-invalid]="isInvalid('fullName')">
+              </div>
+              <div class="cr-field">
+                <label>Điện thoại <span>*</span></label>
+                <input type="tel" formControlName="phone" maxlength="30" [class.is-invalid]="isInvalid('phone')">
+              </div>
+            </div>
+            
+            <div class="cr-field">
+              <label>Email <span>*</span></label>
+              <input type="email" formControlName="email" maxlength="255" [class.is-invalid]="isInvalid('email')">
+            </div>
+            
+            <div class="cr-field">
+              <label>Địa chỉ giao hàng <span>*</span></label>
+              <textarea formControlName="address" rows="2" [class.is-invalid]="isInvalid('address')"></textarea>
+            </div>
+            
+            <div class="cr-field">
+              <label>Ghi chú thêm</label>
+              <textarea formControlName="note" rows="2" maxlength="1000"></textarea>
+            </div>
+
+            <div class="cr-info-box">
+              Sau khi gửi, đơn được tạo ở trạng thái <strong>Chờ quản lý duyệt</strong>. Chưa thu tiền, chưa áp voucher,
+              giá sẽ được thỏa thuận sau khi quản lý nhận làm.
+            </div>
+
+            <div class="cr-submit-actions">
+              <a class="sf-btn sf-btn--outline" routerLink="/store/custom-requests">Quay lại</a>
+              <button type="submit" sfButton [disabled]="isSubmitting || draftForm.dirty">
+                @if (isSubmitting) { <span class="spinner-border spinner-border-sm"></span> }
+                Gửi yêu cầu tạo đơn
+              </button>
+            </div>
+            @if (draftForm.dirty) {
+              <div class="cr-error mt-2">Bạn có thay đổi chưa lưu – hãy lưu bản nháp trước khi gửi.</div>
+            }
+          </form>
+        }
+      </div>
+    }
+  </div>
+</div>
+

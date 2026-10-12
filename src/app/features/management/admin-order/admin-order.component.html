@@ -1,147 +1,164 @@
 <div class="container-fluid p-4 admin-order-page">
   <app-page-header
     icon="bi-clipboard-check"
-    title="Quản lý luồng đơn hàng"
-    subtitle="Duyệt đơn, gán staff và kiểm tra KCS">
+    title="Duyệt và phân công đơn"
+    subtitle="Xử lý hàng đợi P7 theo đúng phiên bản và trạng thái của đơn hàng">
     <button pageActions class="btn btn-outline-primary rounded-pill px-4 shadow-sm"
-            (click)="loadPendingOrders()"
-            [disabled]="isLoading || !activeStatus">
-      <i class="bi bi-arrow-clockwise me-2"></i> Làm mới
+            (click)="loadCurrentTab()"
+            [disabled]="isLoading">
+      <i class="bi bi-arrow-clockwise me-2"></i>Làm mới
     </button>
   </app-page-header>
 
-  <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-    <div class="card-body p-0">
-      <div class="admin-order-status-grid border-bottom">
-        <button type="button"
-                class="admin-order-status-panel status-kcs"
-                [class.active]="activeStatus === 'PENDING_KCS'"
-                (click)="selectStatus('PENDING_KCS')"
-                [disabled]="isLoading">
-          <span class="status-icon text-bg-info">
-            <i class="bi bi-shield-check"></i>
-          </span>
-          <span class="min-w-0">
-            <span class="status-title">Đơn chờ KCS</span>
-            <span class="status-subtitle">Kiểm tra chất lượng sau khi staff xuất kho</span>
-          </span>
-          <span class="admin-order-status-meta">
-            <i class="bi bi-filter-circle"></i>KCS
-          </span>
-        </button>
+  <div class="manager-tabs mb-4">
+    <button type="button"
+            class="manager-tab"
+            [class.active]="activeTab === 'reviews'"
+            (click)="selectTab('reviews')">
+      <span class="tab-icon review"><i class="bi bi-clipboard2-check"></i></span>
+      <span>
+        <strong>Chờ duyệt</strong>
+        <small>Đơn mới ở PENDING_APPROVAL</small>
+      </span>
+    </button>
+    <button type="button"
+            class="manager-tab"
+            [class.active]="activeTab === 'assignments'"
+            (click)="selectTab('assignments')">
+      <span class="tab-icon assignment"><i class="bi bi-person-plus"></i></span>
+      <span>
+        <strong>Chờ phân công</strong>
+        <small>Đơn đã duyệt ở PENDING_ASSIGNMENT</small>
+      </span>
+    </button>
+  </div>
 
-        <button type="button"
-                class="admin-order-status-panel status-approval"
-                [class.active]="activeStatus === 'PENDING_APPROVAL'"
-                (click)="selectStatus('PENDING_APPROVAL')"
-                [disabled]="isLoading">
-          <span class="status-icon text-bg-warning">
-            <i class="bi bi-hourglass-split"></i>
-          </span>
-          <span class="min-w-0">
-            <span class="status-title">Đơn chờ duyệt</span>
-            <span class="status-subtitle">Duyệt hoặc từ chối đơn hàng mới</span>
-          </span>
-          <span class="admin-order-status-meta">
-            <i class="bi bi-filter-circle"></i>Duyệt
-          </span>
-        </button>
-      </div>
+  <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
+    <app-view-state
+      [loading]="isLoading"
+      [empty]="activeTab === 'reviews' ? reviews.length === 0 : assignmentQueue.length === 0"
+      [card]="false"
+      loadingText="Đang tải hàng đợi đơn hàng..."
+      [emptyTitle]="activeTab === 'reviews' ? 'Không có đơn chờ duyệt' : 'Không có đơn chờ phân công'"
+      emptyText="Hiện không có đơn hàng nào cần xử lý trong nhóm này."
+      emptyIcon="bi-clipboard-check">
 
-      <app-view-state
-        [loading]="isLoading"
-        [empty]="!activeStatus"
-        [card]="false"
-        loadingText="Đang tải danh sách đơn hàng..."
-        emptyTitle="Chọn nhóm đơn hàng"
-        emptyText="Chọn một nhóm đơn hàng ở trên để tải danh sách."
-        emptyIcon="bi-layout-split">
-      <app-view-state
-        [empty]="pendingOrders.length === 0"
-        [card]="false"
-        [emptyTitle]="'Không có ' + getActivePanelTitle().toLowerCase()"
-        emptyText="Hiện không có đơn hàng nào cần xử lý.">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light text-uppercase small">
-            <tr>
-              <th class="ps-4">Mã đơn</th>
-              <th>Khách hàng</th>
-              <th>Trạng thái</th>
-              <th>Thanh toán</th>
-              <th>Tổng tiền</th>
-              <th>Staff</th>
-              <th class="text-center pe-4">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let order of pendingOrders" class="order-clickable-row" (click)="openOrderDetail(order)">
-              <td class="ps-4 fw-bold">#{{ order.id }}</td>
-              <td>{{ order.customerName || 'Khách vãng lai' }}</td>
-              <td>
-                <app-order-status-badge [status]="order.status" [compact]="true"></app-order-status-badge>
-              </td>
-              <td class="text-uppercase">
-                <span class="badge rounded-pill px-3 py-2"
-                      [ngClass]="order.paymentMethod === 'ONLINE' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25'">
-                  <i class="bi" [ngClass]="order.paymentMethod === 'ONLINE' ? 'bi-credit-card' : 'bi-cash-coin'"></i>
-                  {{ order.paymentMethod || 'COD' }}
-                </span>
-              </td>
-              <td class="fw-bold text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</td>
-              <td class="admin-order-customer-column">
-                @if (order.status === 'PENDING_APPROVAL') {
-                  <select class="form-select form-select-sm"
-                          [(ngModel)]="selectedStaffByOrder[order.id]"
-                          (click)="$event.stopPropagation()">
-                    <option [ngValue]="null">Chưa chọn staff</option>
-                    <option *ngFor="let staff of staffs" [ngValue]="staff.id">
-                      {{ staff.lastname }} {{ staff.firstname }}
-                    </option>
-                  </select>
-                } @else {
-                  {{ order.staffName || 'Chưa có staff' }}
-                }
-              </td>
-              <td class="text-center pe-4">
-                <ng-container *ngIf="order.status === 'PENDING_APPROVAL'">
-                  <button class="btn btn-sm btn-primary rounded-3 px-3 me-2 shadow-sm"
-                          (click)="$event.stopPropagation(); approveOrder(order)"
-                          [disabled]="isLoading">
-                    <i class="bi bi-check-circle me-1"></i> Duyệt
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger rounded-3 px-3 shadow-sm"
-                          (click)="$event.stopPropagation(); rejectOrder(order)"
-                          [disabled]="isLoading">
-                    <i class="bi bi-x-circle me-1"></i> Từ chối
-                  </button>
-                </ng-container>
-
-                <ng-container *ngIf="order.status === 'PENDING_WAREHOUSE'">
-                  <button class="btn btn-sm btn-outline-primary rounded-3 px-3 shadow-sm"
-                          (click)="$event.stopPropagation(); assignStaff(order)"
-                          [disabled]="isLoading || !selectedStaffByOrder[order.id]">
-                    <i class="bi bi-person-plus me-1"></i> Gán staff
-                  </button>
-                </ng-container>
-
-                <ng-container *ngIf="order.status === 'PENDING_KCS'">
-                  <button class="btn btn-sm btn-success rounded-3 px-3 me-2 shadow-sm"
-                          (click)="$event.stopPropagation(); kcsCheck(order, true)"
-                          [disabled]="isLoading">
-                    <i class="bi bi-check2-circle me-1"></i> KCS đạt
-                  </button>
-                  <button class="btn btn-sm btn-outline-warning rounded-3 px-3 shadow-sm"
-                          (click)="$event.stopPropagation(); kcsCheck(order, false)"
-                          [disabled]="isLoading">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i> Trả về kho
-                  </button>
-                </ng-container>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      @if (activeTab === 'reviews') {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Đơn hàng</th>
+                <th>Khách hàng</th>
+                <th>Sản phẩm</th>
+                <th>Thanh toán</th>
+                <th>Tổng tiền</th>
+                <th>Staff (tùy chọn)</th>
+                <th class="text-end pe-4">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of reviews; track order.orderId) {
+                <tr>
+                  <td class="ps-4">
+                    <button type="button" class="order-link" (click)="openReviewDetail(order)">#{{ order.orderId }}</button>
+                    <div class="small text-muted">{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+                    <app-order-status-badge [status]="order.status" [compact]="true"></app-order-status-badge>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ order.customerName || 'Khách hàng' }}</div>
+                    <span class="customer-kind">{{ order.guest ? 'Khách vãng lai' : 'Tài khoản' }}</span>
+                  </td>
+                  <td>
+                    <span class="order-type" [class.custom]="order.orderType === 'CUSTOM'">{{ order.orderType }}</span>
+                    <div class="small text-muted mt-1">{{ order.totalQuantity }} sản phẩm</div>
+                  </td>
+                  <td>{{ order.paymentMethod || 'Chưa xác định' }}</td>
+                  <td class="fw-bold text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</td>
+                  <td>
+                    <select class="form-select form-select-sm staff-select"
+                            [(ngModel)]="selectedStaffByOrder[order.orderId]"
+                            [disabled]="processingOrderId === order.orderId">
+                      <option [ngValue]="null">Duyệt trước, gán sau</option>
+                      @for (staff of availableStaff; track staff.staffId) {
+                        <option [ngValue]="staff.staffId">{{ staff.displayName }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td class="text-end pe-4 action-cell">
+                    <button class="btn btn-sm btn-outline-secondary" (click)="openReviewDetail(order)" title="Xem chi tiết">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger"
+                            (click)="rejectOrder(order)"
+                            [disabled]="processingOrderId === order.orderId">
+                      Từ chối
+                    </button>
+                    <button class="btn btn-sm btn-primary"
+                            (click)="approveOrder(order)"
+                            [disabled]="processingOrderId === order.orderId">
+                      <span *ngIf="processingOrderId !== order.orderId">Duyệt</span>
+                      <span *ngIf="processingOrderId === order.orderId" class="spinner-border spinner-border-sm"></span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-4">Đơn hàng</th>
+                <th>Khách hàng</th>
+                <th>Loại đơn</th>
+                <th>Thanh toán</th>
+                <th>Tổng tiền</th>
+                <th>Staff</th>
+                <th class="text-end pe-4">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of assignmentQueue; track order.orderId) {
+                <tr>
+                  <td class="ps-4">
+                    <button type="button" class="order-link" (click)="openAssignmentDetail(order)">#{{ order.orderId }}</button>
+                    <div class="small text-muted">{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+                    <app-order-status-badge [status]="order.status" [compact]="true"></app-order-status-badge>
+                  </td>
+                  <td class="fw-semibold">{{ order.customerName || 'Khách hàng' }}</td>
+                  <td><span class="order-type" [class.custom]="order.orderType === 'CUSTOM'">{{ order.orderType }}</span></td>
+                  <td>{{ order.paymentMethod || 'Chưa xác định' }}</td>
+                  <td class="fw-bold text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</td>
+                  <td>
+                    <select class="form-select form-select-sm staff-select"
+                            [(ngModel)]="selectedStaffByOrder[order.orderId]"
+                            [disabled]="processingOrderId === order.orderId">
+                      <option [ngValue]="null">Chọn staff</option>
+                      @for (staff of availableStaff; track staff.staffId) {
+                        <option [ngValue]="staff.staffId">{{ staff.displayName }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td class="text-end pe-4 action-cell">
+                    <button class="btn btn-sm btn-outline-secondary" (click)="openAssignmentDetail(order)" title="Xem chi tiết">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-primary"
+                            (click)="assignStaff(order)"
+                            [disabled]="processingOrderId === order.orderId || !selectedStaffByOrder[order.orderId]">
+                      <span *ngIf="processingOrderId !== order.orderId">Phân công</span>
+                      <span *ngIf="processingOrderId === order.orderId" class="spinner-border spinner-border-sm"></span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
 
       <div class="p-4 border-top">
         <app-pagination
@@ -155,15 +172,74 @@
           (pageSizeChange)="changePageSize($event)">
         </app-pagination>
       </div>
-      </app-view-state>
-      </app-view-state>
-    </div>
+    </app-view-state>
   </div>
 </div>
 
-<app-order-detail-popup
-  [order]="selectedOrderDetail"
-  [isLoading]="isDetailLoading"
-  [error]="detailError"
-  (close)="closeOrderDetail()">
-</app-order-detail-popup>
+@if (detailLoading || selectedDetail || detailError) {
+  <div class="detail-backdrop" (click)="closeDetail()">
+    <section class="detail-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="detail-header">
+        <div>
+          <div class="detail-eyebrow">Chi tiết duyệt đơn</div>
+          <h3>Đơn hàng {{ selectedDetail ? '#' + selectedDetail.order.id : '' }}</h3>
+        </div>
+        <button type="button" class="btn-close btn-close-white" aria-label="Đóng" (click)="closeDetail()"></button>
+      </header>
+
+      <div class="detail-body">
+        @if (detailLoading) {
+          <div class="detail-state"><span class="spinner-border text-primary"></span><span>Đang tải chi tiết...</span></div>
+        } @else if (detailError) {
+          <div class="alert alert-danger mb-0">{{ detailError }}</div>
+        } @else if (selectedDetail; as detail) {
+          <div class="detail-summary">
+            <div><span>Trạng thái</span><app-order-status-badge [status]="detail.order.status"></app-order-status-badge></div>
+            <div><span>Phiên bản</span><strong>{{ detail.order.version ?? '—' }}</strong></div>
+            <div><span>Loại đơn</span><strong>{{ detail.order.orderType || '—' }}</strong></div>
+            <div><span>Thanh toán</span><strong>{{ detail.order.paymentMethod || detail.order.paymentMethodType || '—' }}</strong></div>
+            <div><span>Khách hàng</span><strong>{{ detail.order.customerName || detail.order.recipientName || 'Khách hàng' }}</strong></div>
+            <div><span>Số điện thoại</span><strong>{{ detail.order.recipientPhone || detail.order.customer?.phone || '—' }}</strong></div>
+            <div><span>Tổng tiền</span><strong class="text-danger">{{ detail.order.finalPrice | number: '1.0-0' }} đ</strong></div>
+            <div><span>Hạn xác nhận</span><strong>{{ detail.confirmationDueAt ? (detail.confirmationDueAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</strong></div>
+          </div>
+
+          <div class="detail-note"><span>Ghi chú</span><p>{{ detail.order.note || 'Không có ghi chú.' }}</p></div>
+
+          <h5 class="items-heading">Sản phẩm ({{ getOrderItems(detail.order).length }})</h5>
+          <div class="detail-items">
+            @for (item of getOrderItems(detail.order); track item.id || item.orderItemId || $index) {
+              <article class="detail-item">
+                @if (item.imageUrl || item.image_url || item.imageUrls?.[0]) {
+                  <img [src]="item.imageUrl || item.image_url || item.imageUrls?.[0]" [alt]="item.productName" />
+                }
+                <div class="item-content">
+                  <div class="item-title-row">
+                    <strong>{{ item.productName || 'Sản phẩm tùy chỉnh' }}</strong>
+                    <span class="order-type" [class.custom]="item.sourceType === 'CUSTOM'">{{ item.sourceType || 'CATALOG' }}</span>
+                  </div>
+                  <div class="small text-muted">{{ item.variantName || item.attributes || 'Không có phân loại' }}</div>
+                  @if (item.description) { <p class="item-description">{{ item.description }}</p> }
+                  <div class="item-meta">
+                    <span>Số lượng: <strong>{{ item.quantity }}</strong></span>
+                    <span>Đơn giá: <strong>{{ item.price | number: '1.0-0' }} đ</strong></span>
+                    @if (item.productionDurationDays != null) {
+                      <span>Thời gian làm: <strong>{{ item.productionDurationDays }} ngày</strong></span>
+                    }
+                  </div>
+                  @if ((item.imageUrls?.length || 0) > 1) {
+                    <div class="item-images">
+                      @for (image of item.imageUrls; track image) { <img [src]="image" alt="Ảnh yêu cầu" /> }
+                    </div>
+                  }
+                </div>
+              </article>
+            } @empty {
+              <div class="text-muted">Đơn hàng chưa có dữ liệu sản phẩm.</div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+}

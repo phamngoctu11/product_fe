@@ -1,10 +1,10 @@
 <div class="container-fluid py-3 staff-orders-page">
   <app-page-header
-    icon="bi-box-seam"
-    title="Kho hàng"
-    subtitle="Nhận đơn, xem chi tiết variant và cập nhật số lượng xuất kho">
+    icon="bi-tools"
+    title="Đơn sản xuất"
+    subtitle="Nhận đơn P7 và theo dõi các đơn đang phụ trách">
     <button pageActions class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm" (click)="loadData()" [disabled]="isLoading">
-      <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+      <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
     </button>
   </app-page-header>
 
@@ -12,37 +12,50 @@
     <button class="btn rounded-pill px-4 fw-bold"
             [ngClass]="activeTab === 'pending' ? 'btn-primary shadow-sm' : 'btn-outline-primary'"
             (click)="activeTab = 'pending'">
-      <i class="bi bi-inboxes me-1"></i> Chờ nhận ({{ warehousePendingOrders.length }})
+      <i class="bi bi-inboxes me-1"></i>Chờ nhận ({{ pendingTotalElements }})
     </button>
     <button class="btn rounded-pill px-4 fw-bold"
             [ngClass]="activeTab === 'mine' ? 'btn-primary shadow-sm' : 'btn-outline-primary'"
             (click)="activeTab = 'mine'">
-      <i class="bi bi-person-check me-1"></i> Đơn của tôi ({{ myOrders.length }})
+      <i class="bi bi-person-check me-1"></i>Đơn của tôi ({{ mineTotalElements }})
     </button>
   </div>
 
-  <app-view-state [loading]="isLoading" loadingText="Đang tải dữ liệu kho...">
+  <app-view-state [loading]="isLoading" loadingText="Đang tải dữ liệu đơn hàng...">
     @if (activeTab === 'pending') {
       <app-view-state
-        [empty]="warehousePendingOrders.length === 0"
+        [empty]="claimableOrders.length === 0"
         emptyTitle="Không có đơn chờ nhận"
-        emptyText="Hiện không có đơn nào đang chờ nhận kho.">
-        @for (order of warehousePendingOrders; track order.id) {
-          <app-order-summary-card
-            [order]="order"
-            [clickable]="false"
-            [showActions]="true"
-            [showStaff]="false">
-            <div orderActions>
-              <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderDetail(order)">
-                <i class="bi bi-eye me-1"></i> Xem
-              </button>
-              <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="claimOrder(order)">
-                <i class="bi bi-hand-index-thumb me-1"></i> Nhận đơn
-              </button>
-            </div>
-          </app-order-summary-card>
-        }
+        emptyText="Hiện không có đơn PENDING_ASSIGNMENT nào có thể nhận."
+        emptyIcon="bi-inboxes">
+        <div class="claim-grid">
+          @for (order of claimableOrders; track order.orderId) {
+            <article class="claim-card">
+              <div class="claim-card__header">
+                <div>
+                  <span class="claim-card__eyebrow">Đơn hàng</span>
+                  <strong>#{{ order.orderId }}</strong>
+                </div>
+                <app-order-status-badge [status]="order.status" [compact]="true"></app-order-status-badge>
+              </div>
+              <div class="claim-card__body">
+                <div><span>Khách hàng</span><strong>{{ order.customerName || 'Khách hàng' }}</strong></div>
+                <div><span>Loại đơn</span><strong>{{ order.orderType }}</strong></div>
+                <div><span>Thanh toán</span><strong>{{ order.paymentMethod || 'Chưa xác định' }}</strong></div>
+                <div><span>Tổng tiền</span><strong class="text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</strong></div>
+                <div class="claim-card__date"><span>Ngày tạo</span><strong>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong></div>
+              </div>
+              <div class="claim-card__actions">
+                <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="openClaimableOrderDetail(order)">
+                  <i class="bi bi-eye me-1"></i>Xem
+                </button>
+                <button class="btn btn-primary rounded-pill px-4 fw-bold" (click)="claimOrder(order)">
+                  <i class="bi bi-hand-index-thumb me-1"></i>Nhận đơn
+                </button>
+              </div>
+            </article>
+          }
+        </div>
         <app-pagination
           [currentPage]="pendingPage"
           [totalPages]="pendingTotalPages"
@@ -58,7 +71,7 @@
       <app-view-state
         [empty]="myOrders.length === 0"
         emptyTitle="Chưa có đơn phụ trách"
-        emptyText="Bạn chưa phụ trách đơn hàng nào."
+        emptyText="Bạn chưa nhận hoặc được phân công đơn hàng nào."
         emptyIcon="bi-clipboard-check">
         @for (order of myOrders; track order.id) {
           <app-order-summary-card
@@ -68,7 +81,7 @@
             [showStaff]="false">
             <div orderActions>
               <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderDetail(order)">
-                <i class="bi bi-pencil-square me-1"></i> Xem / cập nhật
+                <i class="bi bi-eye me-1"></i>Xem chi tiết
               </button>
             </div>
           </app-order-summary-card>
@@ -93,62 +106,63 @@
     <div class="bg-primary text-white p-4 d-flex justify-content-between align-items-center">
       <div>
         <h4 class="fw-bold mb-1">Chi tiết đơn hàng {{ selectedOrder ? '#' + selectedOrder.id : '' }}</h4>
-        <div class="small opacity-75">Xem variant và cập nhật số lượng xuất kho</div>
+        <div class="small opacity-75">Thông tin sản phẩm và tiến độ đơn đang phụ trách</div>
       </div>
-      <button class="btn btn-sm btn-light rounded-circle" (click)="closeOrderDetail()">
+      <button class="btn btn-sm btn-light rounded-circle" (click)="closeOrderDetail()" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
     <div class="staff-detail-body p-4 overflow-auto">
       <app-view-state [loading]="detailLoading" [card]="false" loadingText="Đang tải chi tiết đơn hàng...">
-      <ng-container *ngIf="selectedOrder">
-        <div class="row g-3 mb-4">
-          <div class="col-md-3">
-            <div class="text-muted small">Khách hàng</div>
-            <div class="fw-bold">{{ selectedOrder.customerName || selectedOrder.lastname || 'Khách hàng' }}</div>
+        <ng-container *ngIf="selectedOrder">
+          <div class="row g-3 mb-4">
+            <div class="col-md-3">
+              <div class="text-muted small">Khách hàng</div>
+              <div class="fw-bold">{{ selectedOrder.customerName || selectedOrder.lastname || 'Khách hàng' }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Trạng thái</div>
+              <app-order-status-badge [status]="selectedOrder.status" [compact]="true"></app-order-status-badge>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Loại đơn</div>
+              <div class="fw-bold">{{ selectedOrder.orderType || 'CATALOG' }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Tổng tiền</div>
+              <div class="fw-bold text-danger">{{ selectedOrder.finalPrice | number: '1.0-0' }} đ</div>
+            </div>
+            <div class="col-12">
+              <div class="text-muted small">Ghi chú</div>
+              <div class="fw-medium">{{ selectedOrder.note || 'Không có ghi chú' }}</div>
+            </div>
           </div>
-          <div class="col-md-3">
-            <div class="text-muted small">Trạng thái</div>
-            <app-order-status-badge [status]="selectedOrder.status" [compact]="true"></app-order-status-badge>
-          </div>
-          <div class="col-md-3">
-            <div class="text-muted small">Thanh toán</div>
-            <div class="fw-bold">{{ selectedOrder.paymentMethod || 'COD' }}</div>
-          </div>
-          <div class="col-md-3">
-            <div class="text-muted small">Tổng tiền</div>
-            <div class="fw-bold text-danger">{{ selectedOrder.finalPrice | number: '1.0-0' }} đ</div>
-          </div>
-          <div class="col-12">
-            <div class="text-muted small">Ghi chú</div>
-            <div class="fw-medium">{{ selectedOrder.note || 'Không có ghi chú' }}</div>
-          </div>
-        </div>
 
-        <app-order-items-table
-          [items]="selectedOrder.items || []"
-          mode="warehouse"
-          [editable]="selectedOrder.status === 'WAREHOUSE_ASSIGNED'"
-          [quantities]="exportQuantities[selectedOrder.id] || {}"
-          (quantityChange)="updateExportQuantity(selectedOrder.id, $event)">
-        </app-order-items-table>
+          <app-order-items-table
+            [items]="selectedOrder.items || selectedOrder.orderItems || selectedOrder.details || []"
+            mode="warehouse"
+            [editable]="selectedOrder.status === 'WAREHOUSE_ASSIGNED'"
+            [quantities]="exportQuantities[selectedOrder.id] || {}"
+            (quantityChange)="updateExportQuantity(selectedOrder.id, $event)">
+          </app-order-items-table>
 
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
-          <div class="text-muted small">
-            Chỉ đơn ở trạng thái <strong>Đã nhận kho</strong> mới được cập nhật và xác nhận xuất kho.
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+            <div class="text-muted small">
+              P7 chỉ thực hiện nhận/phân công. Chức năng xuất kho cũ vẫn được giữ cho đơn legacy ở trạng thái WAREHOUSE_ASSIGNED.
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="closeOrderDetail()">Đóng</button>
+              <button *ngIf="canExport(selectedOrder)"
+                      class="btn btn-primary rounded-pill px-4 fw-bold"
+                      (click)="exportSelectedOrder()"
+                      [disabled]="exportingOrderId === selectedOrder.id">
+                <span *ngIf="exportingOrderId !== selectedOrder.id"><i class="bi bi-send-check me-1"></i>Xác nhận xuất kho</span>
+                <span *ngIf="exportingOrderId === selectedOrder.id">Đang xử lý...</span>
+              </button>
+            </div>
           </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="closeOrderDetail()">Đóng</button>
-            <button class="btn btn-primary rounded-pill px-4 fw-bold"
-                    (click)="exportSelectedOrder()"
-                    [disabled]="!canExport(selectedOrder) || exportingOrderId === selectedOrder.id">
-              <span *ngIf="exportingOrderId !== selectedOrder.id"><i class="bi bi-send-check me-1"></i> Xác nhận xuất kho</span>
-              <span *ngIf="exportingOrderId === selectedOrder.id">Đang xử lý...</span>
-            </button>
-          </div>
-        </div>
-      </ng-container>
+        </ng-container>
       </app-view-state>
     </div>
   </div>

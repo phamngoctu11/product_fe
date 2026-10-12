@@ -17,7 +17,7 @@
       <span>Phân loại #{{ index + 1 }}</span>
       <strong>{{ group.get('variantName')?.value || 'Chưa đặt tên' }}</strong>
       @if (staffMode) {
-        <small>{{ existing ? 'Chỉ nhập kho' : 'Phân loại mới' }}</small>
+        <small>{{ existing ? 'Phân loại hiện có' : 'Phân loại mới' }}</small>
       }
     </div>
 
@@ -57,19 +57,12 @@
           <div class="field-error">Giá phân loại phải lớn hơn hoặc bằng 0.</div>
         }
       </div>
-      <div class="field-block">
-        <label>Tồn kho</label>
-        <input type="number" class="form-control form-control-custom" formControlName="quantity">
-        @if (isInvalid('quantity')) {
-          <div class="field-error">Số lượng phải lớn hơn hoặc bằng 0.</div>
-        }
-      </div>
     </div>
   } @else {
     <div class="variant-summary-grid">
       <div><span>Tên hiển thị</span><strong>{{ group.get('variantName')?.value || 'Chưa đặt tên' }}</strong></div>
       <div><span>Giá bán</span><strong>{{ group.get('price')?.value | number: '1.0-0' }} đ</strong></div>
-      <div><span>Tồn kho</span><strong>{{ group.get('quantity')?.value | number }}</strong></div>
+      <div><span>Hình thức</span><strong>Làm theo yêu cầu</strong></div>
     </div>
   }
 
@@ -89,34 +82,6 @@
       @for (attribute of attributes; track attribute.label) {
         <span>{{ attribute.label }}: <strong>{{ attribute.value }}</strong></span>
       }
-    </div>
-  }
-
-  @if (staffMode && existing) {
-    <div class="staff-restock-panel">
-      <label>Nhập thêm tồn kho</label>
-      <div class="d-flex flex-wrap align-items-center gap-2">
-        <input
-          type="number"
-          class="form-control form-control-custom"
-          min="1"
-          [ngModel]="restockQuantity"
-          [ngModelOptions]="{ standalone: true }"
-          placeholder="Số lượng"
-          (ngModelChange)="restockQuantityChange.emit(+$event)">
-        <button
-          type="button"
-          class="btn btn-success rounded-pill px-4 fw-bold"
-          [disabled]="restocking || restockQuantity <= 0"
-          (click)="restock.emit()">
-          @if (restocking) {
-            <span class="spinner-border spinner-border-sm me-2"></span>
-          } @else {
-            <i class="bi bi-plus-circle me-1"></i>
-          }
-          Nhập kho
-        </button>
-      </div>
     </div>
   }
 </article>

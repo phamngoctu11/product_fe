@@ -20,11 +20,24 @@ import {
   ViewStateComponent,
 } from '../../shared/ui';
 import { APP_DIALOG_SIZE } from '../../../config/dialog.config';
+import { HeroSectionComponent } from '../home/hero-section/hero-section.component';
+import { SfPageIntroComponent } from '../ui/page-intro/sf-page-intro.component';
+import { SfChipGroupComponent, SfChipItem } from '../ui/chip-group/sf-chip-group.component';
+import { SfProductGridComponent } from '../ui/product-grid/sf-product-grid.component';
+import { SfProductTileComponent } from '../ui/product-tile/sf-product-tile.component';
+import { SfStateComponent } from '../ui/state/sf-state.component';
+
 
 @Component({
   selector: 'app-product',
   standalone: true,
   imports: [
+    HeroSectionComponent,
+    SfPageIntroComponent,
+    SfChipGroupComponent,
+    SfProductGridComponent,
+    SfProductTileComponent,
+    SfStateComponent,
     FormsModule,
     CommonModule,
     ReactiveFormsModule,
@@ -38,6 +51,20 @@ import { APP_DIALOG_SIZE } from '../../../config/dialog.config';
   styleUrl: './product.css',
 })
 export class ProductComponent implements OnInit, OnDestroy {
+  categories: SfChipItem[] = [
+    { value: 'all', label: 'TẤT CẢ' },
+    { value: 'tuong-dat-set', label: 'TƯỢNG ĐẤT SÉT' },
+    { value: 'qua-tang', label: 'QUÀ TẶNG' },
+    { value: 'moc-khoa', label: 'MÓC KHÓA' },
+    { value: 'gom-su', label: 'GỐM SỨ' }
+  ];
+  selectedCategory: string | null = 'all';
+
+  onCategorySelect(category: string | null) {
+    this.selectedCategory = category;
+    this.getAll(0, this.pageSize);
+  }
+
   private readonly actionDialog = inject(ActionDialogService);
   private readonly toast = inject(ToastService);
   plist: Product[] = [];

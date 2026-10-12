@@ -1,6 +1,7 @@
 @import './app/features/shared/static-pages/static-info-pages.css';
 @import './app/app.css';
 @import './app/app-shell.css';
+@import './app/features/storefront/theme/storefront-theme.css';
 
 /* ============================================================
    GLOBAL RESET & FONT

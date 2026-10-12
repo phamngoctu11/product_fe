@@ -3,7 +3,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { ToastService } from '../../../service/toast.service';
 import { FormsModule } from '@angular/forms';
-import { Order, OrderItem, OrderListDTO } from '../../../model/order.model';
+import { Order, OrderAssignmentQueueItem, OrderItem, OrderListDTO } from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderService } from '../../../service/order.service';
 import {
@@ -35,7 +35,7 @@ import type { OrderItemQuantityChange } from '../../shared/ui';
 export class StaffOrdersComponent implements OnInit {
   private readonly actionDialog = inject(ActionDialogService);
   private readonly toast = inject(ToastService);
-  warehousePendingOrders: OrderListDTO[] = [];
+  claimableOrders: OrderAssignmentQueueItem[] = [];
   myOrders: OrderListDTO[] = [];
   activeTab: 'pending' | 'mine' = 'pending';
 
@@ -64,9 +64,9 @@ export class StaffOrdersComponent implements OnInit {
     this.isLoading = true;
     this.pendingPage = 0;
     this.minePage = 0;
-    this.orderService.getWarehousePendingOrders(this.pendingPage, this.pageSize).subscribe({
+    this.orderService.getClaimableOrders(this.pendingPage, this.pageSize).subscribe({
       next: (page) => {
-        this.warehousePendingOrders = page.content || [];
+        this.claimableOrders = page.content || [];
         this.pendingPage = page.number || 0;
         this.pageSize = page.size || this.pageSize;
         this.pendingTotalPages = page.totalPages || 0;
@@ -102,9 +102,9 @@ export class StaffOrdersComponent implements OnInit {
 
     this.isLoading = true;
     this.pendingPage = page;
-    this.orderService.getWarehousePendingOrders(this.pendingPage, this.pageSize).subscribe({
+    this.orderService.getClaimableOrders(this.pendingPage, this.pageSize).subscribe({
       next: (res) => {
-        this.warehousePendingOrders = res.content || [];
+        this.claimableOrders = res.content || [];
         this.pendingPage = res.number ?? page;
         this.pendingTotalPages = res.totalPages || 0;
         this.pendingTotalElements = res.totalElements || 0;
@@ -142,24 +142,24 @@ export class StaffOrdersComponent implements OnInit {
     this.loadData();
   }
 
-  claimOrder(order: OrderListDTO): void {
+  claimOrder(order: OrderAssignmentQueueItem): void {
     this.actionDialog.confirm({
       title: 'Nhận xử lý đơn hàng',
-      message: `Bạn muốn nhận phụ trách đơn hàng #${order.id}?`,
+      message: `Bạn muốn nhận phụ trách đơn hàng #${order.orderId}?`,
       confirmText: 'Nhận đơn',
       icon: 'bi-box-arrow-in-down',
     }).subscribe((confirmed) => {
       if (!confirmed) return;
       this.isLoading = true;
-      this.orderService.claimWarehouseOrder(order.id).subscribe({
-        next: (message) => {
-          this.toast.notify(message);
+      this.orderService.claimOrder(order.orderId, order.orderVersion).subscribe({
+        next: (result) => {
+          this.toast.notify(`Đã nhận đơn #${order.orderId} – trạng thái ${result.orderStatus}.`);
           this.activeTab = 'mine';
           this.loadData();
         },
         error: (err) => {
           if (this.isClaimConflict(err)) {
-            this.removePendingOrder(order.id);
+            this.removePendingOrder(order.orderId);
             this.loadData();
             return;
           }
@@ -263,6 +263,22 @@ export class StaffOrdersComponent implements OnInit {
     return !!order && order.status === 'WAREHOUSE_ASSIGNED' && (order.items?.length || 0) > 0;
   }
 
+  openClaimableOrderDetail(order: OrderAssignmentQueueItem): void {
+    this.selectedOrder = null;
+    this.detailLoading = true;
+    this.orderService.getById(order.orderId).subscribe({
+      next: (detail) => {
+        this.selectedOrder = detail;
+        this.initExportQuantitiesForOrder(detail);
+        this.detailLoading = false;
+      },
+      error: (err) => {
+        this.toast.notify('Không thể tải chi tiết đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.detailLoading = false;
+      },
+    });
+  }
+
   private isClaimConflict(err: any): boolean {
     const payload = typeof err?.error === 'string'
       ? err.error
@@ -273,7 +289,7 @@ export class StaffOrdersComponent implements OnInit {
   }
 
   private removePendingOrder(orderId: number): void {
-    this.warehousePendingOrders = this.warehousePendingOrders.filter((item) => item.id !== orderId);
+    this.claimableOrders = this.claimableOrders.filter((item) => item.orderId !== orderId);
     this.pendingTotalElements = Math.max(0, this.pendingTotalElements - 1);
   }
 

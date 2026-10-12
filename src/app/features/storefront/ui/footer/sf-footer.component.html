@@ -1,0 +1,41 @@
+<footer class="sf-footer">
+  <div class="sf-container">
+    <div class="sf-footer__top">
+      <div class="sf-footer__brand">
+        <h3 class="sf-display sf-display--sm sf-footer__logo">{{ brand.name }}</h3>
+        <p class="sf-footer__slogan">{{ footer.description }}</p>
+      </div>
+      
+      <div class="sf-footer__links">
+        @for (group of footer.links; track group.title) {
+          <div class="sf-footer__group">
+            <h4 class="sf-footer__title sf-eyebrow">{{ group.title }}</h4>
+            <ul class="sf-footer__list">
+              @for (link of group.items; track link.label) {
+                <li>
+                  <a [routerLink]="link.path" class="sf-link sf-footer__link">{{ link.label }}</a>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    </div>
+    
+    <div class="sf-footer__bottom">
+      <div class="sf-footer__social">
+        @for (social of footer.socials; track social.name) {
+          <a [href]="social.url" target="_blank" rel="noopener noreferrer" class="sf-link">{{ social.name }}</a>
+        }
+      </div>
+      <div class="sf-footer__copyright">
+        © {{ footer.copyrightYear }} {{ brand.name }}.
+      </div>
+    </div>
+  </div>
+
+  <div class="sf-footer__wordmark">
+    <sf-wordmark size="xl" class="sf-footer__wordmark-svg"></sf-wordmark>
+  </div>
+</footer>
+

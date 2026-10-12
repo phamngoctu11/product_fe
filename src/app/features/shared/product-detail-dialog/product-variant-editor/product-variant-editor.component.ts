@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-product-variant-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './product-variant-editor.component.html',
   styleUrl: './product-variant-editor.component.css',
 })
@@ -18,15 +18,11 @@ export class ProductVariantEditorComponent {
   @Input() editable = false;
   @Input() removable = false;
   @Input() uploading = false;
-  @Input() restocking = false;
-  @Input() restockQuantity = 0;
   @Input() showReviews = false;
   @Input() dynamicFields: readonly string[] = [];
   @Input() fieldLabels: Readonly<Record<string, string>> = {};
   @Output() imageSelected = new EventEmitter<Event>();
   @Output() remove = new EventEmitter<void>();
-  @Output() restock = new EventEmitter<void>();
-  @Output() restockQuantityChange = new EventEmitter<number>();
   @Output() viewReviews = new EventEmitter<void>();
 
   isInvalid(controlName: string): boolean {

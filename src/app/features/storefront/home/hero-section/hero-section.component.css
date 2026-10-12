@@ -1,0 +1,242 @@
+/* ============================================================
+   HERO SECTION — Imperfecto Style
+   Full-viewport editorial block theo phong cách Handmade Art Shop
+   ============================================================ */
+
+.hero-section {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: var(--sf-bg);
+}
+
+/* ---- Background texture (grain effect) ---- */
+.hero-bg-texture {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(213, 192, 180, 0.25) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(200, 215, 230, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ---- Floating product images ---- */
+.hero-float-images {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-img-wrap {
+  position: absolute;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(74, 60, 49, 0.1), 0 4px 16px rgba(74, 60, 49, 0.08);
+}
+
+.hero-img-inner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f0e8e0 0%, #e8d8cc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover; /* Added for actual images */
+}
+
+.hero-img-placeholder {
+  font-size: 2.5rem;
+  color: rgba(74, 60, 49, 0.25);
+}
+
+/* Vị trí các ảnh trôi nổi */
+.hero-img-1 {
+  width: clamp(140px, 18vw, 220px);
+  height: clamp(160px, 22vw, 260px);
+  top: 15%;
+  left: 5%;
+}
+
+.hero-img-2 {
+  width: clamp(100px, 12vw, 160px);
+  height: clamp(120px, 14vw, 180px);
+  top: 10%;
+  right: 8%;
+}
+
+.hero-img-3 {
+  width: clamp(120px, 15vw, 200px);
+  height: clamp(140px, 18vw, 240px);
+  bottom: 20%;
+  right: 5%;
+}
+
+.hero-img-4 {
+  width: clamp(100px, 12vw, 150px);
+  height: clamp(100px, 12vw, 150px);
+  bottom: 18%;
+  left: 8%;
+}
+
+/* ---- Float Animations ---- */
+@keyframes float1 {
+  0%, 100% { transform: translateY(0px) rotate(-1.5deg); }
+  50%       { transform: translateY(-22px) rotate(1.5deg); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translateY(0px) rotate(2deg); }
+  50%       { transform: translateY(-18px) rotate(-2deg); }
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translateY(-10px) rotate(-1deg); }
+  50%       { transform: translateY(10px) rotate(2deg); }
+}
+
+.float-anim-1 { animation: float1 7s ease-in-out infinite; }
+.float-anim-2 { animation: float2 9s ease-in-out infinite; }
+.float-anim-3 { animation: float3 8s ease-in-out infinite; }
+
+/* ---- Main Content ---- */
+.hero-content {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 6rem 2rem 4rem;
+  max-width: 800px;
+}
+
+/* Tiêu đề chính */
+.hero-headline {
+  margin: 0 0 2rem;
+  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-headline__line1 {
+  font-family: var(--sf-font-sans);
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 200;
+  letter-spacing: 0.1em;
+  color: var(--sf-ink);
+  animation: fadeInUp 0.9s ease 0.1s both;
+  display: block;
+}
+
+.hero-headline__line2 {
+  font-family: var(--sf-font-display);
+  font-size: clamp(3.5rem, 11vw, 9rem);
+  font-weight: 400;
+  color: var(--sf-ink);
+  animation: fadeInUp 1s ease 0.2s both;
+  display: block;
+  margin-top: 0.1em;
+}
+
+/* CTA Buttons */
+.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  animation: fadeInUp 1.2s ease 0.4s both;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 2rem;
+  border-radius: 999px;
+  font-family: var(--sf-font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.hero-btn--primary {
+  background: var(--sf-ink);
+  color: var(--sf-accent-ink);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.hero-btn--primary:hover {
+  background: #fff;
+  color: var(--sf-accent-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.hero-btn--ghost {
+  background: transparent;
+  color: var(--sf-ink);
+  border: 1.5px solid var(--sf-line-strong);
+}
+
+.hero-btn--ghost:hover {
+  background: rgba(236, 229, 216, 0.06);
+  border-color: var(--sf-ink);
+  color: var(--sf-ink);
+  transform: translateY(-2px);
+}
+
+/* ---- Scroll Hint ---- */
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(74, 60, 49, 0.4);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  animation: fadeIn 2s ease 1s both;
+}
+
+.hero-scroll-icon {
+  font-size: 1rem;
+  animation: float2 2s ease-in-out infinite;
+}
+
+/* ---- Animations ---- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 0.7; }
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .hero-img-1, .hero-img-2, .hero-img-3, .hero-img-4 {
+    opacity: 0.5;
+  }
+
+  .hero-img-1 { width: 100px; height: 120px; }
+  .hero-img-2 { width: 80px; height: 90px; top: 8%; right: 4%; }
+  .hero-img-3 { width: 90px; height: 110px; bottom: 12%; right: 3%; }
+  .hero-img-4 { width: 80px; height: 80px; bottom: 12%; left: 3%; }
+
+  .hero-subtitle br { display: none; }
+}
+

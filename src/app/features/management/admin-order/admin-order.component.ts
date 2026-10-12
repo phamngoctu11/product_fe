@@ -1,23 +1,25 @@
-import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { inject as injectActionDialog } from '@angular/core';
-import { ActionDialogService } from '../../../service/action-dialog.service';
-import { inject as injectToast } from '@angular/core';
-import { ToastService } from '../../../service/toast.service';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Order, OrderListDTO } from '../../../model/order.model';
-import { UserResListDTO } from '../../../model/user.model';
-import { OrderService } from '../../../service/order.service';
-import { UserService } from '../../../service/user.service';
+import {
+  AvailableStaff,
+  ManagerOrderReviewDetail,
+  ManagerOrderReviewSummary,
+  Order,
+  OrderAssignmentQueueItem,
+} from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
-import { OrderDetailPopupComponent } from '../../shared/order-detail-popup/order-detail-popup.component';
+import { ActionDialogService } from '../../../service/action-dialog.service';
+import { OrderService } from '../../../service/order.service';
+import { ToastService } from '../../../service/toast.service';
 import {
   AppPaginationComponent,
   OrderStatusBadgeComponent,
   PageHeaderComponent,
   ViewStateComponent,
 } from '../../shared/ui';
-import { AuthService } from '../../../service/auth.service';
+
+type ManagerOrderTab = 'reviews' | 'assignments';
 
 @Component({
   selector: 'app-admin-order',
@@ -25,261 +27,271 @@ import { AuthService } from '../../../service/auth.service';
   imports: [
     CommonModule,
     FormsModule,
-    OrderDetailPopupComponent,
     AppPaginationComponent,
-    PageHeaderComponent,
     OrderStatusBadgeComponent,
+    PageHeaderComponent,
     ViewStateComponent,
   ],
   templateUrl: './admin-order.component.html',
   styleUrl: './admin-order.component.css',
 })
 export class AdminOrderComponent implements OnInit {
-  private readonly actionDialog = injectActionDialog(ActionDialogService);
-  private readonly toast = injectToast(ToastService);
-  pendingOrders: OrderListDTO[] = [];
-  staffs: UserResListDTO[] = [];
-  authService = inject(AuthService);
-  selectedStaffByOrder: { [orderId: number]: string | null } = {};
-  activeStatus: 'PENDING_KCS' | 'PENDING_APPROVAL' | null = null;
-  isLoading = false;
+  private readonly actionDialog = inject(ActionDialogService);
+  private readonly orderService = inject(OrderService);
+  private readonly toast = inject(ToastService);
+
+  activeTab: ManagerOrderTab = 'reviews';
+  reviews: ManagerOrderReviewSummary[] = [];
+  assignmentQueue: OrderAssignmentQueueItem[] = [];
+  availableStaff: AvailableStaff[] = [];
+  selectedStaffByOrder: Record<number, string | null> = {};
+
   currentPage = 0;
   pageSize = 20;
   totalPages = 0;
   totalElements = 0;
-  pageSizeOptions = [10, 20, 50, 100];
-  userId: string | null = null;
-  selectedOrderDetail: Order | null = null;
-  isDetailLoading = false;
+  readonly pageSizeOptions = [10, 20, 50, 100];
+
+  isLoading = false;
+  processingOrderId: number | null = null;
+  selectedDetail: ManagerOrderReviewDetail | null = null;
+  detailLoading = false;
   detailError = '';
 
-  constructor(
-    private orderService: OrderService,
-    private userService: UserService,
-  ) {}
-
   ngOnInit(): void {
-    const storedUserId = this.authService.getUserId();
-    this.userId = storedUserId ? storedUserId : null;
-    this.loadStaffs();
+    this.loadAvailableStaff();
+    this.loadCurrentTab();
   }
 
-  selectStatus(status: 'PENDING_KCS' | 'PENDING_APPROVAL'): void {
-    if (this.activeStatus === status && this.pendingOrders.length > 0) return;
-
-    this.activeStatus = status;
-    this.loadPendingOrders(0);
+  selectTab(tab: ManagerOrderTab): void {
+    if (this.activeTab === tab) return;
+    this.activeTab = tab;
+    this.currentPage = 0;
+    this.loadCurrentTab();
   }
 
-  loadPendingOrders(page: number = 0): void {
-    if (!this.activeStatus) return;
+  loadCurrentTab(): void {
+    if (this.activeTab === 'reviews') {
+      this.loadReviews();
+    } else {
+      this.loadAssignmentQueue();
+    }
+  }
 
+  loadReviews(): void {
     this.isLoading = true;
-    this.currentPage = page;
-    this.orderService.getPendingOrders(this.activeStatus, this.currentPage, this.pageSize).subscribe({
-      next: (res) => {
-        this.pendingOrders = res.content || [];
-        this.currentPage = res.number ?? page;
-        this.pageSize = res.size || this.pageSize;
-        this.totalPages = res.totalPages || 0;
-        this.totalElements = res.totalElements || 0;
+    this.orderService.getManagerReviews(this.currentPage, this.pageSize).subscribe({
+      next: (page) => {
+        this.reviews = page.content || [];
+        this.applyPage(page.number, page.size, page.totalPages, page.totalElements);
         this.isLoading = false;
       },
-      error: (err) => {
-        console.error('Lỗi khi tải danh sách đơn hàng', err);
+      error: (error) => this.handleListError(error, 'Không thể tải danh sách đơn chờ duyệt.'),
+    });
+  }
+
+  loadAssignmentQueue(): void {
+    this.isLoading = true;
+    this.orderService.getManagerAssignmentQueue(this.currentPage, this.pageSize).subscribe({
+      next: (page) => {
+        this.assignmentQueue = page.content || [];
+        this.applyPage(page.number, page.size, page.totalPages, page.totalElements);
         this.isLoading = false;
+      },
+      error: (error) => this.handleListError(error, 'Không thể tải danh sách đơn chờ phân công.'),
+    });
+  }
+
+  loadAvailableStaff(page = 0, accumulated: AvailableStaff[] = []): void {
+    this.orderService.getAvailableStaff(page, 50).subscribe({
+      next: (page) => {
+        const available = [
+          ...accumulated,
+          ...(page.content || []).filter((staff) => staff.available),
+        ];
+        if (page.number + 1 < page.totalPages) {
+          this.loadAvailableStaff(page.number + 1, available);
+          return;
+        }
+        this.availableStaff = available;
+      },
+      error: (error) => {
+        this.availableStaff = [];
+        this.toast.notify('Không thể tải danh sách staff: ' + getApiErrorMessage(error, 'Vui lòng thử lại.'));
       },
     });
   }
 
   changePage(page: number): void {
-    if (page < 0 || page >= this.totalPages) return;
-    this.loadPendingOrders(page);
+    if (page < 0 || page >= this.totalPages || page === this.currentPage) return;
+    this.currentPage = page;
+    this.loadCurrentTab();
   }
 
   changePageSize(size: number): void {
     this.pageSize = size;
-    this.loadPendingOrders(0);
+    this.currentPage = 0;
+    this.loadCurrentTab();
   }
 
-  openOrderDetail(order: OrderListDTO): void {
-    this.selectedOrderDetail = null;
-    this.detailError = '';
-    this.isDetailLoading = true;
-
-    this.orderService.getById(order.id).subscribe({
-      next: (detail) => {
-        this.selectedOrderDetail = {
-          ...detail,
-          staffName: detail.staffName || order.staffName || null,
-          managerId: detail.managerId ?? detail.approvedById ?? null,
-          managerName: detail.managerName || detail.approvedByFullName || null,
-        };
-        this.isDetailLoading = false;
-      },
-      error: (err) => {
-        this.detailError = getApiErrorMessage(err, 'Không thể tải chi tiết đơn hàng.');
-        this.isDetailLoading = false;
-      },
-    });
-  }
-
-  closeOrderDetail(): void {
-    this.selectedOrderDetail = null;
-    this.isDetailLoading = false;
-    this.detailError = '';
-  }
-
-  getActivePanelTitle(): string {
-    return this.activeStatus === 'PENDING_KCS' ? 'Đơn chờ KCS' : 'Đơn chờ duyệt';
-  }
-
-  loadStaffs(): void {
-    this.userService.getAll(0, 100).subscribe({
-      next: (page) => {
-        this.staffs = (page.content || []).filter((user) => {
-          const role = (user.role || '').toUpperCase();
-          return role === 'STAFF' || role === 'ROLE_STAFF';
-        });
-      },
-      error: (err) => console.error('Lỗi khi tải danh sách staff', err),
-    });
-  }
-
-  approveOrder(order: OrderListDTO): void {
-    if (!this.userId) {
-      this.toast.notify('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
-      return;
-    }
-
-    const staffId = this.selectedStaffByOrder[order.id] || undefined;
-    const confirmMessage = staffId
-      ? `Duyệt đơn hàng #${order.id} và gán cho staff đã chọn?`
-      : `Duyệt đơn hàng #${order.id} không gán staff ngay?`;
+  approveOrder(order: ManagerOrderReviewSummary): void {
+    const staffId = this.selectedStaffByOrder[order.orderId] || null;
+    const suffix = staffId
+      ? ' Đơn sẽ được chuyển thẳng cho staff đã chọn.'
+      : ' Đơn sẽ chuyển sang hàng đợi phân công.';
 
     this.actionDialog.confirm({
       title: 'Duyệt đơn hàng',
-      message: confirmMessage,
+      message: `Xác nhận duyệt đơn #${order.orderId}?${suffix}`,
       confirmText: 'Duyệt đơn',
-      icon: 'bi-check-circle-fill',
+      icon: 'bi-check-circle',
     }).subscribe((confirmed) => {
       if (!confirmed) return;
-      this.isLoading = true;
-      this.orderService.reviewOrder(order.id, true, '', this.userId!, staffId).subscribe({
-      next: (message) => {
-        this.toast.notify(message || 'Duyệt đơn hàng thành công!');
-        this.loadPendingOrders();
-      },
-      error: (err) => {
-        this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể duyệt đơn hàng.'));
-        this.isLoading = false;
-      },
+      this.processingOrderId = order.orderId;
+      this.orderService.reviewOrder(order.orderId, {
+        orderVersion: order.orderVersion,
+        approved: true,
+        staffId,
+      }).subscribe({
+        next: (result) => {
+          this.toast.notify(`Đã duyệt đơn #${order.orderId} – trạng thái ${result.orderStatus}.`);
+          this.processingOrderId = null;
+          this.refreshAfterMutation();
+        },
+        error: (error) => this.handleMutationError(error, 'Không thể duyệt đơn.'),
       });
     });
   }
 
-  rejectOrder(order: OrderListDTO): void {
-    if (!this.userId) {
-      this.toast.notify('Không tìm thấy người duyệt đơn. Vui lòng đăng nhập lại.');
-      return;
-    }
-
+  rejectOrder(order: ManagerOrderReviewSummary): void {
     this.actionDialog.prompt({
       title: 'Từ chối đơn hàng',
-      message: `Nhập lý do từ chối đơn hàng #${order.id}. Nội dung này sẽ được gửi cho khách hàng.`,
+      message: `Nhập lý do từ chối đơn #${order.orderId}.`,
       confirmText: 'Từ chối đơn',
       tone: 'danger',
-      icon: 'bi-x-circle-fill',
+      icon: 'bi-x-circle',
       input: {
         label: 'Lý do từ chối',
-        placeholder: 'Ví dụ: Sản phẩm hiện không đủ điều kiện xử lý...',
+        placeholder: 'Ví dụ: thông tin sản phẩm chưa đầy đủ',
         required: true,
-        minLength: 5,
         maxLength: 500,
       },
     }).subscribe((reason) => {
-      if (reason === null) return;
-      this.isLoading = true;
-      this.orderService.reviewOrder(order.id, false, reason, this.userId!).subscribe({
-      next: (message) => {
-        this.toast.notify(message || 'Đã từ chối đơn hàng thành công!');
-        this.loadPendingOrders();
-      },
-      error: (err) => {
-        this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể từ chối đơn hàng.'));
-        this.isLoading = false;
-      },
+      const rejectionReason = reason?.trim();
+      if (!rejectionReason) return;
+      this.processingOrderId = order.orderId;
+      this.orderService.reviewOrder(order.orderId, {
+        orderVersion: order.orderVersion,
+        approved: false,
+        reason: rejectionReason,
+      }).subscribe({
+        next: () => {
+          this.toast.notify(`Đã từ chối đơn #${order.orderId}.`);
+          this.processingOrderId = null;
+          this.refreshAfterMutation();
+        },
+        error: (error) => this.handleMutationError(error, 'Không thể từ chối đơn.'),
       });
     });
   }
 
-  assignStaff(order: OrderListDTO): void {
-    const staffId = this.selectedStaffByOrder[order.id];
+  assignStaff(order: OrderAssignmentQueueItem): void {
+    const staffId = this.selectedStaffByOrder[order.orderId];
     if (!staffId) {
-      this.toast.notify('Vui lòng chọn staff trước khi gán đơn.');
+      this.toast.notify('Vui lòng chọn staff trước khi phân công.');
       return;
     }
 
+    const staff = this.availableStaff.find((item) => item.staffId === staffId);
     this.actionDialog.confirm({
-      title: 'Gán nhân viên xử lý',
-      message: `Gán đơn hàng #${order.id} cho nhân viên đã chọn?`,
-      confirmText: 'Gán nhân viên',
-      icon: 'bi-person-check-fill',
+      title: 'Phân công staff',
+      message: `Phân công đơn #${order.orderId} cho ${staff?.displayName || 'staff đã chọn'}?`,
+      confirmText: 'Phân công',
+      icon: 'bi-person-check',
     }).subscribe((confirmed) => {
       if (!confirmed) return;
-      this.isLoading = true;
-      this.orderService.assignStaff(order.id, staffId).subscribe({
-      next: (message) => {
-        this.toast.notify(message || 'Gán staff thành công!');
-        this.loadPendingOrders();
-      },
-      error: (err) => {
-        this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể gán staff.'));
-        this.isLoading = false;
-      },
+      this.processingOrderId = order.orderId;
+      this.orderService.assignStaff(order.orderId, order.orderVersion, staffId).subscribe({
+        next: (result) => {
+          this.toast.notify(`Đã phân công đơn #${order.orderId} – trạng thái ${result.orderStatus}.`);
+          this.processingOrderId = null;
+          delete this.selectedStaffByOrder[order.orderId];
+          this.refreshAfterMutation();
+        },
+        error: (error) => this.handleMutationError(error, 'Không thể phân công staff.'),
       });
     });
   }
 
-  kcsCheck(order: OrderListDTO, isPassed: boolean): void {
-    const action = isPassed ? 'duyệt KCS đạt' : 'trả về staff để xuất lại';
-    const dialogData = {
-      title: isPassed ? 'Xác nhận KCS đạt' : 'KCS không đạt',
-      message: `Bạn có chắc muốn ${action} cho đơn hàng #${order.id}?`,
-      confirmText: isPassed ? 'Duyệt KCS' : 'Trả về staff',
-      tone: (isPassed ? 'primary' : 'warning') as 'primary' | 'warning',
-      icon: isPassed ? 'bi-shield-check' : 'bi-shield-exclamation',
-      input: isPassed ? undefined : {
-        label: 'Lý do KCS không đạt',
-        placeholder: 'Mô tả vấn đề cần staff kiểm tra lại...',
-        required: false,
-        maxLength: 500,
-      },
-    };
+  openReviewDetail(order: ManagerOrderReviewSummary): void {
+    this.openReviewDetailById(order.orderId);
+  }
 
-    const submitKcs = (cancelReason: string) => {
-      this.isLoading = true;
-      this.orderService.kcsCheck(order.id, isPassed, cancelReason).subscribe({
-      next: (message) => {
-        this.toast.notify(message);
-        this.loadPendingOrders();
+  openAssignmentDetail(order: OrderAssignmentQueueItem): void {
+    this.detailLoading = true;
+    this.detailError = '';
+    this.selectedDetail = null;
+    this.orderService.getById(order.orderId).subscribe({
+      next: (detail) => {
+        this.selectedDetail = { order: detail };
+        this.detailLoading = false;
       },
-      error: (err) => {
-        this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể xử lý KCS.'));
-        this.isLoading = false;
-      },
-      });
-    };
-
-    if (isPassed) {
-      this.actionDialog.confirm(dialogData).subscribe((confirmed) => {
-        if (confirmed) submitKcs('');
-      });
-      return;
-    }
-
-    this.actionDialog.prompt(dialogData).subscribe((reason) => {
-      if (reason !== null) submitKcs(reason);
+      error: (error) => this.handleDetailError(error),
     });
+  }
+
+  closeDetail(): void {
+    this.selectedDetail = null;
+    this.detailLoading = false;
+    this.detailError = '';
+  }
+
+  getOrderItems(order: Order): NonNullable<Order['items']> {
+    return order.items || order.orderItems || order.details || [];
+  }
+
+  private openReviewDetailById(orderId: number): void {
+    this.detailLoading = true;
+    this.detailError = '';
+    this.selectedDetail = null;
+    this.orderService.getManagerReviewDetail(orderId).subscribe({
+      next: (detail) => {
+        this.selectedDetail = detail;
+        this.detailLoading = false;
+      },
+      error: (error) => this.handleDetailError(error),
+    });
+  }
+
+  private refreshAfterMutation(): void {
+    if (this.currentPage > 0 && this.totalElements % this.pageSize === 1) {
+      this.currentPage--;
+    }
+    this.loadAvailableStaff();
+    this.loadCurrentTab();
+  }
+
+  private applyPage(number: number, size: number, totalPages: number, totalElements: number): void {
+    this.currentPage = number ?? 0;
+    this.pageSize = size || this.pageSize;
+    this.totalPages = totalPages || 0;
+    this.totalElements = totalElements || 0;
+  }
+
+  private handleListError(error: unknown, fallback: string): void {
+    this.isLoading = false;
+    this.toast.notify(getApiErrorMessage(error, fallback));
+  }
+
+  private handleDetailError(error: unknown): void {
+    this.detailLoading = false;
+    this.detailError = getApiErrorMessage(error, 'Không thể tải chi tiết đơn hàng.');
+  }
+
+  private handleMutationError(error: unknown, fallback: string): void {
+    this.processingOrderId = null;
+    const message = getApiErrorMessage(error, fallback);
+    this.toast.notify(message);
+    this.loadCurrentTab();
   }
 }

@@ -8,6 +8,7 @@ import { ChatService } from '../../../service/chat.service';
 import { AuthService } from '../../../service/auth.service';
 import { ConsultationService } from '../../../service/consultation.service';
 import { ViewStateComponent } from '../ui';
+import { Product } from '../../../model/product.model';
 
 @Component({
   selector: 'app-product-page',
@@ -18,7 +19,7 @@ import { ViewStateComponent } from '../ui';
 })
 export class ProductPageComponent implements OnInit {
   private readonly toast = injectToast(ToastService);
-  product: any = null;
+  product: Product | null = null;
   isLoading = true;
   returnChatRequestId: number | null = null;
 
@@ -85,6 +86,9 @@ export class ProductPageComponent implements OnInit {
     return this.attributeDictionary[key] || key;
   }
 
+  get isAcceptingOrders(): boolean { return (this.product?.variants?.some(v => v.quantity > 0) || (this.product?.quantity || 0) > 0); }
+  get availabilityLabel(): string { return 'Hết hàng'; }
+
   askAboutProduct() {
     if (!this.authService.isLoggedIn()) {
       this.toast.notify("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
@@ -95,17 +99,22 @@ export class ProductPageComponent implements OnInit {
       return;
     }
 
+    const product = this.product;
+    if (!product?.id) {
+      this.toast.notify('Không tìm thấy thông tin sản phẩm.');
+      return;
+    }
+
     const productInfo = {
-      id: this.product.id,
-      name: this.product.product_name,
-      price: this.product.price,
-      imageUrl: this.product.image_url,
-      tags: this.product.tags || '',
-      variantsCount: this.product.variants ? this.product.variants.length : 0,
-      variants: this.product.variants ? this.product.variants.map((v: any) => ({
+      id: product.id,
+      name: product.product_name,
+      price: product.price,
+      imageUrl: product.image_url,
+      tags: product.tags || '',
+      variantsCount: product.variants?.length || 0,
+      variants: product.variants ? product.variants.map((v) => ({
         name: v.variantName,
         price: v.price,
-        quantity: v.quantity
       })) : []
     };
 

@@ -148,14 +148,11 @@
               [editable]="canEditVariant(index)"
               [removable]="canRemoveVariant(index)"
               [uploading]="isUploadingVariantImage[index]"
-              [restocking]="isRestockingVariant[index]"
               [showReviews]="canViewVariantReviews"
               [dynamicFields]="dynamicFields"
               [fieldLabels]="attributeDictionary"
-              [(restockQuantity)]="staffRestockQuantities[index]"
               (imageSelected)="onVariantFileSelected($event, index)"
               (remove)="removeVariant(index)"
-              (restock)="restockVariant(index)"
               (viewReviews)="openVariantReviews(index)">
             </app-product-variant-editor>
           }

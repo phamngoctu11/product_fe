@@ -1,0 +1,372 @@
+/* ============================================================
+   STOREFRONT THEME — phong cách "Imperfecto"
+   Nền tối ấm, chữ kem, tiêu đề mảnh viết hoa, khung viền mảnh.
+   Mọi component storefront dùng các biến --sf-* bên dưới.
+   ============================================================ */
+
+.sf-shell {
+  /* ---- Bảng màu ---- */
+  --sf-bg: #26211a;
+  --sf-bg-elev: #2f2920;
+  --sf-bg-soft: #3a3328;
+  --sf-bg-deep: #17140f;
+  --sf-ink: #ece5d8;
+  --sf-ink-soft: #d3c9b7;
+  --sf-muted: #a49985;
+  --sf-line: rgba(236, 229, 216, 0.12);
+  --sf-line-strong: #7d6b52;
+  --sf-accent: #c5b8a5;
+  --sf-accent-ink: #26211a;
+  --sf-light: #ebe5dd;
+  --sf-danger: #e08a6f;
+  --sf-success: #a9c19a;
+
+  /* ---- Typography ---- */
+  --sf-font-sans: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif;
+  --sf-font-display: 'Imbue', 'Didot', 'Bodoni 72', serif;
+  --sf-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---- Layout ---- */
+  --sf-container: 1296px;
+  --sf-gutter: clamp(20px, 5vw, 72px);
+  --sf-header-h: 96px;
+  --sf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ---- Map biến legacy để các trang cũ (giỏ hàng, đơn hàng...) đồng bộ màu ---- */
+  --app-shell-bg: var(--sf-bg);
+  --app-surface: var(--sf-bg-elev);
+  --app-surface-muted: #2a251d;
+  --app-surface-glass: rgba(47, 41, 32, 0.92);
+  --app-text: var(--sf-ink);
+  --app-muted-text: var(--sf-muted);
+  --app-border: rgba(236, 229, 216, 0.14);
+  --app-hover-bg: rgba(236, 229, 216, 0.06);
+  --app-primary: var(--sf-accent);
+  --app-primary-rgb: 197, 184, 165;
+  --app-primary-dark: #a8998a;
+  --app-primary-light: #ddd2c2;
+  --app-secondary: #b8a58c;
+  --app-secondary-rgb: 184, 165, 140;
+  --app-gradient: linear-gradient(135deg, #c5b8a5 0%, #a8998a 100%);
+  --app-gradient-soft: linear-gradient(135deg, rgba(197, 184, 165, 0.14) 0%, rgba(168, 153, 138, 0.14) 100%);
+  --shadow-primary: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--sf-bg);
+  color: var(--sf-ink);
+  font-family: var(--sf-font-sans);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.sf-shell ::selection {
+  background: var(--sf-accent);
+  color: var(--sf-accent-ink);
+}
+
+.sf-shell a {
+  color: inherit;
+}
+
+.sf-shell h1,
+.sf-shell h2,
+.sf-shell h3,
+.sf-shell h4 {
+  color: var(--sf-ink);
+  font-family: var(--sf-font-sans);
+}
+
+/* ============================================================
+   LAYOUT HELPERS
+   ============================================================ */
+.sf-container {
+  width: 100%;
+  max-width: calc(var(--sf-container) + var(--sf-gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--sf-gutter);
+}
+
+.sf-section {
+  padding-block: clamp(56px, 8vw, 120px);
+}
+
+/* Tiêu đề hiển thị mảnh, viết hoa — đặc trưng của template */
+.sf-display {
+  margin: 0;
+  font-family: var(--sf-font-sans);
+  font-weight: 200;
+  font-size: clamp(2.6rem, 6.4vw, 5.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--sf-ink);
+}
+
+.sf-display--md {
+  font-size: clamp(2.2rem, 4.6vw, 4rem);
+}
+
+.sf-display--sm {
+  font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+}
+
+.sf-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--sf-ink-soft);
+}
+
+.sf-mono {
+  font-family: var(--sf-font-mono);
+}
+
+.sf-text-muted {
+  color: var(--sf-muted);
+}
+
+.sf-link {
+  color: var(--sf-ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.sf-link:hover {
+  opacity: 0.7;
+  color: var(--sf-ink);
+}
+
+/* ============================================================
+   FORM CONTROLS
+   ============================================================ */
+.sf-input,
+.sf-select,
+.sf-textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--sf-line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--sf-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  text-transform: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.sf-input::placeholder,
+.sf-textarea::placeholder {
+  color: var(--sf-ink-soft);
+  opacity: 0.8;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.sf-input:focus,
+.sf-select:focus,
+.sf-textarea:focus {
+  outline: none;
+  border-color: var(--sf-ink);
+  background: rgba(236, 229, 216, 0.03);
+}
+
+.sf-select {
+  appearance: none;
+  padding-right: 2.2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16' fill='%23ece5d8'%3E%3Cpath d='M1.6 4.6a.6.6 0 0 1 .8 0L8 10.2l5.6-5.6a.6.6 0 1 1 .8.8l-6 6a.6.6 0 0 1-.8 0l-6-6a.6.6 0 0 1 0-.8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+}
+
+.sf-select option {
+  background: var(--sf-bg);
+  color: var(--sf-ink);
+}
+
+.sf-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* ============================================================
+   ANIMATION
+   ============================================================ */
+@keyframes sf-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sf-reveal {
+  animation: sf-fade-up 0.8s var(--sf-ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-reveal { animation: none; }
+}
+
+/* ============================================================
+   LEGACY PAGES INSIDE STOREFRONT (giỏ hàng, đơn hàng, trang tĩnh...)
+   Làm phẳng góc bo + nền để hài hoà với giao diện mới.
+   ============================================================ */
+.sf-shell .sf-main .card,
+.sf-shell .sf-main .glass-card {
+  background: var(--sf-bg-elev);
+  color: var(--sf-ink);
+  border-color: var(--sf-line);
+}
+
+.sf-shell .sf-main .btn-primary {
+  background: var(--sf-light);
+  border-color: var(--sf-light);
+  color: var(--sf-accent-ink);
+}
+
+.sf-shell .sf-main .btn-primary:hover {
+  background: #fff;
+  border-color: #fff;
+  color: var(--sf-accent-ink);
+}
+
+.sf-shell .sf-main .form-control,
+.sf-shell .sf-main .form-select {
+  background-color: transparent;
+  color: var(--sf-ink);
+  border-color: var(--sf-line-strong);
+}
+
+.sf-shell .sf-main .form-control::placeholder {
+  color: var(--sf-muted);
+}
+
+.sf-shell .sf-main .text-muted {
+  color: var(--sf-muted) !important;
+}
+
+/* Dropdown của Bootstrap trong header */
+.sf-shell .dropdown-menu {
+  --bs-dropdown-bg: var(--sf-bg-elev);
+  --bs-dropdown-color: var(--sf-ink);
+  --bs-dropdown-link-color: var(--sf-ink);
+  --bs-dropdown-link-hover-bg: rgba(236, 229, 216, 0.06);
+  --bs-dropdown-link-hover-color: var(--sf-ink);
+  --bs-dropdown-border-color: var(--sf-line);
+  --bs-dropdown-divider-bg: var(--sf-line);
+  border-radius: 0;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================
+   BUTTONS — dùng qua directive [sfButton]
+   ============================================================ */
+.sf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 42px;
+  padding: 0.6rem 1.5rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--sf-ink);
+  font-family: var(--sf-font-sans);
+  font-size: 0.84rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.25s var(--sf-ease), color 0.25s var(--sf-ease),
+    border-color 0.25s var(--sf-ease), opacity 0.25s ease;
+}
+
+.sf-btn:disabled,
+.sf-btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.sf-btn--sm { min-height: 34px; padding: 0.45rem 1rem; font-size: 0.76rem; }
+.sf-btn--lg { min-height: 52px; padding: 0.85rem 2.4rem; font-size: 0.9rem; }
+.sf-btn--block { display: flex; width: 100%; }
+
+.sf-btn--outline {
+  border-color: var(--sf-line-strong);
+  color: var(--sf-ink);
+}
+.sf-btn--outline:hover,
+.sf-btn--outline.is-active {
+  border-color: var(--sf-ink);
+  background: var(--sf-ink);
+  color: var(--sf-accent-ink);
+}
+
+.sf-btn--light {
+  background: var(--sf-light);
+  border-color: var(--sf-light);
+  color: var(--sf-accent-ink);
+  font-weight: 600;
+}
+.sf-btn--light:hover {
+  background: #fff;
+  border-color: #fff;
+  color: var(--sf-accent-ink);
+}
+
+.sf-btn--dark {
+  background: var(--sf-bg-soft);
+  border-color: var(--sf-bg-soft);
+  color: var(--sf-ink);
+}
+.sf-btn--dark:hover {
+  background: #4a4134;
+  border-color: #4a4134;
+  color: var(--sf-ink);
+}
+
+.sf-btn--ghost {
+  color: var(--sf-ink-soft);
+}
+.sf-btn--ghost:hover {
+  color: var(--sf-ink);
+  background: rgba(236, 229, 216, 0.06);
+}
+
+.sf-btn--link {
+  min-height: auto;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+.sf-btn--link:hover { opacity: 0.7; color: var(--sf-ink); }
+
+/* Tag nhỏ dạng mono (VD: tên danh mục trên trang chi tiết) */
+.sf-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.55rem;
+  background: var(--sf-bg-soft);
+  color: var(--sf-ink-soft);
+  font-family: var(--sf-font-mono);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sf-tag--warn {
+  background: rgba(224, 138, 111, 0.16);
+  color: var(--sf-danger);
+}
+

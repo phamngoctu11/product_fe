@@ -6,10 +6,9 @@
 .variant-card {
   height: 100%;
   padding: 1rem;
-  border: 1px solid rgba(var(--app-primary-rgb), 0.16);
-  border-radius: 1rem;
-  background: rgba(15, 22, 41, 0.78);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--sf-line);
+  border-radius: 0;
+  background: var(--sf-bg-elev);
 }
 
 .variant-media-row {
@@ -26,10 +25,10 @@
   height: 78px;
   place-items: center;
   overflow: hidden;
-  border: 1px dashed rgba(var(--app-primary-rgb), 0.3);
-  border-radius: 0.85rem;
-  background: #070b19;
-  color: var(--app-muted-text);
+  border: 1px dashed var(--sf-line-strong);
+  border-radius: 0;
+  background: var(--sf-bg-deep);
+  color: var(--sf-muted);
 }
 
 .variant-upload.is-editable {
@@ -50,26 +49,23 @@
 
 .variant-title span,
 .field-block label,
-.staff-restock-panel label,
 .variant-summary-grid span {
-  color: var(--app-muted-text);
+  color: var(--sf-muted);
+  font-family: var(--sf-font-mono);
   font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .variant-title strong,
 .variant-summary-grid strong {
   overflow: hidden;
-  color: var(--app-text);
+  color: var(--sf-ink);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .variant-title small {
-  color: var(--app-primary-light);
-  font-weight: 700;
+  color: var(--sf-accent);
 }
 
 .variant-actions {
@@ -94,24 +90,32 @@
 
 .form-control-custom {
   min-height: 44px;
-  border-radius: 0.65rem;
+  border-radius: 0;
+  border: 1px solid var(--sf-line-strong);
+  background: transparent;
+  color: var(--sf-ink);
+}
+
+.form-control-custom:focus {
+  border-color: var(--sf-ink);
+  background: rgba(236, 229, 216, 0.03);
 }
 
 .price-input {
-  color: #fb7185 !important;
-  font-weight: 800;
+  color: var(--sf-ink) !important;
+  font-weight: 500;
 }
 
 .field-error {
   margin-top: 0.25rem;
-  color: #f87171;
+  color: var(--sf-danger);
   font-size: 0.78rem;
 }
 
 .attribute-grid {
   margin-top: 0.9rem;
   padding-top: 0.9rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--sf-line);
 }
 
 .variant-summary-grid div {
@@ -120,9 +124,9 @@
   flex-direction: column;
   justify-content: center;
   padding: 0.75rem;
-  border: 1px solid rgba(var(--app-primary-rgb), 0.16);
-  border-radius: 0.8rem;
-  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--sf-line);
+  border-radius: 0;
+  background: var(--sf-bg-soft);
 }
 
 .attribute-preview {
@@ -134,23 +138,12 @@
 
 .attribute-preview span {
   padding: 0.42rem 0.75rem;
-  border: 1px solid rgba(var(--app-primary-rgb), 0.26);
-  border-radius: 999px;
-  background: rgba(var(--app-primary-rgb), 0.12);
-  color: var(--app-primary-light);
+  border: 1px solid var(--sf-line-strong);
+  border-radius: 0;
+  background: var(--sf-bg-soft);
+  color: var(--sf-ink);
+  font-family: var(--sf-font-mono);
   font-size: 0.78rem;
-}
-
-.staff-restock-panel {
-  margin-top: 0.95rem;
-  padding: 0.9rem;
-  border: 1px solid rgba(34, 197, 94, 0.22);
-  border-radius: 0.85rem;
-  background: rgba(34, 197, 94, 0.08);
-}
-
-.staff-restock-panel .form-control {
-  max-width: 160px;
 }
 
 @media (max-width: 640px) {

@@ -11,6 +11,16 @@ export interface OrderItem {
   price: number;
   image_url?: string;
   imageUrl?: string;
+  sourceType?: 'CATALOG' | 'CUSTOM' | string | null;
+  description?: string | null;
+  imageUrls?: string[];
+  specSnapshot?: string | null;
+  madeDaySnapshot?: number | null;
+  productionDurationDays?: number | null;
+  durationRuleVersion?: string | null;
+  computedCompletionAt?: string | null;
+  handmade?: boolean;
+  productionStatus?: string | null;
 
   exportedQuantity?: number | null;
   receivedQuantity?: number | null;
@@ -20,6 +30,11 @@ export interface OrderItem {
 
 export interface Order {
   id: number;
+  version?: number;
+  orderType?: 'CATALOG' | 'CUSTOM' | string | null;
+  paymentStatus?: string | null;
+  paymentMethodType?: string | null;
+  productionStatus?: string | null;
   userId?: number;
   user_id?: number;
   customerName?: string;
@@ -68,6 +83,85 @@ export interface OrderListDTO {
   startOrderTime: string;
   paymentMethod: string;
   staffName?: string | null;
+}
+
+export interface ManagerOrderReviewSummary {
+  orderId: number;
+  orderVersion: number;
+  orderType: 'CATALOG' | 'CUSTOM';
+  customerName: string;
+  guest: boolean;
+  totalQuantity: number;
+  finalPrice: number | null;
+  paymentMethod: 'COD' | 'ONLINE' | string | null;
+  status: string;
+  createdAt: string;
+}
+
+export interface OrderAssignmentQueueItem {
+  orderId: number;
+  orderVersion: number;
+  orderType: 'CATALOG' | 'CUSTOM';
+  customerName: string;
+  finalPrice: number | null;
+  paymentMethod: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export interface AvailableStaff {
+  staffId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  available: boolean;
+}
+
+export interface OrderAssignment {
+  assignmentId: number;
+  assignmentVersion: number;
+  orderId: number;
+  staffId: string;
+  staffName: string;
+  source: 'MANAGER' | 'SELF_CLAIM' | 'MIGRATION' | string;
+  assignedBy?: string | null;
+  assignedAt: string;
+  status: 'ACTIVE' | 'RELEASED' | string;
+}
+
+export interface ManagerOrderReviewDetail {
+  order: Order;
+  decision?: 'APPROVED' | 'REJECTED' | null;
+  managerApprovedAt?: string | null;
+  managerRejectedAt?: string | null;
+  confirmationDueAt?: string | null;
+  activeAssignment?: OrderAssignment | null;
+}
+
+export interface ManagerReviewRequest {
+  orderVersion: number;
+  approved: boolean;
+  reason?: string | null;
+  staffId?: string | null;
+}
+
+export interface ManagerReviewResult {
+  orderId: number;
+  orderVersion: number;
+  orderStatus: string;
+  decision: 'APPROVED' | 'REJECTED';
+  managerId: string;
+  managerName: string;
+  reviewedAt: string;
+  confirmationDueAt?: string | null;
+  rejectionReason?: string | null;
+  assignment?: OrderAssignment | null;
+}
+
+export interface OrderAssignmentResult {
+  orderId: number;
+  orderVersion: number;
+  orderStatus: string;
+  assignment: OrderAssignment;
 }
 
 export interface OrderStatusHistory {

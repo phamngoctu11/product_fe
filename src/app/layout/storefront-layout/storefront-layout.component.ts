@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { AppFooterComponent } from '../app-footer/app-footer.component';
+import { SfFooterComponent } from '../../features/storefront/ui/footer/sf-footer.component';
 import { AuthService } from '../../service/auth.service';
 import { UserService } from '../../service/user.service';
 import { NotificationService } from '../../service/notification.service';
@@ -15,10 +16,17 @@ import { APP_DIALOG_SIZE } from '../../config/dialog.config';
 @Component({
   selector: 'app-storefront-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AppFooterComponent, TimeAgoPipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SfFooterComponent, TimeAgoPipe],
   templateUrl: './storefront-layout.component.html',
 })
 export class StorefrontLayoutComponent implements OnInit, OnDestroy {
+  isScrolled = false;
+  
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    this.isScrolled = window.scrollY > 20;
+  }
+
   displayName = '';
   avatarUrl = '';
   isUserLoading = true;

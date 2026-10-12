@@ -16,6 +16,7 @@ import { ProductReviewService } from '../../../service/product-review.service';
 import { environment } from '../../../../environments/environment';
 import { ProductVariantEditorComponent } from './product-variant-editor/product-variant-editor.component';
 
+
 @Component({
   selector: 'app-product-detail',
   standalone: true,
@@ -50,8 +51,7 @@ export class ProductDetailComponent implements OnInit {
   isUploadingImage: boolean = false;
   uploadedImageUrl: string = '';
   isUploadingVariantImage: boolean[] = [];
-  staffRestockQuantities: number[] = [];
-  isRestockingVariant: boolean[] = [];
+  
   readonly reviewStars = [1, 2, 3, 4, 5];
   selectedReviewVariantId: number | null = null;
   selectedReviewVariantName = '';
@@ -85,19 +85,19 @@ export class ProductDetailComponent implements OnInit {
       tags: [''],
       image_url: [''],
       handmade: [true],
+      availabilityStatus: [''],
       variants: this.fb.array([])
     });
   }
 
   get variants(): FormArray { return this.productForm.get('variants') as FormArray; }
 
+  get totalStock(): number { return (this.rawProduct.variants || []).reduce((sum: number, v: any) => sum + (v.quantity || 0), 0) || this.rawProduct.quantity || 0; }
   get rawProduct(): any {
     return this.productForm.getRawValue();
   }
 
-  get totalStock(): number {
-    return (this.rawProduct.variants || []).reduce((sum: number, variant: any) => sum + Number(variant.quantity || 0), 0);
-  }
+  get availabilityLabel(): string { return 'Hết hàng'; }
 
   get priceRangeLabel(): string {
     const prices = (this.rawProduct.variants || [])
@@ -152,7 +152,8 @@ export class ProductDetailComponent implements OnInit {
 
         this.productForm.patchValue({
           id: res.id, product_name: res.product_name, price: res.price,
-          tags: res.tags, image_url: this.uploadedImageUrl, handmade: res.handmade !== false
+          tags: res.tags, image_url: this.uploadedImageUrl, handmade: res.handmade !== false,
+          availabilityStatus: res.availabilityStatus || 'ACCEPTING_ORDERS',
         });
 
         if (res.tags) this.selectedTags = res.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t !== '');
@@ -170,7 +171,7 @@ export class ProductDetailComponent implements OnInit {
 
             const variantGroup = this.fb.group({
               id: [v.id], variantName: [v.variantName, Validators.required],
-              price: [v.price, [Validators.required, Validators.min(0)]], quantity: [v.quantity, [Validators.required, Validators.min(0)]],
+              price: [v.price, [Validators.required, Validators.min(0)]],
               image_url: [v.image_url || ''], dynamicAttributes: dynGroup
             });
 
@@ -180,8 +181,6 @@ export class ProductDetailComponent implements OnInit {
 
             this.variants.push(variantGroup);
             this.isUploadingVariantImage.push(false);
-            this.staffRestockQuantities.push(0);
-            this.isRestockingVariant.push(false);
           });
           this.refreshDynamicFields();
 
@@ -359,52 +358,9 @@ export class ProductDetailComponent implements OnInit {
     this.dynamicFields.forEach(f => dynGroup.addControl(f, this.fb.control('')));
     this.variants.push(this.fb.group({
       id: [null], variantName: ['', Validators.required], price: [this.productForm.value.price || 0, [Validators.required, Validators.min(0)]],
-      quantity: [1, [Validators.required, Validators.min(0)]], image_url: [''], dynamicAttributes: dynGroup
+      image_url: [''], dynamicAttributes: dynGroup
     }));
     this.isUploadingVariantImage.push(false);
-    this.staffRestockQuantities.push(0);
-    this.isRestockingVariant.push(false);
-  }
-
-  restockVariant(index: number) {
-    if (!this.isStaffMode || this.isView) return;
-
-    const variantId = this.variants.at(index)?.get('id')?.value;
-    const quantity = Number(this.staffRestockQuantities[index] || 0);
-    const userId = this.authService.getUserId();
-
-    if (!variantId) {
-      this.toast.notify('Chỉ có thể nhập kho cho phân loại đã tồn tại.');
-      return;
-    }
-
-    if (!userId) {
-      this.toast.notify('Không tìm thấy userId!');
-      return;
-    }
-
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      this.toast.notify('Số lượng nhập kho phải lớn hơn 0.');
-      return;
-    }
-
-    this.isRestockingVariant[index] = true;
-    this.productService.restockVariant(variantId, { quantity }, userId).subscribe({
-      next: (updatedVariant) => {
-        const currentQuantity = Number(this.variants.at(index)?.get('quantity')?.value || 0);
-        this.variants.at(index)?.patchValue(
-          { quantity: updatedVariant?.quantity ?? currentQuantity + quantity },
-          { emitEvent: false }
-        );
-        this.staffRestockQuantities[index] = 0;
-        this.isRestockingVariant[index] = false;
-        this.toast.notify('Nhập kho thành công!');
-      },
-      error: () => {
-        this.isRestockingVariant[index] = false;
-        this.toast.notify('Không thể nhập kho cho phân loại này.');
-      },
-    });
   }
 
   openVariantReviews(index: number): void {
@@ -509,8 +465,6 @@ export class ProductDetailComponent implements OnInit {
     if (!this.canRemoveVariant(index)) return;
     this.variants.removeAt(index);
     this.isUploadingVariantImage.splice(index, 1);
-    this.staffRestockQuantities.splice(index, 1);
-    this.isRestockingVariant.splice(index, 1);
   }
 
   save() {
@@ -563,12 +517,12 @@ export class ProductDetailComponent implements OnInit {
       .map((variant: any) => {
         delete variant.id;
         delete variant.parsedAttributes;
-        delete variant.restockQuantity;
         return variant;
       });
 
     const requests = [
       this.productService.updateStaffInfo(payload.id, basicInfo),
+      
       ...newVariants.map((variant: any) => this.productService.addVariant(payload.id, variant, userId)),
     ];
 
