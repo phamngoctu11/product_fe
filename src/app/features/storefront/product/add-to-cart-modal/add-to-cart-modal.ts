@@ -104,10 +104,8 @@ export class AddToCartModalComponent implements OnInit {
   getLabel(key: string): string { return this.attributeDictionary[key] || key; }
 
   selectVariant(variant: ProductVariant) {
-    if (variant.quantity > 0) {
-      this.selectedVariant = variant;
-      this.quantity = 1;
-    }
+    this.selectedVariant = variant;
+    this.quantity = 1;
   }
 
   onConfirm() {

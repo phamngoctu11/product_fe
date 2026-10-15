@@ -71,6 +71,7 @@ import { FormsModule } from '@angular/forms';
               [order]="order"
               [isLoading]="isLoading"
               [error]="error"
+              [guestToken]="token"
             ></app-order-detail-popup>
 
             <!-- Receipt Confirm UI -->
@@ -354,7 +355,6 @@ export class GuestOrderComponent implements OnInit {
   getStatusLabel(status: string | undefined): string {
     if (!status) return 'Không xác định';
     const statusMap: { [key: string]: string } = {
-      'PENDING_PAYMENT': 'Chờ thanh toán',
       'PENDING_APPROVAL': 'Chờ duyệt',
       'PENDING_ASSIGNMENT': 'Chờ phân công',
       'DISCUSSING': 'Đang trao đổi',

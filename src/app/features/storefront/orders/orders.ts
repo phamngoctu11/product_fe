@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { inject as injectActionDialog } from '@angular/core';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { inject as injectToast } from '@angular/core';
@@ -19,6 +20,7 @@ import {
 import { UserInforDTO } from '../../../model/user.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../../shared/order-detail-popup/order-detail-popup.component';
+import { OrderPaymentModalComponent } from '../../shared/order-payment/order-payment-modal.component';
 import {
   AppPaginationComponent,
   OrderSummaryCardComponent,
@@ -32,7 +34,9 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     OrderDetailPopupComponent,
+    OrderPaymentModalComponent,
     AppPaginationComponent,
     PageHeaderComponent,
     OrderSummaryCardComponent,
@@ -83,6 +87,8 @@ export class Orders implements OnInit {
   receivedQuantities: { [variantId: number]: number } = {};
   receiptResponse: ReceiptConfirmResponse | null = null;
   complaintNote = '';
+  paymentModalOpen = false;
+  payingOrder: Order | null = null;
 
   userInfo?: UserInforDTO;
 
@@ -90,6 +96,7 @@ export class Orders implements OnInit {
     private orderService: OrderService,
     private authService: AuthService,
     private userService: UserService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -98,6 +105,15 @@ export class Orders implements OnInit {
       this.loadMyOrders();
       this.loadCancelledOrders();
       this.loadUserInfo();
+      this.route.queryParams.subscribe((params) => {
+        const orderIdParam = params['orderId'];
+        if (orderIdParam) {
+          const orderId = Number(orderIdParam);
+          if (!isNaN(orderId) && orderId > 0) {
+            this.openOrderDetailById(orderId);
+          }
+        }
+      });
     } else {
       console.error('Không tìm thấy ID người dùng. Hãy đăng nhập lại!');
     }
@@ -210,6 +226,26 @@ export class Orders implements OnInit {
     this.loadCancelledOrders(page);
   }
 
+  openOrderDetailById(orderId: number): void {
+    this.hideHistoryModalIfOpen();
+    this.receiptMode = false;
+    this.resetReceiptState(false);
+    this.selectedOrderDetail = null;
+    this.detailError = '';
+    this.isDetailLoading = true;
+
+    this.orderService.getById(orderId).subscribe({
+      next: (detail) => {
+        this.selectedOrderDetail = detail;
+        this.isDetailLoading = false;
+      },
+      error: (err) => {
+        this.detailError = getApiErrorMessage(err, 'Không thể tải chi tiết đơn hàng.');
+        this.isDetailLoading = false;
+      },
+    });
+  }
+
   openOrderDetail(order: OrderListDTO): void {
     this.hideHistoryModalIfOpen();
     this.receiptMode = false;
@@ -231,6 +267,20 @@ export class Orders implements OnInit {
         this.isDetailLoading = false;
       },
     });
+  }
+
+  onOrderUpdated(): void {
+    this.loadMyOrders();
+    if (this.selectedOrderDetail?.id) {
+      this.orderService.getById(this.selectedOrderDetail.id).subscribe({
+        next: (detail) => {
+          this.selectedOrderDetail = {
+            ...detail,
+            staffName: detail.staffName || this.selectedOrderDetail?.staffName || null,
+          };
+        },
+      });
+    }
   }
 
   openReceiptConfirm(order: OrderListDTO): void {
@@ -365,7 +415,41 @@ export class Orders implements OnInit {
   }
 
   canCancelOrder(order: OrderListDTO): boolean {
-    return order.status === 'PENDING_PAYMENT' || order.status === 'PENDING_APPROVAL';
+    return order.status === 'PENDING_APPROVAL';
+  }
+
+  canPayOrder(order: OrderListDTO): boolean {
+    return (
+      order.status === 'ORDER_ACCEPTED' &&
+      order.paymentMethod === 'ONLINE' &&
+      (order as any).paymentStatus !== 'PAID' &&
+      (order as any).paymentStatus !== 'EXPIRED' &&
+      (order as any).paymentStatus !== 'FAILED'
+    );
+  }
+
+  openPaymentModal(order: OrderListDTO): void {
+    this.orderService.getById(order.id).subscribe({
+      next: (detail) => {
+        this.payingOrder = detail;
+        this.paymentModalOpen = true;
+      },
+      error: (err) => {
+        this.toast.notify('Không thể tải thông tin đơn hàng để thanh toán: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+      },
+    });
+  }
+
+  closePaymentModal(): void {
+    this.paymentModalOpen = false;
+    this.payingOrder = null;
+  }
+
+  onPaymentSuccess(): void {
+    this.loadMyOrders();
+    if (this.selectedOrderDetail) {
+      this.onOrderUpdated();
+    }
   }
 
   canReorderOrder(order: OrderListDTO): boolean {

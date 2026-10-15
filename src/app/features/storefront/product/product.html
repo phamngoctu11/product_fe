@@ -31,7 +31,8 @@
       [favoriteIds]="favoriteProductIds"
       [busyIds]="favoriteBusyProductIds"
       (favoriteToggled)="toggleFavorite($event)"
-      (viewed)="viewProduct($event.id)">
+      (viewed)="viewProduct($event.id)"
+      (buy)="openAddToCartModal($event)">
       <sf-state
         sfEmpty
         title="Không tìm thấy sản phẩm"

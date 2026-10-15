@@ -1,27 +1,28 @@
+export type ProductAvailabilityStatus = 'ACCEPTING_ORDERS' | 'PAUSED' | 'DISCONTINUED';
+
+export interface ProductAvailabilityUpdateRequest {
+  availabilityStatus: ProductAvailabilityStatus;
+}
+
 export interface Product {
   id?: number;
   product_name: string;
   price: number;
+  madeDay?: number;
   tags?: string;
-  quantity?: number;
   handmade?: boolean;
-  image_url?: string; // DUY NHẤT 1 KIỂU
+  image_url?: string;
   variants?: ProductVariant[];
+  availabilityStatus?: ProductAvailabilityStatus;
 }
 
 export interface ProductVariant {
   id?: number;
   variantName: string;
   price: number;
-  quantity: number;
   attributes?: string;
   parsedAttributes?: any;
-  image_url?: string; // DUY NHẤT 1 KIỂU
-  restockQuantity?: number;
-}
-
-export interface StockImportRequest {
-  quantity: number;
+  image_url?: string;
 }
 
 export interface BestSellingProduct {
@@ -38,4 +39,3 @@ export interface PageResponse<T> {
   totalPages: number;
   totalElements: number;
 }
-

@@ -1,0 +1,43 @@
+.customer-progress-container {
+  background-color: #fafbfc;
+}
+
+.initial-photo-thumb {
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out;
+}
+
+.initial-photo-thumb:hover {
+  transform: scale(1.04);
+}
+
+.initial-photo-thumb-wrap {
+  position: relative;
+}
+
+.initial-photo-overlay {
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.initial-photo-thumb-wrap:hover .initial-photo-overlay {
+  opacity: 1 !important;
+}
+
+.badge-success {
+  background-color: #198754;
+  color: #fff;
+}
+
+.badge-info {
+  background-color: #0dcaf0;
+  color: #000;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  color: #fff;
+}
+

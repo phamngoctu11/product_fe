@@ -1,0 +1,119 @@
+<section class="change-panel border rounded-4 p-3 p-md-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <div class="text-primary small fw-bold text-uppercase">P11 · Điều chỉnh đặc tả</div>
+      <h5 class="fw-bold mb-1">Yêu cầu chỉnh sửa sản phẩm</h5>
+      <p class="small text-muted mb-0">Giá, số lượng, thời lượng sản xuất và deadline không thay đổi trong luồng này.</p>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" (click)="load()" [disabled]="loading">
+      <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary"></span></div>
+  } @else if (loadError) {
+    <div class="alert alert-danger py-2">{{ loadError }}</div>
+  }
+
+  @if (canCreate) {
+    <div class="request-form bg-light border rounded-3 p-3 mb-4">
+      <h6 class="fw-bold"><i class="bi bi-pencil-square me-2"></i>Gửi yêu cầu mới</h6>
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label small fw-bold">Sản phẩm cần chỉnh sửa *</label>
+          <select class="form-select" [(ngModel)]="selectedItemId" (ngModelChange)="selectItem()" [disabled]="submitting">
+            <option [ngValue]="null">Chọn sản phẩm</option>
+            @for (item of eligibleItems; track itemId(item)) {
+              <option [ngValue]="itemId(item)">{{ itemLabel(item) }} · spec v{{ item.specVersion ?? 1 }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-bold">Đặc tả mong muốn *</label>
+          <textarea class="form-control" rows="4" maxlength="4000" [(ngModel)]="proposedDescription"
+                    [disabled]="submitting" placeholder="Mô tả rõ phần cần thay đổi..."></textarea>
+          <div class="text-end text-muted small">{{ proposedDescription.length }}/4000</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-bold">Lý do chỉnh sửa *</label>
+          <textarea class="form-control" rows="2" maxlength="2000" [(ngModel)]="reason"
+                    [disabled]="submitting" placeholder="Vì sao bạn cần thay đổi?"></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-bold">Ảnh tham chiếu mới (tùy chọn, tối đa 10)</label>
+          <input class="form-control" type="file" accept="image/*" multiple (change)="selectFiles($event)" [disabled]="submitting">
+          @if (previews.length) {
+            <div class="preview-list mt-2">
+              @for (preview of previews; track $index) {
+                <div class="preview"><img [src]="preview" alt="Ảnh tham chiếu"><button type="button" (click)="removeFile($index)">×</button></div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+      <div class="text-end mt-3">
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" (click)="submit()" [disabled]="submitting">
+          @if (submitting) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          Gửi yêu cầu
+        </button>
+      </div>
+    </div>
+  } @else if (mode === 'USER' && !loading) {
+    <div class="alert alert-secondary small">Đơn hoặc sản phẩm hiện không còn ở giai đoạn cho phép chỉnh sửa đặc tả.</div>
+  }
+
+  @if (mode === 'STAFF' && pendingRequests.length > 0) {
+    <div class="alert alert-warning small"><strong>{{ pendingRequests.length }}</strong> yêu cầu đang chờ bạn xử lý.</div>
+  }
+
+  <div class="d-flex flex-column gap-3">
+    @for (request of requests; track request.id) {
+      <article class="request-card border rounded-3 p-3" [class.pending]="request.status === 'PENDING_REVIEW'">
+        <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+          <div>
+            <strong>{{ request.productName || 'Sản phẩm #' + request.orderItemId }}</strong>
+            <span class="text-muted" *ngIf="request.variantName"> — {{ request.variantName }}</span>
+            <div class="small text-muted">Yêu cầu #{{ request.id }} · {{ request.createdAt | date: 'dd/MM/yyyy HH:mm' }} · từ spec v{{ request.baseSpecVersion }}</div>
+          </div>
+          <span class="badge rounded-pill"
+                [class.text-bg-warning]="request.status === 'PENDING_REVIEW'"
+                [class.text-bg-success]="request.status === 'APPLIED'"
+                [class.text-bg-danger]="request.status === 'REJECTED'">{{ statusLabel(request.status) }}</span>
+        </div>
+        <div class="small text-muted fw-bold">Đặc tả đề xuất</div>
+        <div class="proposal-text mb-2">{{ proposalDescription(request) }}</div>
+        <div class="small"><strong>Lý do:</strong> {{ request.requestReason }}</div>
+        @if (proposalImages(request).length) {
+          <div class="proposal-images mt-2">
+            @for (image of proposalImages(request); track image) { <a [href]="image" target="_blank"><img [src]="image" alt="Ảnh đề xuất"></a> }
+          </div>
+        }
+        @if (request.decisionReason) {
+          <div class="alert py-2 mt-2 mb-0" [class.alert-danger]="request.status === 'REJECTED'" [class.alert-info]="request.status === 'APPLIED'">
+            <strong>Phản hồi staff:</strong> {{ request.decisionReason }}
+          </div>
+        }
+        @if (request.status === 'APPLIED') {
+          <div class="small text-success fw-bold mt-2"><i class="bi bi-check-circle-fill me-1"></i>Đã tạo spec v{{ request.appliedVersion }}; deadline và giá vẫn giữ nguyên.</div>
+        }
+        @if (mode === 'STAFF' && request.status === 'PENDING_REVIEW') {
+          <div class="border-top mt-3 pt-3">
+            <label class="form-label small fw-bold">Phản hồi (bắt buộc khi từ chối)</label>
+            <textarea class="form-control form-control-sm" rows="2" maxlength="2000" [(ngModel)]="decisionReasons[request.id]"
+                      [disabled]="decidingId !== null" placeholder="Nêu lý do hoặc ghi chú quyết định..."></textarea>
+            <div class="d-flex justify-content-end gap-2 mt-2">
+              <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" (click)="decide(request, 'REJECT')" [disabled]="decidingId !== null">Từ chối</button>
+              <button type="button" class="btn btn-sm btn-success rounded-pill px-3" (click)="decide(request, 'ACCEPT')" [disabled]="decidingId !== null">
+                @if (decidingId === request.id) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                Chấp nhận & áp dụng
+              </button>
+            </div>
+          </div>
+        }
+      </article>
+    } @empty {
+      @if (!loading) { <div class="text-center text-muted small py-3">Chưa có yêu cầu chỉnh sửa nào.</div> }
+    }
+  </div>
+</section>

@@ -23,8 +23,28 @@ export class ProductCardComponent {
   @Output() deleted = new EventEmitter<Product>();
   @Output() favoriteToggled = new EventEmitter<Product>();
 
+  get isAcceptingOrders(): boolean {
+    const status = this.product?.availabilityStatus;
+    return !status || status === 'ACCEPTING_ORDERS';
+  }
+
+  get isPaused(): boolean {
+    return this.product?.availabilityStatus === 'PAUSED';
+  }
+
+  get isDiscontinued(): boolean {
+    return this.product?.availabilityStatus === 'DISCONTINUED';
+  }
+
+  get availabilityLabel(): string {
+    const status = this.product?.availabilityStatus;
+    if (status === 'PAUSED') return 'Tạm ngưng nhận đơn';
+    if (status === 'DISCONTINUED') return 'Ngừng kinh doanh';
+    return 'Đang nhận đơn';
+  }
+
   get isOutOfStock(): boolean {
-    return !this.product.quantity || this.product.quantity <= 0;
+    return !this.isAcceptingOrders;
   }
 
   open(): void {

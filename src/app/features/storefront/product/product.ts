@@ -13,20 +13,13 @@ import { AddToCartModalComponent } from './add-to-cart-modal/add-to-cart-modal';
 import { Product } from '../../../model/product.model';
 import { debounceTime, Observable, Subject, Subscription } from 'rxjs';
 import { getApiErrorMessage } from '../../../model/api-response.model';
-import {
-  AppPaginationComponent,
-  PageHeaderComponent,
-  ProductCardComponent,
-  ViewStateComponent,
-} from '../../shared/ui';
+import { AppPaginationComponent } from '../../shared/ui';
 import { APP_DIALOG_SIZE } from '../../../config/dialog.config';
 import { HeroSectionComponent } from '../home/hero-section/hero-section.component';
 import { SfPageIntroComponent } from '../ui/page-intro/sf-page-intro.component';
 import { SfChipGroupComponent, SfChipItem } from '../ui/chip-group/sf-chip-group.component';
 import { SfProductGridComponent } from '../ui/product-grid/sf-product-grid.component';
-import { SfProductTileComponent } from '../ui/product-tile/sf-product-tile.component';
 import { SfStateComponent } from '../ui/state/sf-state.component';
-
 
 @Component({
   selector: 'app-product',
@@ -36,16 +29,12 @@ import { SfStateComponent } from '../ui/state/sf-state.component';
     SfPageIntroComponent,
     SfChipGroupComponent,
     SfProductGridComponent,
-    SfProductTileComponent,
     SfStateComponent,
     FormsModule,
     CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     AppPaginationComponent,
-    PageHeaderComponent,
-    ProductCardComponent,
-    ViewStateComponent,
   ],
   templateUrl: './product.html',
   styleUrl: './product.css',
@@ -166,11 +155,17 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   // HÀM MỚI: XEM CHI TIẾT SẢN PHẨM (READ-ONLY)
   viewProduct(id: number | null | undefined) {
-    this.dialog.open(ProductDetailComponent, {
+    const dialogRef = this.dialog.open(ProductDetailComponent, {
       ...APP_DIALOG_SIZE.product,
       panelClass: 'product-detail-dialog-panel',
       data: { id: id || null, availableTags: this.getAvailableTags(), isView: true },
       disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result?.action === 'buy' && result.product) {
+        this.openAddToCartModal(result.product);
+      }
     });
   }
 
@@ -199,6 +194,10 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   openAddToCartModal(product: Product) {
     if (!this.canPurchase) { this.toast.notify('Chỉ tài khoản user mới có quyền mua hàng.'); return; }
+    if (product.availabilityStatus === 'PAUSED' || product.availabilityStatus === 'DISCONTINUED') {
+      this.toast.notify('Sản phẩm hiện đang tạm ngưng hoặc ngừng kinh doanh.');
+      return;
+    }
     if (!product.variants || product.variants.length === 0) { this.toast.notify('Sản phẩm này hiện tại chưa có phân loại hàng!'); return; }
 
     const dialogRef = this.dialog.open(AddToCartModalComponent, {

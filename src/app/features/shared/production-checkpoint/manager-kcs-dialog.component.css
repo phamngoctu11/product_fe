@@ -1,0 +1,65 @@
+.kcs-dialog-backdrop {
+  backdrop-filter: blur(4px);
+}
+
+.kcs-dialog-modal {
+  max-width: 900px;
+  max-height: 90vh;
+}
+
+.kcs-dialog-body {
+  max-height: calc(90vh - 150px);
+}
+
+.kcs-thumb {
+  width: 90px;
+  height: 90px;
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out;
+}
+
+.kcs-thumb:hover {
+  transform: scale(1.03);
+}
+
+.kcs-thumb-overlay {
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.kcs-thumbnail-wrap:hover .kcs-thumb-overlay {
+  opacity: 1 !important;
+}
+
+.badge-success {
+  background-color: #198754;
+  color: #fff;
+}
+
+.badge-warning {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.badge-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.badge-info {
+  background-color: #0dcaf0;
+  color: #000;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.checkpoint-entry {
+  background-color: #fdfdfd;
+}
+
+.kcs-action-panel {
+  border-left: 4px solid #ffc107 !important;
+}

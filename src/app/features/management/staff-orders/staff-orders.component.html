@@ -36,7 +36,7 @@
                   <span class="claim-card__eyebrow">Đơn hàng</span>
                   <strong>#{{ order.orderId }}</strong>
                 </div>
-                <app-order-status-badge [status]="order.status" [compact]="true"></app-order-status-badge>
+                <app-order-status-badge [status]="order.status" [paymentStatus]="order.paymentStatus" [paymentMethod]="order.paymentMethod" [compact]="true"></app-order-status-badge>
               </div>
               <div class="claim-card__body">
                 <div><span>Khách hàng</span><strong>{{ order.customerName || 'Khách hàng' }}</strong></div>
@@ -80,6 +80,10 @@
             [showActions]="true"
             [showStaff]="false">
             <div orderActions>
+              <a [routerLink]="['/management/admin-chat']" [queryParams]="{ orderId: order.id }"
+                 class="btn btn-outline-primary rounded-pill px-3 fw-bold shadow-sm">
+                <i class="bi bi-chat-dots me-1"></i> Quản lý chat
+              </a>
               <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderDetail(order)">
                 <i class="bi bi-eye me-1"></i>Xem chi tiết
               </button>
@@ -116,6 +120,28 @@
     <div class="staff-detail-body p-4 overflow-auto">
       <app-view-state [loading]="detailLoading" [card]="false" loadingText="Đang tải chi tiết đơn hàng...">
         <ng-container *ngIf="selectedOrder">
+          <!-- P9 Status Banners -->
+          <div *ngIf="isOnlineWaitingPayment(selectedOrder)" class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-hourglass-split fs-4 text-warning"></i>
+            <div>
+              <strong>Chờ khách thanh toán trực tuyến:</strong> Đơn hàng đã được tiếp nhận nhưng khách hàng chưa hoàn tất thanh toán. Nhân viên chỉ có thể bắt đầu sản xuất sau khi thanh toán thành công (PAID).
+            </div>
+          </div>
+
+          <div *ngIf="selectedOrder.status === 'ORDER_ACCEPTED' && canStartProduction(selectedOrder)" class="alert alert-success d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-check-circle-fill fs-4 text-success"></i>
+            <div>
+              <strong>Sẵn sàng sản xuất:</strong> {{ selectedOrder.paymentMethod === 'COD' ? 'Đơn hàng COD không cần thanh toán trước.' : 'Khách hàng đã thanh toán trực tuyến thành công.' }} Nhân viên có thể bắt đầu sản xuất ngay.
+            </div>
+          </div>
+
+          <div *ngIf="selectedOrder.status === 'ORDER_CREATING'" class="alert alert-info d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-gear-wide-connected fs-4 text-info"></i>
+            <div>
+              <strong>Đang trong tiến trình sản xuất:</strong> Bắt đầu lúc {{ selectedOrder.productionStartedAt | date: 'dd/MM/yyyy HH:mm' }}. Deadline từng sản phẩm được hiển thị trong bảng chi tiết.
+            </div>
+          </div>
+
           <div class="row g-3 mb-4">
             <div class="col-md-3">
               <div class="text-muted small">Khách hàng</div>
@@ -123,7 +149,11 @@
             </div>
             <div class="col-md-3">
               <div class="text-muted small">Trạng thái</div>
-              <app-order-status-badge [status]="selectedOrder.status" [compact]="true"></app-order-status-badge>
+              <app-order-status-badge [status]="selectedOrder.status" [paymentStatus]="selectedOrder.paymentStatus" [paymentMethod]="selectedOrder.paymentMethod" [compact]="true"></app-order-status-badge>
+            </div>
+            <div class="col-md-3">
+              <div class="text-muted small">Hình thức TT</div>
+              <div class="fw-bold">{{ selectedOrder.paymentMethod || 'Chưa xác định' }}</div>
             </div>
             <div class="col-md-3">
               <div class="text-muted small">Loại đơn</div>
@@ -133,6 +163,17 @@
               <div class="text-muted small">Tổng tiền</div>
               <div class="fw-bold text-danger">{{ selectedOrder.finalPrice | number: '1.0-0' }} đ</div>
             </div>
+            <div class="col-md-3" *ngIf="selectedOrder.plannedStartAt">
+              <div class="text-muted small">Dự kiến bắt đầu</div>
+              <div class="fw-bold" [class.text-danger]="isPlannedStartOverdue(selectedOrder)">
+                {{ selectedOrder.plannedStartAt | date: 'dd/MM/yyyy HH:mm' }}
+                <span *ngIf="isPlannedStartOverdue(selectedOrder)" class="badge bg-danger-subtle text-danger ms-1">Quá hạn</span>
+              </div>
+            </div>
+            <div class="col-md-3" *ngIf="selectedOrder.productionStartedAt">
+              <div class="text-muted small">Bắt đầu sản xuất lúc</div>
+              <div class="fw-bold text-success">{{ selectedOrder.productionStartedAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+            </div>
             <div class="col-12">
               <div class="text-muted small">Ghi chú</div>
               <div class="fw-medium">{{ selectedOrder.note || 'Không có ghi chú' }}</div>
@@ -141,29 +182,118 @@
 
           <app-order-items-table
             [items]="selectedOrder.items || selectedOrder.orderItems || selectedOrder.details || []"
-            mode="warehouse"
-            [editable]="selectedOrder.status === 'WAREHOUSE_ASSIGNED'"
-            [quantities]="exportQuantities[selectedOrder.id] || {}"
-            (quantityChange)="updateExportQuantity(selectedOrder.id, $event)">
+            mode="readonly">
           </app-order-items-table>
+
+          <app-change-request-panel
+            *ngIf="activeTab === 'mine' && (selectedOrder.status === 'ORDER_ACCEPTED' || selectedOrder.status === 'ORDER_CREATING')"
+            class="d-block mt-4"
+            [order]="selectedOrder"
+            mode="STAFF"
+            (changed)="refreshSelectedOrder(); loadMyOrders()">
+          </app-change-request-panel>
+
+          <!-- P10 Production Checkpoint Section for Assigned Staff -->
+          <section *ngIf="selectedOrder.status === 'ORDER_CREATING'" class="mt-4">
+            <app-staff-production-checkpoint
+              [orderId]="selectedOrder.id"
+              [orderVersion]="selectedOrder.version ?? 0"
+              (orderUpdated)="refreshSelectedOrder(); loadMyOrders()">
+            </app-staff-production-checkpoint>
+          </section>
+
+          <!-- P8 Order Collaboration Panel (Agreement & Chat) -->
+          <section *ngIf="selectedOrder && !selectedOrder.guestSessionId" class="mt-4">
+            <app-order-collaboration
+              [order]="selectedOrder"
+              mode="STAFF"
+              (orderUpdated)="loadMyOrders(); refreshSelectedOrder()">
+            </app-order-collaboration>
+          </section>
 
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
             <div class="text-muted small">
-              P7 chỉ thực hiện nhận/phân công. Chức năng xuất kho cũ vẫn được giữ cho đơn legacy ở trạng thái WAREHOUSE_ASSIGNED.
+              <span *ngIf="selectedOrder.status === 'ORDER_ACCEPTED' && activeTab === 'mine'">
+                <i class="bi bi-info-circle me-1"></i>Nhân viên phụ trách bắt đầu sản xuất khi đơn đã được duyệt và sẵn sàng.
+              </span>
+              <span *ngIf="selectedOrder.status === 'ORDER_CREATING' && activeTab === 'mine'">
+                <i class="bi bi-info-circle me-1"></i>Thực hiện tải ảnh tiến độ cho từng sản phẩm ở phần Kiểm định sản xuất bên trên.
+              </span>
             </div>
             <div class="d-flex gap-2">
               <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="closeOrderDetail()">Đóng</button>
-              <button *ngIf="canExport(selectedOrder)"
-                      class="btn btn-primary rounded-pill px-4 fw-bold"
-                      (click)="exportSelectedOrder()"
-                      [disabled]="exportingOrderId === selectedOrder.id">
-                <span *ngIf="exportingOrderId !== selectedOrder.id"><i class="bi bi-send-check me-1"></i>Xác nhận xuất kho</span>
-                <span *ngIf="exportingOrderId === selectedOrder.id">Đang xử lý...</span>
-              </button>
+
+              <!-- P9 Start Production Action for Assigned Staff in 'mine' tab -->
+              <ng-container *ngIf="activeTab === 'mine' && selectedOrder.status === 'ORDER_ACCEPTED'">
+                <button *ngIf="canStartProduction(selectedOrder)"
+                        type="button"
+                        class="btn btn-success rounded-pill px-4 fw-bold shadow-sm"
+                        (click)="openStartProductionDialog()">
+                  <i class="bi bi-play-circle-fill me-1"></i>Bắt đầu sản xuất
+                </button>
+                <button *ngIf="isOnlineWaitingPayment(selectedOrder)"
+                        type="button"
+                        class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm"
+                        disabled
+                        title="Khách hàng chưa thanh toán trực tuyến. Không thể bắt đầu sản xuất.">
+                  <i class="bi bi-hourglass-split me-1"></i>Chờ khách thanh toán
+                </button>
+              </ng-container>
             </div>
           </div>
         </ng-container>
       </app-view-state>
+    </div>
+  </div>
+</div>
+
+<!-- P9 Start Production Confirmation Modal -->
+<div *ngIf="showStartProductionModal" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3" style="z-index: 1060;">
+  <div class="bg-white rounded-4 shadow-lg overflow-hidden w-100" style="max-width: 550px;">
+    <div class="bg-success text-white p-3 px-4 d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0"><i class="bi bi-play-circle-fill me-2"></i>Bắt đầu sản xuất đơn #{{ selectedOrder?.id }}</h5>
+      <button class="btn btn-sm btn-light rounded-circle" (click)="closeStartProductionDialog()" [disabled]="isStartingProduction" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="p-4">
+      <p class="text-secondary mb-3">
+        Bạn có chắc chắn muốn bắt đầu tiến trình sản xuất cho đơn hàng này không? Sau khi bắt đầu, trạng thái đơn sẽ chuyển sang <strong>ĐANG SẢN XUẤT (ORDER_CREATING)</strong>.
+      </p>
+
+      <div *ngIf="selectedOrder && isPlannedStartOverdue(selectedOrder)" class="alert alert-warning py-2 px-3 small d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+        <div>
+          <strong>Thời điểm bắt đầu dự kiến đã quá hạn</strong><br>
+          Dự kiến: {{ selectedOrder.plannedStartAt | date: 'dd/MM/yyyy HH:mm' }}. Vui lòng cung cấp lý do bắt đầu muộn.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-bold text-muted">Lý do bắt đầu muộn (nếu có):</label>
+        <textarea
+          class="form-control"
+          rows="3"
+          maxlength="1000"
+          [(ngModel)]="lateStartReason"
+          placeholder="Nhập lý do bắt đầu muộn (tùy chọn, tối đa 1000 ký tự)..."
+          [disabled]="isStartingProduction"></textarea>
+        <div class="text-end text-muted small mt-1">{{ lateStartReason.length }}/1000 ký tự</div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+                (click)="closeStartProductionDialog()"
+                [disabled]="isStartingProduction">
+          Hủy
+        </button>
+        <button class="btn btn-success rounded-pill px-4 fw-bold shadow-sm"
+                (click)="confirmStartProduction()"
+                [disabled]="isStartingProduction">
+          <span *ngIf="isStartingProduction" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          {{ isStartingProduction ? 'Đang xử lý...' : 'Xác nhận bắt đầu' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

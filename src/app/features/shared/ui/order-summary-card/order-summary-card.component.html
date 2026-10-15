@@ -11,7 +11,7 @@
     </div>
 
     <div class="order-summary-heading-actions">
-      <app-order-status-badge [status]="order.status"></app-order-status-badge>
+      <app-order-status-badge [status]="order.status" [paymentStatus]="order.paymentStatus" [paymentMethod]="order.paymentMethod"></app-order-status-badge>
       @if (showActions) {
         <div class="d-flex flex-wrap gap-2 justify-content-end">
           <ng-content select="[orderActions]"></ng-content>

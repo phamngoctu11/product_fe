@@ -17,7 +17,7 @@ export class PaymentSuccessComponent implements OnInit {
   constructor(private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit(): void {
-    // Đọc các tham số (queryParams) mà MoMo gắn trên thanh URL khi gọi về Frontend
+    // Đọc các tham số (queryParams) từ cổng thanh toán khi gọi về Frontend
     this.route.queryParams.subscribe(params => {
       const resultCode = params['resultCode'];
       this.orderId = params['orderId'];
@@ -27,7 +27,7 @@ export class PaymentSuccessComponent implements OnInit {
         this.message = 'Thanh toán thành công! Đơn hàng của bạn đang được xử lý.';
       } else {
         this.isSuccess = false;
-        // Lấy lý do lỗi từ MoMo (nếu có)
+        // Lấy lý do lỗi từ cổng thanh toán (nếu có)
         this.message = params['message'] || 'Thanh toán thất bại hoặc đã bị hủy!';
       }
     });

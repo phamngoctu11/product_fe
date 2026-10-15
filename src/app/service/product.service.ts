@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BestSellingProduct, Product, PageResponse, ProductVariant, StockImportRequest } from '../model/product.model';
+import { BestSellingProduct, Product, PageResponse, ProductVariant, ProductAvailabilityStatus } from '../model/product.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
@@ -73,17 +73,16 @@ export class ProductService {
       .pipe(map(unwrapApiResponse));
   }
 
+  updateAvailability(id: number, availabilityStatus: ProductAvailabilityStatus): Observable<void> {
+    return this.http
+      .patch<ApiResponse<void> | void>(`${this.apiUrl}/${id}/availability`, { availabilityStatus })
+      .pipe(map(unwrapApiResponse));
+  }
+
   addVariant(productId: number, variant: ProductVariant, userId: string): Observable<Product> {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http
       .post<ApiResponse<Product> | Product>(`${this.apiUrl}/${productId}/variants`, variant, { params })
-      .pipe(map(unwrapApiResponse));
-  }
-
-  restockVariant(variantId: number, request: StockImportRequest, userId: string): Observable<ProductVariant> {
-    const params = new HttpParams().set('userId', userId.toString());
-    return this.http
-      .post<ApiResponse<ProductVariant> | ProductVariant>(`${this.apiUrl}/variants/${variantId}/restock`, request, { params })
       .pipe(map(unwrapApiResponse));
   }
 

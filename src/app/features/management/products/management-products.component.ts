@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Product } from '../../../model/product.model';
+import { Product, ProductAvailabilityStatus } from '../../../model/product.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { ProductService } from '../../../service/product.service';
 import { AuthService } from '../../../service/auth.service';
@@ -126,6 +126,43 @@ export class ManagementProductsComponent implements OnInit {
         error: (error) => this.toast.notify(getApiErrorMessage(error, 'Không thể xóa sản phẩm.')),
       });
     });
+  }
+
+  get canManageCatalog(): boolean {
+    return this.authService.isManager();
+  }
+
+  updatingStatusProductId: number | null = null;
+
+  onAvailabilityChange(product: Product, event: Event): void {
+    event.stopPropagation();
+    if (!this.canManageCatalog) {
+      this.toast.notify('Chỉ Manager mới có quyền cập nhật trạng thái catalog.');
+      return;
+    }
+    const select = event.target as HTMLSelectElement;
+    const newStatus = select.value as ProductAvailabilityStatus;
+    if (!product.id || product.availabilityStatus === newStatus) return;
+
+    this.updatingStatusProductId = product.id;
+    this.productService.updateAvailability(product.id, newStatus).subscribe({
+      next: () => {
+        product.availabilityStatus = newStatus;
+        this.updatingStatusProductId = null;
+        this.toast.notify(`Đã cập nhật trạng thái catalog: ${this.getAvailabilityLabel(newStatus)}.`);
+      },
+      error: (error) => {
+        this.updatingStatusProductId = null;
+        select.value = product.availabilityStatus || 'ACCEPTING_ORDERS';
+        this.toast.notify(getApiErrorMessage(error, 'Không thể cập nhật trạng thái sản phẩm.'));
+      }
+    });
+  }
+
+  getAvailabilityLabel(status?: ProductAvailabilityStatus): string {
+    if (status === 'PAUSED') return 'Tạm ngưng nhận đơn';
+    if (status === 'DISCONTINUED') return 'Ngừng kinh doanh';
+    return 'Đang nhận đơn';
   }
 
   get canCreateOrDelete(): boolean {

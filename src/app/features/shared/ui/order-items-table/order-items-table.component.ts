@@ -3,7 +3,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderItem } from '../../../../model/order.model';
 
-export type OrderItemsMode = 'readonly' | 'receipt' | 'warehouse';
+export type OrderItemsMode = 'readonly' | 'receipt';
 
 export interface OrderItemQuantityChange {
   variantId: number;
@@ -28,13 +28,8 @@ export class OrderItemsTableComponent {
     return this.mode === 'receipt';
   }
 
-  get isWarehouse(): boolean {
-    return this.mode === 'warehouse';
-  }
-
   get columnCount(): number {
-    if (this.isWarehouse) return 4;
-    return this.isReceipt ? 8 : 7;
+    return this.isReceipt ? 6 : 5;
   }
 
   getVariantId(item: OrderItem): number {
@@ -43,7 +38,7 @@ export class OrderItemsTableComponent {
 
   getQuantity(item: OrderItem): number {
     const variantId = this.getVariantId(item);
-    return Number(this.quantities[variantId] ?? item.exportedQuantity ?? item.quantity ?? 0);
+    return Number(this.quantities[variantId] ?? item.quantity ?? 0);
   }
 
   getImage(item: OrderItem): string {

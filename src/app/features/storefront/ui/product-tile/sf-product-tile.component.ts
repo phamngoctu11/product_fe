@@ -32,10 +32,22 @@ import { Product } from '../../../../model/product.model';
         <h3 class="sf-tile__name">{{ product().product_name }}</h3>
         <p class="sf-tile__meta">
           <span class="sf-mono">{{ product().price | number: '1.0-0' }} ₫</span>
-          @if (product().variants?.length) {
+          @if (product().madeDay) {
+            <span>~{{ product().madeDay }} ngày làm</span>
+          } @else if (product().variants?.length) {
             <span>{{ product().variants?.length }} phân loại</span>
           }
         </p>
+        <button
+          type="button"
+          class="sf-tile__buy-btn"
+          [disabled]="!isAccepting()"
+          (click)="onBuyClick($event)"
+          [attr.aria-label]="'Chọn mua ' + product().product_name"
+          [title]="isAccepting() ? 'Chọn mua sản phẩm' : availabilityLabel()">
+          <i class="bi bi-bag-plus me-1"></i>
+          <span>{{ isAccepting() ? 'Chọn mua' : availabilityLabel() }}</span>
+        </button>
       </div>
     </a>
 
@@ -149,6 +161,39 @@ import { Product } from '../../../../model/product.model';
     .sf-tile__fav:hover { background: var(--sf-bg-deep); }
     .sf-tile__fav.is-active { color: var(--sf-danger); }
     .sf-tile__fav:disabled { opacity: 0.6; cursor: progress; }
+
+    .sf-tile__buy-btn {
+      margin-top: 0.85rem;
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--sf-line-strong);
+      background: transparent;
+      color: var(--sf-ink);
+      font-family: var(--sf-font-sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.25s var(--sf-ease);
+    }
+
+    .sf-tile__buy-btn:hover:not(:disabled) {
+      background: var(--sf-ink);
+      color: var(--sf-bg);
+      border-color: var(--sf-ink);
+    }
+
+    .sf-tile__buy-btn:disabled {
+      opacity: 0.45;
+      border-color: var(--sf-line);
+      color: var(--sf-muted);
+      cursor: not-allowed;
+    }
   `],
 })
 export class SfProductTileComponent {
@@ -160,19 +205,30 @@ export class SfProductTileComponent {
   readonly favoriteBusy = input(false);
   readonly favoriteToggled = output<Product>();
   readonly viewed = output<Product>();
+  readonly buy = output<Product>();
 
   protected readonly isAccepting = computed(() => {
-    const p = this.product();
-    if (p.variants && p.variants.length > 0) {
-      return p.variants.some(v => v.quantity > 0);
-    }
-    return (p.quantity || 0) > 0;
+    const status = this.product().availabilityStatus;
+    return !status || status === 'ACCEPTING_ORDERS';
   });
-  protected readonly availabilityLabel = computed(() => 'Hết hàng');
+  protected readonly availabilityLabel = computed(() => {
+    const status = this.product().availabilityStatus;
+    if (status === 'PAUSED') return 'Tạm ngưng nhận đơn';
+    if (status === 'DISCONTINUED') return 'Ngừng kinh doanh';
+    return 'Đang nhận đơn';
+  });
 
   onTileClick(event: Event) {
     event.preventDefault();
     this.viewed.emit(this.product());
+  }
+
+  onBuyClick(event: Event) {
+    event.stopPropagation();
+    event.preventDefault();
+    if (this.isAccepting()) {
+      this.buy.emit(this.product());
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   AvailableStaff,
   ManagerOrderReviewDetail,
@@ -9,6 +10,7 @@ import {
   OrderAssignmentQueueItem,
 } from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
+import { ReviewProductionCheckpointResultDTO } from '../../../model/production-checkpoint.model';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { OrderService } from '../../../service/order.service';
 import { ToastService } from '../../../service/toast.service';
@@ -18,6 +20,7 @@ import {
   PageHeaderComponent,
   ViewStateComponent,
 } from '../../shared/ui';
+import { ManagerKcsDialogComponent } from '../../shared/production-checkpoint/manager-kcs-dialog.component';
 
 type ManagerOrderTab = 'reviews' | 'assignments';
 
@@ -31,6 +34,7 @@ type ManagerOrderTab = 'reviews' | 'assignments';
     OrderStatusBadgeComponent,
     PageHeaderComponent,
     ViewStateComponent,
+    ManagerKcsDialogComponent,
   ],
   templateUrl: './admin-order.component.html',
   styleUrl: './admin-order.component.css',
@@ -39,6 +43,8 @@ export class AdminOrderComponent implements OnInit {
   private readonly actionDialog = inject(ActionDialogService);
   private readonly orderService = inject(OrderService);
   private readonly toast = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   activeTab: ManagerOrderTab = 'reviews';
   reviews: ManagerOrderReviewSummary[] = [];
@@ -58,9 +64,38 @@ export class AdminOrderComponent implements OnInit {
   detailLoading = false;
   detailError = '';
 
+  kcsOrderId: number | null = null;
+  isKcsDialogOpen = false;
+
   ngOnInit(): void {
     this.loadAvailableStaff();
     this.loadCurrentTab();
+    this.route.queryParams.subscribe((params) => {
+      const orderIdParam = params['orderId'];
+      if (orderIdParam) {
+        const orderId = Number(orderIdParam);
+        if (!isNaN(orderId) && orderId > 0) {
+          this.openKcsReview(orderId);
+        }
+      }
+    });
+  }
+
+  openKcsReview(orderId: number): void {
+    this.kcsOrderId = orderId;
+    this.isKcsDialogOpen = true;
+  }
+
+  closeKcsDialog(): void {
+    this.isKcsDialogOpen = false;
+    this.kcsOrderId = null;
+  }
+
+  onKcsReviewed(result: ReviewProductionCheckpointResultDTO): void {
+    if (this.selectedDetail?.order && this.selectedDetail.order.id === result.orderId) {
+      this.selectedDetail.order.status = result.orderStatus;
+      this.selectedDetail.order.version = result.orderVersion;
+    }
   }
 
   selectTab(tab: ManagerOrderTab): void {

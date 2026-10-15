@@ -1,0 +1,247 @@
+<div *ngIf="isOpen" class="kcs-dialog-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3" style="z-index: 1060;">
+  <div class="kcs-dialog-modal bg-white rounded-4 shadow-lg overflow-hidden w-100 d-flex flex-column">
+    <!-- Header -->
+    <div class="bg-primary text-white p-4 d-flex justify-content-between align-items-center">
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <h4 class="fw-bold mb-0">Kiểm định chất lượng (KCS) đơn #{{ orderId }}</h4>
+          <span *ngIf="getPendingCount() > 0" class="badge bg-warning text-dark">
+            {{ getPendingCount() }} sản phẩm chờ duyệt
+          </span>
+        </div>
+        <div class="small opacity-75 mt-1">Duyệt sản phẩm hoàn thiện (FINAL_PRODUCT) của từng hạng mục</div>
+      </div>
+      <button class="btn btn-sm btn-light rounded-circle" (click)="onClose()" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="kcs-dialog-body p-4 overflow-auto flex-grow-1">
+      <!-- Success/Status Banner from last review -->
+      <div *ngIf="lastReviewResult" class="mb-4">
+        <div *ngIf="lastReviewResult.orderStatus === 'READY_TO_SHIP'" class="alert alert-success d-flex align-items-center gap-3">
+          <i class="bi bi-check-circle-fill fs-3 text-success"></i>
+          <div>
+            <strong class="d-block">Tất cả sản phẩm đã đạt chuẩn KCS!</strong>
+            Đơn hàng #{{ orderId }} đã tự động chuyển sang trạng thái <strong>SẴN SÀNG GIAO (READY_TO_SHIP)</strong>. Nhân viên phụ trách đã được giải phóng hoàn tất.
+          </div>
+        </div>
+
+        <div *ngIf="lastReviewResult.orderStatus === 'ORDER_CREATING' && (lastReviewResult.remainingOrderItemIds?.length || 0) > 0" class="alert alert-info d-flex align-items-center gap-3">
+          <i class="bi bi-info-circle-fill fs-3 text-info"></i>
+          <div>
+            <strong class="d-block">Đã ghi nhận quyết định KCS</strong>
+            Còn {{ lastReviewResult.remainingOrderItemIds.length }} sản phẩm chưa hoàn tất KCS. Đơn hàng tiếp tục ở trạng thái <strong>ĐANG SẢN XUẤT (ORDER_CREATING)</strong>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="text-muted mt-2">Đang tải tiến độ sản xuất...</div>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="errorMessage && !isLoading" class="alert alert-danger d-flex align-items-center justify-content-between">
+        <div>{{ errorMessage }}</div>
+        <button class="btn btn-sm btn-outline-danger" (click)="loadProgress()">Thử lại</button>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && !errorMessage && itemsProgress.length === 0" class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+        Chưa có dữ liệu tiến độ sản xuất cho đơn hàng này.
+      </div>
+
+      <!-- Items List -->
+      <div *ngIf="!isLoading && !errorMessage && itemsProgress.length > 0" class="d-flex flex-column gap-4">
+        <div *ngFor="let item of itemsProgress" class="card border rounded-3 shadow-sm overflow-hidden">
+          <!-- Item Card Header -->
+          <div class="card-header bg-light py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <h6 class="fw-bold text-dark mb-1">
+                {{ item.productName }}
+                <span *ngIf="item.variantName" class="text-muted fw-normal">({{ item.variantName }})</span>
+              </h6>
+              <div class="text-muted small">
+                <span>Số lượng: <strong>{{ item.quantity }}</strong></span>
+                <span *ngIf="item.computedCompletionAt" class="ms-3">
+                  Hạn hoàn thành: <strong>{{ item.computedCompletionAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                </span>
+              </div>
+            </div>
+            <div>
+              <span class="badge" [ngClass]="getItemStatusBadgeClass(item.productionStatus)">
+                {{ getItemStatusLabel(item.productionStatus) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Item Checkpoints Body -->
+          <div class="card-body p-4">
+            <div *ngIf="!item.checkpoints || item.checkpoints.length === 0" class="text-muted small italic py-2">
+              Chưa có checkpoint nào được nhân viên gửi.
+            </div>
+
+            <div *ngIf="item.checkpoints && item.checkpoints.length > 0" class="d-flex flex-column gap-3">
+              <div *ngFor="let cp of item.checkpoints" class="checkpoint-entry border rounded-3 p-3" [class.border-warning]="cp.stage === 'FINAL_PRODUCT' && cp.status === 'PENDING_REVIEW'" [class.bg-warning-subtle]="cp.stage === 'FINAL_PRODUCT' && cp.status === 'PENDING_REVIEW'">
+                <!-- Stage Header -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <strong class="fs-6 text-dark" *ngIf="cp.stage === 'INITIAL_SHAPE'">
+                      <i class="bi bi-brush me-1 text-primary"></i> 1. Tạo dáng ban đầu (INITIAL_SHAPE)
+                    </strong>
+                    <strong class="fs-6 text-dark" *ngIf="cp.stage === 'FINAL_PRODUCT'">
+                      <i class="bi bi-patch-check-fill me-1 text-success"></i> 2. Sản phẩm hoàn thiện (Lần nộp #{{ cp.attemptNumber }})
+                    </strong>
+                    <span class="text-muted small">(Phiên bản: {{ cp.version }})</span>
+                  </div>
+
+                  <div>
+                    <span *ngIf="cp.status === 'PENDING_REVIEW'" class="badge bg-warning text-dark">
+                      <i class="bi bi-hourglass-split me-1"></i> Chờ KCS duyệt
+                    </span>
+                    <span *ngIf="cp.status === 'PASSED'" class="badge bg-success">
+                      <i class="bi bi-check-circle me-1"></i> Đạt KCS
+                    </span>
+                    <span *ngIf="cp.status === 'REWORK_REQUIRED'" class="badge bg-danger">
+                      <i class="bi bi-arrow-repeat me-1"></i> Yêu cầu làm lại
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Meta & Note -->
+                <div class="text-muted small mb-2">
+                  <span *ngIf="cp.submittedByName">Người nộp: <strong>{{ cp.submittedByName }}</strong> &bull; </span>
+                  <span>Thời gian nộp: <strong>{{ cp.submittedAt | date: 'dd/MM/yyyy HH:mm' }}</strong></span>
+                </div>
+
+                <div *ngIf="cp.note" class="p-2 rounded bg-light small mb-3">
+                  <span class="fw-bold text-muted">Ghi chú từ nhân viên:</span> {{ cp.note }}
+                </div>
+
+                <!-- Images Gallery -->
+                <div *ngIf="cp.images && cp.images.length > 0" class="mb-3">
+                  <div class="small fw-bold text-muted mb-2">Hình ảnh sản phẩm ({{ cp.images.length }} ảnh):</div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <div *ngFor="let img of cp.images" class="kcs-thumbnail-wrap position-relative cursor-pointer" (click)="openLightbox(img.imageUrl)">
+                      <img [src]="img.imageUrl" alt="Ảnh sản phẩm" class="rounded border object-fit-cover kcs-thumb" />
+                      <div class="kcs-thumb-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white bg-dark bg-opacity-25 rounded opacity-0 hover-opacity-100">
+                        <i class="bi bi-zoom-in"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Previous Decision / Feedback -->
+                <div *ngIf="cp.decision" class="p-3 rounded mb-3" [ngClass]="cp.decision.decisionType === 'PASS' ? 'bg-success-subtle text-success-emphasis border border-success' : 'bg-danger-subtle text-danger-emphasis border border-danger'">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong>
+                      <i class="bi" [ngClass]="cp.decision.decisionType === 'PASS' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill'"></i>
+                      Quyết định KCS: {{ cp.decision.decisionType === 'PASS' ? 'ĐẠT TIÊU CHUẨN' : 'YÊU CẦU LÀM LẠI' }}
+                    </strong>
+                    <span class="small">{{ cp.decision.decidedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <div *ngIf="cp.decision.decidedByName" class="small mb-1">
+                    Người duyệt: <strong>{{ cp.decision.decidedByName }}</strong>
+                  </div>
+                  <div *ngIf="cp.decision.reason" class="small">
+                    <strong>Lý do / Hướng dẫn:</strong> {{ cp.decision.reason }}
+                  </div>
+                </div>
+
+                <!-- Manager Action Area (Only when PENDING_REVIEW) -->
+                <div *ngIf="cp.stage === 'FINAL_PRODUCT' && cp.status === 'PENDING_REVIEW'" class="kcs-action-panel mt-3 p-3 bg-white border border-warning rounded-3 shadow-sm">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold text-dark">
+                      <i class="bi bi-shield-check text-primary me-1"></i> Quyết định kiểm định chất lượng:
+                    </span>
+                    <span class="small text-muted">Vui lòng kiểm tra kỹ ảnh trước khi quyết định</span>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div *ngIf="!showReworkForm[cp.id]" class="d-flex gap-2">
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger rounded-pill px-4 fw-bold"
+                      (click)="toggleReworkForm(cp.id)"
+                      [disabled]="submittingCheckpointId === cp.id">
+                      <i class="bi bi-x-circle me-1"></i> Yêu cầu làm lại
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-success rounded-pill px-4 fw-bold shadow-sm"
+                      (click)="passCheckpoint(cp)"
+                      [disabled]="submittingCheckpointId === cp.id">
+                      <span *ngIf="submittingCheckpointId === cp.id" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                      <i *ngIf="submittingCheckpointId !== cp.id" class="bi bi-check-circle-fill me-1"></i>
+                      Duyệt đạt (PASS)
+                    </button>
+                  </div>
+
+                  <!-- Rework Reason Form -->
+                  <div *ngIf="showReworkForm[cp.id]" class="mt-2">
+                    <label class="form-label small fw-bold text-danger">
+                      Lý do yêu cầu làm lại (bắt buộc, tối đa 1000 ký tự):
+                    </label>
+                    <textarea
+                      class="form-control"
+                      rows="3"
+                      maxlength="1000"
+                      [(ngModel)]="reworkReasons[cp.id]"
+                      placeholder="Nêu rõ chi tiết lỗi hoặc điểm cần chỉnh sửa lại để nhân viên khắc phục..."
+                      [disabled]="submittingCheckpointId === cp.id"></textarea>
+                    <div class="text-end text-muted small mt-1">
+                      {{ (reworkReasons[cp.id] || '').length }}/1000 ký tự
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary rounded-pill px-3"
+                        (click)="toggleReworkForm(cp.id)"
+                        [disabled]="submittingCheckpointId === cp.id">
+                        Hủy
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm"
+                        (click)="confirmRework(cp)"
+                        [disabled]="submittingCheckpointId === cp.id || !(reworkReasons[cp.id] || '').trim()">
+                        <span *ngIf="submittingCheckpointId === cp.id" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <i *ngIf="submittingCheckpointId !== cp.id" class="bi bi-send-fill me-1"></i>
+                        Xác nhận yêu cầu làm lại
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-3 px-4 border-top bg-light d-flex justify-content-between align-items-center">
+      <button class="btn btn-outline-primary rounded-pill px-3 fw-bold" (click)="loadProgress()" [disabled]="isLoading">
+        <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+      </button>
+      <button class="btn btn-secondary rounded-pill px-4 fw-bold" (click)="onClose()">
+        Đóng
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox Modal for enlarged photo -->
+<div *ngIf="lightboxImageUrl" class="kcs-lightbox-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style="z-index: 1070;" (click)="closeLightbox()">
+  <div class="position-relative max-w-100 max-h-100" (click)="$event.stopPropagation()">
+    <img [src]="lightboxImageUrl" alt="Hình ảnh sản phẩm lớn" class="img-fluid rounded-3 shadow-lg" style="max-height: 85vh; max-width: 90vw; object-fit: contain;" />
+    <button class="btn btn-sm btn-light rounded-circle position-absolute top-0 end-0 m-2 shadow" (click)="closeLightbox()" aria-label="Đóng">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+</div>

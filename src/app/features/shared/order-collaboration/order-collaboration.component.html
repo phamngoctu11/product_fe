@@ -1,0 +1,398 @@
+<div class="collab-container">
+  <!-- Guest Order Notice -->
+  <div *ngIf="isGuestOrder" class="alert alert-secondary d-flex align-items-center gap-2 m-3">
+    <i class="bi bi-info-circle-fill fs-5"></i>
+    <div>
+      <strong>Đơn hàng khách vãng lai:</strong> Tính năng thỏa thuận và trao đổi trực tuyến chỉ áp dụng cho người dùng đã đăng ký tài khoản.
+    </div>
+  </div>
+
+  <div *ngIf="!isGuestOrder" class="collab-body">
+    <!-- Top Header Bar: Status & 24h Countdown Timer -->
+    <header class="collab-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3">
+      <div class="d-flex align-items-center flex-wrap gap-2">
+        <span class="badge" [ngClass]="isCustomOrder ? 'bg-primary' : 'bg-secondary'">
+          {{ isCustomOrder ? 'Đơn đặt riêng (Custom)' : 'Đơn hàng Catalog' }}
+        </span>
+        <span class="badge" [ngClass]="agreementStatusBadge.bgClass">
+          {{ agreementStatusBadge.text }}
+        </span>
+        <span class="text-muted small">Phiên bản #{{ agreement?.agreementVersion ?? (order?.version || 1) }}</span>
+      </div>
+
+      <!-- 24h Timer -->
+      <div class="timer-badge-wrap d-flex align-items-center gap-2">
+        <div *ngIf="countdownDisplay" class="timer-badge" [class.is-urgent]="countdownPastDue">
+          <i class="bi bi-clock-history me-1"></i>
+          <span>Thời hạn chốt:</span>
+          <strong>{{ countdownDisplay }}</strong>
+        </div>
+        <div *ngIf="timerStopped && timerStoppedText" class="timer-badge is-done">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          <span>{{ timerStoppedText }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Tab Selector -->
+    <div class="d-lg-none collab-tabs px-3 pt-2">
+      <ul class="nav nav-pills nav-fill gap-2">
+        <li class="nav-item">
+          <button
+            type="button"
+            class="nav-link py-2"
+            [class.active]="activeTab === 'agreement'"
+            (click)="activeTab = 'agreement'">
+            <i class="bi bi-file-earmark-text me-1"></i> Thỏa thuận
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            type="button"
+            class="nav-link py-2"
+            [class.active]="activeTab === 'chat'"
+            (click)="activeTab = 'chat'">
+            <i class="bi bi-chat-dots me-1"></i> Trao đổi ({{ messages.length }})
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 2-Column Grid -->
+    <div class="row g-0 collab-grid">
+      <!-- Left Column: Agreement Details & Form -->
+      <section
+        class="col-12 col-lg-6 collab-col collab-agreement"
+        [class.d-none]="activeTab !== 'agreement'"
+        [class.d-lg-block]="true">
+        <div class="collab-panel-inner p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+              <i class="bi bi-file-earmark-ruled text-primary"></i>
+              Chi tiết thỏa thuận sản xuất
+            </h5>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              [disabled]="isLoadingAgreement"
+              (click)="loadAgreement()"
+              title="Làm mới thỏa thuận">
+              <i class="bi bi-arrow-clockwise" [class.spin]="isLoadingAgreement"></i>
+            </button>
+          </div>
+
+          <!-- Amendment Requested Notice -->
+          <div *ngIf="agreement?.decisionReason" class="alert alert-warning p-3 mb-3">
+            <div class="fw-bold mb-1 d-flex align-items-center gap-1">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              Yêu cầu điều chỉnh từ nhân viên:
+            </div>
+            <p class="mb-0 small text-break">{{ agreement?.decisionReason }}</p>
+          </div>
+
+          <!-- Loading / Error for Agreement -->
+          <div *ngIf="isLoadingAgreement" class="text-center py-4 text-muted">
+            <span class="spinner-border spinner-border-sm me-2"></span> Đang tải thông tin thỏa thuận...
+          </div>
+          <div *ngIf="agreementError" class="alert alert-danger py-2 px-3 small mb-3">
+            {{ agreementError }}
+          </div>
+
+          <div *ngIf="!isLoadingAgreement">
+            <!-- Custom Order Form -->
+            <div *ngIf="isCustomOrder" class="agreement-form">
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">Mô tả chi tiết yêu cầu <span class="text-danger">*</span></label>
+                <textarea
+                  class="form-control"
+                  rows="3"
+                  [(ngModel)]="customDescription"
+                  [disabled]="!canUserSubmitAgreement || isSubmittingAgreement"
+                  placeholder="Mô tả kiểu dáng, màu sắc, chi tiết mong muốn..."></textarea>
+              </div>
+
+              <!-- Images list -->
+              <div class="mb-3">
+                <label class="form-label fw-semibold small d-flex justify-content-between">
+                  <span>Ảnh mẫu / thiết kế tham khảo</span>
+                  <span class="text-muted">{{ customImageUrls.length }}/10</span>
+                </label>
+
+                <div class="custom-image-grid d-flex flex-wrap gap-2 mb-2">
+                  <div *ngFor="let url of customImageUrls; let i = index" class="custom-image-thumb position-relative">
+                    <img [src]="url" alt="Mẫu tham khảo" class="rounded border">
+                    <button
+                      *ngIf="canUserSubmitAgreement"
+                      type="button"
+                      class="btn btn-sm btn-danger btn-remove-img position-absolute top-0 end-0 p-0"
+                      (click)="removeImage(i)">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                  <label
+                    *ngIf="canUserSubmitAgreement && customImageUrls.length < 10"
+                    class="btn-upload-box rounded border border-dashed d-flex flex-column align-items-center justify-content-center"
+                    [class.disabled]="isUploadingImage">
+                    <i class="bi bi-plus-lg fs-4 text-muted" *ngIf="!isUploadingImage"></i>
+                    <span class="spinner-border spinner-border-sm" *ngIf="isUploadingImage"></span>
+                    <input
+                      type="file"
+                      class="d-none"
+                      accept="image/*"
+                      [disabled]="isUploadingImage"
+                      (change)="onImageSelected($event)">
+                  </label>
+                </div>
+              </div>
+
+              <!-- Numerical fields -->
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label fw-semibold small">Số lượng</label>
+                  <input
+                    type="number"
+                    min="1"
+                    class="form-control"
+                    [(ngModel)]="customQuantity"
+                    [disabled]="!canUserSubmitAgreement || isSubmittingAgreement">
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-semibold small">Đơn giá đề xuất (đ)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    class="form-control"
+                    [(ngModel)]="customUnitPrice"
+                    [disabled]="!canUserSubmitAgreement || isSubmittingAgreement">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold small">Thời gian dự kiến hoàn thành (ngày)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    class="form-control"
+                    [(ngModel)]="customDurationDays"
+                    [disabled]="!canUserSubmitAgreement || isSubmittingAgreement">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">Ghi chú thêm</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="customNote"
+                  [disabled]="!canUserSubmitAgreement || isSubmittingAgreement"
+                  placeholder="Yêu cầu đóng gói, giao nhận đặc biệt...">
+              </div>
+            </div>
+
+            <!-- Catalog Order Snapshot View -->
+            <div *ngIf="!isCustomOrder" class="catalog-snapshot mb-3">
+              <label class="form-label fw-semibold small mb-2">Sản phẩm trong thỏa thuận</label>
+              <div class="border rounded p-2 bg-light">
+                <div *ngFor="let item of order?.items || []" class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                  <div>
+                    <div class="fw-semibold small">{{ item.productName }}</div>
+                    <div class="text-muted smaller" *ngIf="item.variantName">{{ item.variantName }}</div>
+                    <div class="text-muted smaller">Số lượng: {{ item.quantity }} x {{ (item.price || 0) | number }} đ</div>
+                  </div>
+                  <div class="fw-bold small text-end">
+                    {{ ((item.quantity || 1) * (item.price || 0)) | number }} đ
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Summary Box -->
+            <div class="summary-box rounded p-3 mb-4 border">
+              <div class="d-flex justify-content-between py-1 small">
+                <span class="text-muted">Tạm tính thỏa thuận:</span>
+                <span class="fw-semibold">{{ computedSubtotal | number }} đ</span>
+              </div>
+              <div class="d-flex justify-content-between py-1 small" *ngIf="agreement?.discountAmount || order?.discountAmount">
+                <span class="text-muted">Giảm giá voucher:</span>
+                <span class="text-success fw-semibold">-{{ (agreement?.discountAmount || order?.discountAmount || 0) | number }} đ</span>
+              </div>
+              <div class="d-flex justify-content-between py-2 border-top mt-2 fs-6">
+                <span class="fw-bold">Tổng thanh toán dự kiến:</span>
+                <span class="fw-bold text-primary">{{ computedFinalPrice | number }} đ</span>
+              </div>
+            </div>
+
+            <!-- Actions Bar -->
+            <div class="actions-panel">
+              <!-- USER Action -->
+              <div *ngIf="mode === 'USER'" class="d-flex justify-content-end">
+                <button
+                  *ngIf="canUserSubmitAgreement"
+                  type="button"
+                  class="btn btn-primary rounded-pill px-4 fw-bold"
+                  [disabled]="isSubmittingAgreement"
+                  (click)="submitUserAgreement()">
+                  <span *ngIf="isSubmittingAgreement" class="spinner-border spinner-border-sm me-2"></span>
+                  {{ isSubmittingAgreement ? 'Đang gửi...' : 'Gửi đề xuất thỏa thuận' }}
+                </button>
+                <div *ngIf="!canUserSubmitAgreement" class="text-muted small fst-italic">
+                  Thỏa thuận đang ở trạng thái không thể chỉnh sửa.
+                </div>
+              </div>
+
+              <!-- STAFF Actions -->
+              <div *ngIf="mode === 'STAFF'" class="d-flex flex-wrap justify-content-end gap-2">
+                <button
+                  *ngIf="canStaffDecideAgreement"
+                  type="button"
+                  class="btn btn-outline-warning rounded-pill px-3 fw-bold"
+                  [disabled]="isDecidingAgreement"
+                  (click)="openDecisionDialog('REQUEST_CHANGES')">
+                  <i class="bi bi-arrow-repeat me-1"></i> Yêu cầu sửa đổi
+                </button>
+                <button
+                  *ngIf="canStaffDecideAgreement"
+                  type="button"
+                  class="btn btn-success rounded-pill px-4 fw-bold"
+                  [disabled]="isDecidingAgreement"
+                  (click)="openDecisionDialog('CONFIRM')">
+                  <i class="bi bi-check2-circle me-1"></i> Chốt thỏa thuận
+                </button>
+                <div *ngIf="!canStaffDecideAgreement" class="text-muted small fst-italic">
+                  Đang chờ khách hàng gửi đề xuất thỏa thuận.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Real-time Order Chat -->
+      <section
+        class="col-12 col-lg-6 collab-col collab-chat"
+        [class.d-none]="activeTab !== 'chat'"
+        [class.d-lg-block]="true">
+        <div class="collab-panel-inner d-flex flex-column h-100">
+          <!-- Chat Header -->
+          <div class="chat-header p-3 border-bottom d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="status-dot"></span>
+              <h6 class="mb-0 fw-bold">Trao đổi đơn #{{ order?.id }}</h6>
+            </div>
+            <span class="badge text-bg-light small">
+              {{ mode === 'USER' ? 'Kênh nhân viên' : 'Kênh khách hàng' }}
+            </span>
+          </div>
+
+          <!-- Chat Messages Area -->
+          <div #chatScrollContainer class="chat-messages-container flex-grow-1 p-3">
+            <!-- Loading & Thread Preparation -->
+            <div *ngIf="isThreadPreparing" class="text-center py-5 text-muted">
+              <div class="spinner-border spinner-border-sm mb-2" role="status"></div>
+              <p class="small mb-0">Đang khởi tạo kênh trao đổi an toàn...</p>
+            </div>
+
+            <div *ngIf="isLoadingChat && !isThreadPreparing" class="text-center py-5 text-muted">
+              <span class="spinner-border spinner-border-sm me-2"></span> Đang tải tin nhắn...
+            </div>
+
+            <div *ngIf="chatError" class="alert alert-warning py-2 px-3 small my-3">
+              {{ chatError }}
+            </div>
+
+            <div *ngIf="!isLoadingChat && !isThreadPreparing && messages.length === 0" class="text-center py-5 text-muted small">
+              <i class="bi bi-chat-heart fs-1 d-block mb-2 opacity-50"></i>
+              Chưa có tin nhắn nào. Hãy gửi lời chào và thảo luận chi tiết đơn hàng tại đây!
+            </div>
+
+            <!-- Messages list -->
+            <div *ngFor="let msg of messages" class="chat-bubble-row" [class.is-mine]="isOwnMessage(msg)">
+              <div class="chat-bubble">
+                <div class="bubble-meta d-flex align-items-center gap-2 mb-1">
+                  <span class="bubble-sender fw-bold small">{{ msg.senderName || 'Người gửi' }}</span>
+                  <span class="bubble-role-tag">{{ getSenderRoleBadge(msg) }}</span>
+                  <span class="bubble-time text-muted smaller ms-auto">{{ msg.timestamp | date: 'HH:mm dd/MM' }}</span>
+                </div>
+                <div class="bubble-text">{{ msg.content }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input Footer -->
+          <div class="chat-footer p-3 border-top">
+            <div class="chat-input-wrapper">
+              <textarea
+                class="form-control chat-textarea"
+                rows="2"
+                maxlength="4000"
+                [(ngModel)]="chatInput"
+                (keydown)="onChatKeydown($event)"
+                [disabled]="isSendingMessage || isThreadPreparing"
+                placeholder="Nhập nội dung trao đổi... (Nhấn Enter để gửi)"></textarea>
+
+              <div class="d-flex align-items-center justify-content-between mt-2">
+                <span class="char-count text-muted smaller">
+                  {{ chatInput.length }} / 4000
+                </span>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
+                  [disabled]="!chatInput.trim() || isSendingMessage || isThreadPreparing"
+                  (click)="sendMessage()">
+                  <span *ngIf="isSendingMessage" class="spinner-border spinner-border-sm"></span>
+                  <i *ngIf="!isSendingMessage" class="bi bi-send-fill"></i>
+                  <span>Gửi</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Staff Decision Modal Backdrop -->
+  <div *ngIf="showDecisionModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center p-3">
+    <div class="modal-card-custom bg-white rounded-4 shadow-lg p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">
+          {{ staffDecision === 'CONFIRM' ? 'Xác nhận chốt thỏa thuận' : 'Yêu cầu khách hàng điều chỉnh' }}
+        </h5>
+        <button type="button" class="btn btn-sm btn-light rounded-circle" (click)="closeDecisionDialog()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div *ngIf="staffDecision === 'CONFIRM'" class="mb-3 text-muted small">
+        Bạn đang thực hiện chốt thỏa thuận sản xuất cho đơn hàng #{{ order?.id }}. Đơn hàng sẽ chuyển sang trạng thái <strong>Đã nhận đơn (ORDER_ACCEPTED)</strong>.
+      </div>
+
+      <div *ngIf="staffDecision === 'REQUEST_CHANGES'" class="mb-3">
+        <label class="form-label fw-semibold small">Lý do / Hướng dẫn điều chỉnh <span class="text-danger">*</span></label>
+        <textarea
+          class="form-control"
+          rows="3"
+          [(ngModel)]="staffDecisionReason"
+          placeholder="Nhập chi tiết những điểm khách hàng cần sửa..."></textarea>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button
+          type="button"
+          class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+          [disabled]="isDecidingAgreement"
+          (click)="closeDecisionDialog()">
+          Hủy
+        </button>
+        <button
+          type="button"
+          class="btn rounded-pill px-4 fw-bold"
+          [ngClass]="staffDecision === 'CONFIRM' ? 'btn-success' : 'btn-warning'"
+          [disabled]="isDecidingAgreement"
+          (click)="submitStaffDecision()">
+          <span *ngIf="isDecidingAgreement" class="spinner-border spinner-border-sm me-2"></span>
+          {{ staffDecision === 'CONFIRM' ? 'Chốt thỏa thuận' : 'Gửi yêu cầu sửa' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

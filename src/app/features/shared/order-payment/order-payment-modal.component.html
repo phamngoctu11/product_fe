@@ -1,0 +1,217 @@
+<div *ngIf="isOpen" class="payment-modal-backdrop d-flex align-items-center justify-content-center p-3" (click)="onClose()">
+  <div class="payment-modal-card bg-white rounded-4 shadow-lg overflow-hidden" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="payment-modal-header bg-primary text-white p-3 p-md-4 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-qr-code-scan fs-4"></i>
+        <div>
+          <h5 class="mb-0 fw-bold">Thanh toán chuyển khoản</h5>
+          <div class="small opacity-75">Đơn hàng #{{ order?.id }}</div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-sm btn-light rounded-circle" (click)="onClose()" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="payment-modal-body p-3 p-md-4 overflow-auto">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="text-center py-5 text-muted">
+        <div class="spinner-border text-primary mb-2" role="status"></div>
+        <p class="small mb-0">Đang kiểm tra trạng thái thanh toán...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="errorMessage && !isLoading" class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+        <div class="small">{{ errorMessage }}</div>
+      </div>
+
+      <!-- Content when loaded -->
+      <div *ngIf="!isLoading">
+        <!-- 1. Chưa mở cổng thanh toán (Attempt not created yet) -->
+        <div *ngIf="!attempt && !errorMessage" class="text-center py-4">
+          <div class="payment-init-box p-4 rounded-4 border bg-light mb-4">
+            <i class="bi bi-shield-check fs-1 text-primary mb-2 d-block"></i>
+            <h6 class="fw-bold mb-2">Đơn hàng đã được duyệt & sẵn sàng thanh toán</h6>
+            <p class="text-muted small mb-3">
+              Tổng số tiền cần thanh toán là
+              <strong class="text-danger fs-5">{{ (order?.finalPrice || order?.totalPrice || 0) | number }} đ</strong>.
+            </p>
+            <p class="text-muted smaller mb-0">
+              Nhấn nút bên dưới để tạo mã QR chuyển khoản ngân hàng SePay (VietQR).
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm"
+            [disabled]="isOpening"
+            (click)="openPayment()">
+            <span *ngIf="isOpening" class="spinner-border spinner-border-sm me-2"></span>
+            {{ isOpening ? 'Đang tạo giao dịch...' : 'Mở cổng thanh toán QR' }}
+          </button>
+        </div>
+
+        <!-- 2. Đã có Attempt -->
+        <div *ngIf="attempt">
+          <!-- 2a. Trạng thái PAID -->
+          <div *ngIf="attempt.status === 'PAID'" class="paid-success-box text-center py-4">
+            <div class="success-icon-wrap text-success mb-3">
+              <i class="bi bi-check-circle-fill display-4"></i>
+            </div>
+            <h5 class="fw-bold text-success mb-2">Đã thanh toán thành công!</h5>
+            <p class="text-muted small mb-3">
+              Hệ thống đã ghi nhận khoản thanh toán <strong>{{ attempt.expectedAmount | number }} đ</strong> cho đơn hàng #{{ order?.id }}.
+            </p>
+            <div class="alert alert-success bg-opacity-25 border-0 py-2 px-3 small d-inline-block">
+              <i class="bi bi-clock-history me-1"></i>
+              Đang chờ nhân viên phụ trách xác nhận và bắt đầu sản xuất.
+            </div>
+          </div>
+
+          <!-- 2b. Trạng thái EXPIRED hoặc FAILED -->
+          <div *ngIf="attempt.status === 'EXPIRED' || attempt.status === 'FAILED'" class="text-center py-4">
+            <div class="text-danger mb-3">
+              <i class="bi bi-x-circle-fill display-4"></i>
+            </div>
+            <h5 class="fw-bold text-danger mb-2">
+              {{ attempt.status === 'EXPIRED' ? 'Phiên thanh toán đã hết hạn' : 'Thanh toán không thành công' }}
+            </h5>
+            <p class="text-muted small mb-0">
+              Thời hạn thanh toán 60 phút đã kết thúc. Đơn hàng sẽ được chuyển sang trạng thái hủy theo quy định.
+            </p>
+          </div>
+
+          <!-- 2c. Trạng thái PENDING -->
+          <div *ngIf="attempt.status === 'PENDING'" class="pending-flow">
+            <!-- Countdown Banner -->
+            <div class="countdown-banner d-flex align-items-center justify-content-between p-2 px-3 rounded-3 mb-3" [class.is-urgent]="isExpired">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-stopwatch-fill"></i>
+                <span class="small fw-semibold">Thời hạn hoàn tất thanh toán:</span>
+              </div>
+              <strong class="fs-6">{{ countdownDisplay }}</strong>
+            </div>
+
+            <!-- Two Column Layout: QR & Bank Info -->
+            <div class="row g-3">
+              <!-- Left: QR Code -->
+              <div class="col-12 col-md-5 text-center">
+                <div class="qr-container border rounded-3 p-2 bg-light position-relative">
+                  <div *ngIf="isQrLoading && !qrLoadError" class="qr-loading-placeholder d-flex align-items-center justify-content-center">
+                    <span class="spinner-border text-primary" role="status"></span>
+                  </div>
+
+                  <img
+                    *ngIf="attempt.qrUrl && !qrLoadError"
+                    [src]="attempt.qrUrl"
+                    alt="Mã QR thanh toán VietQR"
+                    class="img-fluid rounded qr-image"
+                    (load)="onQrLoaded()"
+                    (error)="onQrError()">
+
+                  <div *ngIf="qrLoadError" class="qr-error-box p-3 text-center">
+                    <i class="bi bi-image-alt text-muted fs-1 d-block mb-2"></i>
+                    <p class="small text-muted mb-2">Không thể tải ảnh QR</p>
+                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="retryQrLoad()">
+                      <i class="bi bi-arrow-clockwise me-1"></i> Tải lại
+                    </button>
+                  </div>
+                </div>
+                <div class="small text-muted mt-2 fst-italic">
+                  <i class="bi bi-camera me-1"></i> Quét mã bằng App Ngân hàng
+                </div>
+              </div>
+
+              <!-- Right: Transfer Details -->
+              <div class="col-12 col-md-7">
+                <div class="bank-details-card border rounded-3 p-3 bg-light">
+                  <!-- Ngân hàng -->
+                  <div class="detail-row mb-2">
+                    <div class="text-muted smaller">Ngân hàng thụ hưởng</div>
+                    <div class="fw-bold">{{ attempt.bankCode || 'VietinBank' }}</div>
+                  </div>
+
+                  <!-- Số tài khoản -->
+                  <div class="detail-row mb-2">
+                    <div class="text-muted smaller">Số tài khoản</div>
+                    <div class="d-flex align-items-center justify-content-between">
+                      <span class="fw-bold font-monospace fs-6">{{ attempt.accountNumber }}</span>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary py-0 px-2"
+                        (click)="copyText(attempt.accountNumber, 'acc')">
+                        <i class="bi" [ngClass]="copiedField === 'acc' ? 'bi-check-lg text-success' : 'bi-copy'"></i>
+                        <span class="smaller ms-1">{{ copiedField === 'acc' ? 'Đã chép' : 'Sao chép' }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Chủ tài khoản -->
+                  <div class="detail-row mb-2">
+                    <div class="text-muted smaller">Chủ tài khoản</div>
+                    <div class="fw-bold text-uppercase">{{ attempt.accountName }}</div>
+                  </div>
+
+                  <!-- Số tiền -->
+                  <div class="detail-row mb-2">
+                    <div class="text-muted smaller">Số tiền chính xác</div>
+                    <div class="d-flex align-items-center justify-content-between">
+                      <span class="fw-bold text-danger fs-6">{{ attempt.expectedAmount | number }} đ</span>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary py-0 px-2"
+                        (click)="copyText(attempt.expectedAmount, 'amt')">
+                        <i class="bi" [ngClass]="copiedField === 'amt' ? 'bi-check-lg text-success' : 'bi-copy'"></i>
+                        <span class="smaller ms-1">{{ copiedField === 'amt' ? 'Đã chép' : 'Sao chép' }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Nội dung chuyển khoản -->
+                  <div class="detail-row">
+                    <div class="text-muted smaller">Nội dung chuyển khoản (Bắt buộc giữ nguyên)</div>
+                    <div class="d-flex align-items-center justify-content-between mt-1">
+                      <span class="fw-bold font-monospace text-primary bg-white px-2 py-1 rounded border">{{ attempt.transferContent }}</span>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary py-1 px-2"
+                        (click)="copyText(attempt.transferContent, 'content')">
+                        <i class="bi" [ngClass]="copiedField === 'content' ? 'bi-check-lg text-success' : 'bi-copy'"></i>
+                        <span class="smaller ms-1">{{ copiedField === 'content' ? 'Đã chép' : 'Sao chép' }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Warning Notice -->
+                <div class="alert alert-warning p-2 mt-2 mb-0 d-flex gap-2">
+                  <i class="bi bi-exclamation-triangle-fill text-warning flex-shrink-0"></i>
+                  <div class="smaller">
+                    <strong>Lưu ý:</strong> Vui lòng giữ nguyên nội dung chuyển khoản và số tiền chính xác để hệ thống tự động xác nhận trong vòng 1-2 phút.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Listening Radar Footer -->
+            <div class="polling-indicator text-center text-muted smaller py-2 mt-3 border-top d-flex align-items-center justify-content-center gap-2">
+              <span class="spinner-grow spinner-grow-sm text-primary" role="status"></span>
+              <span>Đang tự động lắng nghe kết quả thanh toán từ ngân hàng...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="payment-modal-footer p-3 bg-light border-top d-flex justify-content-end">
+      <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="onClose()">
+        Đóng
+      </button>
+    </div>
+  </div>
+</div>
+

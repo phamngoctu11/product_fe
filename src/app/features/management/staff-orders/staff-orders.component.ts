@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { Order, OrderAssignmentQueueItem, OrderItem, OrderListDTO } from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderService } from '../../../service/order.service';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import {
   AppPaginationComponent,
   OrderItemsTableComponent,
@@ -14,7 +15,9 @@ import {
   PageHeaderComponent,
   ViewStateComponent,
 } from '../../shared/ui';
-import type { OrderItemQuantityChange } from '../../shared/ui';
+import { OrderCollaborationComponent } from '../../shared/order-collaboration/order-collaboration.component';
+import { StaffProductionCheckpointComponent } from '../../shared/production-checkpoint/staff-production-checkpoint.component';
+import { ChangeRequestPanelComponent } from '../../shared/change-request/change-request-panel.component';
 
 @Component({
   selector: 'app-staff-orders',
@@ -22,12 +25,16 @@ import type { OrderItemQuantityChange } from '../../shared/ui';
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     AppPaginationComponent,
     OrderItemsTableComponent,
     PageHeaderComponent,
     OrderSummaryCardComponent,
     OrderStatusBadgeComponent,
     ViewStateComponent,
+    OrderCollaborationComponent,
+    StaffProductionCheckpointComponent,
+    ChangeRequestPanelComponent,
   ],
   templateUrl: './staff-orders.component.html',
   styleUrl: './staff-orders.component.css',
@@ -35,6 +42,7 @@ import type { OrderItemQuantityChange } from '../../shared/ui';
 export class StaffOrdersComponent implements OnInit {
   private readonly actionDialog = inject(ActionDialogService);
   private readonly toast = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
   claimableOrders: OrderAssignmentQueueItem[] = [];
   myOrders: OrderListDTO[] = [];
   activeTab: 'pending' | 'mine' = 'pending';
@@ -51,13 +59,23 @@ export class StaffOrdersComponent implements OnInit {
 
   selectedOrder: Order | null = null;
   detailLoading = false;
-  exportingOrderId: number | null = null;
-  exportQuantities: { [orderId: number]: { [variantId: number]: number } } = {};
+
+  isStartingProduction = false;
+  showStartProductionModal = false;
+  lateStartReason = '';
+  startProductionKey: string | null = null;
 
   constructor(private orderService: OrderService) {}
 
   ngOnInit(): void {
     this.loadData();
+    this.route.queryParams.subscribe((params) => {
+      const orderId = Number(params['orderId']);
+      if (Number.isInteger(orderId) && orderId > 0) {
+        this.activeTab = 'mine';
+        this.openOrderDetailById(orderId);
+      }
+    });
   }
 
   loadData(): void {
@@ -74,7 +92,7 @@ export class StaffOrdersComponent implements OnInit {
         this.loadMyOrders();
       },
       error: (err) => {
-        this.toast.notify('Không thể tải hàng đợi kho: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.toast.notify('Không thể tải hàng đợi đơn có thể nhận: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
         this.isLoading = false;
       },
     });
@@ -171,15 +189,18 @@ export class StaffOrdersComponent implements OnInit {
   }
 
   openOrderDetail(order: OrderListDTO): void {
+    this.openOrderDetailById(order.id, order.staffName);
+  }
+
+  private openOrderDetailById(orderId: number, fallbackStaffName?: string | null): void {
     this.selectedOrder = null;
     this.detailLoading = true;
-    this.orderService.getById(order.id).subscribe({
+    this.orderService.getById(orderId).subscribe({
       next: (detail) => {
         this.selectedOrder = {
           ...detail,
-          staffName: detail.staffName || order.staffName || null,
+          staffName: detail.staffName || fallbackStaffName || null,
         };
-        this.initExportQuantitiesForOrder(detail);
         this.detailLoading = false;
       },
       error: (err) => {
@@ -194,73 +215,104 @@ export class StaffOrdersComponent implements OnInit {
     this.detailLoading = false;
   }
 
-  exportSelectedOrder(): void {
-    if (!this.selectedOrder) return;
-    this.exportOrder(this.selectedOrder);
-  }
-
-  exportOrder(order: Order): void {
-    const items = order.items || [];
-    const payload = items.map((item) => ({
-      variantId: this.getVariantId(item),
-      quantity: this.getExportQuantity(order.id, item),
-    }));
-
-    if (items.length === 0) {
-      this.toast.notify('Đơn hàng chưa có danh sách variant để xuất kho.');
-      return;
-    }
-
-    if (payload.some((item) => !item.variantId)) {
-      this.toast.notify('Không thể xuất kho vì dữ liệu variant thiếu variantId.');
-      return;
-    }
-
-    if (payload.some((item) => item.quantity < 0)) {
-      this.toast.notify('Số lượng xuất kho không được âm.');
-      return;
-    }
-
-    this.actionDialog.confirm({
-      title: 'Xác nhận xuất kho',
-      message: `Kiểm tra lại số lượng trước khi xuất kho đơn hàng #${order.id}.`,
-      confirmText: 'Xuất kho',
-      tone: 'warning',
-      icon: 'bi-box-seam-fill',
-    }).subscribe((confirmed) => {
-      if (!confirmed) return;
-      this.exportingOrderId = order.id;
-      this.orderService.exportWarehouseOrder(order.id, payload as { variantId: number; quantity: number }[]).subscribe({
-        next: (message) => {
-          this.toast.notify(message);
-          this.exportingOrderId = null;
-          this.closeOrderDetail();
-          this.loadData();
-        },
-        error: (err) => {
-          this.toast.notify('Không thể xuất kho: ' + getApiErrorMessage(err, 'Vui lòng kiểm tra lại số lượng.'));
-          this.exportingOrderId = null;
-        },
-      });
+  refreshSelectedOrder(): void {
+    if (!this.selectedOrder?.id) return;
+    this.orderService.getById(this.selectedOrder.id).subscribe({
+      next: (detail) => {
+        this.selectedOrder = {
+          ...detail,
+          staffName: detail.staffName || this.selectedOrder?.staffName || null,
+        };
+      },
     });
   }
 
-  getVariantId(item: OrderItem): number {
-    return Number(item.variantId || item.productVariantId || 0);
+  canStartProduction(order: Order | null): boolean {
+    if (!order || order.status !== 'ORDER_ACCEPTED') return false;
+    if (order.paymentMethod === 'COD') return true;
+    if (order.paymentMethod === 'ONLINE') return order.paymentStatus === 'PAID';
+    return false;
   }
 
-  getExportQuantity(orderId: number, item: OrderItem): number {
-    const variantId = this.getVariantId(item);
-    return Number(this.exportQuantities[orderId]?.[variantId] ?? item.exportedQuantity ?? item.quantity ?? 0);
+  isOnlineWaitingPayment(order: Order | null): boolean {
+    if (!order || order.status !== 'ORDER_ACCEPTED') return false;
+    return order.paymentMethod === 'ONLINE' && order.paymentStatus !== 'PAID';
   }
 
-  updateExportQuantity(orderId: number, change: OrderItemQuantityChange): void {
-    if (!this.exportQuantities[orderId]) this.exportQuantities[orderId] = {};
-    this.exportQuantities[orderId][change.variantId] = change.quantity;
+  isPlannedStartOverdue(order: Order | null): boolean {
+    if (!order?.plannedStartAt) return false;
+    return Date.now() > new Date(order.plannedStartAt).getTime();
   }
 
-  canExport(order: Order | null): boolean {
-    return !!order && order.status === 'WAREHOUSE_ASSIGNED' && (order.items?.length || 0) > 0;
+  openStartProductionDialog(): void {
+    if (!this.selectedOrder || !this.canStartProduction(this.selectedOrder)) return;
+    this.lateStartReason = '';
+    this.showStartProductionModal = true;
+  }
+
+  closeStartProductionDialog(): void {
+    this.showStartProductionModal = false;
+    this.lateStartReason = '';
+  }
+
+  confirmStartProduction(): void {
+    if (!this.selectedOrder?.id || this.isStartingProduction) return;
+
+    this.isStartingProduction = true;
+    if (!this.startProductionKey) {
+      this.startProductionKey = this.orderService.generateIdempotencyKey(
+        'staff-start-production',
+        this.selectedOrder.id
+      );
+    }
+
+    const req = {
+      orderVersion: this.selectedOrder.version ?? 0,
+      lateStartReason: this.lateStartReason.trim() || undefined,
+    };
+
+    this.orderService.startProduction(this.selectedOrder.id, req, this.startProductionKey).subscribe({
+      next: (res) => {
+        this.isStartingProduction = false;
+        this.startProductionKey = null;
+        this.showStartProductionModal = false;
+
+        if (this.selectedOrder) {
+          this.selectedOrder.status = res.status;
+          this.selectedOrder.productionStartedAt = res.productionStartedAt;
+          this.selectedOrder.version = res.orderVersion;
+
+          if (this.selectedOrder.items && res.itemDeadlines) {
+            const deadlineMap = new Map(res.itemDeadlines.map((d) => [d.orderItemId, d]));
+            this.selectedOrder.items.forEach((item) => {
+              const itemId = item.id ?? item.orderItemId;
+              if (itemId && deadlineMap.has(itemId)) {
+                const d = deadlineMap.get(itemId)!;
+                item.computedCompletionAt = d.computedCompletionAt;
+                item.productionDurationDays = d.productionDurationDays;
+              }
+            });
+          }
+        }
+
+        this.toast.notify(`Đã bắt đầu sản xuất đơn hàng #${res.orderId}!`);
+        this.loadMyOrders();
+      },
+      error: (err) => {
+        this.isStartingProduction = false;
+        if (err?.status === 409 || err?.error?.errorCode === 'ORDER_VERSION_CONFLICT') {
+          this.toast.notify('Dữ liệu đơn hàng đã thay đổi trên máy chủ, đang làm mới...');
+          this.startProductionKey = null;
+          this.refreshSelectedOrder();
+          this.loadMyOrders();
+        } else {
+          const msg = err?.error?.errorCode === 'ORDER_NOT_READY_FOR_PRODUCTION'
+            ? 'Đơn hàng chưa sẵn sàng để sản xuất (chưa hoàn tất thanh toán hoặc thỏa thuận).'
+            : getApiErrorMessage(err, 'Không thể bắt đầu sản xuất. Vui lòng thử lại.');
+          this.toast.notify(msg);
+        }
+      },
+    });
   }
 
   openClaimableOrderDetail(order: OrderAssignmentQueueItem): void {
@@ -269,7 +321,6 @@ export class StaffOrdersComponent implements OnInit {
     this.orderService.getById(order.orderId).subscribe({
       next: (detail) => {
         this.selectedOrder = detail;
-        this.initExportQuantitiesForOrder(detail);
         this.detailLoading = false;
       },
       error: (err) => {
@@ -293,13 +344,23 @@ export class StaffOrdersComponent implements OnInit {
     this.pendingTotalElements = Math.max(0, this.pendingTotalElements - 1);
   }
 
-  private initExportQuantitiesForOrder(order: Order): void {
-    if (!this.exportQuantities[order.id]) this.exportQuantities[order.id] = {};
-    (order.items || []).forEach((item) => {
-      const variantId = this.getVariantId(item);
-      if (variantId && this.exportQuantities[order.id][variantId] === undefined) {
-        this.exportQuantities[order.id][variantId] = Number(item.exportedQuantity ?? item.quantity ?? 0);
-      }
-    });
+  canShowCollaboration(order: Order | null): boolean {
+    if (!order || this.activeTab !== 'mine') return false;
+    const isGuest = !!order.customer?.guest || !!order.guestSessionId || (!order.userId && !order.user_id && !order.customer?.userId);
+    if (isGuest) return false;
+    const s = (order.status || '').toUpperCase();
+    return s === 'DISCUSSING' || s === 'WAITING_STAFF_CONFIRMATION' || s === 'ORDER_ACCEPTED';
+  }
+
+  onCollaborationOrderUpdated(updated: Order): void {
+    this.selectedOrder = updated;
+    const idx = this.myOrders.findIndex((o) => o.id === updated.id);
+    if (idx !== -1) {
+      this.myOrders[idx] = {
+        ...this.myOrders[idx],
+        status: updated.status,
+        version: updated.version,
+      };
+    }
   }
 }

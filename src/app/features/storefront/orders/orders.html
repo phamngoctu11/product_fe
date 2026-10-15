@@ -66,6 +66,18 @@
     [showFooter]="true"
     (selected)="openOrderDetail($event)">
     <div orderActions>
+      <button *ngIf="canPayOrder(order)"
+         type="button"
+         class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm"
+         (click)="$event.stopPropagation(); openPaymentModal(order)">
+        <i class="bi bi-qr-code-scan me-1"></i> Thanh toán ngay
+      </button>
+      <button *ngIf="order.status === 'DISCUSSING' || order.status === 'WAITING_STAFF_CONFIRMATION' || order.status === 'ORDER_ACCEPTED'"
+         type="button"
+         class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold shadow-sm"
+         (click)="$event.stopPropagation(); openOrderDetail(order)">
+        <i class="bi bi-chat-dots me-1"></i> Trao đổi & Thỏa thuận
+      </button>
       <button class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#timelineModal" (click)="$event.stopPropagation(); viewTimeline(order.id)">
         <i class="bi bi-clock-history"></i> Tiến trình
       </button>
@@ -111,8 +123,17 @@
   (complaintNoteChange)="complaintNote = $event"
   (submitReceipt)="submitReceiptConfirm($event)"
   (sendComplaint)="sendReceiptComplaint()"
+  (orderUpdated)="onOrderUpdated()"
   (close)="closeOrderDetail()">
 </app-order-detail-popup>
+
+<app-order-payment-modal
+  [isOpen]="paymentModalOpen"
+  [order]="payingOrder"
+  (close)="closePaymentModal()"
+  (paymentSuccess)="onPaymentSuccess()"
+  (orderRefreshRequired)="loadMyOrders()">
+</app-order-payment-modal>
 
 <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">

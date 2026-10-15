@@ -9,34 +9,34 @@
 
     <div class="auth-panel-content">
       <!-- Logo -->
-      <div class="auth-panel-logo">
+      <a routerLink="/store/product" class="auth-panel-logo" aria-label="ClayArt Trang chủ">
         <div class="auth-panel-logo-mark">
-          <i class="bi bi-bag-heart-fill"></i>
+          <i class="bi bi-flower1"></i>
         </div>
-        <span class="auth-panel-logo-name">ShopVN</span>
-      </div>
+        <span class="auth-panel-logo-name">ClayArt</span>
+      </a>
 
-      <h2 class="auth-panel-tagline">Mua sắm thông minh<br>mọi lúc mọi nơi</h2>
-      <p class="auth-panel-desc">Khám phá hàng nghìn sản phẩm chất lượng cao, quản lý đơn hàng và nhận hỗ trợ nhanh chóng.</p>
+      <h2 class="auth-panel-tagline">Nghệ thuật thủ công<br>tinh hoa đất sét</h2>
+      <p class="auth-panel-desc">Khám phá các tác phẩm gốm sứ & tượng đất sét độc bản, chế tác tỉ mỉ từ đôi bàn tay nghệ nhân tâm huyết.</p>
 
       <div class="auth-features">
         <div class="auth-feature-item">
           <div class="auth-feature-icon auth-feature-icon-primary">
-            <i class="bi bi-shield-fill-check"></i>
+            <i class="bi bi-gem"></i>
           </div>
-          <span>Bảo mật giao dịch tuyệt đối</span>
+          <span>Chế tác thủ công độc bản nghệ nhân</span>
         </div>
         <div class="auth-feature-item">
           <div class="auth-feature-icon auth-feature-icon-success">
-            <i class="bi bi-truck-front-fill"></i>
+            <i class="bi bi-chat-dots-fill"></i>
           </div>
-          <span>Theo dõi đơn hàng thời gian thực</span>
+          <span>Theo dõi tiến độ & tùy biến đơn hàng</span>
         </div>
         <div class="auth-feature-item">
           <div class="auth-feature-icon auth-feature-icon-warning">
-            <i class="bi bi-gift-fill"></i>
+            <i class="bi bi-shield-fill-check"></i>
           </div>
-          <span>Tích điểm & đổi voucher hấp dẫn</span>
+          <span>Bảo chứng uy tín & giao hàng an toàn</span>
         </div>
       </div>
     </div>
@@ -44,6 +44,12 @@
 
   <!-- ===== RIGHT PANEL (Form) ===== -->
   <div class="auth-panel-right">
+
+    <div class="auth-back-container">
+      <a routerLink="/store/product" class="auth-back-link">
+        <i class="bi bi-arrow-left"></i> Quay lại cửa hàng
+      </a>
+    </div>
 
     <!-- LOGIN MODE -->
     <ng-container *ngIf="isLoginMode && !isForgotMode">
@@ -53,7 +59,7 @@
             <i class="bi bi-person-fill"></i>
           </div>
           <h1 class="auth-card-title">Đăng nhập</h1>
-          <p class="auth-card-subtitle">Chào mừng bạn quay trở lại!</p>
+          <p class="auth-card-subtitle">Chào mừng bạn quay trở lại ClayArt!</p>
         </div>
 
         <div *ngIf="loginErrorMessage" class="auth-alert auth-alert-warning">
@@ -182,7 +188,7 @@
             <i class="bi bi-person-plus-fill"></i>
           </div>
           <h1 class="auth-card-title">Tạo tài khoản mới</h1>
-          <p class="auth-card-subtitle">Tham gia cùng chúng tôi ngay hôm nay!</p>
+          <p class="auth-card-subtitle">Khám phá thế giới gốm thủ công cùng ClayArt!</p>
         </div>
 
         <form #registerForm="ngForm" (ngSubmit)="handleRegister(registerForm)" novalidate>

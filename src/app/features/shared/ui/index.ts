@@ -1,5 +1,4 @@
 export * from './app-pagination/app-pagination.component';
-export * from './chat-message-list/chat-message-list.component';
 export * from './form-field/form-field.component';
 export * from './metric-card/metric-card.component';
 export * from './order-status-badge/order-status-badge.component';

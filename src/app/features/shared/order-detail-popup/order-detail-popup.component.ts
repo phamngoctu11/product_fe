@@ -20,11 +20,25 @@ import {
   ViewStateComponent,
 } from '../../shared/ui';
 import type { OrderItemQuantityChange } from '../../shared/ui';
+import { OrderCollaborationComponent } from '../order-collaboration/order-collaboration.component';
+import { OrderPaymentModalComponent } from '../order-payment/order-payment-modal.component';
+import { CustomerProductionProgressComponent } from '../production-checkpoint/customer-production-progress.component';
+import { ChangeRequestPanelComponent } from '../change-request/change-request-panel.component';
 
 @Component({
   selector: 'app-order-detail-popup',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrderItemsTableComponent, OrderStatusBadgeComponent, ViewStateComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    OrderItemsTableComponent,
+    OrderStatusBadgeComponent,
+    ViewStateComponent,
+    OrderCollaborationComponent,
+    OrderPaymentModalComponent,
+    CustomerProductionProgressComponent,
+    ChangeRequestPanelComponent,
+  ],
   templateUrl: './order-detail-popup.component.html',
   styleUrl: './order-detail-popup.component.css',
 })
@@ -33,6 +47,7 @@ export class OrderDetailPopupComponent {
   @Input() isLoading = false;
   @Input() error = '';
   @Input() receiptMode = false;
+  @Input() guestToken: string | null = null;
   @Input() receivedQuantities: { [variantId: number]: number } = {};
   @Input() receiptResponse: ReceiptConfirmResponse | null = null;
   @Input() receiptError = '';
@@ -42,6 +57,7 @@ export class OrderDetailPopupComponent {
   @Output() submitReceipt = new EventEmitter<boolean>();
   @Output() sendComplaint = new EventEmitter<void>();
   @Output() complaintNoteChange = new EventEmitter<string>();
+  @Output() orderUpdated = new EventEmitter<void>();
 
   readonly reviewStars = [1, 2, 3, 4, 5];
   reviewingItem: OrderItem | null = null;
@@ -52,16 +68,66 @@ export class OrderDetailPopupComponent {
   reviewError = '';
   isUploadingReviewImage = false;
   isSubmittingReview = false;
+  paymentModalOpen = false;
 
   constructor(
     private readonly productReviewService: ProductReviewService,
     private readonly http: HttpClient,
     private readonly toast: ToastService,
-    private readonly authService: AuthService,
+    public readonly authService: AuthService,
   ) {}
 
   get isVisible(): boolean {
     return this.isLoading || !!this.order || !!this.error;
+  }
+
+  canShowProductionProgress(order: Order | null): boolean {
+    if (!order || !order.id || this.receiptMode) return false;
+    const s = (order.status || '').toUpperCase();
+    return (
+      s === 'ORDER_CREATING' ||
+      s === 'READY_TO_SHIP' ||
+      s === 'SHIPPING' ||
+      s === 'DELIVERED'
+    );
+  }
+
+  canShowCollaboration(order: Order): boolean {
+    if (this.receiptMode) return false;
+    if (!order || !order.id) return false;
+    if (order.guestSessionId || !order.userId) return false;
+    return (
+      order.status === 'DISCUSSING' ||
+      order.status === 'WAITING_STAFF_CONFIRMATION' ||
+      order.status === 'ORDER_ACCEPTED'
+    );
+  }
+
+  canShowChangeRequests(order: Order): boolean {
+    const userId = order.userId || order.user_id || order.customer?.userId;
+    if (this.receiptMode || this.guestToken || order.guestSessionId || !userId) return false;
+    return this.authService.isCustomer()
+      && ['ORDER_ACCEPTED', 'ORDER_CREATING'].includes((order.status || '').toUpperCase());
+  }
+
+  canPayOrder(order: Order | null): boolean {
+    if (!order || this.receiptMode) return false;
+    if (order.guestSessionId || !order.userId) return false;
+    return (
+      order.status === 'ORDER_ACCEPTED' &&
+      order.paymentMethod === 'ONLINE' &&
+      order.paymentStatus !== 'PAID' &&
+      order.paymentStatus !== 'EXPIRED' &&
+      order.paymentStatus !== 'FAILED'
+    );
+  }
+
+  openPaymentModal(): void {
+    this.paymentModalOpen = true;
+  }
+
+  closePaymentModal(): void {
+    this.paymentModalOpen = false;
   }
 
   updateReceivedQuantity(change: OrderItemQuantityChange): void {

@@ -237,9 +237,28 @@
             } @empty {
               <div class="text-muted">Đơn hàng chưa có dữ liệu sản phẩm.</div>
             }
+
+            @if (detail.order.status === 'ORDER_CREATING') {
+              <div class="mt-4 p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                <div>
+                  <strong class="d-block text-dark">Tiến trình kiểm định chất lượng (KCS)</strong>
+                  <span class="small text-muted">Đơn hàng đang sản xuất. Xem ảnh hoàn thiện và thực hiện KCS từng sản phẩm.</span>
+                </div>
+                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm" (click)="openKcsReview(detail.order.id)">
+                  <i class="bi bi-shield-check me-1"></i> Kiểm định KCS
+                </button>
+              </div>
+            }
           </div>
         }
       </div>
     </section>
   </div>
 }
+
+<app-manager-kcs-dialog
+  [orderId]="kcsOrderId"
+  [isOpen]="isKcsDialogOpen"
+  (close)="closeKcsDialog()"
+  (reviewed)="onKcsReviewed($event)">
+</app-manager-kcs-dialog>

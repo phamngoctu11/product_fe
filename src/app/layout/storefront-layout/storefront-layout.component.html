@@ -6,10 +6,11 @@
       <span class="sf-navbar__logo-text">ClayArt</span>
     </a>
 
-    <!-- Nav links căn giữa -->
+    <!-- Nav links căn giữa (Desktop) -->
     <nav class="sf-navbar__nav" aria-label="Điều hướng cửa hàng">
       <a class="sf-navbar__link" routerLink="/store/product" routerLinkActive="sf-navbar__link--active" [routerLinkActiveOptions]="{ exact: true }">Cửa hàng</a>
-      <a class="sf-navbar__link" routerLink="/store/consultations" routerLinkActive="sf-navbar__link--active">Đặt làm riêng</a>
+      <a class="sf-navbar__link" routerLink="/store/custom-requests" routerLinkActive="sf-navbar__link--active">Đặt làm riêng</a>
+      <a class="sf-navbar__link" routerLink="/store/about" routerLinkActive="sf-navbar__link--active">Giới thiệu</a>
       <a class="sf-navbar__link" routerLink="/store/help/contact-support" routerLinkActive="sf-navbar__link--active">Liên hệ</a>
     </nav>
 
@@ -49,7 +50,9 @@
             }
             @for (notification of notifications; track notification.id ?? $index) {
               <li>
-                <a class="dropdown-item notification-item" routerLink="/store/orders">
+                <a class="dropdown-item notification-item"
+                   routerLink="/store/orders"
+                   [queryParams]="notification.orderId ? { orderId: notification.orderId } : {}">
                   <div class="notification-icon"><i class="bi bi-box-seam-fill"></i></div>
                   <div>
                     <h6 class="mb-1 fw-bold">{{ notification.title }}</h6>
@@ -83,19 +86,63 @@
             <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/cart"><i class="bi bi-bag-check-fill"></i>Giỏ hàng</a></li>
             <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/wishlist"><i class="bi bi-heart-fill"></i>Yêu thích</a></li>
             <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/custom-requests"><i class="bi bi-pencil-square"></i>Tạo yêu cầu custom</a></li>
-            <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/consultations"><i class="bi bi-chat-heart-fill"></i>Tư vấn sản phẩm</a></li>
             <li><button class="dropdown-item sf-dropdown__item" type="button" (click)="openSettings()"><i class="bi bi-palette2"></i>Cài đặt giao diện</button></li>
             <li><hr class="dropdown-divider my-1"></li>
             <li><button class="dropdown-item sf-dropdown__item sf-dropdown__item--danger" type="button" (click)="logout()"><i class="bi bi-box-arrow-right"></i>Đăng xuất</button></li>
           </ul>
         </div>
-      } @else {
+      }
+
+      @if (!isCustomerSession) {
         <!-- Chưa đăng nhập -->
-        <a class="sf-navbar__auth-link" routerLink="/login">Đăng nhập</a>
+        <a class="sf-navbar__auth-link d-none d-sm-inline-flex" routerLink="/login">Đăng nhập</a>
         <a class="sf-navbar__auth-link sf-navbar__auth-link--primary" routerLink="/login" [queryParams]="{ mode: 'signup' }">Đăng ký</a>
       }
+
+      <!-- Nút mở menu trên Mobile -->
+      <button class="sf-navbar__icon-btn sf-navbar__mobile-toggle d-md-none" type="button"
+        (click)="toggleMobileMenu()" aria-label="Menu" [attr.aria-expanded]="isMobileMenuOpen">
+        <i class="bi" [class.bi-list]="!isMobileMenuOpen" [class.bi-x-lg]="isMobileMenuOpen"></i>
+      </button>
     </div>
   </header>
+
+  <!-- Mobile Drawer Menu -->
+  @if (isMobileMenuOpen) {
+    <div class="sf-navbar__drawer-backdrop" (click)="closeMobileMenu()"></div>
+    <div class="sf-navbar__drawer" role="dialog" aria-modal="true" aria-label="Menu điều hướng di động">
+      <div class="sf-navbar__drawer-header">
+        <span class="sf-navbar__logo-text">ClayArt</span>
+        <button class="sf-navbar__icon-btn" type="button" (click)="closeMobileMenu()" aria-label="Đóng menu">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <nav class="sf-navbar__drawer-nav">
+        <a class="sf-navbar__drawer-link" routerLink="/store/product" (click)="closeMobileMenu()">
+          <span>Cửa hàng</span>
+          <i class="bi bi-arrow-right"></i>
+        </a>
+        <a class="sf-navbar__drawer-link" routerLink="/store/custom-requests" (click)="closeMobileMenu()">
+          <span>Đặt làm riêng</span>
+          <i class="bi bi-arrow-right"></i>
+        </a>
+        <a class="sf-navbar__drawer-link" routerLink="/store/about" (click)="closeMobileMenu()">
+          <span>Giới thiệu</span>
+          <i class="bi bi-arrow-right"></i>
+        </a>
+        <a class="sf-navbar__drawer-link" routerLink="/store/help/contact-support" (click)="closeMobileMenu()">
+          <span>Liên hệ</span>
+          <i class="bi bi-arrow-right"></i>
+        </a>
+      </nav>
+      @if (!isCustomerSession) {
+        <div class="sf-navbar__drawer-auth">
+          <a class="sf-navbar__auth-link sf-navbar__auth-link--full text-center" routerLink="/login" (click)="closeMobileMenu()">Đăng nhập</a>
+          <a class="sf-navbar__auth-link sf-navbar__auth-link--primary sf-navbar__auth-link--full text-center" routerLink="/login" [queryParams]="{ mode: 'signup' }" (click)="closeMobileMenu()">Đăng ký tài khoản</a>
+        </div>
+      }
+    </div>
+  }
 
   <main class="storefront-main">
     <router-outlet></router-outlet>

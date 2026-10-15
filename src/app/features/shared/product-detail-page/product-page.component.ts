@@ -4,9 +4,12 @@ import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../../service/toast.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProductService } from '../../../service/product.service';
-import { ChatService } from '../../../service/chat.service';
 import { AuthService } from '../../../service/auth.service';
-import { ConsultationService } from '../../../service/consultation.service';
+import { MatDialog } from '@angular/material/dialog';
+import { CartService } from '../../../service/cart.service';
+import { AddToCartModalComponent } from '../../storefront/product/add-to-cart-modal/add-to-cart-modal';
+import { APP_DIALOG_SIZE } from '../../../config/dialog.config';
+import { getApiErrorMessage } from '../../../model/api-response.model';
 import { ViewStateComponent } from '../ui';
 import { Product } from '../../../model/product.model';
 
@@ -21,7 +24,6 @@ export class ProductPageComponent implements OnInit {
   private readonly toast = injectToast(ToastService);
   product: Product | null = null;
   isLoading = true;
-  returnChatRequestId: number | null = null;
 
   // Từ điển dịch thuộc tính sang Tiếng Việt
   attributeDictionary: { [key: string]: string } = {
@@ -35,9 +37,9 @@ export class ProductPageComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private productService: ProductService,
-    private chatService: ChatService,
-    private consultationService: ConsultationService,
-    public authService: AuthService
+    public authService: AuthService,
+    private cartService: CartService,
+    private dialog: MatDialog,
   ) {}
 
   goToStore(): void {
@@ -45,12 +47,6 @@ export class ProductPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    const fromChat = this.route.snapshot.queryParamMap.get('fromChat') === 'true';
-    const chatRequestId = Number(this.route.snapshot.queryParamMap.get('chatRequestId'));
-    this.returnChatRequestId = fromChat && Number.isFinite(chatRequestId) && chatRequestId > 0
-      ? chatRequestId
-      : null;
-
     // Đọc tham số :id từ URL (Ví dụ: /product/5 -> lấy số 5)
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -82,51 +78,42 @@ export class ProductPageComponent implements OnInit {
     });
   }
 
+  openAddToCartModal() {
+    if (!this.product) return;
+    if (!this.product.variants || this.product.variants.length === 0) {
+      this.toast.notify('Sản phẩm này hiện tại chưa có phân loại hàng!');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(AddToCartModalComponent, {
+      ...APP_DIALOG_SIZE.addToCart,
+      data: { product: this.product },
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe((result: { variantId: number; quantity: number } | null) => {
+      if (result) {
+        this.cartService.addToCart(this.authService.getUserId(), result.variantId, result.quantity).subscribe({
+          next: () => this.toast.notify('Đã thêm vào giỏ hàng thành công!'),
+          error: (err) => this.toast.notify('Lỗi: ' + getApiErrorMessage(err, 'Không thể thêm vào giỏ hàng')),
+        });
+      }
+    });
+  }
+
   getLabel(key: string): string {
     return this.attributeDictionary[key] || key;
   }
 
-  get isAcceptingOrders(): boolean { return (this.product?.variants?.some(v => v.quantity > 0) || (this.product?.quantity || 0) > 0); }
-  get availabilityLabel(): string { return 'Hết hàng'; }
+  get isAcceptingOrders(): boolean {
+    const status = this.product?.availabilityStatus;
+    return !status || status === 'ACCEPTING_ORDERS';
+  }
 
-  askAboutProduct() {
-    if (!this.authService.isLoggedIn()) {
-      this.toast.notify("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
-      return;
-    }
-    if (!this.authService.isCustomer()) {
-      this.toast.notify('Chỉ tài khoản user mới có thể gửi yêu cầu tư vấn sản phẩm.');
-      return;
-    }
-
-    const product = this.product;
-    if (!product?.id) {
-      this.toast.notify('Không tìm thấy thông tin sản phẩm.');
-      return;
-    }
-
-    const productInfo = {
-      id: product.id,
-      name: product.product_name,
-      price: product.price,
-      imageUrl: product.image_url,
-      tags: product.tags || '',
-      variantsCount: product.variants?.length || 0,
-      variants: product.variants ? product.variants.map((v) => ({
-        name: v.variantName,
-        price: v.price,
-      })) : []
-    };
-
-    this.consultationService.createRequest({
-      productId: productInfo.id,
-      firstMessage: `Tôi cần tư vấn thêm về sản phẩm ${productInfo.name}.`,
-    }).subscribe({
-      next: (consultation) => {
-        this.chatService.openConsultation(consultation, productInfo);
-        this.toast.notify('Đã gửi yêu cầu tư vấn. Nhân viên sẽ phản hồi trong khung chat.');
-      },
-      error: () => this.toast.notify('Không thể tạo yêu cầu tư vấn lúc này. Vui lòng thử lại sau.'),
-    });
+  get availabilityLabel(): string {
+    const status = this.product?.availabilityStatus;
+    if (status === 'PAUSED') return 'Tạm ngưng nhận đơn';
+    if (status === 'DISCONTINUED') return 'Ngừng kinh doanh';
+    return 'Đang nhận đơn';
   }
 }

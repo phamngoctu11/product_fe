@@ -27,8 +27,14 @@
 
         <div class="quick-stats">
           <div>
-            <span>Kho</span>
-            <strong>{{ totalStock | number }}</strong>
+            <span>Trạng thái</span>
+            <strong [class.text-warning]="rawProduct.availabilityStatus === 'PAUSED'" [class.text-muted]="rawProduct.availabilityStatus === 'DISCONTINUED'">
+              {{ availabilityLabel }}
+            </strong>
+          </div>
+          <div>
+            <span>Chế tác</span>
+            <strong>~{{ rawProduct.madeDay || 3 }} ngày</strong>
           </div>
           <div>
             <span>Phân loại</span>
@@ -73,6 +79,30 @@
             <input class="form-check-input" type="checkbox" formControlName="handmade">
             <span>Sản phẩm handmade, cần theo dõi checkpoint</span>
           </label>
+        </div>
+
+        <div class="info-grid mb-3">
+          <div class="field-block">
+            <label>Trạng thái catalog</label>
+            <select class="form-select form-control-custom" formControlName="availabilityStatus" [disabled]="isView || !canManageCatalog">
+              <option value="ACCEPTING_ORDERS">Đang nhận đơn</option>
+              <option value="PAUSED">Tạm ngưng nhận đơn</option>
+              <option value="DISCONTINUED">Ngừng kinh doanh</option>
+            </select>
+            <small class="text-muted mt-1 d-block" *ngIf="!canManageCatalog && !isView">
+              * Chỉ Manager mới có quyền cập nhật trạng thái catalog.
+            </small>
+            <div class="text-danger small mt-1" *ngIf="isInvalid('availabilityStatus')">Trạng thái là bắt buộc.</div>
+          </div>
+
+          <div class="field-block">
+            <label>Thời gian chế tác (ngày)</label>
+            <div class="input-group">
+              <input type="number" class="form-control form-control-custom border-end-0" formControlName="madeDay" placeholder="3" min="2" step="0.5" />
+              <span class="input-group-text border-start-0">ngày</span>
+            </div>
+            <div class="text-danger small mt-1" *ngIf="isInvalid('madeDay')">Thời gian chế tác tối thiểu 2 ngày.</div>
+          </div>
         </div>
 
         <div class="detail-section">
@@ -273,14 +303,19 @@
         }
 
         <div class="detail-footer">
-          @if (authService.isCustomer()) {
-            <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold me-auto" (click)="askAboutProduct()">
-              <i class="bi bi-chat-heart-fill me-2"></i> Tư vấn sản phẩm
-            </button>
-          }
           <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" (click)="onCancel()">
             {{ isView ? 'Đóng' : 'Hủy bỏ' }}
           </button>
+          @if (isView) {
+            <button
+              type="button"
+              class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"
+              [disabled]="!isAcceptingOrders"
+              [title]="isAcceptingOrders ? 'Chọn mua sản phẩm' : availabilityLabel"
+              (click)="buy()">
+              <i class="bi bi-bag-plus-fill me-1"></i> {{ isAcceptingOrders ? 'Chọn mua' : availabilityLabel }}
+            </button>
+          }
           @if (!isView) {
             <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" [disabled]="productForm.invalid" (click)="save()">
               <i class="bi bi-check-circle me-1"></i> {{ isStaffMode ? 'Lưu thông tin' : 'Lưu dữ liệu' }}

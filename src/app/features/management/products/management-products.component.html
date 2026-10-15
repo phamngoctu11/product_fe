@@ -70,7 +70,28 @@
                 </span>
                 <span class="product-name-copy">
                   <strong>{{ product.product_name }}</strong>
-                  <small>{{ product.variants?.length || 0 }} phân loại</small>
+                  <small>{{ product.variants?.length || 0 }} phân loại • ~{{ product.madeDay || 3 }} ngày làm</small>
+                  @if (canManageCatalog) {
+                    <select
+                      class="availability-select"
+                      [class.is-paused]="product.availabilityStatus === 'PAUSED'"
+                      [class.is-discontinued]="product.availabilityStatus === 'DISCONTINUED'"
+                      [value]="product.availabilityStatus || 'ACCEPTING_ORDERS'"
+                      [disabled]="updatingStatusProductId === product.id"
+                      (click)="$event.stopPropagation()"
+                      (change)="onAvailabilityChange(product, $event)">
+                      <option value="ACCEPTING_ORDERS">Đang nhận đơn</option>
+                      <option value="PAUSED">Tạm ngưng nhận đơn</option>
+                      <option value="DISCONTINUED">Ngừng kinh doanh</option>
+                    </select>
+                  } @else {
+                    <span
+                      class="availability-select is-readonly"
+                      [class.is-paused]="product.availabilityStatus === 'PAUSED'"
+                      [class.is-discontinued]="product.availabilityStatus === 'DISCONTINUED'">
+                      {{ getAvailabilityLabel(product.availabilityStatus) }}
+                    </span>
+                  }
                 </span>
                 <span class="product-actions">
                   <button type="button" class="card-action edit" title="Chỉnh sửa sản phẩm" (click)="editProduct(product, $event)">

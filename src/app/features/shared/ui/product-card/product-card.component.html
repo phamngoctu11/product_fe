@@ -31,8 +31,8 @@
         }
       </button>
     }
-    @if (isOutOfStock) {
-      <span class="badge-oos">Hết hàng</span>
+    @if (!isAcceptingOrders) {
+      <span class="badge-oos" [class.discontinued]="isDiscontinued">{{ availabilityLabel }}</span>
     }
   </div>
 
@@ -57,9 +57,13 @@
         <small class="product-price-label">Giá tham khảo</small>
         <span class="product-price">{{ product.price | number }}đ</span>
       </div>
-      @if (!isOutOfStock) {
-        <small class="product-stock">Kho: {{ product.quantity }}</small>
-      }
+      <small class="product-availability">
+        @if (isAcceptingOrders) {
+          <span><i class="bi bi-hammer me-1"></i>~{{ product.madeDay || 3 }} ngày làm</span>
+        } @else {
+          <span class="text-danger">{{ availabilityLabel }}</span>
+        }
+      </small>
     </div>
   </div>
 
@@ -68,9 +72,9 @@
       <button
         type="button"
         class="btn-add-cart flex-grow-1"
-        [disabled]="isOutOfStock"
+        [disabled]="!isAcceptingOrders"
         (click)="$event.stopPropagation(); purchased.emit(product)">
-        <i class="bi bi-cart-plus-fill"></i> Chọn mua
+        <i class="bi bi-cart-plus-fill"></i> {{ isAcceptingOrders ? 'Chọn mua' : availabilityLabel }}
       </button>
     }
     @if (canEdit) {

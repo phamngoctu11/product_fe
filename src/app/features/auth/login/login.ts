@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { inject as injectToast } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { formatRateLimitDelay, getApiErrorMessage, getRetryAfterSeconds } from '../../../model/api-response.model';
 import { AuthService } from '../../../service/auth.service';
 import { ToastService } from '../../../service/toast.service';
@@ -10,7 +10,7 @@ import { ToastService } from '../../../service/toast.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

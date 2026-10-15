@@ -36,7 +36,8 @@ import { SfProductTileComponent } from '../product-tile/sf-product-tile.componen
             [favorite]="isIn(favoriteIds(), product)"
             [favoriteBusy]="isIn(busyIds(), product)"
             (favoriteToggled)="favoriteToggled.emit($event)"
-            (viewed)="viewed.emit($event)" />
+            (viewed)="viewed.emit($event)"
+            (buy)="buy.emit($event)" />
         }
       </div>
     }
@@ -82,6 +83,7 @@ export class SfProductGridComponent {
   readonly busyIds = input<ReadonlySet<number>>(new Set());
   readonly favoriteToggled = output<Product>();
   readonly viewed = output<Product>();
+  readonly buy = output<Product>();
 
   protected readonly skeletons = computed(() => Array.from({ length: this.skeletonCount() }, (_, i) => i));
 

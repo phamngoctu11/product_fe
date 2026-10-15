@@ -75,7 +75,9 @@
             }
             @for (notification of notifications; track notification.id ?? $index) {
               <li>
-                <a class="dropdown-item notification-item" [routerLink]="notificationRoute">
+                <a class="dropdown-item notification-item"
+                   [routerLink]="notificationRoute"
+                   [queryParams]="notification.orderId ? { orderId: notification.orderId } : {}">
                   <div class="notification-icon"><i class="bi bi-box-seam-fill"></i></div>
                   <div class="min-w-0">
                     <h6 class="mb-1 fw-bold text-dark fs-6">{{ notification.title }}</h6>

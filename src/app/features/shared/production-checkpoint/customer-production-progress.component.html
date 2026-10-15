@@ -1,0 +1,96 @@
+@if (isLoading) {
+  <div class="text-center py-3">
+    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    <span class="small text-muted ms-2">Đang tải tiến trình chế tác từ xưởng...</span>
+  </div>
+} @else if (loadError) {
+  <div class="alert alert-warning mt-4 d-flex align-items-center justify-content-between gap-3">
+    <span><i class="bi bi-exclamation-triangle me-2"></i>{{ loadError }}</span>
+    <button type="button" class="btn btn-sm btn-outline-warning" (click)="loadProgress()">Thử lại</button>
+  </div>
+} @else if (items.length > 0) {
+  <div class="customer-progress-section mt-4 p-3 p-md-4 rounded-4 bg-white border shadow-sm">
+    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+      <div>
+        <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-hammer text-primary"></i> Tiến trình chế tác thủ công từ xưởng
+        </h5>
+        <div class="small text-muted">Hình ảnh thực tế tạo dáng ban đầu do nghệ nhân/nhân viên trực tiếp thực hiện.</div>
+      </div>
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill">
+        {{ items.length }} loại sản phẩm
+      </span>
+    </div>
+
+    <div class="d-flex flex-column gap-3">
+      @for (item of items; track item.orderItemId) {
+        <div class="progress-item-card p-3 rounded-3 bg-light border">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <div>
+              <strong class="text-dark">{{ item.productName }}</strong>
+              @if (item.variantName) {
+                <span class="text-muted small ms-1">({{ item.variantName }})</span>
+              }
+              <span class="badge bg-secondary-subtle text-secondary ms-2">{{ item.quantity }} chiếc</span>
+            </div>
+
+            @if (item.computedCompletionAt) {
+              <div class="small text-primary fw-medium">
+                <i class="bi bi-clock me-1"></i>Hạn hoàn thành ước tính: <strong>{{ item.computedCompletionAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
+              </div>
+            }
+          </div>
+
+          <!-- INITIAL_SHAPE -->
+          @if (getInitialShapeCheckpoint(item); as initial) {
+            <div class="initial-shape-box bg-white p-3 rounded-3 border mt-2">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill small">
+                  <i class="bi bi-check-circle-fill me-1"></i>Đã hoàn thành tạo dáng ban đầu
+                </span>
+                <small class="text-muted">Cập nhật lúc: {{ initial.submittedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+              </div>
+
+              @if (initial.note) {
+                <p class="small text-secondary mb-2 fst-italic">
+                  "{{ initial.note }}"
+                </p>
+              }
+
+              <!-- Ảnh sản phẩm -->
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                @for (img of initial.images; track img.imageUrl) {
+                  <div class="customer-thumb rounded overflow-hidden position-relative border" (click)="openImageModal(img.imageUrl)">
+                    <img [src]="img.imageUrl" alt="Ảnh tiến độ chế tác" class="w-100 h-100 object-fit-cover">
+                    <div class="thumb-hover-overlay d-flex align-items-center justify-content-center">
+                      <i class="bi bi-zoom-in text-white fs-5"></i>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="text-muted small fst-italic p-2 bg-white rounded border mt-2">
+              <i class="bi bi-hourglass-split me-1 text-warning"></i>
+              Xưởng đang chuẩn bị nguyên liệu và định hình dáng phôi ban đầu. Hình ảnh tiến trình sẽ sớm xuất hiện tại đây.
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- Modal xem ảnh phóng to -->
+@if (enlargedImageUrl) {
+  <div class="image-modal-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3"
+       style="z-index: 1090;"
+       (click)="closeImageModal()">
+    <div class="position-relative bg-white rounded-3 p-2 shadow-lg overflow-hidden" (click)="$event.stopPropagation()" style="max-width: 90vw; max-height: 90vh;">
+      <button class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle" (click)="closeImageModal()" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <img [src]="enlargedImageUrl" alt="Hình ảnh tiến độ chế tác" class="d-block w-100 h-100 object-fit-contain" style="max-height: 85vh;">
+    </div>
+  </div>
+}

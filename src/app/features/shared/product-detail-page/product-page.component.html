@@ -58,12 +58,11 @@
 
         <!-- Add to Cart / Consult CTA -->
         <div class="sf-product-info__actions">
-          <button class="sf-btn sf-btn--light sf-btn--block" *ngIf="isAcceptingOrders">
-            ADD TO CART
+          <button class="sf-btn sf-btn--light sf-btn--block" *ngIf="isAcceptingOrders" (click)="openAddToCartModal()">
+            <i class="bi bi-bag-plus me-2"></i>CHỌN MUA
           </button>
-          
-          <button class="sf-btn sf-btn--outline sf-btn--block mt-3" *ngIf="authService.isCustomer()" (click)="askAboutProduct()">
-            CẦN TƯ VẤN THÊM?
+          <button class="sf-btn sf-btn--disabled sf-btn--block" *ngIf="!isAcceptingOrders" disabled>
+            <i class="bi bi-slash-circle me-2"></i>{{ availabilityLabel }}
           </button>
         </div>
 
@@ -74,8 +73,8 @@
             <span class="sf-product-attr-value">{{ availabilityLabel }}</span>
           </div>
           <div class="sf-product-attr-row">
-            <span class="sf-product-attr-label">Vận chuyển</span>
-            <span class="sf-product-attr-value">3 - 5 ngày</span>
+            <span class="sf-product-attr-label">Thời gian chế tác</span>
+            <span class="sf-product-attr-value">~{{ product.madeDay || 3 }} ngày (thủ công)</span>
           </div>
           
           <ng-container *ngIf="product.variants && product.variants.length > 0 && product.variants[0].parsedAttributes">

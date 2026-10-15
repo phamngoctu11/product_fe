@@ -1,0 +1,67 @@
+.payment-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.55);
+  z-index: 1070;
+  backdrop-filter: blur(2px);
+}
+
+.payment-modal-card {
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.countdown-banner {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+.countdown-banner.is-urgent {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+
+.qr-container {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-loading-placeholder {
+  height: 220px;
+  width: 100%;
+}
+
+.qr-image {
+  max-height: 240px;
+  object-fit: contain;
+}
+
+.smaller {
+  font-size: 0.78rem;
+}
+
+.bank-details-card .detail-row:not(:last-child) {
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+  padding-bottom: 0.45rem;
+}
+
+.paid-success-box .success-icon-wrap {
+  animation: pop-in 0.4s ease-out;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+

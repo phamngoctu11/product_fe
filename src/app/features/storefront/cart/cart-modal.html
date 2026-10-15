@@ -13,9 +13,7 @@
           <i class="bi bi-bag-check-fill"></i>
         </div>
         <div>
-          <h5>Giỏ hàng của tôi</h5>
-          <p class="cart-header-sub">Xem lại sản phẩm, voucher và xác nhận thanh toán</p>
-        </div>
+          <h5>Giỏ hàng của tôi</h5></div>
       </div>
       <button type="button" class="cart-close-btn" (click)="onClose()" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
@@ -40,9 +38,7 @@
             <div class="cart-guest-form">
               <div class="cart-guest-heading">
                 <div>
-                  <h6>Thông tin nhận hàng</h6>
-                  <p>Khách vãng lai cần cung cấp thông tin để shop tạo và xử lý đơn.</p>
-                </div>
+                  <h6>Thông tin nhận hàng</h6></div>
                 <i class="bi bi-person-lines-fill"></i>
               </div>
 
@@ -117,10 +113,10 @@
             @if (isCustomerCart && isOwner) {
               <button
                 type="button"
-                class="cart-btn cart-btn-momo"
+                class="cart-btn cart-btn-online"
                 (click)="approve('ONLINE')"
                 [disabled]="isLoading || !!onlinePaymentData">
-                <i class="bi bi-wallet2"></i> MoMo
+                <i class="bi bi-credit-card-2-front"></i> Thanh toán Online
               </button>
               <button
                 type="button"

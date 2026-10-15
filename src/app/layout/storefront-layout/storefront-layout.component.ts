@@ -18,13 +18,23 @@ import { APP_DIALOG_SIZE } from '../../config/dialog.config';
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, SfFooterComponent, TimeAgoPipe],
   templateUrl: './storefront-layout.component.html',
+  styleUrl: './storefront-layout.component.css',
 })
 export class StorefrontLayoutComponent implements OnInit, OnDestroy {
   isScrolled = false;
+  isMobileMenuOpen = false;
   
   @HostListener('window:scroll')
   onWindowScroll() {
     this.isScrolled = window.scrollY > 20;
+  }
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
   }
 
   displayName = '';

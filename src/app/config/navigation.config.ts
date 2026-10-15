@@ -24,8 +24,6 @@ export interface AppNavigationItem {
 
 export const APP_NAVIGATION: readonly AppNavigationItem[] = [
   { label: 'Bảng thống kê', route: '/management/admin-dashboard', icon: 'bi-bar-chart-line-fill', roles: ROUTE_ACCESS.management },
-  { label: 'Quản lý chat', route: '/management/admin-chat', icon: 'bi-chat-square-dots-fill', roles: ROUTE_ACCESS.operations },
-  { label: 'Hoa hồng tư vấn', route: '/management/commissions', icon: 'bi-cash-stack', roles: ROUTE_ACCESS.operations },
   { label: 'Quản lý sản phẩm', route: '/management/product', icon: 'bi-grid-fill', roles: ROUTE_ACCESS.operations },
   { label: 'Quản lý người dùng', route: '/management/user', icon: 'bi-people-fill', roles: ROUTE_ACCESS.management },
   { label: 'Duyệt & phân công', route: '/management/admin-orders', icon: 'bi-clipboard2-check-fill', roles: ROUTE_ACCESS.manager },

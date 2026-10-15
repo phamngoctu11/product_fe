@@ -8,8 +8,6 @@ import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../service/auth.service';
-import { ChatService } from '../../../service/chat.service';
-import { ConsultationService } from '../../../service/consultation.service';
 import { ApiResponse, getApiErrorMessage, unwrapApiResponse } from '../../../model/api-response.model';
 import { ProductReview, ProductReviewSummary } from '../../../model/product-review.model';
 import { ProductReviewService } from '../../../service/product-review.service';
@@ -71,8 +69,6 @@ export class ProductDetailComponent implements OnInit {
     private productService: ProductService,
     private productReviewService: ProductReviewService,
     private http: HttpClient,
-    private chatService: ChatService,
-    private consultationService: ConsultationService,
     public authService: AuthService // 🚨 Đổi thành public để dùng trong HTML
   ) {
     this.isView = data.isView || false;
@@ -82,22 +78,36 @@ export class ProductDetailComponent implements OnInit {
       id: [null],
       product_name: ['', [Validators.required]],
       price: [0, [Validators.required, Validators.min(0)]],
+      madeDay: [3, [Validators.required, Validators.min(2)]],
       tags: [''],
       image_url: [''],
       handmade: [true],
-      availabilityStatus: [''],
+      availabilityStatus: ['ACCEPTING_ORDERS', [Validators.required]],
       variants: this.fb.array([])
     });
   }
 
   get variants(): FormArray { return this.productForm.get('variants') as FormArray; }
 
-  get totalStock(): number { return (this.rawProduct.variants || []).reduce((sum: number, v: any) => sum + (v.quantity || 0), 0) || this.rawProduct.quantity || 0; }
   get rawProduct(): any {
     return this.productForm.getRawValue();
   }
 
-  get availabilityLabel(): string { return 'Hết hàng'; }
+  get canManageCatalog(): boolean {
+    return this.authService.isManager();
+  }
+
+  get availabilityLabel(): string {
+    const status = this.rawProduct.availabilityStatus;
+    if (status === 'PAUSED') return 'Tạm ngưng nhận đơn';
+    if (status === 'DISCONTINUED') return 'Ngừng kinh doanh';
+    return 'Đang nhận đơn';
+  }
+
+  get isAcceptingOrders(): boolean {
+    const status = this.rawProduct.availabilityStatus;
+    return !status || status === 'ACCEPTING_ORDERS';
+  }
 
   get priceRangeLabel(): string {
     const prices = (this.rawProduct.variants || [])
@@ -143,6 +153,8 @@ export class ProductDetailComponent implements OnInit {
 
     if (this.isView) {
       this.productForm.disable();
+    } else if (!this.canManageCatalog) {
+      this.productForm.get('availabilityStatus')?.disable({ emitEvent: false });
     }
 
     if (this.data && this.data.id) {
@@ -152,6 +164,7 @@ export class ProductDetailComponent implements OnInit {
 
         this.productForm.patchValue({
           id: res.id, product_name: res.product_name, price: res.price,
+          madeDay: res.madeDay || 3,
           tags: res.tags, image_url: this.uploadedImageUrl, handmade: res.handmade !== false,
           availabilityStatus: res.availabilityStatus || 'ACCEPTING_ORDERS',
         });
@@ -192,47 +205,7 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
-  // 🚨 HÀM TƯ VẤN ĐÃ ĐƯỢC FIX CHUẨN
-  askAboutProduct() {
-    if (!this.authService.isLoggedIn()) {
-      this.toast.notify("Vui lòng đăng nhập để chat với Admin về sản phẩm này!");
-      return;
-    }
 
-    if (!this.authService.isCustomer()) {
-      this.toast.notify('Chỉ tài khoản user mới có thể gửi yêu cầu tư vấn sản phẩm.');
-      return;
-    }
-
-    // Dùng getRawValue() để lấy dữ liệu kể cả khi Form bị disable (isView = true)
-    const formValue = this.productForm.getRawValue();
-
-    if (!formValue.id) {
-      this.toast.notify("Sản phẩm chưa có trên hệ thống!");
-      return;
-    }
-
-    const productInfo = {
-      id: formValue.id,
-      name: formValue.product_name,
-      price: formValue.price,
-      imageUrl: formValue.image_url,
-      tags: formValue.tags || '',
-      variantsCount: formValue.variants ? formValue.variants.length : 0
-    };
-
-    this.consultationService.createRequest({
-      productId: productInfo.id,
-      firstMessage: `Tôi cần tư vấn thêm về sản phẩm ${productInfo.name}.`,
-    }).subscribe({
-      next: (consultation) => {
-        this.chatService.openConsultation(consultation, productInfo);
-        this.toast.notify('Đã gửi yêu cầu tư vấn. Nhân viên sẽ phản hồi trong khung chat.');
-        this.dialogRef.close();
-      },
-      error: () => this.toast.notify('Không thể tạo yêu cầu tư vấn lúc này. Vui lòng thử lại sau.'),
-    });
-  }
 
   onFileSelected(event: any) {
     if (this.isView) return;
@@ -522,7 +495,6 @@ export class ProductDetailComponent implements OnInit {
 
     const requests = [
       this.productService.updateStaffInfo(payload.id, basicInfo),
-      
       ...newVariants.map((variant: any) => this.productService.addVariant(payload.id, variant, userId)),
     ];
 
@@ -533,6 +505,10 @@ export class ProductDetailComponent implements OnInit {
       },
       error: () => this.toast.notify('Không thể cập nhật sản phẩm bằng quyền staff.'),
     });
+  }
+
+  buy() {
+    this.dialogRef.close({ action: 'buy', product: this.rawProduct });
   }
 
   onCancel() { this.dialogRef.close(false); }

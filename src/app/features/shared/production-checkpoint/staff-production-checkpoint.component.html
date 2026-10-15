@@ -1,0 +1,408 @@
+<div class="production-tracker">
+  @if (isLoading) {
+    <div class="text-center py-4">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="small text-muted mt-2">Đang tải tiến trình chế tác sản phẩm...</div>
+    </div>
+  } @else if (loadError) {
+    <div class="alert alert-danger d-flex align-items-center justify-content-between">
+      <div><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ loadError }}</div>
+      <button class="btn btn-sm btn-outline-danger" (click)="loadProgress()">Thử lại</button>
+    </div>
+  } @else if (items.length === 0) {
+    <div class="alert alert-secondary text-center py-4">
+      <i class="bi bi-box-seam fs-3 d-block mb-2 text-muted"></i>
+      Không có dữ liệu tiến trình sản xuất cho đơn hàng này.
+    </div>
+  } @else {
+    <div class="production-items-list d-flex flex-column gap-4">
+      @for (item of items; track item.orderItemId) {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden item-tracker-card">
+          <!-- Item Card Header -->
+          <div class="item-header p-3 px-4 bg-light border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-secondary">Item #{{ item.orderItemId }}</span>
+                <h5 class="fw-bold mb-0 text-dark">{{ item.productName }}</h5>
+                @if (item.variantName) {
+                  <span class="text-muted fw-semibold">— {{ item.variantName }}</span>
+                }
+              </div>
+              <div class="small text-muted mt-1 d-flex flex-wrap align-items-center gap-3">
+                <span><i class="bi bi-box-seam me-1"></i>Số lượng: <strong>{{ item.quantity }} chiếc</strong> (1 luồng chế tác)</span>
+                @if (item.productionDurationDays) {
+                  <span><i class="bi bi-calendar-event me-1"></i>Thời gian: <strong>~{{ item.productionDurationDays }} ngày</strong></span>
+                }
+                @if (item.computedCompletionAt) {
+                  <span class="text-primary"><i class="bi bi-clock-history me-1"></i>Hạn hoàn thành: <strong>{{ item.computedCompletionAt | date: 'dd/MM/yyyy HH:mm' }}</strong></span>
+                }
+              </div>
+            </div>
+
+            <!-- Item Production Status Badge -->
+            <div>
+              @switch (item.productionStatus) {
+                @case ('INITIAL_IN_PROGRESS') {
+                  <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="bi bi-palette me-1"></i>Đang tạo dáng ban đầu</span>
+                }
+                @case ('FINAL_IN_PROGRESS') {
+                  <span class="badge bg-info text-white px-3 py-2 rounded-pill"><i class="bi bi-brush me-1"></i>Đang hoàn thiện sản phẩm</span>
+                }
+                @case ('FINAL_WAITING_QC') {
+                  <span class="badge bg-primary text-white px-3 py-2 rounded-pill"><i class="bi bi-hourglass-split me-1"></i>Chờ Manager KCS</span>
+                }
+                @case ('FINAL_REWORK_REQUIRED') {
+                  <span class="badge bg-danger text-white px-3 py-2 rounded-pill"><i class="bi bi-arrow-repeat me-1"></i>KCS yêu cầu làm lại</span>
+                }
+                @case ('READY') {
+                  <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>Đã đạt KCS hoàn thiện</span>
+                }
+                @default {
+                  <span class="badge bg-secondary text-white px-3 py-2 rounded-pill">{{ item.productionStatus }}</span>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Stepper Body -->
+          <div class="p-4 d-flex flex-column gap-4">
+
+            <!-- ================= GIAI ĐOẠN 1: TẠO DÁNG BAN ĐẦU ================= -->
+            <div class="stage-section p-3 rounded-3 border" [class.border-success]="isInitialCompleted(item)">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="stage-step-badge" [class.completed]="isInitialCompleted(item)">1</span>
+                  <h6 class="fw-bold mb-0 text-dark">Giai đoạn 1: Hình ảnh tạo dáng ban đầu (INITIAL_SHAPE)</h6>
+                </div>
+                @if (isInitialCompleted(item)) {
+                  <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill">
+                    <i class="bi bi-check-circle-fill me-1"></i>Đã hoàn thành & gửi báo cáo
+                  </span>
+                } @else {
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1 rounded-pill">
+                    <i class="bi bi-hourglass me-1"></i>Chưa nộp
+                  </span>
+                }
+              </div>
+
+              <!-- Nếu đã nộp INITIAL_SHAPE -->
+              @if (getInitialShapeCheckpoint(item); as initial) {
+                <div class="checkpoint-card bg-light p-3 rounded-3">
+                  <div class="small text-muted mb-2 d-flex justify-content-between">
+                    <span><i class="bi bi-person-fill me-1"></i>Người nộp: <strong>{{ initial.submittedByName || 'Staff phụ trách' }}</strong></span>
+                    <span><i class="bi bi-clock me-1"></i>Thời gian: <strong>{{ initial.submittedAt | date: 'dd/MM/yyyy HH:mm' }}</strong></span>
+                  </div>
+
+                  @if (initial.note) {
+                    <div class="p-2 px-3 bg-white rounded border mb-3 small">
+                      <span class="text-muted fw-bold">Ghi chú từ xưởng:</span> {{ initial.note }}
+                    </div>
+                  }
+
+                  <!-- Ảnh đã nộp -->
+                  <div class="image-gallery d-flex flex-wrap gap-2">
+                    @for (img of initial.images; track img.imageUrl) {
+                      <div class="gallery-thumbnail position-relative rounded overflow-hidden" (click)="openImageModal(img.imageUrl)">
+                        <img [src]="img.imageUrl" alt="Ảnh tạo dáng ban đầu" class="w-100 h-100 object-fit-cover">
+                        <div class="thumb-overlay d-flex align-items-center justify-content-center">
+                          <i class="bi bi-zoom-in text-white fs-5"></i>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="alert alert-success mt-3 py-2 px-3 small mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-send-check-fill text-success fs-5"></i>
+                    <div>Ảnh tạo dáng ban đầu đã được gửi tự động tới khách hàng qua email và thông báo. Không cần Manager duyệt giai đoạn này.</div>
+                  </div>
+                </div>
+              } @else {
+                <!-- Form nộp INITIAL_SHAPE -->
+                @if (!readOnly && !accessDenied) {
+                  <div class="upload-form bg-light p-3 rounded-3 border">
+                    <p class="small text-muted mb-3">
+                      Chụp và tải lên 1 đến 10 hình ảnh tạo dáng phôi thô/định hình ban đầu. Khi nộp, báo cáo sẽ được tự động gửi đến khách hàng và chuyển thẳng sang giai đoạn hoàn thiện.
+                    </p>
+
+                    <!-- Vùng upload ảnh -->
+                    <div class="mb-3">
+                      <label class="form-label small fw-bold text-dark">Hình ảnh tạo dáng ban đầu (1–10 ảnh) *</label>
+                      <input
+                        type="file"
+                        class="form-control form-control-sm"
+                        accept="image/*"
+                        multiple
+                        [disabled]="isUploadingInitial[item.orderItemId] || isSubmittingInitial[item.orderItemId]"
+                        (change)="onSelectInitialFiles($event, item.orderItemId)">
+                    </div>
+
+                    <!-- Danh sách ảnh xem trước -->
+                    @if ((initialPreviews[item.orderItemId] || []).length > 0) {
+                      <div class="preview-gallery d-flex flex-wrap gap-2 mb-3">
+                        @for (preview of initialPreviews[item.orderItemId]; track $index) {
+                          <div class="preview-thumbnail position-relative rounded overflow-hidden border">
+                            <img [src]="preview" alt="Xem trước" class="w-100 h-100 object-fit-cover">
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-danger remove-preview-btn p-0 d-flex align-items-center justify-content-center"
+                              [disabled]="isUploadingInitial[item.orderItemId] || isSubmittingInitial[item.orderItemId]"
+                              (click)="removeInitialFile(item.orderItemId, $index)"
+                              title="Xóa ảnh">
+                              <i class="bi bi-x"></i>
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <!-- Ghi chú tùy chọn -->
+                    <div class="mb-3">
+                      <label class="form-label small fw-bold text-dark">Ghi chú tiến độ (tùy chọn, tối đa 2000 ký tự)</label>
+                      <textarea
+                        class="form-control form-control-sm"
+                        rows="2"
+                        maxlength="2000"
+                        placeholder="Ví dụ: Đã hoàn thành nặn phôi thô, đất sét đang khô tự nhiên..."
+                        [(ngModel)]="initialNotes[item.orderItemId]"
+                        [disabled]="isUploadingInitial[item.orderItemId] || isSubmittingInitial[item.orderItemId]">
+                      </textarea>
+                    </div>
+
+                    <!-- Nút nộp -->
+                    <div class="text-end">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-primary rounded-pill px-4 fw-bold"
+                        [disabled]="(initialFiles[item.orderItemId] || []).length === 0 || isUploadingInitial[item.orderItemId] || isSubmittingInitial[item.orderItemId]"
+                        (click)="submitInitialShape(item)">
+                        @if (isUploadingInitial[item.orderItemId]) {
+                          <span class="spinner-border spinner-border-sm me-1"></span> Đang tải ảnh...
+                        } @else if (isSubmittingInitial[item.orderItemId]) {
+                          <span class="spinner-border spinner-border-sm me-1"></span> Đang gửi checkpoint...
+                        } @else {
+                          <i class="bi bi-send-fill me-1"></i> Gửi ảnh tạo dáng ban đầu
+                        }
+                      </button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="text-muted small fst-italic">Giai đoạn tạo dáng ban đầu chưa hoàn thành.</div>
+                }
+              }
+            </div>
+
+            <!-- ================= GIAI ĐOẠN 2: SẢN PHẨM HOÀN THIỆN & KCS ================= -->
+            <div class="stage-section p-3 rounded-3 border" [class.border-success]="isFinalPassed(item)">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="stage-step-badge" [class.completed]="isFinalPassed(item)">2</span>
+                  <h6 class="fw-bold mb-0 text-dark">Giai đoạn 2: Sản phẩm hoàn thiện & Kiểm định KCS (FINAL_PRODUCT)</h6>
+                </div>
+                @if (isFinalPassed(item)) {
+                  <span class="badge bg-success px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>Đã đạt KCS</span>
+                } @else if (isFinalPendingReview(item)) {
+                  <span class="badge bg-warning text-dark px-3 py-1 rounded-pill"><i class="bi bi-hourglass-split me-1"></i>Đang chờ KCS duyệt</span>
+                } @else if (canSubmitFinal(item)) {
+                  <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1 rounded-pill"><i class="bi bi-pencil-fill me-1"></i>Cần nộp kiểm định</span>
+                }
+              </div>
+
+              <!-- Nếu chưa hoàn thành giai đoạn 1 -->
+              @if (!isInitialCompleted(item)) {
+                <div class="alert alert-secondary small py-2 px-3 mb-0 d-flex align-items-center gap-2">
+                  <i class="bi bi-lock-fill text-muted"></i>
+                  <div>Giai đoạn này sẽ tự động mở sau khi hoàn thành và nộp ảnh tạo dáng ban đầu ở Giai đoạn 1.</div>
+                </div>
+              } @else {
+                <!-- Lịch sử các lần nộp FINAL_PRODUCT -->
+                @if (getFinalCheckpoints(item).length > 0) {
+                  <div class="attempts-history d-flex flex-column gap-3 mb-4">
+                    <h6 class="small fw-bold text-uppercase text-muted mb-0"><i class="bi bi-clock-history me-1"></i>Lịch sử kiểm định KCS ({{ getFinalCheckpoints(item).length }} lần nộp):</h6>
+
+                    @for (finalCp of getFinalCheckpoints(item); track finalCp.id) {
+                      <div class="attempt-card p-3 rounded-3 border bg-light"
+                           [class.border-danger]="finalCp.status === 'REWORK_REQUIRED'"
+                           [class.border-success]="finalCp.status === 'PASSED'"
+                           [class.border-warning]="finalCp.status === 'PENDING_REVIEW'">
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 pb-2 border-bottom">
+                          <div class="fw-bold text-dark">
+                            <span class="badge bg-dark me-2">Lần #{{ finalCp.attemptNumber }}</span>
+                            Nộp lúc: {{ finalCp.submittedAt | date: 'dd/MM/yyyy HH:mm' }}
+                            @if (finalCp.submittedByName) {
+                              <span class="text-muted fw-normal ms-1">(bởi {{ finalCp.submittedByName }})</span>
+                            }
+                          </div>
+
+                          <!-- Trạng thái KCS của attempt -->
+                          <div>
+                            @switch (finalCp.status) {
+                              @case ('PENDING_REVIEW') {
+                                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill"><i class="bi bi-hourglass-split me-1"></i>Đang chờ Manager duyệt KCS</span>
+                              }
+                              @case ('PASSED') {
+                                <span class="badge bg-success px-3 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>ĐẠT KIỂM ĐỊNH KCS</span>
+                              }
+                              @case ('REWORK_REQUIRED') {
+                                <span class="badge bg-danger px-3 py-1 rounded-pill"><i class="bi bi-arrow-repeat me-1"></i>KCS YÊU CẦU LÀM LẠI</span>
+                              }
+                            }
+                          </div>
+                        </div>
+
+                        <!-- Quyết định KCS nếu có -->
+                        @if (finalCp.decision; as dec) {
+                          <div class="decision-box p-3 rounded-2 mb-3" [class.bg-danger-subtle]="dec.decisionType === 'REWORK_REQUIRED'" [class.bg-success-subtle]="dec.decisionType === 'PASS'">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                              <span class="fw-bold" [class.text-danger]="dec.decisionType === 'REWORK_REQUIRED'" [class.text-success]="dec.decisionType === 'PASS'">
+                                <i class="bi" [class.bi-x-circle-fill]="dec.decisionType === 'REWORK_REQUIRED'" [class.bi-check-circle-fill]="dec.decisionType === 'PASS'"></i>
+                                {{ dec.decisionType === 'REWORK_REQUIRED' ? 'Lý do yêu cầu làm lại từ Manager:' : 'Xác nhận đạt KCS từ Manager' }}
+                              </span>
+                              <small class="text-muted">{{ dec.decidedAt | date: 'dd/MM/yyyy HH:mm' }} ({{ dec.decidedByName }})</small>
+                            </div>
+                            @if (dec.reason) {
+                              <p class="mb-0 small fw-medium mt-1">{{ dec.reason }}</p>
+                            }
+                          </div>
+                        }
+
+                        @if (finalCp.note) {
+                          <div class="small text-muted mb-2"><span class="fw-bold">Ghi chú của staff:</span> {{ finalCp.note }}</div>
+                        }
+
+                        <!-- Ảnh của attempt -->
+                        <div class="image-gallery d-flex flex-wrap gap-2">
+                          @for (img of finalCp.images; track img.imageUrl) {
+                            <div class="gallery-thumbnail position-relative rounded overflow-hidden" (click)="openImageModal(img.imageUrl)">
+                              <img [src]="img.imageUrl" alt="Ảnh sản phẩm hoàn thiện" class="w-100 h-100 object-fit-cover">
+                              <div class="thumb-overlay d-flex align-items-center justify-content-center">
+                                <i class="bi bi-zoom-in text-white fs-5"></i>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- Nếu đang chờ review -->
+                @if (isFinalPendingReview(item)) {
+                  <div class="alert alert-warning py-3 px-3 d-flex align-items-center gap-2 mb-0">
+                    <i class="bi bi-hourglass-top text-warning fs-4"></i>
+                    <div>
+                      <strong>Đang chờ Manager kiểm định KCS:</strong> Lần nộp gần nhất đang được Manager xem xét. Nhân viên không thể nộp thêm lần mới cho đến khi có quyết định đạt hoặc yêu cầu làm lại.
+                    </div>
+                  </div>
+                }
+
+                <!-- Nếu đã đạt KCS -->
+                @if (isFinalPassed(item)) {
+                  <div class="alert alert-success py-3 px-3 d-flex align-items-center gap-2 mb-0">
+                    <i class="bi bi-patch-check-fill text-success fs-4"></i>
+                    <div>
+                      <strong>Đã hoàn thành kiểm định KCS:</strong> Loại sản phẩm này đã được Manager duyệt đạt. Toàn bộ thao tác nộp đã được khóa hoàn tất.
+                    </div>
+                  </div>
+                }
+
+                <!-- Form nộp attempt mới khi canSubmitFinal -->
+                @if (canSubmitFinal(item) && !readOnly) {
+                  <div class="upload-form bg-light p-3 rounded-3 border mt-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <h6 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-camera-fill me-1 text-primary"></i>
+                        Nộp kiểm định sản phẩm hoàn thiện (Lần #{{ getNextFinalAttemptNumber(item) }})
+                      </h6>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Attempt #{{ getNextFinalAttemptNumber(item) }}</span>
+                    </div>
+
+                    <p class="small text-muted mb-3">
+                      Tải lên 1 đến 10 hình ảnh chi tiết sản phẩm sau khi chế tác hoàn thiện để gửi cho Manager KCS.
+                    </p>
+
+                    <!-- Vùng upload ảnh -->
+                    <div class="mb-3">
+                      <label class="form-label small fw-bold text-dark">Hình ảnh sản phẩm hoàn thiện (1–10 ảnh) *</label>
+                      <input
+                        type="file"
+                        class="form-control form-control-sm"
+                        accept="image/*"
+                        multiple
+                        [disabled]="isUploadingFinal[item.orderItemId] || isSubmittingFinal[item.orderItemId]"
+                        (change)="onSelectFinalFiles($event, item.orderItemId)">
+                    </div>
+
+                    <!-- Danh sách ảnh xem trước -->
+                    @if ((finalPreviews[item.orderItemId] || []).length > 0) {
+                      <div class="preview-gallery d-flex flex-wrap gap-2 mb-3">
+                        @for (preview of finalPreviews[item.orderItemId]; track $index) {
+                          <div class="preview-thumbnail position-relative rounded overflow-hidden border">
+                            <img [src]="preview" alt="Xem trước" class="w-100 h-100 object-fit-cover">
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-danger remove-preview-btn p-0 d-flex align-items-center justify-content-center"
+                              [disabled]="isUploadingFinal[item.orderItemId] || isSubmittingFinal[item.orderItemId]"
+                              (click)="removeFinalFile(item.orderItemId, $index)"
+                              title="Xóa ảnh">
+                              <i class="bi bi-x"></i>
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <!-- Ghi chú tùy chọn -->
+                    <div class="mb-3">
+                      <label class="form-label small fw-bold text-dark">Ghi chú cho Manager (tùy chọn, tối đa 2000 ký tự)</label>
+                      <textarea
+                        class="form-control form-control-sm"
+                        rows="2"
+                        maxlength="2000"
+                        placeholder="Ví dụ: Đã khắc phục đường men theo yêu cầu, nước men đều..."
+                        [(ngModel)]="finalNotes[item.orderItemId]"
+                        [disabled]="isUploadingFinal[item.orderItemId] || isSubmittingFinal[item.orderItemId]">
+                      </textarea>
+                    </div>
+
+                    <!-- Nút nộp -->
+                    <div class="text-end">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-success rounded-pill px-4 fw-bold shadow-sm"
+                        [disabled]="(finalFiles[item.orderItemId] || []).length === 0 || isUploadingFinal[item.orderItemId] || isSubmittingFinal[item.orderItemId]"
+                        (click)="submitFinalProduct(item)">
+                        @if (isUploadingFinal[item.orderItemId]) {
+                          <span class="spinner-border spinner-border-sm me-1"></span> Đang tải ảnh...
+                        } @else if (isSubmittingFinal[item.orderItemId]) {
+                          <span class="spinner-border spinner-border-sm me-1"></span> Đang nộp KCS...
+                        } @else {
+                          <i class="bi bi-cloud-upload-fill me-1"></i> Nộp kiểm định KCS (Lần #{{ getNextFinalAttemptNumber(item) }})
+                        }
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal xem ảnh phóng to -->
+@if (enlargedImageUrl) {
+  <div class="image-modal-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3"
+       style="z-index: 1080;"
+       (click)="closeImageModal()">
+    <div class="position-relative bg-white rounded-3 p-2 shadow-lg overflow-hidden" (click)="$event.stopPropagation()" style="max-width: 90vw; max-height: 90vh;">
+      <button class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle" (click)="closeImageModal()" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <img [src]="enlargedImageUrl" alt="Hình ảnh phóng to" class="d-block w-100 h-100 object-fit-contain" style="max-height: 85vh;">
+    </div>
+  </div>
+}

@@ -694,7 +694,7 @@ this.closeCart(data);
     if (!qrSource) {
       this.paymentQrDataUrl = '';
       this.isGeneratingPaymentQr = false;
-      this.toast.notify('KhÃ´ng tÃ¬m tháº¥y dá»¯ liá»‡u QR thanh toÃ¡n tá»« MoMo.');
+      this.toast.notify('Không tìm thấy dữ liệu QR thanh toán.');
       return;
     }
 

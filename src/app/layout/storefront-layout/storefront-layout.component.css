@@ -1,85 +1,92 @@
 /* ============================================================
-   STOREFRONT NAVBAR
+   STOREFRONT NAVBAR — Imperfecto Aesthetic
+   Nền tối ấm, chữ kem, border mảnh, wordmark serif Imbue
    ============================================================ */
 
 .sf-navbar {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1040;
-  height: var(--sf-header-h, 96px);
+  height: 84px;
   padding: 0 var(--sf-gutter, 2rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  background: transparent;
-  transition: background 0.35s ease, box-shadow 0.35s ease, backdrop-filter 0.35s ease, height 0.35s ease;
+  gap: 1.5rem;
+  background: rgba(38, 33, 26, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(236, 229, 216, 0.08);
+  transition: background 0.3s ease, box-shadow 0.3s ease, height 0.3s ease, border-color 0.3s ease;
 }
 
 .sf-navbar--scrolled {
-  background: rgba(38, 33, 26, 0.88); /* var(--sf-bg) with opacity */
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 rgba(236, 229, 216, 0.08), 0 4px 24px rgba(0, 0, 0, 0.2);
-  height: 72px; /* Slightly shorter when scrolled */
+  background: rgba(38, 33, 26, 0.98);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(236, 229, 216, 0.12);
+  height: 70px;
 }
 
-/* ---- Logo ---- */
+/* ---- Logo / Wordmark ---- */
 .sf-navbar__logo {
   text-decoration: none;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
 }
 
 .sf-navbar__logo-text {
-  font-family: var(--sf-font-display);
-  font-size: 2rem;
+  font-family: var(--sf-font-display, 'Imbue', serif);
+  font-size: 2.2rem;
   font-weight: 400;
-  color: var(--sf-ink);
-  letter-spacing: -0.02em;
-  transition: color 0.3s ease;
+  color: var(--sf-ink, #ece5d8);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  transition: color 0.25s ease;
 }
 
-.sf-navbar:not(.sf-navbar--scrolled) .sf-navbar__logo-text {
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+.sf-navbar__logo:hover .sf-navbar__logo-text {
+  color: #ffffff;
 }
 
-/* ---- Nav Links ---- */
+/* ---- Nav Links (Desktop) ---- */
 .sf-navbar__nav {
   display: flex;
   align-items: center;
-  gap: 2.5rem;
+  gap: 2.25rem;
 }
 
 .sf-navbar__link {
   text-decoration: none;
-  font-family: var(--sf-font-sans);
-  font-size: 0.85rem;
+  font-family: var(--sf-font-sans, sans-serif);
+  font-size: 0.82rem;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--sf-ink-soft);
-  transition: color 0.2s ease, opacity 0.2s ease;
+  color: var(--sf-ink-soft, #d3c9b7);
+  transition: color 0.2s ease;
   position: relative;
+  padding: 0.4rem 0;
 }
 
 .sf-navbar__link::after {
   content: '';
   position: absolute;
-  bottom: -4px;
+  bottom: 0;
   left: 0;
   width: 100%;
   height: 1px;
-  background: var(--sf-ink);
+  background: var(--sf-ink, #ece5d8);
   transform: scaleX(0);
   transform-origin: right;
-  transition: transform 0.3s var(--sf-ease);
+  transition: transform 0.28s var(--sf-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 
 .sf-navbar__link:hover,
 .sf-navbar__link--active {
-  color: var(--sf-ink);
+  color: #ffffff;
 }
 
 .sf-navbar__link:hover::after,
@@ -88,7 +95,7 @@
   transform-origin: left;
 }
 
-/* ---- Actions ---- */
+/* ---- Actions (Right side) ---- */
 .sf-navbar__actions {
   display: flex;
   align-items: center;
@@ -100,53 +107,66 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%; /* Or 0 for square, but let's keep rounded for icons */
-  border: none;
-  background: transparent;
-  color: var(--sf-ink);
-  font-size: 1.25rem;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(236, 229, 216, 0.12);
+  background: rgba(236, 229, 216, 0.03);
+  color: var(--sf-ink, #ece5d8);
+  font-size: 1.15rem;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   text-decoration: none;
+  padding: 0;
 }
 
 .sf-navbar__icon-btn:hover {
-  background: rgba(236, 229, 216, 0.08);
+  background: rgba(236, 229, 216, 0.09);
+  border-color: rgba(236, 229, 216, 0.24);
+  color: #ffffff;
+}
+
+.notification-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.22em 0.5em;
+  background-color: var(--sf-danger, #e08a6f) !important;
+  color: #26211a !important;
+  border: 1px solid var(--sf-bg, #26211a);
 }
 
 /* ---- User Dropdown Button ---- */
 .sf-navbar__user-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  height: 44px;
-  padding: 0 1rem 0 0.5rem;
+  gap: 0.6rem;
+  height: 42px;
+  padding: 0 0.9rem 0 0.4rem;
   border-radius: 999px;
-  border: 1px solid var(--sf-line);
+  border: 1px solid rgba(236, 229, 216, 0.14);
   background: rgba(236, 229, 216, 0.03);
   cursor: pointer;
-  transition: 0.2s ease;
-  color: var(--sf-ink);
+  transition: all 0.2s ease;
+  color: var(--sf-ink, #ece5d8);
 }
 
 .sf-navbar__user-btn:hover {
-  background: rgba(236, 229, 216, 0.08);
-  border-color: rgba(236, 229, 216, 0.2);
+  background: rgba(236, 229, 216, 0.09);
+  border-color: rgba(236, 229, 216, 0.28);
+  color: #ffffff;
 }
 
 .sf-navbar__avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--sf-bg-elev);
+  background: var(--sf-bg-elev, #2f2920);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  font-size: 0.85rem;
-  color: var(--sf-ink);
+  font-size: 0.9rem;
+  color: var(--sf-ink, #ece5d8);
   flex-shrink: 0;
 }
 
@@ -157,7 +177,7 @@
 }
 
 .sf-navbar__username {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 500;
   max-width: 120px;
   overflow: hidden;
@@ -166,51 +186,294 @@
 }
 
 .sf-navbar__chevron {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   opacity: 0.6;
 }
 
 /* ---- Auth Links ---- */
 .sf-navbar__auth-link {
+  font-family: var(--sf-font-sans, sans-serif);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--sf-ink, #ece5d8);
+  padding: 0.55rem 1.15rem;
+  border: 1px solid rgba(236, 229, 216, 0.16);
+  border-radius: 2px;
+  background: transparent;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.sf-navbar__auth-link:hover {
+  color: #ffffff;
+  border-color: rgba(236, 229, 216, 0.35);
+  background: rgba(236, 229, 216, 0.06);
+}
+
+.sf-navbar__auth-link--primary {
+  color: #26211a !important;
+  background: var(--sf-light, #ebe5dd);
+  border-color: var(--sf-light, #ebe5dd);
+  font-weight: 600;
+}
+
+.sf-navbar__auth-link--primary:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #1a1610 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.sf-navbar__auth-link--full {
+  width: 100%;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+}
+
+/* ---- Dropdown Menus ---- */
+.sf-dropdown {
+  background: var(--sf-bg-elev, #2f2920);
+  border: 1px solid rgba(236, 229, 216, 0.14);
+  border-radius: 4px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  padding: 0.5rem 0;
+  min-width: 220px;
+}
+
+.sf-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1.25rem;
   font-size: 0.85rem;
+  color: var(--sf-ink-soft, #d3c9b7);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.sf-dropdown__item:hover,
+.sf-dropdown__item:focus {
+  background: rgba(236, 229, 216, 0.08);
+  color: #ffffff;
+}
+
+.sf-dropdown__item i {
+  font-size: 1rem;
+  opacity: 0.75;
+}
+
+.sf-dropdown__item--danger {
+  color: var(--sf-danger, #e08a6f);
+}
+
+.sf-dropdown__item--danger:hover {
+  background: rgba(224, 138, 111, 0.12);
+  color: #ff9d82;
+}
+
+/* Notifications Menu */
+.notification-menu {
+  width: 340px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid rgba(236, 229, 216, 0.1);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--sf-ink, #ece5d8);
+}
+
+.notification-header button {
+  font-size: 0.78rem;
+  color: var(--sf-muted, #a49985);
+  text-decoration: none;
+}
+
+.notification-header button:hover {
+  color: var(--sf-ink, #ece5d8);
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid rgba(236, 229, 216, 0.06);
+  color: var(--sf-ink, #ece5d8);
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.notification-item:hover {
+  background: rgba(236, 229, 216, 0.06);
+}
+
+.notification-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(236, 229, 216, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sf-accent, #c5b8a5);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-time {
+  font-size: 0.72rem;
+  color: var(--sf-muted, #a49985);
+}
+
+/* ---- Mobile Navigation Drawer ---- */
+.sf-navbar__drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1045;
+}
+
+.sf-navbar__drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(85vw, 360px);
+  background: var(--sf-bg-elev, #2f2920);
+  border-left: 1px solid rgba(236, 229, 216, 0.12);
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+  animation: sfDrawerSlideIn 0.25s var(--sf-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@keyframes sfDrawerSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.sf-navbar__drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(236, 229, 216, 0.1);
+  margin-bottom: 1.25rem;
+}
+
+.sf-navbar__drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.sf-navbar__drawer-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  border-radius: 2px;
+  color: var(--sf-ink, #ece5d8);
+  font-family: var(--sf-font-sans, sans-serif);
+  font-size: 0.95rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--sf-ink-soft);
-  padding: 0.5rem 1rem;
-  transition: 0.2s ease;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
 
-.sf-navbar__auth-link:hover {
-  color: var(--sf-ink);
+.sf-navbar__drawer-link:hover {
+  background: rgba(236, 229, 216, 0.06);
+  border-color: rgba(236, 229, 216, 0.12);
+  color: #ffffff;
 }
 
-.sf-navbar__auth-link--primary {
-  color: var(--sf-accent-ink);
-  background: var(--sf-light);
-  border-radius: 0;
-  padding: 0.6rem 1.25rem;
+.sf-navbar__drawer-link i {
+  font-size: 0.85rem;
+  opacity: 0.5;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.sf-navbar__auth-link--primary:hover {
-  background: #fff;
+.sf-navbar__drawer-link:hover i {
+  transform: translateX(3px);
+  opacity: 1;
 }
 
-/* ---- Main content ---- */
+.sf-navbar__drawer-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(236, 229, 216, 0.1);
+}
+
+/* ---- Main Content ---- */
 .storefront-main {
-  /* No min-height needed here if sf-shell has it, but it's fine */
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding-top: 0;
 }
 
-/* Responsive */
+/* ---- Responsive ---- */
+@media (max-width: 991px) {
+  .sf-navbar__nav {
+    gap: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
-  .sf-navbar__nav { display: none; }
-  .sf-navbar__username { display: none; }
-  .sf-navbar__logo-text { font-size: 1.5rem; }
+  .sf-navbar {
+    height: 72px;
+    padding: 0 1rem;
+  }
+
+  .sf-navbar--scrolled {
+    height: 64px;
+  }
+
+  .sf-navbar__nav {
+    display: none;
+  }
+
+  .sf-navbar__username {
+    display: none;
+  }
+
+  .sf-navbar__logo-text {
+    font-size: 1.75rem;
+  }
+
+  .sf-navbar__icon-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1.05rem;
+  }
+
+  .sf-navbar__user-btn {
+    height: 38px;
+    padding: 0 0.5rem;
+  }
 }
-
-.sf-badge--alert { background-color: var(--sf-danger); color: var(--sf-ink); border: 2px solid var(--sf-bg); font-size: 0.65rem; padding: 0.25em 0.5em; }
-

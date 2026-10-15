@@ -45,11 +45,9 @@
         @for (v of filteredVariants; track v.id) {
           <button class="btn text-start border variant-option"
                   [ngClass]="{
-                    'btn-outline-secondary': selectedVariant?.id !== v.id && v.quantity > 0,
-                    'btn-success text-white border-success shadow-sm': selectedVariant?.id === v.id,
-                    'btn-light text-muted border-dashed': v.quantity <= 0
+                    'btn-outline-secondary': selectedVariant?.id !== v.id,
+                    'btn-success text-white border-success shadow-sm': selectedVariant?.id === v.id
                   }"
-                  [disabled]="v.quantity <= 0"
                   (click)="selectVariant(v)">
             <div class="fw-bold mb-1 variant-name" [title]="v.variantName">{{ v.variantName }}</div>
 
@@ -63,11 +61,10 @@
               }
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" *ngIf="v.quantity > 0">
+            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
               <span class="small fw-bold text-danger" [ngClass]="{'text-white': selectedVariant?.id === v.id}">{{ v.price | number }}đ</span>
-              <span class="small opacity-75">Kho: {{ v.quantity }}</span>
+              <span class="small opacity-75"><i class="bi bi-clock-history me-1"></i>Làm theo yêu cầu</span>
             </div>
-            <div class="text-danger small fw-bold mt-1" *ngIf="v.quantity <= 0">Hết hàng</div>
           </button>
         } @empty {
           <div class="alert alert-warning w-100 py-2"><i class="bi bi-exclamation-triangle me-2"></i>Không tìm thấy phân loại hàng nào phù hợp với bộ lọc.</div>
@@ -76,23 +73,25 @@
     </div>
 
     <div class="mb-2" *ngIf="selectedVariant">
-      <label class="form-label fw-bold text-dark mb-2 quantity-title">Chọn số lượng mua</label>
+      <label class="form-label fw-bold text-dark mb-2 quantity-title">Chọn số lượng đặt làm</label>
       <div class="quantity-input input-group">
         <button class="btn btn-outline-secondary" type="button" (click)="quantity = quantity > 1 ? quantity - 1 : 1">
           <i class="bi bi-dash"></i>
         </button>
-        <input type="number" class="form-control text-center fw-bold" [(ngModel)]="quantity" [min]="1" [max]="selectedVariant.quantity" />
-        <button class="btn btn-outline-secondary" type="button" (click)="quantity = quantity < selectedVariant.quantity ? quantity + 1 : selectedVariant.quantity">
+        <input type="number" class="form-control text-center fw-bold" [(ngModel)]="quantity" [min]="1" />
+        <button class="btn btn-outline-secondary" type="button" (click)="quantity = quantity + 1">
           <i class="bi bi-plus"></i>
         </button>
       </div>
-      <div class="form-text text-success mt-1 fw-semibold"><i class="bi bi-check2-circle me-1"></i>Sẵn có: {{ selectedVariant.quantity }} sản phẩm</div>
+      <div class="form-text text-success mt-1 fw-semibold">
+        <i class="bi bi-check2-circle me-1"></i>Sản phẩm thủ công theo yêu cầu (ước tính ~{{ product.madeDay || 3 }} ngày chế tác)
+      </div>
     </div>
   </div>
 
   <div class="modal-footer px-4 py-3 bg-light border-0 d-flex justify-content-between gap-3">
     <button class="btn btn-secondary px-4 rounded-pill fw-bold" (click)="onCancel()">Hủy bỏ</button>
-    <button class="btn btn-success px-4 rounded-pill fw-bold" [disabled]="!selectedVariant || quantity <= 0 || quantity > selectedVariant.quantity" (click)="onConfirm()">
+    <button class="btn btn-success px-4 rounded-pill fw-bold" [disabled]="!selectedVariant || quantity < 1" (click)="onConfirm()">
       <i class="bi bi-cart-plus me-1"></i> Xác nhận thêm vào giỏ
     </button>
   </div>

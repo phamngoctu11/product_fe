@@ -80,6 +80,11 @@ export class AuthService {
     return role === 'ADMIN' || role === 'MANAGER';
   }
 
+  isManager(): boolean {
+    const role = this.getUserRole();
+    return role === 'MANAGER' || role === 'ADMIN';
+  }
+
   isStaff(): boolean {
     return this.getUserRole() === 'STAFF';
   }

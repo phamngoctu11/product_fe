@@ -4,6 +4,11 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
   Order,
+  OrderAgreement,
+  OrderAgreementDecisionRequest,
+  OrderChatMessage,
+  OrderChatThread,
+  SubmitOrderAgreementRequest,
   AvailableStaff,
   ManagerOrderReviewDetail,
   ManagerOrderReviewSummary,
@@ -17,6 +22,12 @@ import {
   ReceiptConfirmRequest,
   ReceiptConfirmResponse,
   ReorderResponse,
+  PaymentAttempt,
+  StartProductionRequest,
+  StartProductionResult,
+  OrderChangeRequest,
+  CreateOrderChangeRequest,
+  DecideOrderChangeRequest,
 } from '../model/order.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { PageResponse } from '../model/page-response.model';
@@ -154,14 +165,6 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  kcsCheck(orderId: number, isPassed: boolean, cancelReason: string = ''): Observable<string> {
-    const params = new HttpParams()
-      .set('isPassed', String(isPassed))
-      .set('cancelReason', cancelReason);
-    return this.http
-      .post<ApiResponse<null> | string>(`${this.apiUrl}/manager/kcs-check/${orderId}`, null, { params })
-      .pipe(map((response: any) => this.extractMessage(response, isPassed ? 'KCS đạt, đơn chuyển sang giao hàng!' : 'KCS không đạt, đơn đã trả về staff.')));
-  }
 
   getClaimableOrders(page: number = 0, size: number = 20): Observable<PageResponse<OrderAssignmentQueueItem>> {
     const params = this.pageParams(page, size);
@@ -190,11 +193,6 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  exportWarehouseOrder(orderId: number, items: { variantId: number; quantity: number }[]): Observable<string> {
-    return this.http
-      .post<ApiResponse<null> | string>(`${this.apiUrl}/staff/export/${orderId}`, items)
-      .pipe(map((response: any) => this.extractMessage(response, 'Xuất kho thành công!')));
-  }
 
   private extractMessage(response: any, fallback: string): string {
     if (typeof response === 'string') {
@@ -240,4 +238,130 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
+  getOrderAgreement(orderId: number): Observable<OrderAgreement> {
+    return this.http
+      .get<ApiResponse<OrderAgreement> | OrderAgreement>(`${this.apiUrl}/${orderId}/agreement`)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  submitOrderAgreement(orderId: number, request: SubmitOrderAgreementRequest, idempotencyKey?: string): Observable<OrderAgreement> {
+    const key = idempotencyKey || this.generateIdempotencyKey('user-agreement', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
+    return this.http
+      .post<ApiResponse<OrderAgreement> | OrderAgreement>(
+        `${this.apiUrl}/${orderId}/agreement/submissions`,
+        request,
+        { headers }
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  decideOrderAgreement(orderId: number, request: OrderAgreementDecisionRequest, idempotencyKey?: string): Observable<OrderAgreement> {
+    const key = idempotencyKey || this.generateIdempotencyKey('staff-agreement-decision', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
+    return this.http
+      .post<ApiResponse<OrderAgreement> | OrderAgreement>(
+        `${this.apiUrl}/staff/${orderId}/agreement/decisions`,
+        request,
+        { headers }
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getOrderChatThread(orderId: number): Observable<OrderChatThread> {
+    return this.http
+      .get<ApiResponse<OrderChatThread> | OrderChatThread>(`${this.apiUrl}/${orderId}/chat`)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getOrderChatMessages(orderId: number): Observable<OrderChatMessage[]> {
+    return this.http
+      .get<ApiResponse<OrderChatMessage[]> | OrderChatMessage[]>(`${this.apiUrl}/${orderId}/chat/messages`)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  sendOrderChatMessage(orderId: number, content: string): Observable<OrderChatMessage> {
+    return this.http
+      .post<ApiResponse<OrderChatMessage> | OrderChatMessage>(
+        `${this.apiUrl}/${orderId}/chat/messages`,
+        { orderId, content }
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  openPaymentAttempt(orderId: number, idempotencyKey?: string): Observable<PaymentAttempt> {
+    const key = idempotencyKey || this.generateIdempotencyKey('user-payment-open', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
+    return this.http
+      .post<ApiResponse<PaymentAttempt> | PaymentAttempt>(
+        `${environment.apiUrl}/payments/orders/${orderId}/attempts`,
+        null,
+        { headers }
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getPaymentStatus(orderId: number): Observable<PaymentAttempt> {
+    return this.http
+      .get<ApiResponse<PaymentAttempt> | PaymentAttempt>(
+        `${environment.apiUrl}/payments/orders/${orderId}/status`
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  startProduction(orderId: number, request: StartProductionRequest, idempotencyKey?: string): Observable<StartProductionResult> {
+    const key = idempotencyKey || this.generateIdempotencyKey('staff-start-production', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
+    return this.http
+      .post<ApiResponse<StartProductionResult> | StartProductionResult>(
+        `${this.apiUrl}/staff/${orderId}/start-production`,
+        request,
+        { headers }
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getChangeRequests(orderId: number): Observable<OrderChangeRequest[]> {
+    return this.http
+      .get<ApiResponse<OrderChangeRequest[]> | OrderChangeRequest[]>(`${this.apiUrl}/${orderId}/change-requests`)
+      .pipe(map(unwrapApiResponse));
+  }
+
+  createChangeRequest(
+    orderId: number,
+    request: CreateOrderChangeRequest,
+    idempotencyKey?: string,
+  ): Observable<OrderChangeRequest> {
+    const key = idempotencyKey || this.generateIdempotencyKey('user-change-request', orderId);
+    return this.http
+      .post<ApiResponse<OrderChangeRequest> | OrderChangeRequest>(
+        `${this.apiUrl}/${orderId}/change-requests`,
+        request,
+        { headers: new HttpHeaders({ 'Idempotency-Key': key }) },
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  decideChangeRequest(
+    orderId: number,
+    changeRequestId: number,
+    request: DecideOrderChangeRequest,
+    idempotencyKey?: string,
+  ): Observable<OrderChangeRequest> {
+    const key = idempotencyKey || this.generateIdempotencyKey('staff-change-request', orderId);
+    return this.http
+      .post<ApiResponse<OrderChangeRequest> | OrderChangeRequest>(
+        `${this.apiUrl}/staff/${orderId}/change-requests/${changeRequestId}/decision`,
+        request,
+        { headers: new HttpHeaders({ 'Idempotency-Key': key }) },
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  generateIdempotencyKey(scope: string, orderId: number): string {
+    const randomPart = typeof globalThis.crypto?.randomUUID === 'function'
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    return `${scope}-${orderId}-${randomPart}`;
+  }
 }

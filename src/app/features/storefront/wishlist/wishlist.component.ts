@@ -88,8 +88,8 @@ export class WishlistComponent implements OnInit {
       this.toast.notify('Vui lòng đăng nhập để mua hàng.');
       return;
     }
-    if ((product as any).availabilityStatus === "TEMPORARILY_PAUSED") {
-      this.toast.notify('Sản phẩm hiện không nhận đơn mới.');
+    if (product.availabilityStatus === 'PAUSED' || product.availabilityStatus === 'DISCONTINUED') {
+      this.toast.notify('Sản phẩm hiện đang tạm ngưng hoặc ngừng kinh doanh.');
       return;
     }
     if (!product.variants || product.variants.length === 0) {
