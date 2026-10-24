@@ -2,7 +2,7 @@
   <app-page-header
     icon="bi-tools"
     title="Đơn sản xuất"
-    subtitle="Nhận đơn P7 và theo dõi các đơn đang phụ trách">
+    subtitle="Nhận đơn và theo dõi các đơn đang phụ trách">
     <button pageActions class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm" (click)="loadData()" [disabled]="isLoading">
       <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
     </button>
@@ -10,26 +10,166 @@
 
   <div class="d-flex flex-wrap gap-2 mb-4">
     <button class="btn rounded-pill px-4 fw-bold"
-            [ngClass]="activeTab === 'pending' ? 'btn-primary shadow-sm' : 'btn-outline-primary'"
-            (click)="activeTab = 'pending'">
-      <i class="bi bi-inboxes me-1"></i>Chờ nhận ({{ pendingTotalElements }})
+            [ngClass]="activeTab === 'in_progress' ? 'btn-primary shadow-sm' : 'btn-outline-primary'"
+            (click)="activeTab = 'in_progress'">
+      <i class="bi bi-gear-wide-connected me-1"></i>Đơn đang thực hiện ({{ totalInProgressCount }})
     </button>
     <button class="btn rounded-pill px-4 fw-bold"
-            [ngClass]="activeTab === 'mine' ? 'btn-primary shadow-sm' : 'btn-outline-primary'"
-            (click)="activeTab = 'mine'">
-      <i class="bi bi-person-check me-1"></i>Đơn của tôi ({{ mineTotalElements }})
+            [ngClass]="activeTab === 'completed' ? 'btn-primary shadow-sm' : 'btn-outline-primary'"
+            (click)="activeTab = 'completed'">
+      <i class="bi bi-check2-circle me-1"></i>Đơn đã hoàn thành ({{ totalCompletedCount }})
+    </button>
+    <button class="btn rounded-pill px-4 fw-bold"
+            [ngClass]="activeTab === 'claimable' ? 'btn-primary shadow-sm' : 'btn-outline-primary'"
+            (click)="activeTab = 'claimable'">
+      <i class="bi bi-inboxes me-1"></i>Đơn đang chờ nhận ({{ pendingTotalElements }})
     </button>
   </div>
 
   <app-view-state [loading]="isLoading" loadingText="Đang tải dữ liệu đơn hàng...">
-    @if (activeTab === 'pending') {
+    <!-- TAB 1: ĐƠN ĐANG THỰC HIỆN -->
+    @if (activeTab === 'in_progress') {
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 staff-filter-bar p-3 rounded-4">
+        <div class="d-flex align-items-center gap-2">
+          <label class="form-label small fw-bold text-muted mb-0 d-flex align-items-center gap-1">
+            <i class="bi bi-funnel"></i> Lọc trạng thái:
+          </label>
+          <select class="form-select form-select-sm rounded-pill" style="min-width: 240px;" [(ngModel)]="inProgressStatusFilter">
+            <option value="ALL">Tất cả trạng thái ({{ totalInProgressCount }})</option>
+            <option value="DISCUSSING">Đang trao đổi</option>
+            <option value="WAITING_STAFF_CONFIRMATION">Chờ nhân viên xác nhận</option>
+            <option value="ORDER_ACCEPTED">Sẵn sàng sản xuất</option>
+            <option value="ORDER_CREATING">Đang sản xuất</option>
+            <option value="READY_TO_SHIP">Sẵn sàng giao</option>
+            <option value="SHIPPING">Đang giao hàng</option>
+          </select>
+        </div>
+        <div class="small text-muted">
+          Hiển thị <strong>{{ inProgressOrders.length }}</strong> đơn đang thực hiện
+        </div>
+      </div>
+
       <app-view-state
-        [empty]="claimableOrders.length === 0"
+        [empty]="inProgressOrders.length === 0"
+        emptyTitle="Không có đơn đang thực hiện"
+        emptyText="Hiện không có đơn hàng nào đang trong quá trình thực hiện theo bộ lọc này."
+        emptyIcon="bi-clipboard-check">
+        @for (order of inProgressOrders; track order.id) {
+          <app-order-summary-card
+            [order]="order"
+            [clickable]="false"
+            [showActions]="true"
+            [showStaff]="false">
+            <div orderActions>
+              <button type="button"
+                 class="btn btn-outline-primary rounded-pill px-3 fw-bold shadow-sm"
+                 (click)="openOrderChat(order)">
+                <i class="bi bi-chat-dots me-1"></i> Trao đổi & Chat
+              </button>
+              <button *ngIf="canHandoverShipping(order)"
+                      type="button"
+                      class="btn btn-warning rounded-pill px-3 fw-bold shadow-sm"
+                      (click)="openShippingHandoverDialog(order)">
+                <i class="bi bi-truck me-1"></i> Bàn giao
+              </button>
+              <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderDetail(order)">
+                <i class="bi bi-eye me-1"></i>Xem chi tiết
+              </button>
+            </div>
+          </app-order-summary-card>
+        }
+        <app-pagination
+          [currentPage]="minePage"
+          [totalPages]="mineTotalPages"
+          [totalElements]="mineTotalElements"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="isLoading"
+          (pageChange)="changeMyOrdersPage($event)"
+          (pageSizeChange)="changePageSize($event)">
+        </app-pagination>
+      </app-view-state>
+    }
+
+    <!-- TAB 2: ĐƠN ĐÃ HOÀN THÀNH (DELIVERED, CANCELLED) -->
+    @if (activeTab === 'completed') {
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 staff-filter-bar p-3 rounded-4">
+        <div class="d-flex align-items-center gap-2">
+          <label class="form-label small fw-bold text-muted mb-0 d-flex align-items-center gap-1">
+            <i class="bi bi-funnel"></i> Lọc trạng thái:
+          </label>
+          <select class="form-select form-select-sm rounded-pill" style="min-width: 220px;" [(ngModel)]="completedStatusFilter">
+            <option value="ALL">Tất cả trạng thái ({{ totalCompletedCount }})</option>
+            <option value="DELIVERED">Đã giao hàng</option>
+            <option value="CANCELLED">Đã hủy</option>
+          </select>
+        </div>
+        <div class="small text-muted">
+          Hiển thị <strong>{{ completedOrders.length }}</strong> đơn đã hoàn tất
+        </div>
+      </div>
+
+      <app-view-state
+        [empty]="completedOrders.length === 0"
+        emptyTitle="Không có đơn đã hoàn thành"
+        emptyText="Chưa có đơn hàng nào đã hoàn thành, đã giao hoặc đã hủy theo bộ lọc này."
+        emptyIcon="bi-check2-all">
+        @for (order of completedOrders; track order.id) {
+          <app-order-summary-card
+            [order]="order"
+            [clickable]="false"
+            [showActions]="true"
+            [showStaff]="false">
+            <div orderActions>
+              <button type="button"
+                 class="btn btn-outline-secondary rounded-pill px-3 fw-bold shadow-sm"
+                 (click)="openOrderChat(order)">
+                <i class="bi bi-chat-left-text me-1"></i> Lịch sử chat
+              </button>
+              <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderDetail(order)">
+                <i class="bi bi-eye me-1"></i>Xem chi tiết
+              </button>
+            </div>
+          </app-order-summary-card>
+        }
+        <app-pagination
+          [currentPage]="minePage"
+          [totalPages]="mineTotalPages"
+          [totalElements]="mineTotalElements"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          [disabled]="isLoading"
+          (pageChange)="changeMyOrdersPage($event)"
+          (pageSizeChange)="changePageSize($event)">
+        </app-pagination>
+      </app-view-state>
+    }
+
+    <!-- TAB 3: ĐƠN ĐANG CHỜ NHẬN (CLAIMABLE / ASSIGN QUEUE) -->
+    @if (activeTab === 'claimable') {
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 staff-filter-bar p-3 rounded-4">
+        <div class="d-flex align-items-center gap-2">
+          <label class="form-label small fw-bold text-muted mb-0 d-flex align-items-center gap-1">
+            <i class="bi bi-funnel"></i> Lọc loại đơn:
+          </label>
+          <select class="form-select form-select-sm rounded-pill" style="min-width: 220px;" [(ngModel)]="claimableFilter">
+            <option value="ALL">Tất cả loại đơn ({{ pendingTotalElements }})</option>
+            <option value="CUSTOM">Đơn đặt riêng</option>
+            <option value="CATALOG">Đơn mẫu có sẵn</option>
+          </select>
+        </div>
+        <div class="small text-muted">
+          Hiển thị <strong>{{ filteredClaimableOrders.length }}</strong> đơn chờ nhận
+        </div>
+      </div>
+
+      <app-view-state
+        [empty]="filteredClaimableOrders.length === 0"
         emptyTitle="Không có đơn chờ nhận"
-        emptyText="Hiện không có đơn PENDING_ASSIGNMENT nào có thể nhận."
+        emptyText="Hiện không có đơn nào đang chờ phân công và phù hợp với bộ lọc này."
         emptyIcon="bi-inboxes">
         <div class="claim-grid">
-          @for (order of claimableOrders; track order.orderId) {
+          @for (order of filteredClaimableOrders; track order.orderId) {
             <article class="claim-card">
               <div class="claim-card__header">
                 <div>
@@ -67,54 +207,28 @@
           (pageSizeChange)="changePageSize($event)">
         </app-pagination>
       </app-view-state>
-    } @else {
-      <app-view-state
-        [empty]="myOrders.length === 0"
-        emptyTitle="Chưa có đơn phụ trách"
-        emptyText="Bạn chưa nhận hoặc được phân công đơn hàng nào."
-        emptyIcon="bi-clipboard-check">
-        @for (order of myOrders; track order.id) {
-          <app-order-summary-card
-            [order]="order"
-            [clickable]="false"
-            [showActions]="true"
-            [showStaff]="false">
-            <div orderActions>
-              <a [routerLink]="['/management/admin-chat']" [queryParams]="{ orderId: order.id }"
-                 class="btn btn-outline-primary rounded-pill px-3 fw-bold shadow-sm">
-                <i class="bi bi-chat-dots me-1"></i> Quản lý chat
-              </a>
-              <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderDetail(order)">
-                <i class="bi bi-eye me-1"></i>Xem chi tiết
-              </button>
-            </div>
-          </app-order-summary-card>
-        }
-        <app-pagination
-          [currentPage]="minePage"
-          [totalPages]="mineTotalPages"
-          [totalElements]="mineTotalElements"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="pageSizeOptions"
-          [disabled]="isLoading"
-          (pageChange)="changeMyOrdersPage($event)"
-          (pageSizeChange)="changePageSize($event)">
-        </app-pagination>
-      </app-view-state>
     }
   </app-view-state>
 </div>
 
-<div *ngIf="detailLoading || selectedOrder" class="staff-detail-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3">
-  <div class="staff-detail-modal bg-white rounded-4 shadow-lg overflow-hidden w-100">
+<div *ngIf="detailLoading || selectedOrder" class="staff-detail-backdrop position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3">
+  <div class="staff-detail-modal rounded-4 shadow-lg overflow-hidden w-100">
     <div class="bg-primary text-white p-4 d-flex justify-content-between align-items-center">
       <div>
         <h4 class="fw-bold mb-1">Chi tiết đơn hàng {{ selectedOrder ? '#' + selectedOrder.id : '' }}</h4>
         <div class="small opacity-75">Thông tin sản phẩm và tiến độ đơn đang phụ trách</div>
       </div>
-      <button class="btn btn-sm btn-light rounded-circle" (click)="closeOrderDetail()" aria-label="Đóng">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <div class="d-flex align-items-center gap-2">
+        <button *ngIf="selectedOrder && canShowCollaboration(selectedOrder)"
+                type="button"
+                class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold"
+                (click)="openOrderChat(selectedOrder)">
+          <i class="bi bi-chat-dots me-1"></i>Trao đổi & Chat (Cửa sổ lớn)
+        </button>
+        <button class="btn btn-sm btn-light rounded-circle" (click)="closeOrderDetail()" aria-label="Đóng">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     </div>
 
     <div class="staff-detail-body p-4 overflow-auto">
@@ -124,7 +238,7 @@
           <div *ngIf="isOnlineWaitingPayment(selectedOrder)" class="alert alert-warning d-flex align-items-center gap-2 mb-4">
             <i class="bi bi-hourglass-split fs-4 text-warning"></i>
             <div>
-              <strong>Chờ khách thanh toán trực tuyến:</strong> Đơn hàng đã được tiếp nhận nhưng khách hàng chưa hoàn tất thanh toán. Nhân viên chỉ có thể bắt đầu sản xuất sau khi thanh toán thành công (PAID).
+              <strong>Chờ khách thanh toán trực tuyến:</strong> Đơn hàng đã được tiếp nhận nhưng khách hàng chưa hoàn tất thanh toán. Nhân viên chỉ có thể bắt đầu sản xuất sau khi thanh toán thành công.
             </div>
           </div>
 
@@ -163,13 +277,6 @@
               <div class="text-muted small">Tổng tiền</div>
               <div class="fw-bold text-danger">{{ selectedOrder.finalPrice | number: '1.0-0' }} đ</div>
             </div>
-            <div class="col-md-3" *ngIf="selectedOrder.plannedStartAt">
-              <div class="text-muted small">Dự kiến bắt đầu</div>
-              <div class="fw-bold" [class.text-danger]="isPlannedStartOverdue(selectedOrder)">
-                {{ selectedOrder.plannedStartAt | date: 'dd/MM/yyyy HH:mm' }}
-                <span *ngIf="isPlannedStartOverdue(selectedOrder)" class="badge bg-danger-subtle text-danger ms-1">Quá hạn</span>
-              </div>
-            </div>
             <div class="col-md-3" *ngIf="selectedOrder.productionStartedAt">
               <div class="text-muted small">Bắt đầu sản xuất lúc</div>
               <div class="fw-bold text-success">{{ selectedOrder.productionStartedAt | date: 'dd/MM/yyyy HH:mm' }}</div>
@@ -186,7 +293,7 @@
           </app-order-items-table>
 
           <app-change-request-panel
-            *ngIf="activeTab === 'mine' && (selectedOrder.status === 'ORDER_ACCEPTED' || selectedOrder.status === 'ORDER_CREATING')"
+            *ngIf="canShowChangeRequests(selectedOrder)"
             class="d-block mt-4"
             [order]="selectedOrder"
             mode="STAFF"
@@ -202,29 +309,38 @@
             </app-staff-production-checkpoint>
           </section>
 
-          <!-- P8 Order Collaboration Panel (Agreement & Chat) -->
-          <section *ngIf="selectedOrder && !selectedOrder.guestSessionId" class="mt-4">
-            <app-order-collaboration
-              [order]="selectedOrder"
-              mode="STAFF"
-              (orderUpdated)="loadMyOrders(); refreshSelectedOrder()">
-            </app-order-collaboration>
+          <!-- P8 Order Collaboration CTA (Cửa sổ lớn) -->
+          <section *ngIf="selectedOrder && canShowCollaboration(selectedOrder)" class="mt-4" id="order-collab-section">
+            <div class="card border-primary-subtle bg-primary-subtle bg-opacity-10 rounded-4 p-3 d-flex flex-row align-items-center justify-content-between flex-wrap gap-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                  <i class="bi bi-chat-dots-fill fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-bold text-dark fs-6">Phòng trao đổi & thỏa thuận trực tuyến</div>
+                  <div class="small text-muted">Nhắn tin trực tiếp với khách hàng, cập nhật báo giá và duyệt thỏa thuận trên màn hình lớn.</div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" (click)="openOrderChat(selectedOrder)">
+                <i class="bi bi-arrows-fullscreen me-1"></i> Mở phòng trao đổi (Cửa sổ lớn)
+              </button>
+            </div>
           </section>
 
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
             <div class="text-muted small">
-              <span *ngIf="selectedOrder.status === 'ORDER_ACCEPTED' && activeTab === 'mine'">
+              <span *ngIf="selectedOrder.status === 'ORDER_ACCEPTED' && activeTab !== 'claimable'">
                 <i class="bi bi-info-circle me-1"></i>Nhân viên phụ trách bắt đầu sản xuất khi đơn đã được duyệt và sẵn sàng.
               </span>
-              <span *ngIf="selectedOrder.status === 'ORDER_CREATING' && activeTab === 'mine'">
+              <span *ngIf="selectedOrder.status === 'ORDER_CREATING' && activeTab !== 'claimable'">
                 <i class="bi bi-info-circle me-1"></i>Thực hiện tải ảnh tiến độ cho từng sản phẩm ở phần Kiểm định sản xuất bên trên.
               </span>
             </div>
             <div class="d-flex gap-2">
               <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="closeOrderDetail()">Đóng</button>
 
-              <!-- P9 Start Production Action for Assigned Staff in 'mine' tab -->
-              <ng-container *ngIf="activeTab === 'mine' && selectedOrder.status === 'ORDER_ACCEPTED'">
+              <!-- P9 Start Production Action for Assigned Staff -->
+              <ng-container *ngIf="activeTab !== 'claimable' && selectedOrder.status === 'ORDER_ACCEPTED'">
                 <button *ngIf="canStartProduction(selectedOrder)"
                         type="button"
                         class="btn btn-success rounded-pill px-4 fw-bold shadow-sm"
@@ -239,6 +355,15 @@
                   <i class="bi bi-hourglass-split me-1"></i>Chờ khách thanh toán
                 </button>
               </ng-container>
+
+              <!-- P12 Handover Action for READY_TO_SHIP Orders -->
+              <ng-container *ngIf="activeTab !== 'claimable' && canHandoverShipping(selectedOrder)">
+                <button type="button"
+                        class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm"
+                        (click)="openShippingHandoverDialog()">
+                  <i class="bi bi-truck me-1"></i>Bàn giao vận chuyển
+                </button>
+              </ng-container>
             </div>
           </div>
         </ng-container>
@@ -248,38 +373,18 @@
 </div>
 
 <!-- P9 Start Production Confirmation Modal -->
-<div *ngIf="showStartProductionModal" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3" style="z-index: 1060;">
-  <div class="bg-white rounded-4 shadow-lg overflow-hidden w-100" style="max-width: 550px;">
+<div *ngIf="showStartProductionModal" class="start-production-backdrop position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3">
+  <div class="start-production-modal rounded-4 shadow-lg overflow-hidden w-100" style="max-width: 550px;">
     <div class="bg-success text-white p-3 px-4 d-flex justify-content-between align-items-center">
-      <h5 class="fw-bold mb-0"><i class="bi bi-play-circle-fill me-2"></i>Bắt đầu sản xuất đơn #{{ selectedOrder?.id }}</h5>
+      <h5 class="fw-bold mb-0"><i class="bi bi-play-circle-fill me-2"></i>Bắt đầu sản xuất đơn #{{ (startingOrder || selectedOrder)?.id }}</h5>
       <button class="btn btn-sm btn-light rounded-circle" (click)="closeStartProductionDialog()" [disabled]="isStartingProduction" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
     <div class="p-4">
       <p class="text-secondary mb-3">
-        Bạn có chắc chắn muốn bắt đầu tiến trình sản xuất cho đơn hàng này không? Sau khi bắt đầu, trạng thái đơn sẽ chuyển sang <strong>ĐANG SẢN XUẤT (ORDER_CREATING)</strong>.
+        Bạn có chắc chắn muốn bắt đầu tiến trình sản xuất cho đơn hàng này không? Sau khi xác nhận, đơn sẽ chuyển sang trạng thái <strong>Đang sản xuất</strong>.
       </p>
-
-      <div *ngIf="selectedOrder && isPlannedStartOverdue(selectedOrder)" class="alert alert-warning py-2 px-3 small d-flex align-items-center gap-2 mb-3">
-        <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
-        <div>
-          <strong>Thời điểm bắt đầu dự kiến đã quá hạn</strong><br>
-          Dự kiến: {{ selectedOrder.plannedStartAt | date: 'dd/MM/yyyy HH:mm' }}. Vui lòng cung cấp lý do bắt đầu muộn.
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label small fw-bold text-muted">Lý do bắt đầu muộn (nếu có):</label>
-        <textarea
-          class="form-control"
-          rows="3"
-          maxlength="1000"
-          [(ngModel)]="lateStartReason"
-          placeholder="Nhập lý do bắt đầu muộn (tùy chọn, tối đa 1000 ký tự)..."
-          [disabled]="isStartingProduction"></textarea>
-        <div class="text-end text-muted small mt-1">{{ lateStartReason.length }}/1000 ký tự</div>
-      </div>
 
       <div class="d-flex justify-content-end gap-2 mt-4">
         <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
@@ -294,6 +399,128 @@
           {{ isStartingProduction ? 'Đang xử lý...' : 'Xác nhận bắt đầu' }}
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- P12 Shipping Handover Modal -->
+<div *ngIf="showHandoverModal" class="start-production-backdrop position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style="z-index: 2060;">
+  <div class="start-production-modal rounded-4 shadow-lg overflow-hidden w-100" style="max-width: 600px;">
+    <div class="bg-warning text-dark p-3 px-4 d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0"><i class="bi bi-truck me-2"></i>Bàn giao vận chuyển đơn #{{ handoverOrder?.id }}</h5>
+      <button class="btn btn-sm btn-light rounded-circle" (click)="closeShippingHandoverDialog()" [disabled]="isHandingOver" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="p-4">
+      <p class="text-secondary mb-3">
+        Xác nhận số lượng sản phẩm thực tế xuất kho để bàn giao cho đơn vị vận chuyển. Sau khi bàn giao, đơn hàng sẽ chuyển sang trạng thái <strong>Đang giao</strong>.
+      </p>
+
+      <div class="table-responsive mb-3 border rounded-3">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Sản phẩm</th>
+              <th class="text-center">Số lượng đặt</th>
+              <th class="text-center" style="width: 140px;">SL xuất kho</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of (handoverOrder?.items || handoverOrder?.orderItems || handoverOrder?.details || [])">
+              <td class="ps-3">
+                <div class="fw-semibold">{{ item.productName || item.variantName || 'Sản phẩm' }}</div>
+                <div class="text-muted small">Item #{{ getHandoverItemKey(item) }}</div>
+              </td>
+              <td class="text-center fw-bold">{{ item.quantity }}</td>
+              <td class="text-center">
+                <input
+                  type="number"
+                  class="form-control form-control-sm text-center fw-bold"
+                  [min]="0"
+                  [max]="item.quantity"
+                  [(ngModel)]="handoverQuantities[getHandoverItemKey(item)]"
+                  [disabled]="isHandingOver">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-bold text-muted">Ghi chú bàn giao (nếu có):</label>
+        <textarea
+          class="form-control"
+          rows="3"
+          maxlength="2000"
+          [(ngModel)]="handoverNote"
+          placeholder="Nhập ghi chú bàn giao vận chuyển (tùy chọn, tối đa 2000 ký tự)..."
+          [disabled]="isHandingOver"></textarea>
+        <div class="text-end text-muted small mt-1">{{ handoverNote.length }}/2000 ký tự</div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+                (click)="closeShippingHandoverDialog()"
+                [disabled]="isHandingOver">
+          Hủy
+        </button>
+        <button class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm"
+                (click)="confirmShippingHandover()"
+                [disabled]="isHandingOver">
+          <span *ngIf="isHandingOver" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          {{ isHandingOver ? 'Đang xử lý...' : 'Xác nhận bàn giao' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dedicated Staff Order Collaboration & Chat Modal (Cửa sổ lớn) -->
+<div *ngIf="showChatModal"
+     class="staff-chat-backdrop position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-2 p-md-3"
+     style="z-index: 2050;">
+  <div class="staff-chat-modal rounded-4 shadow-lg overflow-hidden w-100">
+    <!-- Modal Header -->
+    <div class="bg-primary text-white p-3 px-4 d-flex justify-content-between align-items-center flex-shrink-0">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+          <i class="bi bi-chat-dots-fill fs-5"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0">Phòng trao đổi & thỏa thuận — Đơn #{{ chatOrder?.id || '...' }}</h5>
+          <small class="text-white-50" *ngIf="chatOrder">
+            Khách hàng: {{ chatOrder.customerName || chatOrder.customer?.name || chatOrder.recipientName || 'Khách hàng' }} • Loại đơn: {{ chatOrder.orderType || 'CATALOG' }}
+          </small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button *ngIf="chatOrder"
+                type="button"
+                class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold"
+                (click)="switchToFullDetailFromChat()"
+                title="Xem đầy đủ chi tiết đơn hàng">
+          <i class="bi bi-file-earmark-text me-1"></i>Xem chi tiết đơn
+        </button>
+        <button type="button" class="btn btn-sm btn-light rounded-circle" (click)="closeOrderChat()" aria-label="Đóng">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+    <!-- Modal Body -->
+    <div class="staff-chat-body">
+      <div *ngIf="isChatOrderLoading" class="text-center py-5 text-muted my-auto">
+        <div class="spinner-border spinner-border-lg text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+        <h5 class="fw-bold">Đang kết nối phòng trao đổi đơn #{{ chatOrder?.id || '' }}...</h5>
+        <p class="small text-muted">Hệ thống đang đồng bộ dữ liệu thỏa thuận và kênh chat trực tuyến.</p>
+      </div>
+      <app-order-collaboration
+        *ngIf="!isChatOrderLoading && chatOrder"
+        [order]="chatOrder"
+        mode="STAFF"
+        [onlyChat]="false"
+        (orderUpdated)="loadMyOrders(); refreshSelectedOrder()">
+      </app-order-collaboration>
     </div>
   </div>
 </div>

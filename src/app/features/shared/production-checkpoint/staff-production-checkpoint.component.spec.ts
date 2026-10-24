@@ -16,7 +16,6 @@ describe('StaffProductionCheckpointComponent', () => {
     productName: 'Tách trà gốm mộc',
     variantName: 'Màu nâu đất',
     quantity: 20, // Large quantity but only 1 checkpoint stepper
-    handmade: true,
     productionDurationDays: 4,
     computedCompletionAt: '2026-10-22T17:00:00Z',
     productionStatus: 'INITIAL_IN_PROGRESS',

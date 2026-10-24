@@ -1,20 +1,19 @@
 export type ProductAvailabilityStatus = 'ACCEPTING_ORDERS' | 'PAUSED' | 'DISCONTINUED';
 
-export interface ProductAvailabilityUpdateRequest {
-  availabilityStatus: ProductAvailabilityStatus;
-}
-
 export interface Product {
   id?: number;
   product_name: string;
   price: number;
   madeDay?: number;
-  tags?: string;
-  handmade?: boolean;
+  tags?: string[];
   image_url?: string;
   variants?: ProductVariant[];
   availabilityStatus?: ProductAvailabilityStatus;
+  productTypeId?: number | null;
+  productTypeCode?: string | null;
+  productTypeName?: string | null;
 }
+
 
 export interface ProductVariant {
   id?: number;

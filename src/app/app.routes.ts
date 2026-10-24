@@ -20,13 +20,16 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'product', pathMatch: 'full' },
       { path: 'product', loadComponent: () => import('./features/management/products/management-products.component').then((m) => m.ManagementProductsComponent) },
+      { path: 'product-types', data: { roles: ROUTE_ACCESS.management }, loadComponent: () => import('./features/management/product-types/product-types.component').then((m) => m.ProductTypesComponent) },
       { path: 'product/:id', loadComponent: () => import('./features/shared/product-detail-page/product-page.component').then((m) => m.ProductPageComponent) },
       { path: 'user', data: { roles: ROUTE_ACCESS.management }, loadComponent: () => import('./features/management/user/user').then((m) => m.UserComponent) },
       { path: 'staff-orders', data: { roles: ROUTE_ACCESS.staff }, loadComponent: () => import('./features/management/staff-orders/staff-orders.component').then((m) => m.StaffOrdersComponent) },
+      { path: 'staff-custom-orders', data: { roles: ROUTE_ACCESS.staff }, loadComponent: () => import('./features/management/staff-custom-orders/staff-custom-orders.component').then((m) => m.StaffCustomOrdersComponent) },
       { path: 'myinfor', loadComponent: () => import('./features/shared/myinfor/myinfor').then((m) => m.Myinfor) },
       { path: 'admin-orders', data: { roles: ROUTE_ACCESS.manager }, loadComponent: () => import('./features/management/admin-order/admin-order.component').then((m) => m.AdminOrderComponent) },
       { path: 'admin-dashboard', data: { roles: ROUTE_ACCESS.management }, loadComponent: () => import('./features/management/admin-dashboard/admin-dashboard').then((m) => m.AdminDashboard) },
       { path: 'admin-vouchers', data: { roles: ROUTE_ACCESS.management }, loadComponent: () => import('./features/management/voucher-admin/voucher-admin.component').then((m) => m.VoucherAdminComponent) },
+      { path: 'workflow-operations', data: { roles: ROUTE_ACCESS.management }, loadComponent: () => import('./features/management/workflow-operations/workflow-operations.component').then((m) => m.WorkflowOperationsComponent) },
     ],
   },
   {
@@ -42,6 +45,7 @@ export const routes: Routes = [
       { path: 'wishlist', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/wishlist/wishlist.component').then((m) => m.WishlistComponent) },
       { path: 'custom-requests', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/custom-request/custom-request-list.component').then((m) => m.CustomRequestListComponent) },
       { path: 'custom-requests/:id', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/custom-request/custom-request-form.component').then((m) => m.CustomRequestFormComponent) },
+      { path: 'custom-orders', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/custom-orders/custom-orders.component').then((m) => m.CustomOrdersComponent) },
       { path: 'myinfor', canActivate: [storefrontGuard], loadComponent: () => import('./features/shared/myinfor/myinfor').then((m) => m.Myinfor) },
       { path: 'payment-success', loadComponent: () => import('./features/storefront/payment-success/payment-success').then((m) => m.PaymentSuccessComponent) },
       { path: 'help/shopping-guide', loadComponent: () => import('./features/shared/static-pages/shopping-guide-page.component').then((m) => m.ShoppingGuidePageComponent) },
@@ -61,6 +65,7 @@ export const routes: Routes = [
       { path: 'orders/:id', loadComponent: () => import('./features/storefront/guest-order/guest-order.component').then((m) => m.GuestOrderComponent) },
     ],
   },
+  { path: 'custom-orders', redirectTo: 'store/custom-orders', pathMatch: 'full' },
   { path: '', redirectTo: 'store/product', pathMatch: 'full' },
   { path: '**', redirectTo: 'store/product' },
 ];

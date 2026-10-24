@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -16,7 +17,7 @@ import { APP_DIALOG_SIZE } from '../../config/dialog.config';
 @Component({
   selector: 'app-storefront-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, SfFooterComponent, TimeAgoPipe],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SfFooterComponent, TimeAgoPipe],
   templateUrl: './storefront-layout.component.html',
   styleUrl: './storefront-layout.component.css',
 })

@@ -18,7 +18,7 @@
 
       <div class="min-w-0">
         <h5 class="fw-bold text-dark m-0 text-truncate" [title]="product.product_name">{{ product.product_name }}</h5>
-        <span class="badge bg-secondary mt-1 product-tags" *ngIf="product.tags" [title]="product.tags">{{ product.tags }}</span>
+        <span class="badge bg-secondary mt-1 product-tags" *ngIf="product.tags?.length" [title]="product.tags?.join(', ')">{{ product.tags?.join(', ') }}</span>
 
         <div class="text-danger fw-bold mt-1 fs-5">
            {{ selectedVariant ? (selectedVariant.price | number) : ('Từ ' + (product.price | number)) }}đ

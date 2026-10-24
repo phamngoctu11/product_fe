@@ -40,13 +40,7 @@ import { SfStateComponent } from '../ui/state/sf-state.component';
   styleUrl: './product.css',
 })
 export class ProductComponent implements OnInit, OnDestroy {
-  categories: SfChipItem[] = [
-    { value: 'all', label: 'TẤT CẢ' },
-    { value: 'tuong-dat-set', label: 'TƯỢNG ĐẤT SÉT' },
-    { value: 'qua-tang', label: 'QUÀ TẶNG' },
-    { value: 'moc-khoa', label: 'MÓC KHÓA' },
-    { value: 'gom-su', label: 'GỐM SỨ' }
-  ];
+  categories: SfChipItem[] = [{ value: 'all', label: 'TẤT CẢ' }];
   selectedCategory: string | null = 'all';
 
   onCategorySelect(category: string | null) {
@@ -113,11 +107,13 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.loadError = '';
     this.productService.getAll(page, size, {
-      keyword: this.searchTerm,
+      keyword: this.selectedCategory && this.selectedCategory !== 'all' ? this.selectedCategory : this.searchTerm,
       maxPrice: this.searchPrice,
     }).subscribe({
       next: (res: any) => {
         this.plist = res.content || [];
+        const tags = Array.from(new Set(this.plist.flatMap((product) => product.tags || [])));
+        this.categories = [{ value: 'all', label: 'TẤT CẢ' }, ...tags.map((tag) => ({ value: tag, label: tag.toLocaleUpperCase('vi') }))];
         this.filteredProducts = [...this.plist];
         this.currentPage = res.number || 0;
         this.pageSize = res.size || 10;
@@ -145,12 +141,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   getAvailableTags(): string[] {
-    const tagsSet = new Set<string>();
-    ['#quanao', '#giay', '#dienthoai', '#giadung', '#mypham', '#thucpham'].forEach(t => tagsSet.add(t));
-    this.plist.forEach(p => {
-      if (p.tags) p.tags.split(',').forEach(t => { if (t.trim()) tagsSet.add(t.trim().toLowerCase()); });
-    });
-    return Array.from(tagsSet);
+    return Array.from(new Set(this.plist.flatMap((product) => product.tags || [])));
   }
 
   // HÀM MỚI: XEM CHI TIẾT SẢN PHẨM (READ-ONLY)
@@ -286,7 +277,6 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   delete(item: Product) {
     if (!this.isAdmin) return;
-    if (!this.currentUserId) { this.toast.notify('Không tìm thấy userId!'); return; }
     if (!item.id) return;
     const productId = item.id;
     this.actionDialog.confirm({
@@ -297,7 +287,7 @@ export class ProductComponent implements OnInit, OnDestroy {
       icon: 'bi-trash3-fill',
     }).subscribe((confirmed) => {
       if (!confirmed) return;
-      this.productService.delete(productId, this.currentUserId).subscribe({
+      this.productService.delete(productId).subscribe({
         next: () => this.getAll(this.currentPage, this.pageSize),
         error: () => this.toast.notify('Lỗi khi xóa!')
       });

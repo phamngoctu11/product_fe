@@ -16,7 +16,6 @@ describe('ManagerKcsDialogComponent', () => {
       orderItemId: 501,
       productName: 'Chén trà men ngọc',
       quantity: 20,
-      handmade: true,
       productionDurationDays: 2,
       computedCompletionAt: '2026-10-18T10:00:00Z',
       productionStatus: 'FINAL_WAITING_QC',

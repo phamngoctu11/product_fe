@@ -1,11 +1,188 @@
-/* Order history styles */
-  .timeline { list-style: none; padding: 0; position: relative; }
-  .timeline::before { content: ''; position: absolute; top: 0; bottom: 0; left: 12px; width: 4px; background: rgba(var(--app-primary-rgb), 0.18); border-radius: 2px; }
-  .timeline-item { position: relative; margin-bottom: 30px; padding-left: 40px; }
-  .timeline-item:last-child { margin-bottom: 0; }
-  .timeline-item::before { content: ''; position: absolute; left: 4px; top: 4px; width: 18px; height: 18px; border-radius: 0.35rem; background-color: #64748b; border: 4px solid #0d1427; z-index: 1; transition: all 0.3s ease; }
-  .timeline-item.completed::before { background-color: #198754; }
-  .timeline-item.cancelled::before { background-color: #dc3545; }
-  .timeline-item.active::before { background-color: #0d6efd; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25); }
-  .timeline-date { margin-top: 4px; font-size: 0.85rem; }
-  .timeline-previous-status { margin-top: 2px; font-size: 0.8rem; }
+/* ============================================================
+   STOREFRONT ORDERS (LỊCH SỬ ĐƠN HÀNG) — CLAYART POTTERY THEME
+   Bỏ hết bo tròn viền (border-radius: 0), font Inter Tight.
+   ============================================================ */
+
+.orders-page {
+  font-family: var(--sf-font-sans, 'Inter Tight', sans-serif);
+  color: var(--sf-ink, #ece5d8);
+}
+
+.orders-page-header {
+  border-bottom: 1px solid var(--app-border, rgba(236, 229, 216, 0.14));
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.orders-page-title {
+  margin: 0;
+  font-family: var(--sf-font-sans, 'Inter Tight', sans-serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  color: var(--sf-ink, #ece5d8);
+  line-height: 1.05;
+}
+
+.orders-page-subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.92rem;
+  color: var(--sf-muted, #a49985);
+  letter-spacing: -0.005em;
+}
+
+/* --- Filter Panel with Chips (Matching Storefront Product Filter) --- */
+.order-filter-panel {
+  background: var(--app-surface, #2b251e);
+  border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14));
+  border-radius: 0 !important;
+  padding: 1rem 1.25rem;
+}
+
+.order-filter-label {
+  font-family: var(--sf-font-sans, 'Inter Tight', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--app-muted-text, #a49985);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.order-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--sf-line-strong, #7d6b52);
+  border-radius: 0 !important;
+  background: transparent;
+  color: var(--app-text, #ece5d8);
+  font-family: var(--sf-font-sans, 'Inter Tight', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.order-filter-chip:hover,
+.order-filter-chip.is-active {
+  background: #ece5d8;
+  color: #26211a;
+  border-color: #ece5d8;
+  font-weight: 600;
+}
+
+/* --- Modals --- */
+.orders-modal-content {
+  background: var(--app-surface, #2b251e) !important;
+  border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14)) !important;
+  border-radius: 0 !important;
+  color: var(--app-text, #ece5d8);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.orders-modal-header {
+  background: var(--app-surface-muted, #362f26) !important;
+  border-bottom: 1px solid var(--app-border, rgba(236, 229, 216, 0.14)) !important;
+  border-radius: 0 !important;
+  color: var(--app-text, #ece5d8) !important;
+  padding: 1.1rem 1.4rem;
+}
+
+.orders-modal-header .modal-title {
+  font-family: var(--sf-font-sans, 'Inter Tight', sans-serif);
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.orders-modal-body {
+  background: var(--app-surface, #2b251e) !important;
+  padding: 1.5rem;
+  color: var(--app-text, #ece5d8);
+}
+
+.orders-modal-footer {
+  background: var(--app-surface-muted, #362f26) !important;
+  border-top: 1px solid var(--app-border, rgba(236, 229, 216, 0.14)) !important;
+  border-radius: 0 !important;
+  padding: 0.85rem 1.4rem;
+}
+
+/* --- Timeline --- */
+.timeline {
+  list-style: none;
+  padding: 0;
+  position: relative;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 10px;
+  width: 2px;
+  background: rgba(236, 229, 216, 0.18);
+  border-radius: 0;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 24px;
+  padding-left: 36px;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 0 !important;
+  background-color: #362f26;
+  border: 2px solid #7d6b52;
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.timeline-item.completed::before {
+  background-color: #4ade80;
+  border-color: #4ade80;
+}
+
+.timeline-item.cancelled::before {
+  background-color: #e08a6f;
+  border-color: #e08a6f;
+}
+
+.timeline-item.active::before {
+  background-color: #c5b8a5;
+  border-color: #ece5d8;
+  box-shadow: 0 0 0 3px rgba(197, 184, 165, 0.25);
+}
+
+.timeline-date {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--app-muted-text, #a49985);
+}
+
+.timeline-previous-status {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--app-muted-text, #a49985);
+}

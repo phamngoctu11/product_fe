@@ -76,8 +76,6 @@
         <div class="field-block mb-3">
           <label>Quy trình sản xuất</label>
           <label class="form-check d-flex align-items-center gap-2 mt-2">
-            <input class="form-check-input" type="checkbox" formControlName="handmade">
-            <span>Sản phẩm handmade, cần theo dõi checkpoint</span>
           </label>
         </div>
 
@@ -111,7 +109,20 @@
             <span>Thẻ phân loại</span>
           </div>
 
-          <div class="input-group tag-input" *ngIf="!isView">
+          <div class="field-block mb-3">
+            <label>Loại sản phẩm (cấu hình trường đặt làm riêng)</label>
+            <select class="form-select" formControlName="productTypeId">
+              <option [ngValue]="null">Không áp dụng</option>
+              @for (type of productTypes; track type.id) { <option [ngValue]="type.id">{{ type.name }}</option> }
+            </select>
+          </div>
+          <div class="field-block mb-3">
+            <label>Thẻ dùng để lọc danh mục</label>
+            <input class="form-control" type="text" formControlName="tags" placeholder="Gốm sứ, quà tặng, trang trí">
+            <small class="text-muted">Tạo hoặc đổi tên thẻ tại mục Loại sản phẩm &amp; thẻ.</small>
+          </div>
+
+          <div class="input-group tag-input" *ngIf="false">
             <span class="input-group-text">#</span>
             <input type="text" class="form-control" placeholder="Nhập tag mới..." [(ngModel)]="newTagInput" [ngModelOptions]="{standalone: true}" (keyup.enter)="addNewTag()">
             <button class="btn btn-primary fw-bold px-4" type="button" (click)="addNewTag()">
@@ -119,14 +130,14 @@
             </button>
           </div>
 
-          <div class="chip-row">
+          <div class="chip-row" *ngIf="false">
             <span class="muted-empty" *ngIf="selectedTags.length === 0">Chưa có tag nào.</span>
             <span class="detail-chip clickable" *ngFor="let tag of selectedTags" (click)="toggleTag(tag)">
               {{ tag }} <i class="bi bi-x-circle-fill ms-1" *ngIf="!isView"></i>
             </span>
           </div>
 
-          <div class="suggestion-row" *ngIf="!isView && getUnselectedAvailableTags().length > 0">
+          <div class="suggestion-row" *ngIf="false">
             <span>Gợi ý:</span>
             <button type="button" *ngFor="let tag of getUnselectedAvailableTags()" (click)="toggleTag(tag)">
               <i class="bi bi-plus"></i>{{ tag }}

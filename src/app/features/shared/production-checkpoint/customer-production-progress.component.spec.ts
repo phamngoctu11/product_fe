@@ -15,7 +15,6 @@ describe('CustomerProductionProgressComponent', () => {
       productName: 'Bình hoa gốm',
       variantName: 'Men rạn xanh',
       quantity: 10,
-      handmade: true,
       productionDurationDays: 3,
       computedCompletionAt: '2026-10-20T17:00:00Z',
       productionStatus: 'FINAL_IN_PROGRESS',

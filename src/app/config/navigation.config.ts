@@ -25,9 +25,12 @@ export interface AppNavigationItem {
 export const APP_NAVIGATION: readonly AppNavigationItem[] = [
   { label: 'Bảng thống kê', route: '/management/admin-dashboard', icon: 'bi-bar-chart-line-fill', roles: ROUTE_ACCESS.management },
   { label: 'Quản lý sản phẩm', route: '/management/product', icon: 'bi-grid-fill', roles: ROUTE_ACCESS.operations },
+  { label: 'Loại sản phẩm & thẻ', route: '/management/product-types', icon: 'bi-tags-fill', roles: ROUTE_ACCESS.management },
   { label: 'Quản lý người dùng', route: '/management/user', icon: 'bi-people-fill', roles: ROUTE_ACCESS.management },
-  { label: 'Duyệt & phân công', route: '/management/admin-orders', icon: 'bi-clipboard2-check-fill', roles: ROUTE_ACCESS.manager },
+  { label: 'Duyệt đơn & KCS', route: '/management/admin-orders', icon: 'bi-clipboard2-check-fill', roles: ROUTE_ACCESS.manager },
   { label: 'Cấu hình voucher', route: '/management/admin-vouchers', icon: 'bi-ticket-perforated-fill', roles: ROUTE_ACCESS.management },
+  { label: 'Vận hành Workflow', route: '/management/workflow-operations', icon: 'bi-activity', roles: ROUTE_ACCESS.management },
   { label: 'Đơn sản xuất', route: '/management/staff-orders', icon: 'bi-box-seam-fill', roles: ROUTE_ACCESS.staff },
+  { label: 'Trao đổi custom', route: '/management/staff-custom-orders', icon: 'bi-chat-heart-fill', roles: ROUTE_ACCESS.staff },
   { label: 'Hồ sơ cá nhân', route: '/management/myinfor', icon: 'bi-person-badge-fill', roles: ROUTE_ACCESS.operations },
 ];

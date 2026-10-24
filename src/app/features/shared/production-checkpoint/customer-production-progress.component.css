@@ -1,11 +1,35 @@
 .customer-progress-container {
-  background-color: #fafbfc;
+  background-color: var(--app-shell-bg, #221d18);
+}
+
+.customer-progress-section {
+  background: var(--app-surface, #26211a) !important;
+  border-color: rgba(236, 229, 216, 0.12) !important;
+  border-radius: 0 !important;
+  color: #ece5d8;
+}
+
+.progress-item-card {
+  background: #1c1813 !important;
+  border-color: rgba(236, 229, 216, 0.1) !important;
+  border-radius: 0 !important;
+  color: #ece5d8;
+}
+
+.initial-shape-box {
+  background: #241e18 !important;
+  border-color: rgba(236, 229, 216, 0.1) !important;
+  border-radius: 0 !important;
+  color: #ece5d8;
 }
 
 .initial-photo-thumb {
   width: 100px;
   height: 100px;
   cursor: pointer;
+  object-fit: cover;
+  border-radius: 0 !important;
+  border-color: rgba(236, 229, 216, 0.15) !important;
   transition: transform 0.15s ease-in-out;
 }
 
@@ -15,11 +39,13 @@
 
 .initial-photo-thumb-wrap {
   position: relative;
+  border-radius: 0 !important;
 }
 
 .initial-photo-overlay {
   transition: opacity 0.15s ease;
   pointer-events: none;
+  border-radius: 0 !important;
 }
 
 .initial-photo-thumb-wrap:hover .initial-photo-overlay {
@@ -40,4 +66,3 @@
   background-color: #6c757d;
   color: #fff;
 }
-

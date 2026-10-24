@@ -18,12 +18,14 @@ import {
   OrderAssignmentResult,
   OrderListDTO,
   OrderStatusHistory,
-  ReceiptComplaintRequest,
   ReceiptConfirmRequest,
   ReceiptConfirmResponse,
+  ReceiptViewDTO,
+  ShippingHandoverRequest,
+  ShippingHandoverResponse,
   ReorderResponse,
+  ReorderResponseDTO,
   PaymentAttempt,
-  StartProductionRequest,
   StartProductionResult,
   OrderChangeRequest,
   CreateOrderChangeRequest,
@@ -121,22 +123,58 @@ export class OrderService {
     });
   }
 
-  reorderOrder(orderId: number): Observable<ReorderResponse> {
+  shippingHandover(
+    orderId: number,
+    request: ShippingHandoverRequest,
+    idempotencyKey?: string
+  ): Observable<ShippingHandoverResponse> {
+    const key = idempotencyKey || this.generateIdempotencyKey('staff-shipping-handover', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
     return this.http
-      .post<ApiResponse<ReorderResponse> | ReorderResponse>(`${this.apiUrl}/${orderId}/reorder`, null)
+      .post<ApiResponse<ShippingHandoverResponse> | ShippingHandoverResponse>(
+        `${this.apiUrl}/staff/${orderId}/shipping-handover`,
+        request,
+        { headers }
+      )
       .pipe(map(unwrapApiResponse));
   }
 
-  confirmReceipt(orderId: number, request: ReceiptConfirmRequest): Observable<ReceiptConfirmResponse> {
+  getReceiptView(orderId: number): Observable<ReceiptViewDTO> {
     return this.http
-      .post<ApiResponse<ReceiptConfirmResponse> | ReceiptConfirmResponse>(`${this.apiUrl}/customer/confirm-receipt/${orderId}`, request)
+      .get<ApiResponse<ReceiptViewDTO> | ReceiptViewDTO>(`${this.apiUrl}/${orderId}/receipt`)
       .pipe(map(unwrapApiResponse));
   }
 
-  sendReceiptComplaint(orderId: number, request: ReceiptComplaintRequest): Observable<ReceiptConfirmResponse> {
+  confirmReceipt(
+    orderId: number,
+    request: ReceiptConfirmRequest,
+    idempotencyKey?: string
+  ): Observable<ReceiptConfirmResponse> {
+    const key = idempotencyKey || this.generateIdempotencyKey('user-receipt', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
     return this.http
-      .post<ApiResponse<ReceiptConfirmResponse> | ReceiptConfirmResponse>(`${this.apiUrl}/customer/receipt-complaint/${orderId}`, request)
+      .post<ApiResponse<ReceiptConfirmResponse> | ReceiptConfirmResponse>(
+        `${this.apiUrl}/${orderId}/receipt`,
+        request,
+        { headers }
+      )
       .pipe(map(unwrapApiResponse));
+  }
+
+  reorder(orderId: number, idempotencyKey?: string): Observable<ReorderResponseDTO> {
+    const key = idempotencyKey || this.generateIdempotencyKey('user-reorder', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
+    return this.http
+      .post<ApiResponse<ReorderResponseDTO> | ReorderResponseDTO>(
+        `${this.apiUrl}/${orderId}/reorder`,
+        null,
+        { headers }
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  reorderOrder(orderId: number, idempotencyKey?: string): Observable<ReorderResponseDTO> {
+    return this.reorder(orderId, idempotencyKey);
   }
 
   getOrderHistory(orderId: number): Observable<OrderStatusHistory[]> {
@@ -231,10 +269,31 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  confirmGuestReceipt(orderId: number, token: string, request: ReceiptConfirmRequest): Observable<ReceiptConfirmResponse> {
+  getGuestReceiptView(orderId: number, token: string): Observable<ReceiptViewDTO> {
     const params = new HttpParams().set('token', token);
     return this.http
-      .post<ApiResponse<ReceiptConfirmResponse> | ReceiptConfirmResponse>(`${environment.apiUrl}/guest/orders/${orderId}/confirm-receipt`, request, { params })
+      .get<ApiResponse<ReceiptViewDTO> | ReceiptViewDTO>(
+        `${environment.apiUrl}/guest/orders/${orderId}/receipt`,
+        { params }
+      )
+      .pipe(map(unwrapApiResponse));
+  }
+
+  confirmGuestReceipt(
+    orderId: number,
+    token: string,
+    request: ReceiptConfirmRequest,
+    idempotencyKey?: string
+  ): Observable<ReceiptConfirmResponse> {
+    const params = new HttpParams().set('token', token);
+    const key = idempotencyKey || this.generateIdempotencyKey('guest-receipt', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
+    return this.http
+      .post<ApiResponse<ReceiptConfirmResponse> | ReceiptConfirmResponse>(
+        `${environment.apiUrl}/guest/orders/${orderId}/receipt`,
+        request,
+        { params, headers }
+      )
       .pipe(map(unwrapApiResponse));
   }
 
@@ -309,13 +368,13 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  startProduction(orderId: number, request: StartProductionRequest, idempotencyKey?: string): Observable<StartProductionResult> {
+  startProduction(orderId: number, idempotencyKey?: string): Observable<StartProductionResult> {
     const key = idempotencyKey || this.generateIdempotencyKey('staff-start-production', orderId);
     const headers = new HttpHeaders({ 'Idempotency-Key': key });
     return this.http
       .post<ApiResponse<StartProductionResult> | StartProductionResult>(
         `${this.apiUrl}/staff/${orderId}/start-production`,
-        request,
+        null,
         { headers }
       )
       .pipe(map(unwrapApiResponse));

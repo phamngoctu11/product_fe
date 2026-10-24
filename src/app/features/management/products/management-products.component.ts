@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Product, ProductAvailabilityStatus } from '../../../model/product.model';
+import { Product } from '../../../model/product.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { ProductService } from '../../../service/product.service';
 import { AuthService } from '../../../service/auth.service';
@@ -107,8 +107,7 @@ export class ManagementProductsComponent implements OnInit {
 
   deleteProduct(product: Product, event?: Event): void {
     event?.stopPropagation();
-    const userId = this.authService.getUserId();
-    if (!product.id || !userId || !this.authService.isAdmin()) return;
+    if (!product.id || !this.authService.isAdmin()) return;
 
     this.actionDialog.confirm({
       title: 'Xóa sản phẩm',
@@ -118,7 +117,7 @@ export class ManagementProductsComponent implements OnInit {
       icon: 'bi-trash3-fill',
     }).subscribe((confirmed) => {
       if (!confirmed) return;
-      this.productService.delete(product.id!, userId).subscribe({
+      this.productService.delete(product.id!).subscribe({
         next: () => {
           this.toast.notify('Đã xóa sản phẩm.');
           this.loadProducts();
@@ -132,46 +131,12 @@ export class ManagementProductsComponent implements OnInit {
     return this.authService.isManager();
   }
 
-  updatingStatusProductId: number | null = null;
-
-  onAvailabilityChange(product: Product, event: Event): void {
-    event.stopPropagation();
-    if (!this.canManageCatalog) {
-      this.toast.notify('Chỉ Manager mới có quyền cập nhật trạng thái catalog.');
-      return;
-    }
-    const select = event.target as HTMLSelectElement;
-    const newStatus = select.value as ProductAvailabilityStatus;
-    if (!product.id || product.availabilityStatus === newStatus) return;
-
-    this.updatingStatusProductId = product.id;
-    this.productService.updateAvailability(product.id, newStatus).subscribe({
-      next: () => {
-        product.availabilityStatus = newStatus;
-        this.updatingStatusProductId = null;
-        this.toast.notify(`Đã cập nhật trạng thái catalog: ${this.getAvailabilityLabel(newStatus)}.`);
-      },
-      error: (error) => {
-        this.updatingStatusProductId = null;
-        select.value = product.availabilityStatus || 'ACCEPTING_ORDERS';
-        this.toast.notify(getApiErrorMessage(error, 'Không thể cập nhật trạng thái sản phẩm.'));
-      }
-    });
-  }
-
-  getAvailabilityLabel(status?: ProductAvailabilityStatus): string {
-    if (status === 'PAUSED') return 'Tạm ngưng nhận đơn';
-    if (status === 'DISCONTINUED') return 'Ngừng kinh doanh';
-    return 'Đang nhận đơn';
-  }
-
   get canCreateOrDelete(): boolean {
     return this.authService.isAdmin();
   }
 
   private openProductDialog(id: number | null | undefined, isView: boolean): void {
-    const isStaffMode = this.authService.isStaff() && !this.authService.isAdmin();
-    if (!isView && !this.authService.isAdmin() && !(isStaffMode && id)) {
+    if (!isView && !this.authService.isManager()) {
       this.toast.notify('Bạn không có quyền thực hiện chức năng này.');
       return;
     }
@@ -183,7 +148,7 @@ export class ManagementProductsComponent implements OnInit {
         id: id || null,
         availableTags: this.availableTags(),
         isView,
-        staffMode: isStaffMode,
+        staffMode: false,
       },
       disableClose: !isView,
     });
@@ -237,7 +202,7 @@ export class ManagementProductsComponent implements OnInit {
   }
 
   private productTags(product: Product): string[] {
-    return (product.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean);
+    return product.tags || [];
   }
 
   private normalize(value: string): string {

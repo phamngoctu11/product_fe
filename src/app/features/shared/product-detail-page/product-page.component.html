@@ -31,7 +31,7 @@
         <!-- Header: Back link & Category Tag -->
         <div class="sf-product-info__header">
           <a class="sf-link sf-link--back" href="javascript:void(0)" (click)="goToStore()">BACK TO SHOP</a>
-          <span class="sf-tag">{{ product.tags ? product.tags.split(',')[0].trim() : 'SẢN PHẨM' }}</span>
+          <span class="sf-tag">{{ product.tags?.[0] || 'SẢN PHẨM' }}</span>
         </div>
 
         <!-- Price -->
@@ -44,7 +44,7 @@
 
         <!-- Description -->
         <p class="sf-product-info__desc">
-          Đây là mẫu thiết kế của shop và sẽ được thực hiện theo yêu cầu sau khi đơn được duyệt. Khách hàng vui lòng kiểm tra kỹ phân loại, màu sắc và kích cỡ trước khi đặt. Thời gian hoàn thiện sẽ được trao đổi trực tiếp với nhân viên phụ trách.
+          Đây là mẫu thiết kế của shop và sẽ được thực hiện theo yêu cầu sau khi đơn được duyệt. Khách hàng vui lòng kiểm tra kỹ phân loại, màu sắc và kích cỡ trước khi đặt. Thời gian chế tác dự kiến được hiển thị bên dưới và được lưu vào đơn tại thời điểm đặt hàng.
         </p>
 
         <!-- Variants Selection -->

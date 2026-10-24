@@ -80,7 +80,6 @@ export interface OrderItemProductionDTO {
   quantity: number;
   productionDurationDays?: number;
   computedCompletionAt?: string;
-  handmade: boolean;
   productionStatus: OrderItemProductionStatus;
   assignment?: OrderItemAssignmentDTO;
   checkpoints: ProductionCheckpointDTO[];

@@ -42,6 +42,44 @@
           <h5>1. Thông tin sản phẩm</h5>
 
           <div class="cr-field">
+            <label>Phân khúc sản phẩm <span>*</span></label>
+            <select formControlName="productTypeId" (change)="onProductTypeChange($any($event.target).value)" [disabled]="!!currentDraft || isReadonly">
+              <option [ngValue]="null">Chọn loại sản phẩm</option>
+              @for (type of productTypes; track type.id) {
+                <option [ngValue]="type.id">{{ type.name }}</option>
+              }
+            </select>
+            @if (draftForm.get('productTypeId')?.touched && draftForm.get('productTypeId')?.invalid) {
+              <div class="cr-error">Vui lòng chọn phân khúc sản phẩm.</div>
+            }
+          </div>
+
+          @if (selectedFields.length) {
+            <div class="cr-type-fields" formGroupName="fieldValues">
+              @for (field of selectedFields; track field.code) {
+                <div class="cr-field">
+                  <label>{{ field.label }} <span>*</span></label>
+                  @if (field.kind === 'TEXT') {
+                    <input type="text" [formControlName]="field.code" [attr.maxlength]="field.maxLength || null" [placeholder]="field.hint || ''">
+                  } @else if (field.kind === 'NUMBER') {
+                    <input type="number" [formControlName]="field.code" [attr.min]="field.minimum" [attr.max]="field.maximum" [placeholder]="field.hint || ''">
+                  } @else if (field.kind === 'SINGLE_SELECT') {
+                    <select [formControlName]="field.code"><option [ngValue]="null">Chọn {{ field.label.toLowerCase() }}</option>@for (option of field.options || []; track option) { <option [value]="option">{{ option }}</option> }</select>
+                  } @else if (field.kind === 'MULTI_SELECT') {
+                    <select [formControlName]="field.code" multiple>@for (option of field.options || []; track option) { <option [value]="option">{{ option }}</option> }</select>
+                  } @else {
+                    <label class="cr-checkbox"><input type="checkbox" [formControlName]="field.code"> Có</label>
+                  }
+                  @if (field.hint) { <small class="cr-hint">{{ field.hint }} @if (field.unit) { ({{ field.unit }}) }</small> }
+                  @if (draftForm.get('fieldValues')?.get(field.code)?.touched && draftForm.get('fieldValues')?.get(field.code)?.invalid) {
+                    <div class="cr-error">Vui lòng nhập giá trị hợp lệ cho {{ field.label }}.</div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <div class="cr-field">
             <label>Mô tả chi tiết <span>*</span></label>
             <textarea formControlName="description" rows="5"
               placeholder="Kích thước, màu sắc, chất liệu, phong cách, mục đích sử dụng..."></textarea>
@@ -166,4 +204,3 @@
     }
   </div>
 </div>
-

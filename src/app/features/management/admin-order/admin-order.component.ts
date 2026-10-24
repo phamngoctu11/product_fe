@@ -10,9 +10,13 @@ import {
   OrderAssignmentQueueItem,
 } from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
-import { ReviewProductionCheckpointResultDTO } from '../../../model/production-checkpoint.model';
+import {
+  OrderItemProductionDTO,
+  ReviewProductionCheckpointResultDTO,
+} from '../../../model/production-checkpoint.model';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { OrderService } from '../../../service/order.service';
+import { ProductionCheckpointService } from '../../../service/production-checkpoint.service';
 import { ToastService } from '../../../service/toast.service';
 import {
   AppPaginationComponent,
@@ -22,7 +26,7 @@ import {
 } from '../../shared/ui';
 import { ManagerKcsDialogComponent } from '../../shared/production-checkpoint/manager-kcs-dialog.component';
 
-type ManagerOrderTab = 'reviews' | 'assignments';
+export type ManagerOrderTab = 'reviews' | 'assignments' | 'kcs';
 
 @Component({
   selector: 'app-admin-order',
@@ -42,6 +46,7 @@ type ManagerOrderTab = 'reviews' | 'assignments';
 export class AdminOrderComponent implements OnInit {
   private readonly actionDialog = inject(ActionDialogService);
   private readonly orderService = inject(OrderService);
+  private readonly checkpointService = inject(ProductionCheckpointService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -67,16 +72,38 @@ export class AdminOrderComponent implements OnInit {
   kcsOrderId: number | null = null;
   isKcsDialogOpen = false;
 
+  quickKcsOrderId: number | null = null;
+  lookupOrderId: number | null = null;
+  kcsOrder: Order | null = null;
+  kcsItemsProgress: OrderItemProductionDTO[] = [];
+  isKcsSearching = false;
+  kcsSearchError = '';
+  recentKcsOrderIds: number[] = [];
+  previewImageUrl: string | null = null;
+
   ngOnInit(): void {
     this.loadAvailableStaff();
-    this.loadCurrentTab();
+    this.loadRecentKcsOrders();
+
     this.route.queryParams.subscribe((params) => {
+      const tabParam = params['tab'];
+      if (tabParam === 'kcs' || tabParam === 'reviews' || tabParam === 'assignments') {
+        this.activeTab = tabParam;
+      }
+
       const orderIdParam = params['orderId'];
       if (orderIdParam) {
         const orderId = Number(orderIdParam);
         if (!isNaN(orderId) && orderId > 0) {
-          this.openKcsReview(orderId);
+          this.lookupOrderId = orderId;
+          if (this.activeTab === 'kcs') {
+            this.searchKcsOrder(orderId);
+          } else {
+            this.openKcsReview(orderId);
+          }
         }
+      } else {
+        this.loadCurrentTab();
       }
     });
   }
@@ -84,6 +111,7 @@ export class AdminOrderComponent implements OnInit {
   openKcsReview(orderId: number): void {
     this.kcsOrderId = orderId;
     this.isKcsDialogOpen = true;
+    this.addRecentKcsOrder(orderId);
   }
 
   closeKcsDialog(): void {
@@ -96,6 +124,144 @@ export class AdminOrderComponent implements OnInit {
       this.selectedDetail.order.status = result.orderStatus;
       this.selectedDetail.order.version = result.orderVersion;
     }
+    if (this.kcsOrder && this.kcsOrder.id === result.orderId) {
+      this.kcsOrder.status = result.orderStatus;
+      this.kcsOrder.version = result.orderVersion;
+      this.checkpointService.getProgress(result.orderId).subscribe({
+        next: (items) => {
+          this.kcsItemsProgress = items || [];
+        },
+      });
+    }
+  }
+
+  quickCheckKcs(): void {
+    if (!this.quickKcsOrderId || this.quickKcsOrderId <= 0) {
+      this.toast.notify('Vui lòng nhập mã đơn hàng cần kiểm định KCS.');
+      return;
+    }
+    this.openKcsReview(this.quickKcsOrderId);
+  }
+
+  searchKcsOrder(orderIdInput?: number): void {
+    const targetId = orderIdInput ?? this.lookupOrderId;
+    if (!targetId || targetId <= 0) {
+      this.toast.notify('Vui lòng nhập mã đơn hàng hợp lệ.');
+      return;
+    }
+
+    this.lookupOrderId = targetId;
+    this.isKcsSearching = true;
+    this.kcsSearchError = '';
+    this.kcsOrder = null;
+    this.kcsItemsProgress = [];
+
+    this.orderService.getById(targetId).subscribe({
+      next: (order) => {
+        this.kcsOrder = order;
+        this.addRecentKcsOrder(targetId);
+        this.checkpointService.getProgress(targetId).subscribe({
+          next: (checkpoints) => {
+            this.kcsItemsProgress = checkpoints || [];
+            this.isKcsSearching = false;
+          },
+          error: () => {
+            this.kcsItemsProgress = [];
+            this.isKcsSearching = false;
+          },
+        });
+      },
+      error: (err) => {
+        this.isKcsSearching = false;
+        this.kcsSearchError = getApiErrorMessage(err, `Không tìm thấy đơn hàng #${targetId} hoặc bạn không có quyền truy cập.`);
+      },
+    });
+  }
+
+  clearKcsSearch(): void {
+    this.lookupOrderId = null;
+    this.kcsOrder = null;
+    this.kcsItemsProgress = [];
+    this.kcsSearchError = '';
+  }
+
+  openLightbox(url: string): void {
+    this.previewImageUrl = url;
+  }
+
+  closeLightbox(): void {
+    this.previewImageUrl = null;
+  }
+
+  getPendingKcsCount(): number {
+    return this.kcsItemsProgress.reduce((acc, item) => {
+      const hasPending = (item.checkpoints || []).some(
+        (cp) => cp.stage === 'FINAL_PRODUCT' && cp.status === 'PENDING_REVIEW'
+      );
+      return acc + (hasPending ? 1 : 0);
+    }, 0);
+  }
+
+  getCompletedKcsCount(): number {
+    return this.kcsItemsProgress.reduce((acc, item) => {
+      const isReady = item.productionStatus === 'READY';
+      return acc + (isReady ? 1 : 0);
+    }, 0);
+  }
+
+  getItemStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'READY':
+        return 'badge-success';
+      case 'FINAL_WAITING_QC':
+        return 'badge-warning';
+      case 'FINAL_REWORK_REQUIRED':
+        return 'badge-danger';
+      case 'FINAL_IN_PROGRESS':
+      case 'INITIAL_IN_PROGRESS':
+        return 'badge-info';
+      default:
+        return 'badge-secondary';
+    }
+  }
+
+  getItemStatusLabel(status: string): string {
+    switch (status) {
+      case 'WAITING_ASSIGNMENT':
+        return 'Chờ phân công';
+      case 'ASSIGNED':
+        return 'Đã phân công';
+      case 'INITIAL_IN_PROGRESS':
+        return 'Đang tạo dáng';
+      case 'FINAL_IN_PROGRESS':
+        return 'Đang làm hoàn thiện';
+      case 'FINAL_WAITING_QC':
+        return 'Chờ KCS kiểm định';
+      case 'FINAL_REWORK_REQUIRED':
+        return 'Yêu cầu làm lại';
+      case 'READY':
+        return 'Đạt chuẩn KCS';
+      default:
+        return status;
+    }
+  }
+
+  private loadRecentKcsOrders(): void {
+    try {
+      const raw = localStorage.getItem('recent_kcs_orders');
+      if (raw) {
+        this.recentKcsOrderIds = JSON.parse(raw).filter((id: unknown) => typeof id === 'number' && id > 0);
+      }
+    } catch {
+      this.recentKcsOrderIds = [];
+    }
+  }
+
+  private addRecentKcsOrder(orderId: number): void {
+    this.recentKcsOrderIds = [orderId, ...this.recentKcsOrderIds.filter((id) => id !== orderId)].slice(0, 8);
+    try {
+      localStorage.setItem('recent_kcs_orders', JSON.stringify(this.recentKcsOrderIds));
+    } catch {}
   }
 
   selectTab(tab: ManagerOrderTab): void {
@@ -108,8 +274,12 @@ export class AdminOrderComponent implements OnInit {
   loadCurrentTab(): void {
     if (this.activeTab === 'reviews') {
       this.loadReviews();
-    } else {
+    } else if (this.activeTab === 'assignments') {
       this.loadAssignmentQueue();
+    } else if (this.activeTab === 'kcs') {
+      if (this.lookupOrderId) {
+        this.searchKcsOrder(this.lookupOrderId);
+      }
     }
   }
 

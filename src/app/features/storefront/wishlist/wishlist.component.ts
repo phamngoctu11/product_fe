@@ -146,7 +146,7 @@ export class WishlistComponent implements OnInit {
     const tagsSet = new Set<string>();
     this.products.forEach((product) => {
       if (product.tags) {
-        product.tags.split(',').forEach((tag) => {
+        product.tags.forEach((tag) => {
           const normalized = tag.trim();
           if (normalized) tagsSet.add(normalized.toLowerCase());
         });

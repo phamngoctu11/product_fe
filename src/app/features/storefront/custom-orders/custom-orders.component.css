@@ -1,0 +1,46 @@
+.custom-orders-page {
+  min-height: calc(100vh - 160px);
+}
+
+.master-card {
+  min-height: 700px;
+  background-color: var(--app-surface, #2b251e) !important;
+  border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14)) !important;
+  color: var(--app-text, #ece5d8);
+}
+
+.master-body {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+
+.order-list-item {
+  background-color: #241f19;
+  border: 1px solid rgba(236, 229, 216, 0.12) !important;
+  border-radius: 1rem;
+  color: var(--app-text, #ece5d8);
+  transition: all 0.2s ease-in-out;
+}
+
+.order-list-item:hover {
+  background-color: #362f26;
+  border-color: rgba(236, 229, 216, 0.28) !important;
+  transform: translateY(-1px);
+}
+
+.order-list-item.is-selected {
+  background-color: #3a3227;
+  border-color: #c5b8a5 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.detail-workspace-card {
+  min-height: 700px;
+  background-color: var(--app-surface, #2b251e) !important;
+  border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14)) !important;
+  color: var(--app-text, #ece5d8);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

@@ -18,15 +18,45 @@ export interface CustomRequestDTO {
   submittedAt?: string | null;
   /** Backend quyết định draft còn được sửa/xóa/submit hay không */
   editable: boolean;
+  productTypeId: number | null;
+  productTypeCode: string | null;
+  productTypeName: string | null;
+  productTypeVersion: number | null;
+  fields: ProductTypeField[];
+  fieldValues: Record<string, unknown>;
+}
+
+export type ProductTypeFieldKind = 'TEXT' | 'NUMBER' | 'SINGLE_SELECT' | 'MULTI_SELECT' | 'BOOLEAN';
+export interface ProductTypeField {
+  code: string;
+  label: string;
+  kind: ProductTypeFieldKind;
+  displayOrder?: number | null;
+  unit?: string | null;
+  hint?: string | null;
+  maxLength?: number | null;
+  minimum?: number | null;
+  maximum?: number | null;
+  options?: string[] | null;
+}
+export interface ProductTypeOption {
+  id: number;
+  code: string;
+  name: string;
+  description?: string | null;
+  fields: ProductTypeField[];
+  active: boolean;
 }
 
 export interface CreateCustomRequest {
   description: string;
   imageUrls: string[];
   quantity: number;
+  productTypeId: number;
+  fieldValues: Record<string, unknown>;
 }
 
-export interface UpdateCustomRequest extends CreateCustomRequest {
+export interface UpdateCustomRequest extends Omit<CreateCustomRequest, 'productTypeId'> {
   expectedVersion: number;
 }
 

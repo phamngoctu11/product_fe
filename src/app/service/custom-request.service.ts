@@ -11,6 +11,7 @@ import {
   CustomRequestSubmissionDTO,
   SubmitCustomRequest,
   UpdateCustomRequest,
+  ProductTypeOption,
 } from '../model/custom-request.model';
 
 @Injectable({ providedIn: 'root' })
@@ -18,6 +19,11 @@ export class CustomRequestService {
   private readonly apiUrl = `${environment.apiUrl}/custom-requests`;
 
   constructor(private readonly http: HttpClient) {}
+
+  getProductTypes(): Observable<ProductTypeOption[]> {
+    return this.http.get<ApiResponse<ProductTypeOption[]>>(`${environment.apiUrl}/product-types`)
+      .pipe(map((res) => res.data));
+  }
 
   /** Sinh khóa idempotency mới. Caller giữ lại khóa để retry cùng một thao tác. */
   newIdempotencyKey(): string {

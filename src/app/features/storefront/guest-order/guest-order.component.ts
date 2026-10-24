@@ -9,7 +9,9 @@ import {
   Order,
   OrderItem,
   OrderStatusHistory,
+  ReceiptConfirmRequest,
   ReceiptConfirmResponse,
+  ReceiptViewDTO,
 } from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../../shared/order-detail-popup/order-detail-popup.component';
@@ -77,17 +79,31 @@ import { FormsModule } from '@angular/forms';
             <!-- Receipt Confirm UI -->
             <div *ngIf="receiptMode" class="bg-white p-6 rounded-lg shadow-sm">
               <h4 class="font-medium text-lg mb-4 text-gray-900 border-b pb-3">Xác nhận số lượng thực nhận</h4>
+
+              <div *ngIf="receiptView?.dataWarning" class="bg-amber-50 text-amber-700 p-4 rounded-lg mb-4 text-sm flex gap-2 border border-amber-200">
+                <i class="bi bi-info-circle-fill mt-0.5"></i>
+                <div class="flex-1">Dữ liệu số lượng xuất kho được đồng bộ từ dữ liệu cũ (legacy fallback).</div>
+              </div>
+
+              <div *ngIf="receiptView && !receiptView.canConfirmReceipt" class="bg-gray-100 text-gray-700 p-4 rounded-lg mb-4 text-sm flex gap-2">
+                <i class="bi bi-hourglass-split mt-0.5"></i>
+                <div class="flex-1">Đơn hàng chưa ở trạng thái sẵn sàng để xác nhận nhận hàng.</div>
+              </div>
+
               <div *ngIf="receiptError" class="bg-red-50 text-red-600 p-4 rounded-lg mb-4 text-sm flex gap-2">
                 <i class="bi bi-exclamation-circle-fill mt-0.5"></i>
                 <div class="flex-1">{{ receiptError }}</div>
               </div>
+
               <div class="space-y-4">
-                <div *ngFor="let item of order.items" class="flex flex-col sm:flex-row items-center gap-4 p-4 border rounded-lg">
-                  <img [src]="item.imageUrl || '/images/placeholder.jpg'" class="w-16 h-16 object-cover rounded-md" alt="Ảnh sản phẩm">
+                <div *ngFor="let item of (receiptView?.items || [])" class="flex flex-col sm:flex-row items-center gap-4 p-4 border rounded-lg">
                   <div class="flex-1">
-                    <p class="font-medium text-gray-800">{{ getVariantName(item) }}</p>
+                    <p class="font-medium text-gray-800">{{ item.productName || item.variantName || 'Sản phẩm #' + item.orderItemId }}</p>
+                    <p class="text-sm text-gray-500 mt-1" *ngIf="item.variantName && item.variantName !== item.productName">{{ item.variantName }}</p>
                     <p class="text-sm text-gray-500 mt-1">
-                      Số lượng đã xuất: <span class="font-bold">{{ item.exportedQuantity ?? item.quantity }}</span>
+                      Số lượng đặt: <span class="font-medium">{{ item.orderedQuantity }}</span>
+                      <span class="mx-2">•</span>
+                      Số lượng đã xuất: <span class="font-bold">{{ item.exportedQuantity ?? item.orderedQuantity }}</span>
                     </p>
                   </div>
                   <div class="w-full sm:w-32">
@@ -95,10 +111,39 @@ import { FormsModule } from '@angular/forms';
                     <input 
                       type="number" 
                       class="sf-input w-full"
-                      [(ngModel)]="receivedQuantities[getReceiptVariantId(item)]"
+                      [(ngModel)]="receivedQuantities[item.orderItemId]"
                       min="0"
+                      [disabled]="!receiptView?.canConfirmReceipt || isSubmittingReceipt"
                     >
                   </div>
+                </div>
+              </div>
+
+              <!-- Mismatch table when matched=false and completed=false -->
+              <div *ngIf="receiptResponse && !receiptResponse.completed && receiptResponse.mismatches?.length" class="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <div class="font-medium text-amber-800 mb-2 flex items-center gap-2">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  Số lượng thực nhận đang lệch so với số lượng xuất kho:
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm text-left">
+                    <thead>
+                      <tr class="border-b border-amber-200 text-gray-600">
+                        <th class="py-2">Sản phẩm</th>
+                        <th class="py-2 text-center">Đặt</th>
+                        <th class="py-2 text-center">Xuất</th>
+                        <th class="py-2 text-center">Thực nhận</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let m of receiptResponse.mismatches" class="border-b border-amber-100">
+                        <td class="py-2 font-medium">{{ m.productName || m.variantName || 'Item #' + m.orderItemId }}</td>
+                        <td class="py-2 text-center">{{ m.orderedQuantity }}</td>
+                        <td class="py-2 text-center">{{ m.exportedQuantity }}</td>
+                        <td class="py-2 text-center text-red-600 font-bold">{{ m.receivedQuantity }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
@@ -112,17 +157,17 @@ import { FormsModule } from '@angular/forms';
                   Quay lại
                 </button>
                 <button 
-                  *ngIf="receiptResponse && !receiptResponse.confirmed"
+                  *ngIf="receiptResponse && !receiptResponse.completed && receiptResponse.mismatches?.length"
                   class="sf-button-primary bg-yellow-600 border-yellow-600 hover:bg-yellow-700" 
                   (click)="submitReceiptConfirm(true)" 
                   [disabled]="isSubmittingReceipt"
                 >
-                  <i class="bi bi-exclamation-triangle mr-2"></i> Chấp nhận lệch số lượng
+                  <i class="bi bi-check-circle mr-2"></i> Xác nhận chấp nhận chênh lệch
                 </button>
                 <button 
                   class="sf-button-primary" 
                   (click)="submitReceiptConfirm()" 
-                  [disabled]="isSubmittingReceipt"
+                  [disabled]="isSubmittingReceipt || !receiptView?.canConfirmReceipt"
                 >
                   <span *ngIf="isSubmittingReceipt" class="spinner-border spinner-border-sm mr-2" role="status"></span>
                   <i *ngIf="!isSubmittingReceipt" class="bi bi-check-circle mr-2"></i>
@@ -200,7 +245,8 @@ export class GuestOrderComponent implements OnInit {
   receiptMode = false;
   isSubmittingReceipt = false;
   receiptError = '';
-  receivedQuantities: { [variantId: number]: number } = {};
+  receiptView: ReceiptViewDTO | null = null;
+  receivedQuantities: { [orderItemId: number]: number } = {};
   receiptResponse: ReceiptConfirmResponse | null = null;
 
   constructor(
@@ -236,7 +282,7 @@ export class GuestOrderComponent implements OnInit {
         this.isLoading = false;
         
         if (this.receiptMode) {
-          this.initReceivedQuantities();
+          this.openReceiptConfirm();
         }
       },
       error: (err: any) => {
@@ -277,79 +323,92 @@ export class GuestOrderComponent implements OnInit {
   }
 
   openReceiptConfirm(): void {
+    if (!this.orderId || !this.token) return;
     this.receiptMode = true;
     this.receiptError = '';
     this.receiptResponse = null;
-    this.initReceivedQuantities();
+    this.receivedQuantities = {};
+    this.receiptView = null;
+
+    this.orderService.getGuestReceiptView(this.orderId, this.token).subscribe({
+      next: (rv) => {
+        this.receiptView = rv;
+        (rv.items || []).forEach((item) => {
+          this.receivedQuantities[item.orderItemId] = item.exportedQuantity ?? item.orderedQuantity ?? 0;
+        });
+      },
+      error: (err) => {
+        this.receiptError = getApiErrorMessage(err, 'Không thể tải thông tin xác nhận nhận hàng.');
+      },
+    });
   }
   
   cancelReceiptConfirm(): void {
     this.receiptMode = false;
-  }
-
-  initReceivedQuantities(): void {
+    this.receiptView = null;
+    this.receiptResponse = null;
+    this.receiptError = '';
     this.receivedQuantities = {};
-    if (this.order && this.order.items) {
-      this.order.items.forEach(item => {
-        const variantId = this.getReceiptVariantId(item);
-        if (variantId) {
-          this.receivedQuantities[variantId] = Number(item.exportedQuantity ?? item.quantity ?? 0);
-        }
-      });
-    }
   }
 
   submitReceiptConfirm(acceptMismatch: boolean = false): void {
-    if (!this.order || !this.token) return;
+    if (!this.orderId || !this.token || !this.receiptView) return;
 
-    const receivedItems = this.buildReceivedItemsPayload();
-    if (receivedItems.length === 0) {
-      this.receiptError = 'Không có item hợp lệ để xác nhận nhận hàng.';
+    if (!this.receiptView.canConfirmReceipt) {
+      this.receiptError = 'Đơn hàng chưa ở trạng thái sẵn sàng để xác nhận nhận hàng.';
       return;
     }
 
+    const items = this.receiptView.items || [];
+    const receivedItems: ItemCheckRequest[] = items.map((item) => ({
+      orderItemId: item.orderItemId,
+      receivedQuantity: Number(this.receivedQuantities[item.orderItemId] ?? item.exportedQuantity ?? item.orderedQuantity ?? 0),
+    }));
+
+    if (receivedItems.length === 0) {
+      this.receiptError = 'Không có sản phẩm hợp lệ để xác nhận nhận hàng.';
+      return;
+    }
+
+    const intentKey = this.orderService.generateIdempotencyKey(
+      acceptMismatch ? 'guest-receipt-mismatch' : 'guest-receipt',
+      this.orderId
+    );
+
     this.isSubmittingReceipt = true;
     this.receiptError = '';
-    
-    this.orderService.confirmGuestReceipt(this.order.id, this.token, { receivedItems, acceptMismatch }).subscribe({
-      next: (response: any) => {
+
+    const payload: ReceiptConfirmRequest = {
+      orderVersion: this.receiptView.orderVersion,
+      receivedItems,
+      acceptMismatch,
+      note: null,
+    };
+
+    this.orderService.confirmGuestReceipt(this.orderId, this.token, payload, intentKey).subscribe({
+      next: (response) => {
         this.receiptResponse = response;
         this.isSubmittingReceipt = false;
 
-        if (response.confirmed) {
+        if (response.completed) {
           this.toast.notify(response.message || 'Xác nhận nhận hàng thành công!');
-          this.receiptMode = false;
+          this.cancelReceiptConfirm();
           this.loadOrder();
           return;
         }
 
         this.receiptError = response.message || 'Số lượng thực nhận đang lệch so với số lượng xuất kho.';
       },
-      error: (err: any) => {
-        this.receiptError = getApiErrorMessage(err, 'Không thể xác nhận nhận hàng.');
+      error: (err) => {
         this.isSubmittingReceipt = false;
+        if (err?.status === 409 || err?.error?.errorCode === 'ORDER_VERSION_CONFLICT') {
+          this.toast.notify('Dữ liệu đơn hàng đã thay đổi trên máy chủ, đang làm mới...');
+          this.openReceiptConfirm();
+        } else {
+          this.receiptError = getApiErrorMessage(err, 'Không thể xác nhận nhận hàng.');
+        }
       },
     });
-  }
-
-  getReceiptVariantId(item: OrderItem): number {
-    return Number(item.variantId || item.productVariantId || 0);
-  }
-  
-  getVariantName(item: OrderItem): string {
-    return item.variantName || ('Sản phẩm #' + this.getReceiptVariantId(item));
-  }
-
-  private buildReceivedItemsPayload(): ItemCheckRequest[] {
-    if (!this.order?.items?.length) return [];
-
-    return this.order.items.map((item) => {
-      const variantId = this.getReceiptVariantId(item);
-      return {
-        variantId,
-        quantity: Number(this.receivedQuantities[variantId] ?? 0),
-      };
-    }).filter((item) => item.variantId > 0 && item.quantity >= 0);
   }
 
   getStatusLabel(status: string | undefined): string {

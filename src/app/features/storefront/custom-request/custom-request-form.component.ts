@@ -22,6 +22,8 @@ import {
   CUSTOM_DESCRIPTION_MAX_WORDS,
   CustomRequestDTO,
   CustomRequestSubmissionDTO,
+  ProductTypeField,
+  ProductTypeOption,
   countWords,
   isHttpUrl,
 } from '../../../model/custom-request.model';
@@ -57,6 +59,8 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
   draftId: number | null = null;
   currentDraft: CustomRequestDTO | null = null;
   submission: CustomRequestSubmissionDTO | null = null;
+  productTypes: ProductTypeOption[] = [];
+  selectedFields: ProductTypeField[] = [];
 
   isLoading = false;
   isSaving = false;
@@ -65,6 +69,7 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
 
   private createKey: string | null = null;
   private submitKey: string | null = null;
+  private routeDraftId: number | null = null;
   private readonly subs = new Subscription();
 
   constructor(
@@ -79,6 +84,8 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
     this.draftForm = this.fb.group({
       description: ['', [Validators.required, maxWordsValidator(CUSTOM_DESCRIPTION_MAX_WORDS)]],
       quantity: [1, [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
+      productTypeId: [null, Validators.required],
+      fieldValues: this.fb.group({}),
       imageUrls: this.fb.array<FormControl<string | null>>([]),
     });
 
@@ -111,12 +118,38 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam && idParam !== 'new') {
-      this.draftId = Number(idParam);
+    this.subs.add(this.route.paramMap.subscribe((params) => {
+      const idParam = params.get('id');
+      const nextId = idParam && idParam !== 'new' ? Number(idParam) : null;
+      if (nextId !== null && (!Number.isSafeInteger(nextId) || nextId <= 0)) {
+        this.toast.notify('Đường dẫn bản nháp không hợp lệ.');
+        this.router.navigate(['/store/custom-requests']);
+        return;
+      }
+      if (nextId === this.routeDraftId) return;
+      const previousRouteDraftId = this.routeDraftId;
+      this.routeDraftId = nextId;
+      if (nextId === null) {
+        if (previousRouteDraftId !== null) {
+          this.draftId = null;
+          this.currentDraft = null;
+          this.draftForm.enable({ emitEvent: false });
+          this.submitForm.enable({ emitEvent: false });
+          this.draftForm.reset({ description: '', quantity: 1 }, { emitEvent: false });
+          this.imageUrls.clear({ emitEvent: false });
+          this.selectedFields = [];
+        }
+        return;
+      }
+      if (this.currentDraft?.id === nextId) return;
+      this.draftId = nextId;
       this.loadDraft();
-    }
+    }));
     this.prefillContact();
+    this.customRequestService.getProductTypes().subscribe({
+      next: (types) => { this.productTypes = types; },
+      error: (err) => this.toast.notify(getApiErrorMessage(err, 'Không thể tải danh sách loại sản phẩm.')),
+    });
   }
 
   ngOnDestroy() {
@@ -151,7 +184,9 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
   private applyDraft(draft: CustomRequestDTO) {
     this.currentDraft = draft;
     this.draftId = draft.id;
-    this.draftForm.patchValue({ description: draft.description, quantity: draft.quantity }, { emitEvent: false });
+    this.selectedFields = draft.fields ?? [];
+    this.rebuildFieldControls(this.selectedFields, draft.fieldValues ?? {});
+    this.draftForm.patchValue({ description: draft.description, quantity: draft.quantity, productTypeId: draft.productTypeId }, { emitEvent: false });
     this.imageUrls.clear({ emitEvent: false });
     (draft.imageUrls ?? []).forEach((url) => this.imageUrls.push(this.createUrlControl(url), { emitEvent: false }));
     this.draftForm.markAsPristine();
@@ -160,6 +195,25 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
       this.draftForm.disable({ emitEvent: false });
       this.submitForm.disable({ emitEvent: false });
     }
+  }
+
+  onProductTypeChange(value: string | number | null) {
+    const type = this.productTypes.find((item) => item.id === Number(value));
+    this.selectedFields = type?.fields ?? [];
+    this.rebuildFieldControls(this.selectedFields, {});
+    this.draftForm.markAsDirty();
+  }
+
+  private rebuildFieldControls(fields: ProductTypeField[], values: Record<string, unknown>) {
+    const controls: Record<string, FormControl> = {};
+    for (const field of fields) {
+      const validators = [field.kind === 'BOOLEAN' ? (control: AbstractControl) => control.value === null || control.value === undefined ? { required: true } : null : Validators.required];
+      if (field.kind === 'TEXT' && field.maxLength) validators.push(Validators.maxLength(field.maxLength));
+      if (field.kind === 'NUMBER' && field.minimum !== null && field.minimum !== undefined) validators.push(Validators.min(field.minimum));
+      if (field.kind === 'NUMBER' && field.maximum !== null && field.maximum !== undefined) validators.push(Validators.max(field.maximum));
+      controls[field.code] = this.fb.control(values[field.code] ?? (field.kind === 'MULTI_SELECT' ? [] : null), validators);
+    }
+    this.draftForm.setControl('fieldValues', this.fb.group(controls), { emitEvent: false });
   }
 
   private prefillContact() {
@@ -245,6 +299,7 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
     const payload = {
       description: (value.description as string).trim(),
       quantity: Number(value.quantity),
+      fieldValues: value.fieldValues as Record<string, unknown>,
       imageUrls: (value.imageUrls as (string | null)[])
         .map((u) => (u ?? '').trim())
         .filter((u) => u.length > 0),
@@ -253,8 +308,8 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     const request$ =
       this.draftId && this.currentDraft
-        ? this.customRequestService.update(this.draftId, { ...payload, expectedVersion: this.currentDraft.version })
-        : this.customRequestService.create(payload, (this.createKey ??= this.customRequestService.newIdempotencyKey()));
+        ? this.customRequestService.update(this.draftId, { description: payload.description, quantity: payload.quantity, fieldValues: payload.fieldValues, imageUrls: payload.imageUrls, expectedVersion: this.currentDraft.version })
+        : this.customRequestService.create({ ...payload, productTypeId: Number(value.productTypeId) }, (this.createKey ??= this.customRequestService.newIdempotencyKey()));
 
     request$.subscribe({
       next: (draft) => {

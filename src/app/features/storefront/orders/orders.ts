@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { inject as injectActionDialog } from '@angular/core';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { inject as injectToast } from '@angular/core';
@@ -15,7 +15,10 @@ import {
   OrderItem,
   OrderListDTO,
   OrderStatusHistory,
+  ReceiptConfirmRequest,
   ReceiptConfirmResponse,
+  ReceiptViewDTO,
+  ReorderResponseDTO,
 } from '../../../model/order.model';
 import { UserInforDTO } from '../../../model/user.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
@@ -24,7 +27,6 @@ import { OrderPaymentModalComponent } from '../../shared/order-payment/order-pay
 import {
   AppPaginationComponent,
   OrderSummaryCardComponent,
-  PageHeaderComponent,
   ViewStateComponent,
 } from '../../shared/ui';
 
@@ -38,7 +40,6 @@ import {
     OrderDetailPopupComponent,
     OrderPaymentModalComponent,
     AppPaginationComponent,
-    PageHeaderComponent,
     OrderSummaryCardComponent,
     ViewStateComponent,
   ],
@@ -84,11 +85,14 @@ export class Orders implements OnInit {
   receiptMode = false;
   isSubmittingReceipt = false;
   receiptError = '';
-  receivedQuantities: { [variantId: number]: number } = {};
+  currentReceiptView: ReceiptViewDTO | null = null;
+  receivedQuantities: { [key: number]: number } = {};
   receiptResponse: ReceiptConfirmResponse | null = null;
-  complaintNote = '';
   paymentModalOpen = false;
   payingOrder: Order | null = null;
+
+  reorderResult: ReorderResponseDTO | null = null;
+  showReorderModal = false;
 
   userInfo?: UserInforDTO;
 
@@ -97,6 +101,7 @@ export class Orders implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private route: ActivatedRoute,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -286,10 +291,11 @@ export class Orders implements OnInit {
   openReceiptConfirm(order: OrderListDTO): void {
     this.hideHistoryModalIfOpen();
     this.receiptMode = true;
-    this.resetReceiptState(false);
+    this.resetReceiptState();
     this.selectedOrderDetail = null;
     this.detailError = '';
     this.isDetailLoading = true;
+    this.currentReceiptView = null;
 
     this.orderService.getById(order.id).subscribe({
       next: (detail) => {
@@ -297,13 +303,24 @@ export class Orders implements OnInit {
           ...detail,
           staffName: detail.staffName || order.staffName || null,
         };
-        (this.selectedOrderDetail.items || []).forEach((item) => {
-          const variantId = this.getReceiptVariantId(item);
-          if (variantId) {
-            this.receivedQuantities[variantId] = Number(item.exportedQuantity ?? item.quantity ?? 0);
-          }
+        this.orderService.getReceiptView(order.id).subscribe({
+          next: (receiptView) => {
+            this.currentReceiptView = receiptView;
+            this.receivedQuantities = {};
+            (receiptView.items || []).forEach((item) => {
+              const qty = item.exportedQuantity ?? item.orderedQuantity ?? 0;
+              this.receivedQuantities[item.orderItemId] = qty;
+              if (item.variantId) {
+                this.receivedQuantities[item.variantId] = qty;
+              }
+            });
+            this.isDetailLoading = false;
+          },
+          error: (err) => {
+            this.receiptError = getApiErrorMessage(err, 'Không thể tải thông tin xác nhận nhận hàng.');
+            this.isDetailLoading = false;
+          },
         });
-        this.isDetailLoading = false;
       },
       error: (err) => {
         this.detailError = getApiErrorMessage(err, 'Không thể tải chi tiết đơn hàng.');
@@ -314,6 +331,7 @@ export class Orders implements OnInit {
 
   closeOrderDetail(): void {
     this.selectedOrderDetail = null;
+    this.currentReceiptView = null;
     this.isDetailLoading = false;
     this.detailError = '';
     this.receiptMode = false;
@@ -321,22 +339,45 @@ export class Orders implements OnInit {
   }
 
   submitReceiptConfirm(acceptMismatch: boolean = false): void {
-    if (!this.selectedOrderDetail) return;
+    if (!this.selectedOrderDetail || !this.currentReceiptView) return;
 
-    const receivedItems = this.buildReceivedItemsPayload();
-    if (receivedItems.length === 0) {
-      this.receiptError = 'Không có item hợp lệ để xác nhận nhận hàng.';
+    if (!this.currentReceiptView.canConfirmReceipt) {
+      this.receiptError = 'Đơn hàng chưa ở trạng thái sẵn sàng để xác nhận nhận hàng.';
       return;
     }
 
+    const items = this.currentReceiptView.items || [];
+    const receivedItems: ItemCheckRequest[] = items.map((item) => ({
+      orderItemId: item.orderItemId,
+      receivedQuantity: Number(this.receivedQuantities[item.orderItemId] ?? item.exportedQuantity ?? item.orderedQuantity ?? 0),
+    }));
+
+    if (receivedItems.length === 0) {
+      this.receiptError = 'Không có sản phẩm hợp lệ để xác nhận nhận hàng.';
+      return;
+    }
+
+    const intentKey = this.orderService.generateIdempotencyKey(
+      acceptMismatch ? 'user-receipt-mismatch' : 'user-receipt',
+      this.currentReceiptView.orderId
+    );
+
     this.isSubmittingReceipt = true;
     this.receiptError = '';
-    this.orderService.confirmReceipt(this.selectedOrderDetail.id, { receivedItems, acceptMismatch }).subscribe({
+
+    const payload: ReceiptConfirmRequest = {
+      orderVersion: this.currentReceiptView.orderVersion,
+      receivedItems,
+      acceptMismatch,
+      note: null,
+    };
+
+    this.orderService.confirmReceipt(this.currentReceiptView.orderId, payload, intentKey).subscribe({
       next: (response) => {
         this.receiptResponse = response;
         this.isSubmittingReceipt = false;
 
-        if (response.confirmed) {
+        if (response.completed) {
           this.toast.notify(response.message || 'Xác nhận nhận hàng thành công!');
           this.closeOrderDetail();
           this.loadMyOrders();
@@ -347,61 +388,23 @@ export class Orders implements OnInit {
         this.receiptError = response.message || 'Số lượng thực nhận đang lệch so với số lượng xuất kho.';
       },
       error: (err) => {
-        this.receiptError = getApiErrorMessage(err, 'Không thể xác nhận nhận hàng.');
         this.isSubmittingReceipt = false;
+        if (err?.status === 409 || err?.error?.errorCode === 'ORDER_VERSION_CONFLICT') {
+          this.toast.notify('Dữ liệu đơn hàng đã thay đổi trên máy chủ, đang làm mới...');
+          if (this.selectedOrderDetail) {
+            this.openReceiptConfirm({ id: this.selectedOrderDetail.id } as any);
+          }
+        } else {
+          this.receiptError = getApiErrorMessage(err, 'Không thể xác nhận nhận hàng.');
+        }
       },
     });
-  }
-
-  sendReceiptComplaint(): void {
-    if (!this.selectedOrderDetail) return;
-
-    const receivedItems = this.buildReceivedItemsPayload();
-    if (receivedItems.length === 0) {
-      this.receiptError = 'Không có item hợp lệ để gửi khiếu nại.';
-      return;
-    }
-
-    this.isSubmittingReceipt = true;
-    this.receiptError = '';
-    this.orderService.sendReceiptComplaint(this.selectedOrderDetail.id, {
-      receivedItems,
-      note: this.complaintNote.trim(),
-    }).subscribe({
-      next: (response) => {
-        this.receiptResponse = response;
-        this.isSubmittingReceipt = false;
-        this.toast.notify(response.message || 'Đã gửi khiếu nại cho manager.');
-        this.closeOrderDetail();
-      },
-      error: (err) => {
-        this.receiptError = getApiErrorMessage(err, 'Không thể gửi khiếu nại.');
-        this.isSubmittingReceipt = false;
-      },
-    });
-  }
-
-  getReceiptVariantId(item: OrderItem): number {
-    return Number(item.variantId || item.productVariantId || 0);
-  }
-
-  private buildReceivedItemsPayload(): ItemCheckRequest[] {
-    if (!this.selectedOrderDetail?.items?.length) return [];
-
-    return this.selectedOrderDetail.items.map((item) => {
-      const variantId = this.getReceiptVariantId(item);
-      return {
-        variantId,
-        quantity: Number(this.receivedQuantities[variantId] ?? 0),
-      };
-    }).filter((item) => item.variantId > 0 && item.quantity >= 0);
   }
 
   private resetReceiptState(clearQuantities: boolean = true): void {
     this.isSubmittingReceipt = false;
     this.receiptError = '';
     this.receiptResponse = null;
-    this.complaintNote = '';
     if (clearQuantities) {
       this.receivedQuantities = {};
     }
@@ -464,24 +467,36 @@ export class Orders implements OnInit {
     if (!this.canReorderOrder(order) || this.reorderingOrderIds.has(order.id)) return;
 
     this.reorderingOrderIds.add(order.id);
-    this.orderService.reorderOrder(order.id).subscribe({
+    const key = this.orderService.generateIdempotencyKey('user-reorder', order.id);
+
+    this.orderService.reorder(order.id, key).subscribe({
       next: (response) => {
         this.reorderingOrderIds.delete(order.id);
-        if (response.addedItemCount > 0 && response.skippedItemCount === 0) {
-          this.toast.notify(`Đã thêm ${response.addedItemCount} sản phẩm vào giỏ hàng.`);
+        if (response.orderType === 'CUSTOM' && response.customDraftId) {
+          this.toast.notify('Đã tạo bản thảo yêu cầu đặt riêng mới từ đơn cũ.');
+          this.router.navigate(['/store/custom-requests', response.customDraftId]);
           return;
         }
-        if (response.addedItemCount > 0) {
-          this.toast.notify(`Đã thêm ${response.addedItemCount} sản phẩm, bỏ qua ${response.skippedItemCount} sản phẩm không còn phù hợp.`);
-          return;
-        }
-        this.toast.notify('Không có sản phẩm nào trong đơn cũ có thể mua lại.');
+
+        // CATALOG orders: show result modal without auto redirect
+        this.reorderResult = response;
+        this.showReorderModal = true;
       },
       error: (err) => {
         this.reorderingOrderIds.delete(order.id);
         this.toast.notify(getApiErrorMessage(err, 'Không thể mua lại đơn hàng này.'));
       },
     });
+  }
+
+  closeReorderModal(): void {
+    this.showReorderModal = false;
+    this.reorderResult = null;
+  }
+
+  goToCart(): void {
+    this.closeReorderModal();
+    this.router.navigate(['/store/cart']);
   }
 
   cancelOrder(order: OrderListDTO): void {

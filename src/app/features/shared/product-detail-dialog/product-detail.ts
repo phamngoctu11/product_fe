@@ -11,6 +11,7 @@ import { AuthService } from '../../../service/auth.service';
 import { ApiResponse, getApiErrorMessage, unwrapApiResponse } from '../../../model/api-response.model';
 import { ProductReview, ProductReviewSummary } from '../../../model/product-review.model';
 import { ProductReviewService } from '../../../service/product-review.service';
+import { ProductTypeOption } from '../../../model/custom-request.model';
 import { environment } from '../../../../environments/environment';
 import { ProductVariantEditorComponent } from './product-variant-editor/product-variant-editor.component';
 
@@ -32,6 +33,7 @@ export class ProductDetailComponent implements OnInit {
 
   availableTags: string[] = [];
   selectedTags: string[] = [];
+  productTypes: ProductTypeOption[] = [];
   newTagInput: string = '';
 
   customFields: string[] = [];
@@ -80,8 +82,8 @@ export class ProductDetailComponent implements OnInit {
       price: [0, [Validators.required, Validators.min(0)]],
       madeDay: [3, [Validators.required, Validators.min(2)]],
       tags: [''],
+      productTypeId: [null],
       image_url: [''],
-      handmade: [true],
       availabilityStatus: ['ACCEPTING_ORDERS', [Validators.required]],
       variants: this.fb.array([])
     });
@@ -149,6 +151,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.productService.getProductTypes().subscribe({ next: (items) => this.productTypes = items });
     this.productForm.get('tags')?.valueChanges.subscribe(() => this.refreshDynamicFields());
 
     if (this.isView) {
@@ -165,11 +168,12 @@ export class ProductDetailComponent implements OnInit {
         this.productForm.patchValue({
           id: res.id, product_name: res.product_name, price: res.price,
           madeDay: res.madeDay || 3,
-          tags: res.tags, image_url: this.uploadedImageUrl, handmade: res.handmade !== false,
+          tags: Array.isArray(res.tags) ? res.tags.join(', ') : (res.tags || ''), image_url: this.uploadedImageUrl,
+          productTypeId: res.productTypeId ?? null,
           availabilityStatus: res.availabilityStatus || 'ACCEPTING_ORDERS',
         });
 
-        if (res.tags) this.selectedTags = res.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t !== '');
+        if (res.tags) this.selectedTags = Array.isArray(res.tags) ? res.tags : String(res.tags).split(',').map((tag: string) => tag.trim()).filter(Boolean);
         this.variants.clear();
         this.isUploadingVariantImage = [];
 
@@ -276,16 +280,8 @@ export class ProductDetailComponent implements OnInit {
   }
 
   refreshDynamicFields() {
-    const t = (this.productForm.get('tags')?.value || '').toLowerCase();
     let newFieldsSet = new Set<string>();
-    if (t.includes('#quanao') || t.includes('#thoitrang') || t.includes('áo') || t.includes('quần') || t.includes('#vay')) ['size', 'color', 'material', 'fit'].forEach(f => newFieldsSet.add(f));
-    if (t.includes('#giay') || t.includes('#dep') || t.includes('#balo')) ['size', 'color', 'material'].forEach(f => newFieldsSet.add(f));
-    if (t.includes('#dienthoai') || t.includes('#laptop') || t.includes('#congnghe')) ['color', 'ram', 'storage', 'chipset'].forEach(f => newFieldsSet.add(f));
-    if (t.includes('#giadung') || t.includes('#dienmay')) ['power', 'capacity', 'material', 'color'].forEach(f => newFieldsSet.add(f));
-    if (t.includes('#mypham') || t.includes('#lamdep')) ['shade', 'volume', 'skin_type'].forEach(f => newFieldsSet.add(f));
-    if (t.includes('#thucpham') || t.includes('#doan') || t.includes('#douong')) ['flavor', 'weight'].forEach(f => newFieldsSet.add(f));
     this.customFields.forEach(f => newFieldsSet.add(f));
-    if (newFieldsSet.size === 0) newFieldsSet.add('type');
     this.dynamicFields = Array.from(newFieldsSet);
     this.variants.controls.forEach(control => {
       const dynGroup = control.get('dynamicAttributes') as FormGroup;
@@ -441,18 +437,13 @@ export class ProductDetailComponent implements OnInit {
   }
 
   save() {
-    const userId = this.authService.getUserId();
-    console.log("id của user hiện tại là: "+userId);
-
     if (this.productForm.invalid || this.isView) {
       this.productForm.markAllAsTouched();
       return;
     }
-    if (!userId) {
-      this.toast.notify('Không tìm thấy userId!');
-      return;
-    }
     const payload = JSON.parse(JSON.stringify(this.productForm.getRawValue()));
+    payload.tags = (payload.tags || '').split(',').map((tag: string) => tag.trim()).filter(Boolean);
+    payload.productTypeId = payload.productTypeId ? Number(payload.productTypeId) : null;
 
     payload.variants = payload.variants.map((v: any) => {
       const attrs = { ...v.dynamicAttributes };
@@ -460,50 +451,10 @@ export class ProductDetailComponent implements OnInit {
       v.attributes = JSON.stringify(attrs); delete v.dynamicAttributes; return v;
     });
 
-    if (this.isStaffMode) {
-      this.saveStaffProductChanges(payload, userId);
-      return;
-    }
-
-    const request = this.isEdit ? this.productService.update(payload.id, payload, userId) : this.productService.create(payload, userId);
+    const request = this.isEdit ? this.productService.update(payload.id, payload) : this.productService.create(payload);
     request.subscribe({
       next: () => { this.toast.notify(this.isEdit ? 'Cập nhật thành công!' : 'Thêm mới thành công!'); this.dialogRef.close(true); },
       error: () => this.toast.notify('Đã xảy ra lỗi!')
-    });
-  }
-
-  private saveStaffProductChanges(payload: any, userId: string) {
-    if (!payload.id) {
-      this.toast.notify('Staff chỉ được cập nhật sản phẩm đã tồn tại.');
-      return;
-    }
-
-    const basicInfo = {
-      product_name: payload.product_name,
-      price: payload.price,
-      tags: payload.tags,
-      image_url: payload.image_url,
-    };
-
-    const newVariants = (payload.variants || [])
-      .filter((variant: any) => !variant.id)
-      .map((variant: any) => {
-        delete variant.id;
-        delete variant.parsedAttributes;
-        return variant;
-      });
-
-    const requests = [
-      this.productService.updateStaffInfo(payload.id, basicInfo),
-      ...newVariants.map((variant: any) => this.productService.addVariant(payload.id, variant, userId)),
-    ];
-
-    forkJoin(requests).subscribe({
-      next: () => {
-        this.toast.notify(newVariants.length > 0 ? 'Đã cập nhật thông tin và thêm phân loại mới!' : 'Đã cập nhật thông tin sản phẩm!');
-        this.dialogRef.close(true);
-      },
-      error: () => this.toast.notify('Không thể cập nhật sản phẩm bằng quyền staff.'),
     });
   }
 

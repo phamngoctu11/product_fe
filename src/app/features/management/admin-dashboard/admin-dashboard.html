@@ -31,7 +31,12 @@
     <!-- Mini Status Cards -->
     <div class="row g-3 mb-4">
       <div class="col-xl-3 col-md-6" *ngFor="let status of pendingStatuses">
-        <div class="mini-stat-card shadow-sm">
+        <div class="mini-stat-card shadow-sm"
+             [class.cursor-pointer]="status.key === 'pendingKCS' || status.key === 'pendingAP' || status.key === 'pendingWH'"
+             (click)="navigateToStatus(status.key)"
+             role="button"
+             tabindex="0"
+             [title]="'Xem chi tiết: ' + status.label">
           <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
             <div class="min-w-0">
               <p class="status-label mb-0 fw-semibold text-dark">{{ status.label }}</p>

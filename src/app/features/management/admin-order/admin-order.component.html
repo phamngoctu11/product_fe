@@ -1,13 +1,33 @@
 <div class="container-fluid p-4 admin-order-page">
   <app-page-header
     icon="bi-clipboard-check"
-    title="Duyệt và phân công đơn"
-    subtitle="Xử lý hàng đợi P7 theo đúng phiên bản và trạng thái của đơn hàng">
-    <button pageActions class="btn btn-outline-primary rounded-pill px-4 shadow-sm"
-            (click)="loadCurrentTab()"
-            [disabled]="isLoading">
-      <i class="bi bi-arrow-clockwise me-2"></i>Làm mới
-    </button>
+    title="Duyệt đơn, phân công & KCS"
+    subtitle="Duyệt đơn, phân công nhân viên và kiểm định chất lượng sản phẩm">
+    <div pageActions class="d-flex align-items-center gap-2">
+      <div class="input-group input-group-sm kcs-quick-search" style="max-width: 250px;">
+        <span class="input-group-text bg-white border-end-0 text-muted">
+          <i class="bi bi-shield-check text-warning"></i>
+        </span>
+        <input
+          type="number"
+          class="form-control border-start-0 ps-0"
+          placeholder="Mã đơn KCS..."
+          [(ngModel)]="quickKcsOrderId"
+          (keyup.enter)="quickCheckKcs()" />
+        <button
+          class="btn btn-warning text-dark fw-bold px-3 shadow-none"
+          type="button"
+          (click)="quickCheckKcs()"
+          title="Kiểm định KCS ngay">
+          KCS
+        </button>
+      </div>
+      <button class="btn btn-outline-primary rounded-pill px-4 shadow-sm"
+              (click)="loadCurrentTab()"
+              [disabled]="isLoading || isKcsSearching">
+        <i class="bi bi-arrow-clockwise me-2"></i>Làm mới
+      </button>
+    </div>
   </app-page-header>
 
   <div class="manager-tabs mb-4">
@@ -18,7 +38,7 @@
       <span class="tab-icon review"><i class="bi bi-clipboard2-check"></i></span>
       <span>
         <strong>Chờ duyệt</strong>
-        <small>Đơn mới ở PENDING_APPROVAL</small>
+        <small>Đơn mới đang chờ quản lý duyệt</small>
       </span>
     </button>
     <button type="button"
@@ -28,15 +48,25 @@
       <span class="tab-icon assignment"><i class="bi bi-person-plus"></i></span>
       <span>
         <strong>Chờ phân công</strong>
-        <small>Đơn đã duyệt ở PENDING_ASSIGNMENT</small>
+        <small>Đơn đã duyệt và đang chờ phân công</small>
+      </span>
+    </button>
+    <button type="button"
+            class="manager-tab"
+            [class.active]="activeTab === 'kcs'"
+            (click)="selectTab('kcs')">
+      <span class="tab-icon kcs"><i class="bi bi-shield-check"></i></span>
+      <span>
+        <strong>Kiểm định KCS & Checkpoint</strong>
+        <small>Tiến độ sản xuất, ảnh mẫu & duyệt KCS</small>
       </span>
     </button>
   </div>
 
   <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
     <app-view-state
-      [loading]="isLoading"
-      [empty]="activeTab === 'reviews' ? reviews.length === 0 : assignmentQueue.length === 0"
+      [loading]="activeTab === 'kcs' ? false : isLoading"
+      [empty]="activeTab === 'reviews' ? reviews.length === 0 : (activeTab === 'assignments' ? assignmentQueue.length === 0 : false)"
       [card]="false"
       loadingText="Đang tải hàng đợi đơn hàng..."
       [emptyTitle]="activeTab === 'reviews' ? 'Không có đơn chờ duyệt' : 'Không có đơn chờ phân công'"
@@ -106,7 +136,7 @@
             </tbody>
           </table>
         </div>
-      } @else {
+      } @else if (activeTab === 'assignments') {
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
             <thead>
@@ -158,20 +188,258 @@
             </tbody>
           </table>
         </div>
+      } @else if (activeTab === 'kcs') {
+        <div class="kcs-page-content p-4">
+          <!-- Lookup & Search Box -->
+          <div class="card border rounded-3 p-3 mb-4 bg-light shadow-sm">
+            <div class="row g-2 align-items-center">
+              <div class="col-md-6 col-lg-5">
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="bi bi-search text-primary"></i></span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    placeholder="Nhập mã đơn hàng cần kiểm định KCS (VD: 105)..."
+                    [(ngModel)]="lookupOrderId"
+                    (keyup.enter)="searchKcsOrder()" />
+                  <button
+                    class="btn btn-primary px-4 fw-bold"
+                    type="button"
+                    (click)="searchKcsOrder()"
+                    [disabled]="isKcsSearching || !lookupOrderId">
+                    <span *ngIf="isKcsSearching" class="spinner-border spinner-border-sm me-1"></span>
+                    <i *ngIf="!isKcsSearching" class="bi bi-shield-check me-1"></i>
+                    Tra cứu & KCS
+                  </button>
+                </div>
+              </div>
+
+              <div class="col-md-6 col-lg-7 d-flex flex-wrap align-items-center gap-2 justify-content-md-end">
+                <span *ngIf="recentKcsOrderIds.length > 0" class="small text-muted fw-bold">Đơn vừa xem:</span>
+                <button
+                  *ngFor="let id of recentKcsOrderIds"
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2"
+                  (click)="searchKcsOrder(id)">
+                  #{{ id }}
+                </button>
+                <button
+                  *ngIf="kcsOrder"
+                  type="button"
+                  class="btn btn-sm btn-link text-muted text-decoration-none"
+                  (click)="clearKcsSearch()">
+                  <i class="bi bi-x-circle me-1"></i>Xóa kết quả
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="isKcsSearching" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="text-muted mt-2">Đang tải thông tin đơn hàng và tiến độ checkpoint...</div>
+          </div>
+
+          <!-- Error Alert -->
+          <div *ngIf="kcsSearchError && !isKcsSearching" class="alert alert-danger d-flex align-items-center justify-content-between mb-4">
+            <div><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ kcsSearchError }}</div>
+            <button class="btn btn-sm btn-outline-danger" (click)="searchKcsOrder()">Thử lại</button>
+          </div>
+
+          <!-- Initial Empty State -->
+          <div *ngIf="!isKcsSearching && !kcsOrder && !kcsSearchError" class="text-center py-5">
+            <div class="kcs-empty-icon mb-3">
+              <i class="bi bi-shield-check text-primary" style="font-size: 3.5rem;"></i>
+            </div>
+            <h5 class="fw-bold text-dark">Kiểm định chất lượng (KCS) & Checkpoint sản xuất</h5>
+            <p class="text-muted mx-auto" style="max-width: 500px;">
+              Nhập mã đơn hàng ở ô tìm kiếm phía trên để kiểm tra ảnh tiến độ checkpoint (Tạo dáng ban đầu & Sản phẩm hoàn thiện) và tiến hành duyệt KCS (Đạt / Yêu cầu làm lại).
+            </p>
+          </div>
+
+          <!-- Loaded Order & Checkpoints -->
+          <div *ngIf="!isKcsSearching && kcsOrder" class="d-flex flex-column gap-4">
+            <!-- Order Summary Card -->
+            <div class="card border rounded-4 shadow-sm overflow-hidden">
+              <div class="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                  <h5 class="fw-bold text-primary mb-0">Đơn hàng #{{ kcsOrder.id }}</h5>
+                  <app-order-status-badge [status]="kcsOrder.status" [compact]="true"></app-order-status-badge>
+                  <span class="order-type" [class.custom]="kcsOrder.orderType === 'CUSTOM'">{{ kcsOrder.orderType || 'CATALOG' }}</span>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm"
+                    (click)="openKcsReview(kcsOrder.id)">
+                    <i class="bi bi-shield-check me-1"></i> Mở bảng kiểm định KCS
+                  </button>
+                </div>
+              </div>
+
+              <div class="card-body p-4">
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <span class="text-muted small d-block">Khách hàng</span>
+                    <strong class="text-dark">{{ kcsOrder.customerName || kcsOrder.recipientName || 'Khách hàng' }}</strong>
+                  </div>
+                  <div class="col-md-3">
+                    <span class="text-muted small d-block">Tổng giá trị</span>
+                    <strong class="text-danger fs-6">{{ kcsOrder.finalPrice | number: '1.0-0' }} đ</strong>
+                  </div>
+                  <div class="col-md-3">
+                    <span class="text-muted small d-block">Nhân viên phụ trách</span>
+                    <strong class="text-dark">{{ kcsOrder.staffName || 'Chưa gán' }}</strong>
+                  </div>
+                  <div class="col-md-3">
+                    <span class="text-muted small d-block">Phiên bản đơn (Version)</span>
+                    <strong class="text-secondary">v{{ kcsOrder.version ?? 0 }}</strong>
+                  </div>
+                </div>
+
+                <!-- Status Callouts: Compact Pill/Badge -->
+                <div *ngIf="kcsOrder.status === 'ORDER_CREATING'" class="kcs-status-callout-compact kcs-callout-warning mt-3">
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <i class="bi bi-hourglass-split text-warning"></i>
+                    <div>
+                      <strong class="text-warning">Đang sản xuất</strong>
+                      <span class="small text-muted ms-2">
+                        {{ kcsItemsProgress.length }} sản phẩm &bull;
+                        <span class="text-danger fw-bold">{{ getPendingKcsCount() }} chờ duyệt KCS</span> &bull;
+                        <span class="text-success fw-bold">{{ getCompletedKcsCount() }} đạt chuẩn</span>
+                      </span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-warning text-uppercase fw-bold ms-auto" (click)="openKcsReview(kcsOrder.id)">
+                    <i class="bi bi-shield-check me-1"></i> Kiểm định ngay
+                  </button>
+                </div>
+
+                <div *ngIf="kcsOrder.status === 'READY_TO_SHIP'" class="kcs-status-callout-compact kcs-callout-success mt-3">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    <div>
+                      <strong class="text-success">Đã hoàn tất sản xuất, sẵn sàng giao</strong>
+                      <span class="small text-muted ms-2">Toàn bộ sản phẩm đã đạt chuẩn KCS.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Items & Checkpoints Progress -->
+            <div class="d-flex flex-column gap-3">
+              <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="color: #ece5d8;">
+                <span>Tiến độ sản xuất theo từng sản phẩm</span>
+                <span class="badge bg-secondary">{{ kcsItemsProgress.length }}</span>
+              </h5>
+
+              <div *ngIf="kcsItemsProgress.length === 0" class="text-muted p-4 rounded-3 text-center" style="background: #26211a; border: 1px solid rgba(236, 229, 216, 0.1);">
+                Đơn hàng này chưa có dữ liệu sản phẩm hoặc checkpoint nào.
+              </div>
+
+              <div *ngFor="let item of kcsItemsProgress" class="card border rounded-3 shadow-sm overflow-hidden" style="background: #26211a; border-color: rgba(236, 229, 216, 0.12) !important;">
+                <div class="card-header py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2" style="background: #312921; border-bottom: 1px solid rgba(236, 229, 216, 0.1);">
+                  <div>
+                    <h6 class="fw-bold mb-1" style="color: #ece5d8;">
+                      {{ item.productName }}
+                      <span *ngIf="item.variantName" class="text-muted fw-normal">({{ item.variantName }})</span>
+                    </h6>
+                    <div class="small text-muted">
+                      <span>Số lượng: <strong style="color: #ece5d8;">{{ item.quantity }}</strong></span>
+                      <span *ngIf="item.computedCompletionAt" class="ms-3">
+                        Hạn hoàn thành: <strong style="color: #ece5d8;">{{ item.computedCompletionAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                      </span>
+                    </div>
+                  </div>
+                  <span class="badge" [ngClass]="getItemStatusBadgeClass(item.productionStatus)">
+                    {{ getItemStatusLabel(item.productionStatus) }}
+                  </span>
+                </div>
+
+                <div class="card-body p-4" style="background: #26211a;">
+                  <div *ngIf="!item.checkpoints || item.checkpoints.length === 0" class="text-muted small py-2">
+                    <i class="bi bi-info-circle me-1"></i>Chưa có checkpoint nào được nhân viên gửi cho sản phẩm này.
+                  </div>
+
+                  <div *ngIf="item.checkpoints && item.checkpoints.length > 0" class="d-flex flex-column gap-3">
+                    <div *ngFor="let cp of item.checkpoints"
+                         class="p-3 rounded-3 border"
+                         [class.border-warning]="cp.stage === 'FINAL_PRODUCT' && cp.status === 'PENDING_REVIEW'"
+                         [class.bg-warning-subtle]="cp.stage === 'FINAL_PRODUCT' && cp.status === 'PENDING_REVIEW'"
+                         style="background: #1c1813; border-color: rgba(236, 229, 216, 0.1) !important;">
+
+                      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <strong *ngIf="cp.stage === 'INITIAL_SHAPE'" class="text-warning">
+                            <i class="bi bi-brush me-1"></i>1. Tạo dáng ban đầu
+                          </strong>
+                          <strong *ngIf="cp.stage === 'FINAL_PRODUCT'" class="text-success">
+                            <i class="bi bi-patch-check-fill me-1"></i>2. Sản phẩm hoàn thiện (Lần #{{ cp.attemptNumber }})
+                          </strong>
+                          <span class="badge" [ngClass]="{
+                            'bg-warning text-dark': cp.status === 'PENDING_REVIEW',
+                            'bg-success': cp.status === 'PASSED',
+                            'bg-danger': cp.status === 'REWORK_REQUIRED'
+                          }">
+                            {{ cp.status === 'PENDING_REVIEW' ? 'Chờ KCS duyệt' : (cp.status === 'PASSED' ? 'Đạt KCS' : 'Yêu cầu làm lại') }}
+                          </span>
+                        </div>
+                        <span class="small text-muted">{{ cp.submittedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                      </div>
+
+                      <div *ngIf="cp.note" class="kcs-staff-note mb-2">
+                        <strong class="text-muted">Ghi chú staff:</strong> {{ cp.note }}
+                      </div>
+
+                      <!-- Photos -->
+                      <div *ngIf="cp.images && cp.images.length > 0" class="d-flex flex-wrap gap-2 mb-2">
+                        <div *ngFor="let img of cp.images" class="position-relative cursor-pointer" (click)="openLightbox(img.imageUrl)">
+                          <img [src]="img.imageUrl" alt="Ảnh checkpoint" class="border object-fit-cover" style="width: 80px; height: 80px; border-radius: 0 !important; border-color: rgba(236, 229, 216, 0.15) !important;" />
+                        </div>
+                      </div>
+
+                      <!-- Review Decision: Compact Tag & Reason (Not full width) -->
+                      <div *ngIf="cp.decision" class="kcs-decision-compact mt-2">
+                        <div class="kcs-decision-tag" [ngClass]="cp.decision.decisionType === 'PASS' ? 'kcs-pass' : 'kcs-rework'">
+                          <i class="bi" [ngClass]="cp.decision.decisionType === 'PASS' ? 'bi-check-circle-fill' : 'bi-exclamation-octagon-fill'"></i>
+                          <span>Quyết định: {{ cp.decision.decisionType === 'PASS' ? 'ĐẠT TIÊU CHUẨN' : 'YÊU CẦU LÀM LẠI' }}</span>
+                        </div>
+                        <div *ngIf="cp.decision.reason" class="kcs-decision-reason mt-1">
+                          <strong>Lý do:</strong> {{ cp.decision.reason }}
+                        </div>
+                      </div>
+
+                      <!-- Action Button when PENDING_REVIEW -->
+                      <div *ngIf="cp.stage === 'FINAL_PRODUCT' && cp.status === 'PENDING_REVIEW'" class="mt-3 pt-2 border-top d-flex justify-content-end" style="border-color: rgba(236, 229, 216, 0.1) !important;">
+                        <button type="button" class="btn btn-warning btn-sm px-4 fw-bold shadow-sm" (click)="openKcsReview(kcsOrder.id)">
+                          <i class="bi bi-shield-check me-1"></i> Kiểm định chất lượng KCS
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       }
 
-      <div class="p-4 border-top">
-        <app-pagination
-          [currentPage]="currentPage"
-          [totalPages]="totalPages"
-          [totalElements]="totalElements"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="pageSizeOptions"
-          [disabled]="isLoading"
-          (pageChange)="changePage($event)"
-          (pageSizeChange)="changePageSize($event)">
-        </app-pagination>
-      </div>
+      @if (activeTab !== 'kcs') {
+        <div class="p-4 border-top">
+          <app-pagination
+            [currentPage]="currentPage"
+            [totalPages]="totalPages"
+            [totalElements]="totalElements"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            [disabled]="isLoading"
+            (pageChange)="changePage($event)"
+            (pageSizeChange)="changePageSize($event)">
+          </app-pagination>
+        </div>
+      }
     </app-view-state>
   </div>
 </div>
@@ -239,13 +507,33 @@
             }
 
             @if (detail.order.status === 'ORDER_CREATING') {
-              <div class="mt-4 p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+              <div class="kcs-status-callout-compact kcs-callout-warning mt-4 w-100">
                 <div>
-                  <strong class="d-block text-dark">Tiến trình kiểm định chất lượng (KCS)</strong>
-                  <span class="small text-muted">Đơn hàng đang sản xuất. Xem ảnh hoàn thiện và thực hiện KCS từng sản phẩm.</span>
+                  <strong class="d-block text-warning">Tiến trình kiểm định chất lượng (KCS)</strong>
+                  <span class="small text-muted">Đơn hàng đang sản xuất. Xem ảnh hoàn thiện và thực hiện duyệt KCS từng sản phẩm.</span>
                 </div>
-                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm" (click)="openKcsReview(detail.order.id)">
+                <button type="button" class="btn btn-warning px-4 fw-bold shadow-sm" (click)="openKcsReview(detail.order.id)">
                   <i class="bi bi-shield-check me-1"></i> Kiểm định KCS
+                </button>
+              </div>
+            } @else if (detail.order.status === 'READY_TO_SHIP') {
+              <div class="kcs-status-callout-compact kcs-callout-success mt-4 w-100">
+                <div>
+                  <strong class="d-block text-success">Đã hoàn tất kiểm định chất lượng (KCS)</strong>
+                  <span class="small text-muted">Tất cả sản phẩm đã đạt chuẩn KCS và sẵn sàng giao hàng.</span>
+                </div>
+                <button type="button" class="btn btn-outline-success px-4 fw-bold shadow-sm" (click)="openKcsReview(detail.order.id)">
+                  <i class="bi bi-check2-circle me-1"></i> Xem lịch sử KCS
+                </button>
+              </div>
+            } @else {
+              <div class="kcs-status-callout-compact mt-4 w-100" style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(236, 229, 216, 0.12);">
+                <div>
+                  <strong class="d-block text-light">Tiến độ sản xuất & Checkpoint</strong>
+                  <span class="small text-muted">Xem ảnh tạo dáng, sản phẩm hoàn thiện và lịch sử kiểm định.</span>
+                </div>
+                <button type="button" class="btn btn-outline-primary px-4 fw-bold shadow-sm" (click)="openKcsReview(detail.order.id)">
+                  <i class="bi bi-eye me-1"></i> Xem Checkpoint & KCS
                 </button>
               </div>
             }
@@ -262,3 +550,14 @@
   (close)="closeKcsDialog()"
   (reviewed)="onKcsReviewed($event)">
 </app-manager-kcs-dialog>
+
+@if (previewImageUrl) {
+  <div class="kcs-lightbox-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style="z-index: 2070;" (click)="closeLightbox()">
+    <div class="position-relative max-w-100 max-h-100" (click)="$event.stopPropagation()">
+      <img [src]="previewImageUrl" alt="Hình ảnh sản phẩm lớn" class="img-fluid rounded-3 shadow-lg" style="max-height: 85vh; max-width: 90vw; object-fit: contain;" />
+      <button class="btn btn-sm btn-light rounded-circle position-absolute top-0 end-0 m-2 shadow" (click)="closeLightbox()" aria-label="Đóng">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+}

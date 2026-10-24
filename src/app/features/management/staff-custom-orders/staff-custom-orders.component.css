@@ -1,0 +1,58 @@
+.staff-custom-orders-page {
+  min-height: calc(100vh - 80px);
+}
+
+.master-card,
+.detail-workspace-card {
+  background: var(--app-surface, #2b251e);
+  border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14)) !important;
+  border-radius: 0 !important;
+}
+
+.master-card {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 170px);
+}
+
+.master-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.detail-workspace-card {
+  min-height: calc(100vh - 170px);
+}
+
+.order-list-item {
+  background: var(--app-surface-muted, #362f26);
+  border-color: var(--app-border, rgba(236, 229, 216, 0.12)) !important;
+  border-radius: 0 !important;
+  transition: all 0.2s ease;
+}
+
+.order-list-item:hover {
+  background: rgba(197, 184, 165, 0.08);
+  border-color: var(--app-primary, #c5b8a5) !important;
+}
+
+.order-list-item.is-selected {
+  background: rgba(197, 184, 165, 0.14);
+  border-color: var(--app-primary, #c5b8a5) !important;
+  box-shadow: inset 4px 0 0 var(--app-primary, #c5b8a5);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+

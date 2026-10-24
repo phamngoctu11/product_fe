@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { CartRes, CheckoutResponse, GuestCheckoutRequest } from '../model/cart.model';
+import { CartRes, CheckoutRequest, CheckoutResponse, GuestCheckoutRequest } from '../model/cart.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
@@ -73,30 +73,18 @@ export class CartService {
       .pipe(map(unwrapApiResponse));
   }
 
-  // ĐÃ SỬA: Giữ nguyên tên hàm acceptCart, thêm paymentMethod vào cuối cùng để không gây lỗi các file khác
-  acceptCart(
-    userId: string,
-    productIds: number[],
-    userVoucherId?: number,
-    paymentMethod: string = 'COD',
-    note:string = '',
-    idempotencyKey?: string,
-  ): Observable<CheckoutResponse> {
-    let params = new HttpParams().set('paymentMethod', paymentMethod)
-    if(note)
-      params = params.set('note',note)
-    if (userVoucherId) {
-      params = params.set('userVoucherId', userVoucherId.toString());
-    }
+  checkout(request: CheckoutRequest, idempotencyKey: string): Observable<CheckoutResponse> {
     const headers = idempotencyKey
       ? new HttpHeaders({ 'Idempotency-Key': idempotencyKey })
       : undefined;
 
-    // Backend đang trả về JSON (có status, url, message) nên KHÔNG dùng responseType: 'text' nữa
-    return this.http.post<ApiResponse<CheckoutResponse> | CheckoutResponse>(`${this.apiUrl}/approve/${userId}`, productIds, {
-      params: params,
-      headers,
-    }).pipe(map(unwrapApiResponse));
+    return this.http
+      .post<ApiResponse<CheckoutResponse> | CheckoutResponse>(
+        `${environment.apiUrl}/checkout`,
+        request,
+        { headers },
+      )
+      .pipe(map(unwrapApiResponse));
   }
 
   private withCartOwner(options: { params?: HttpParams; headers?: HttpHeaders } = {}): { params?: HttpParams; headers?: HttpHeaders } {

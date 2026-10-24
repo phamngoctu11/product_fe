@@ -14,6 +14,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   ApiResponse,
@@ -44,6 +45,8 @@ import { WebsocketService } from '../../../service/websocket.service';
 export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy {
   @Input() order: Order | null = null;
   @Input() mode: 'USER' | 'STAFF' = 'USER';
+  @Input() initialTab: 'agreement' | 'chat' = 'agreement';
+  @Input() onlyChat: boolean = false;
   @Output() orderUpdated = new EventEmitter<void>();
 
   @ViewChild('chatScrollContainer') private chatScrollContainer?: ElementRef<HTMLDivElement>;
@@ -57,6 +60,14 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   // Tabs for mobile / responsive
   activeTab: 'agreement' | 'chat' = 'agreement';
 
+  // WebSocket Live Connection State
+  wsConnected = false;
+  private wsConnectionSub: Subscription | null = null;
+
+  get isWsConnected(): boolean {
+    return this.wsConnected || this.websocketService.isOrderChatConnected();
+  }
+
   // Agreement State
   agreement: OrderAgreement | null = null;
   isLoadingAgreement = false;
@@ -67,9 +78,12 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   // Custom agreement form model
   customDescription = '';
   customImageUrls: string[] = [];
+  customProductTypeName = '';
+  customFieldEntries: { label: string; value: string }[] = [];
   customQuantity = 1;
   customUnitPrice = 0;
   customDurationDays = 3;
+  customPaymentMethod: 'COD' | 'ONLINE' = 'COD';
   customUserVoucherId: number | null = null;
   customNote = '';
   isUploadingImage = false;
@@ -95,7 +109,7 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   isThreadPreparing = false;
   private messageIdSet = new Set<string>();
   private chatUnsubscribe: (() => void) | null = null;
-  private threadRetryCount = 0;
+  threadRetryCount = 0;
   private threadRetryTimeout: any = null;
 
   get currentUserId(): string | number | null {
@@ -103,7 +117,12 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   }
 
   get isGuestOrder(): boolean {
-    return !this.order?.userId || !!this.order?.guestSessionId;
+    if (!this.order) return true;
+    if (this.order.orderType === 'CUSTOM') return false;
+    if (this.order.customer?.guest) return true;
+    if (this.order.guestSessionId) return true;
+    const userId = this.order.userId ?? this.order.user_id ?? this.order.customer?.userId;
+    return !userId;
   }
 
   get isCustomOrder(): boolean {
@@ -159,6 +178,15 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   }
 
   ngOnInit(): void {
+    if (this.onlyChat) {
+      this.activeTab = 'chat';
+    } else if (this.initialTab) {
+      this.activeTab = this.initialTab;
+    }
+    this.wsConnected = this.websocketService.isOrderChatConnected();
+    this.wsConnectionSub = this.websocketService.isConnected$.subscribe((connected) => {
+      this.wsConnected = connected;
+    });
     if (this.order?.id) {
       this.initData();
     }
@@ -182,6 +210,10 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   }
 
   private cleanUpResources(): void {
+    if (this.wsConnectionSub) {
+      this.wsConnectionSub.unsubscribe();
+      this.wsConnectionSub = null;
+    }
     if (this.timerIntervalId) {
       clearInterval(this.timerIntervalId);
       this.timerIntervalId = null;
@@ -198,9 +230,11 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
 
   private initData(): void {
     if (!this.order?.id) return;
-    this.loadAgreement();
+    if (!this.onlyChat) {
+      this.loadAgreement();
+      this.startTimer();
+    }
     this.initChat();
-    this.startTimer();
   }
 
   // ================= AGREEMENT LOGIC =================
@@ -237,6 +271,7 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
       this.customQuantity = 1;
       this.customDurationDays = 3;
       this.customDescription = this.order.note || '';
+      this.customPaymentMethod = this.order.paymentMethod === 'ONLINE' ? 'ONLINE' : 'COD';
       if (this.order.items && this.order.items.length > 0) {
         const first = this.order.items[0];
         if (first.description) this.customDescription = first.description;
@@ -244,6 +279,17 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
         if (first.price) this.customUnitPrice = first.price;
         if (first.productionDurationDays) this.customDurationDays = first.productionDurationDays;
         if (first.imageUrls) this.customImageUrls = [...first.imageUrls];
+        this.customProductTypeName = first.productTypeName || '';
+        const values = first.fieldValues || {};
+        this.customFieldEntries = (first.productTypeFields || [])
+          .filter((field) => values[field.code] !== null && values[field.code] !== undefined && values[field.code] !== '')
+          .map((field) => ({ label: field.label, value: `${Array.isArray(values[field.code]) ? (values[field.code] as unknown[]).join(', ') : values[field.code]}${field.unit ? ` ${field.unit}` : ''}` }));
+        if (first.specSnapshot && !this.customProductTypeName) {
+          try {
+            const snapshot = JSON.parse(first.specSnapshot);
+            this.customProductTypeName = snapshot.productType?.name || '';
+          } catch { /* legacy snapshot */ }
+        }
       }
     }
   }
@@ -257,6 +303,9 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
         if (parsed.unitPrice) this.customUnitPrice = parsed.unitPrice;
         if (parsed.productionDurationDays) this.customDurationDays = parsed.productionDurationDays;
         if (Array.isArray(parsed.imageUrls)) this.customImageUrls = [...parsed.imageUrls];
+        if (parsed.paymentMethod === 'ONLINE' || parsed.paymentMethod === 'COD') {
+          this.customPaymentMethod = parsed.paymentMethod;
+        }
         if (parsed.note) this.customNote = parsed.note;
       } catch {
         // Plain text snapshot
@@ -273,11 +322,6 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   onImageSelected(event: any): void {
     const file: File = event?.target?.files?.[0];
     if (!file) return;
-
-    if (this.customImageUrls.length >= 10) {
-      this.toast.notify('Tối đa 10 ảnh tham khảo.');
-      return;
-    }
 
     this.isUploadingImage = true;
     const formData = new FormData();
@@ -320,6 +364,7 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
       quantity: this.isCustomOrder ? Number(this.customQuantity) : undefined,
       unitPrice: this.isCustomOrder ? Number(this.customUnitPrice) : undefined,
       productionDurationDays: this.isCustomOrder ? Number(this.customDurationDays) : undefined,
+      paymentMethod: this.isCustomOrder ? this.customPaymentMethod : undefined,
       userVoucherId: this.customUserVoucherId || undefined,
       note: this.customNote.trim() || undefined,
     };
@@ -407,11 +452,11 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   }
 
   private updateTimer(): void {
-    const userSubmittedAt = this.order?.userSubmittedAt || this.agreement?.submittedAt;
+    const agreementSubmittedAt = this.agreement?.submittedAt;
     const dueAtStr = this.order?.confirmationDueAt || this.agreement?.confirmationDueAt;
 
     // Rule: Timer stops immediately upon valid submission, does not restart on REQUEST_CHANGES
-    if (userSubmittedAt) {
+    if (agreementSubmittedAt) {
       this.timerStopped = true;
       this.countdownDisplay = '';
       this.timerStoppedText = 'Đã nộp đề xuất thỏa thuận';
@@ -454,12 +499,29 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
 
   // ================= CHAT LOGIC =================
 
+  get hasAssignedStaff(): boolean {
+    if (!this.order) return false;
+    if (this.order.staffId || this.order.staffName) return true;
+    const s = (this.order.status || '').toUpperCase();
+    return s === 'DISCUSSING' || s === 'WAITING_STAFF_CONFIRMATION' || s === 'ORDER_ACCEPTED' || s === 'ORDER_CREATING';
+  }
+
+  refreshOrderState(): void {
+    this.orderUpdated.emit();
+    this.initData();
+  }
+
   private initChat(): void {
     if (!this.order?.id) return;
     this.isLoadingChat = true;
     this.chatError = '';
     this.isThreadPreparing = false;
     this.threadRetryCount = 0;
+
+    if (!this.hasAssignedStaff && this.mode === 'USER') {
+      this.isLoadingChat = false;
+      return;
+    }
 
     this.fetchChatThreadAndMessages();
   }
@@ -470,30 +532,41 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
     this.orderService.getOrderChatThread(this.order.id).subscribe({
       next: (thread: OrderChatThread) => {
         this.isThreadPreparing = false;
+        this.isLoadingChat = false;
+        this.chatError = '';
         this.loadChatMessages();
         this.subscribeChatWs();
       },
       error: (err) => {
-        if (err?.status === 404 && this.threadRetryCount < 3) {
+        if (err?.status === 404 && this.threadRetryCount < 8) {
           // Thread being prepared asynchronously by backend - retry with backoff
           this.isThreadPreparing = true;
           this.threadRetryCount++;
-          const delay = Math.pow(2, this.threadRetryCount - 1) * 1000; // 1s, 2s, 4s
+          const delay = Math.min(3000, 1000 + (this.threadRetryCount - 1) * 500);
           this.threadRetryTimeout = setTimeout(() => {
             this.fetchChatThreadAndMessages();
           }, delay);
         } else {
           this.isLoadingChat = false;
           this.isThreadPreparing = false;
-          this.chatError = getApiErrorMessage(err, 'Không thể kết nối kênh trao đổi.');
+          if (err?.status === 404) {
+            this.chatError = 'Kênh trao đổi đang được tạo bởi hệ thống. Vui lòng thử lại sau giây lát.';
+          } else {
+            this.chatError = getApiErrorMessage(err, 'Không thể kết nối kênh trao đổi.');
+          }
         }
       },
     });
   }
 
-  private loadChatMessages(): void {
+  retryInitChat(): void {
+    this.initChat();
+  }
+
+  loadChatMessages(): void {
     if (!this.order?.id) return;
 
+    this.isLoadingChat = true;
     this.orderService.getOrderChatMessages(this.order.id).subscribe({
       next: (msgs: OrderChatMessage[]) => {
         this.isLoadingChat = false;
@@ -575,6 +648,17 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
   }
 
   isOwnMessage(msg: OrderChatMessage): boolean {
+    if (!msg) return false;
+
+    const role = (msg.senderRole || '').toUpperCase();
+    if (this.mode === 'USER') {
+      if (role === 'STAFF' || role === 'MANAGER') return false;
+      if (role === 'USER') return true;
+    } else if (this.mode === 'STAFF') {
+      if (role === 'USER') return false;
+      if (role === 'STAFF' || role === 'MANAGER') return true;
+    }
+
     if (!this.currentUserId || !msg.senderId) return false;
     return String(msg.senderId) === String(this.currentUserId);
   }
@@ -586,4 +670,3 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
     return 'Khách hàng';
   }
 }
-

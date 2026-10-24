@@ -14,13 +14,17 @@ export interface OrderItem {
   sourceType?: 'CATALOG' | 'CUSTOM' | string | null;
   description?: string | null;
   imageUrls?: string[];
+  productTypeCode?: string | null;
+  productTypeName?: string | null;
+  productTypeVersion?: number | null;
+  productTypeFields?: { code: string; label: string; unit?: string | null }[];
+  fieldValues?: Record<string, unknown>;
   specSnapshot?: string | null;
   specVersion?: number;
   madeDaySnapshot?: number | null;
   productionDurationDays?: number | null;
   durationRuleVersion?: string | null;
   computedCompletionAt?: string | null;
-  handmade?: boolean;
   productionStatus?: string | null;
 
   exportedQuantity?: number | null;
@@ -37,7 +41,6 @@ export interface Order {
   paymentMethodType?: string | null;
   productionStatus?: string | null;
   productionStartedAt?: string | null;
-  plannedStartAt?: string | null;
   userId?: number | string | null;
   user_id?: number | string | null;
   customerName?: string;
@@ -50,7 +53,6 @@ export interface Order {
   discountAmount?: number;
   voucherName?: string;
   startOrderTime: string;
-  endOrderTime: string | null;
   status: string;
   cancelReason: string | null;
   note: string | null;
@@ -68,7 +70,6 @@ export interface Order {
   staffId?: string | null;
   staffName?: string | null;
   confirmationDueAt?: string | null;
-  userSubmittedAt?: string | null;
   currentAgreementVersion?: number | null;
   userVoucherId?: number | null;
 }
@@ -143,8 +144,6 @@ export interface OrderAssignment {
 export interface ManagerOrderReviewDetail {
   order: Order;
   decision?: 'APPROVED' | 'REJECTED' | null;
-  managerApprovedAt?: string | null;
-  managerRejectedAt?: string | null;
   confirmationDueAt?: string | null;
   activeAssignment?: OrderAssignment | null;
 }
@@ -184,49 +183,128 @@ export interface OrderStatusHistory {
   changerId?: number;
 }
 
+// ==========================================
+// PHẦN 12: BÀN GIAO VẬN CHUYỂN, XÁC NHẬN NHẬN HÀNG, REORDER
+// ==========================================
+
+export type OrderType = 'CATALOG' | 'CUSTOM' | string;
+export type OrderStatus =
+  | 'PENDING_APPROVAL'
+  | 'PENDING_ASSIGNMENT'
+  | 'DISCUSSING'
+  | 'WAITING_STAFF_CONFIRMATION'
+  | 'ORDER_ACCEPTED'
+  | 'ORDER_CREATING'
+  | 'READY_TO_SHIP'
+  | 'SHIPPING'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | string;
+
+export interface ShippingHandoverItemRequest {
+  orderItemId: number;
+  exportedQuantity: number;
+}
+
+export interface ShippingHandoverRequest {
+  orderVersion: number;
+  items: ShippingHandoverItemRequest[];
+  handoverNote?: string;
+}
+
+export interface ShippingHandoverItemDTO {
+  orderItemId: number;
+  orderedQuantity: number;
+  exportedQuantity: number;
+}
+
+export interface ShippingHandoverResponse {
+  orderId: number;
+  orderVersion: number;
+  status: OrderStatus | string;
+  shippingStartedAt: string;
+  expectedShippingDays: number;
+  expectedDeliveryAt: string;
+  items: ShippingHandoverItemDTO[];
+}
+
+export interface ReceiptItemDTO {
+  orderItemId: number;
+  variantId?: number | null;
+  productName: string;
+  variantName?: string | null;
+  orderedQuantity: number;
+  exportedQuantity?: number | null;
+  receivedQuantity?: number | null;
+}
+
+export interface ReceiptViewDTO {
+  orderId: number;
+  orderVersion: number;
+  orderType: OrderType | string;
+  status: OrderStatus | string;
+  shippingStartedAt?: string | null;
+  expectedShippingDays: number;
+  expectedDeliveryAt?: string | null;
+  deliveredAt?: string | null;
+  canConfirmReceipt: boolean;
+  dataWarning?: string | null;
+  items: ReceiptItemDTO[];
+}
+
 export interface ItemCheckRequest {
-  variantId: number;
-  quantity: number;
+  orderItemId: number;
+  receivedQuantity: number;
 }
 
 export interface ReceiptConfirmRequest {
+  orderVersion: number;
   receivedItems: ItemCheckRequest[];
-  acceptMismatch: boolean;
-}
-
-export interface ReceiptComplaintRequest {
-  receivedItems: ItemCheckRequest[];
-  note?: string;
+  acceptMismatch?: boolean;
+  note?: string | null;
 }
 
 export interface ReceiptMismatchDTO {
-  variantId: number;
-  variantName: string;
+  orderItemId: number;
+  variantId?: number | null;
+  productName?: string | null;
+  variantName?: string | null;
   orderedQuantity: number;
   exportedQuantity: number;
   receivedQuantity: number;
 }
 
 export interface ReceiptConfirmResponse {
+  orderId: number;
+  orderVersion: number;
+  status: OrderStatus | string;
   matched: boolean;
-  confirmed: boolean;
-  message: string;
-  mismatches: ReceiptMismatchDTO[];
+  completed: boolean;
+  mismatchAccepted: boolean;
+  confirmedAt?: string;
+  message?: string;
+  mismatches?: ReceiptMismatchDTO[];
 }
 
-export interface ReorderItem {
-  variantId: number | null;
-  variantName: string;
+export interface ReorderItemDTO {
+  orderItemId?: number | null;
+  variantId?: number | null;
+  variantName?: string | null;
   quantity: number;
   skipReason?: string | null;
 }
 
-export interface ReorderResponse {
+export interface ReorderResponseDTO {
+  orderType: OrderType | string;
+  customDraftId?: number | null;
   addedItemCount: number;
   skippedItemCount: number;
-  addedItems: ReorderItem[];
-  skippedItems: ReorderItem[];
+  addedItems: ReorderItemDTO[];
+  skippedItems: ReorderItemDTO[];
 }
+
+export type ReorderResponse = ReorderResponseDTO;
+export type ReorderItem = ReorderItemDTO;
 
 export type OrderAgreementStatus = 'DRAFT' | 'USER_SUBMITTED' | 'CHANGES_REQUESTED' | 'STAFF_CONFIRMED' | string;
 export type OrderAgreementDecision = 'CONFIRM' | 'REQUEST_CHANGES';
@@ -261,6 +339,7 @@ export interface SubmitOrderAgreementRequest {
   quantity?: number | null;
   unitPrice?: number | null;
   productionDurationDays?: number | null;
+  paymentMethod?: 'COD' | 'ONLINE' | null;
   userVoucherId?: number | null;
   note?: string | null;
 }
@@ -339,11 +418,6 @@ export interface ItemDeadline {
   orderItemId: number;
   productionDurationDays: number;
   computedCompletionAt: string;
-}
-
-export interface StartProductionRequest {
-  orderVersion: number;
-  lateStartReason?: string | null;
 }
 
 export interface StartProductionResult {

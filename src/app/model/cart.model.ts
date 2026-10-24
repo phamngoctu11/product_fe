@@ -36,6 +36,13 @@ export interface CheckoutResponse extends CartPaymentData {
   guestWorkflowStatus?: 'PENDING_START' | 'STARTED' | 'START_FAILED';
 }
 
+export interface CheckoutRequest {
+  variantIds: number[];
+  userVoucherId?: number;
+  paymentMethod: 'COD' | 'ONLINE';
+  note?: string;
+}
+
 export interface GuestCheckoutRequest {
   customerName: string;
   phone: string;

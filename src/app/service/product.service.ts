@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BestSellingProduct, Product, PageResponse, ProductVariant, ProductAvailabilityStatus } from '../model/product.model';
+import { ProductTypeField, ProductTypeOption } from '../model/custom-request.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
 
@@ -11,6 +12,7 @@ export interface ProductQueryParams {
   minPrice?: number | null;
   maxPrice?: number | null;
 }
+export interface SaveProductType { code: string; name: string; description?: string; fields: ProductTypeField[]; active: boolean; }
 
 @Injectable({
   providedIn: 'root',
@@ -19,10 +21,9 @@ export class ProductService {
   private apiUrl = `${environment.apiUrl}/products`;
   constructor(private http: HttpClient) {}
 
-  create(product: Product, userId: string): Observable<Product> {
-    const params = new HttpParams().set('userId', userId.toString());
+  create(product: Product): Observable<Product> {
     return this.http
-      .post<ApiResponse<Product> | Product>(this.apiUrl, product, { params })
+      .post<ApiResponse<Product> | Product>(this.apiUrl, product)
       .pipe(map(unwrapApiResponse));
   }
 
@@ -45,6 +46,17 @@ export class ProductService {
       .pipe(map(unwrapApiResponse));
   }
 
+  getProductTypes(management = false): Observable<ProductTypeOption[]> {
+    const path = management ? '/product-types/management' : '/product-types';
+    return this.http.get<ApiResponse<ProductTypeOption[]>>(`${environment.apiUrl}${path}`).pipe(map(unwrapApiResponse));
+  }
+
+  saveProductType(type: SaveProductType, id?: number): Observable<ProductTypeOption> {
+    const request = id ? this.http.put<ApiResponse<ProductTypeOption>>(`${environment.apiUrl}/product-types/${id}`, type)
+      : this.http.post<ApiResponse<ProductTypeOption>>(`${environment.apiUrl}/product-types`, type);
+    return request.pipe(map(unwrapApiResponse));
+  }
+
   getBestSelling(period: string = 'day', page: number = 0, size: number = 5): Observable<BestSellingProduct[]> {
     const params = new HttpParams()
       .set('period', period)
@@ -60,29 +72,15 @@ export class ProductService {
       );
   }
 
-  update(id: number, product: Product, userId: string): Observable<Product> {
-    const params = new HttpParams().set('userId', userId.toString());
+  update(id: number, product: Product): Observable<Product> {
     return this.http
-      .put<ApiResponse<Product> | Product>(`${this.apiUrl}/${id}`, product, { params })
+      .put<ApiResponse<Product> | Product>(`${this.apiUrl}/${id}`, product)
       .pipe(map(unwrapApiResponse));
   }
 
-  updateStaffInfo(id: number, product: Pick<Product, 'product_name' | 'price' | 'tags' | 'image_url'>): Observable<void> {
+  addVariant(productId: number, variant: ProductVariant): Observable<Product> {
     return this.http
-      .patch<ApiResponse<void> | void>(`${this.apiUrl}/${id}/staff-info`, product)
-      .pipe(map(unwrapApiResponse));
-  }
-
-  updateAvailability(id: number, availabilityStatus: ProductAvailabilityStatus): Observable<void> {
-    return this.http
-      .patch<ApiResponse<void> | void>(`${this.apiUrl}/${id}/availability`, { availabilityStatus })
-      .pipe(map(unwrapApiResponse));
-  }
-
-  addVariant(productId: number, variant: ProductVariant, userId: string): Observable<Product> {
-    const params = new HttpParams().set('userId', userId.toString());
-    return this.http
-      .post<ApiResponse<Product> | Product>(`${this.apiUrl}/${productId}/variants`, variant, { params })
+      .post<ApiResponse<Product> | Product>(`${this.apiUrl}/${productId}/variants`, variant)
       .pipe(map(unwrapApiResponse));
   }
 
@@ -91,8 +89,7 @@ export class ProductService {
       .get<ApiResponse<Product> | Product>(`${this.apiUrl}/${id}`)
       .pipe(map(unwrapApiResponse));
   }
-  delete(id: number, userId: string): Observable<string> {
-    const params = new HttpParams().set('userId', userId.toString());
-    return this.http.delete<string>(`${this.apiUrl}/${id}`, { params, responseType: 'text' as 'json' });
+  delete(id: number): Observable<string> {
+    return this.http.delete<string>(`${this.apiUrl}/${id}`, { responseType: 'text' as 'json' });
   }
 }

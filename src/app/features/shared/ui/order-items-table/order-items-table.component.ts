@@ -6,6 +6,7 @@ import { OrderItem } from '../../../../model/order.model';
 export type OrderItemsMode = 'readonly' | 'receipt';
 
 export interface OrderItemQuantityChange {
+  orderItemId?: number;
   variantId: number;
   quantity: number;
 }
@@ -32,13 +33,18 @@ export class OrderItemsTableComponent {
     return this.isReceipt ? 6 : 5;
   }
 
+  getOrderItemId(item: OrderItem): number {
+    return Number(item.orderItemId || item.id || 0);
+  }
+
   getVariantId(item: OrderItem): number {
     return Number(item.variantId || item.productVariantId || 0);
   }
 
   getQuantity(item: OrderItem): number {
+    const orderItemId = this.getOrderItemId(item);
     const variantId = this.getVariantId(item);
-    return Number(this.quantities[variantId] ?? item.quantity ?? 0);
+    return Number(this.quantities[orderItemId] ?? this.quantities[variantId] ?? item.exportedQuantity ?? item.quantity ?? 0);
   }
 
   getImage(item: OrderItem): string {
@@ -50,8 +56,11 @@ export class OrderItemsTableComponent {
   }
 
   updateQuantity(item: OrderItem, value: number | string): void {
+    const orderItemId = this.getOrderItemId(item);
+    const variantId = this.getVariantId(item);
     this.quantityChange.emit({
-      variantId: this.getVariantId(item),
+      orderItemId,
+      variantId,
       quantity: Math.max(0, Number(value || 0)),
     });
   }

@@ -107,6 +107,12 @@
           </div>
         </div>
 
+        <div *ngIf="receiptMode && dataWarning" class="alert alert-warning py-2 px-3 small mb-3">
+          <i class="bi bi-info-circle me-1"></i>Dữ liệu số lượng xuất kho được đồng bộ từ dữ liệu cũ (legacy fallback).
+        </div>
+        <div *ngIf="receiptMode && !canConfirmReceipt" class="alert alert-secondary py-2 px-3 small mb-3">
+          <i class="bi bi-hourglass me-1"></i>Đơn hàng chưa ở trạng thái sẵn sàng để xác nhận nhận hàng.
+        </div>
         <div *ngIf="receiptMode && receiptError" class="alert alert-warning">
           {{ receiptError }}
         </div>
@@ -264,13 +270,15 @@
           </div>
         </section>
 
-        <div *ngIf="receiptMode && receiptResponse && !receiptResponse.confirmed && receiptResponse.mismatches?.length" class="border rounded-3 p-3 mt-4 bg-light">
-          <div class="fw-bold text-danger mb-3">Số lượng thực nhận đang lệch với số lượng xuất kho</div>
+        <div *ngIf="receiptMode && receiptResponse && !receiptResponse.completed && receiptResponse.mismatches?.length" class="border rounded-3 p-3 mt-4 bg-light">
+          <div class="fw-bold text-danger mb-3">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>Số lượng thực nhận đang lệch so với số lượng xuất kho
+          </div>
           <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
               <thead>
                 <tr>
-                  <th>Variant</th>
+                  <th>Sản phẩm</th>
                   <th class="text-center">Đặt</th>
                   <th class="text-center">Xuất</th>
                   <th class="text-center">Thực nhận</th>
@@ -279,8 +287,8 @@
               <tbody>
                 <tr *ngFor="let mismatch of receiptResponse.mismatches">
                   <td>
-                    <div class="fw-semibold">{{ mismatch.variantName || 'Variant #' + mismatch.variantId }}</div>
-                    <div class="text-muted small">ID: {{ mismatch.variantId }}</div>
+                    <div class="fw-semibold">{{ mismatch.productName || mismatch.variantName || 'Item #' + mismatch.orderItemId }}</div>
+                    <div class="text-muted small" *ngIf="mismatch.variantName && mismatch.variantName !== mismatch.productName">{{ mismatch.variantName }}</div>
                   </td>
                   <td class="text-center">{{ mismatch.orderedQuantity }}</td>
                   <td class="text-center">{{ mismatch.exportedQuantity }}</td>
@@ -289,48 +297,28 @@
               </tbody>
             </table>
           </div>
-
-          <label class="form-label fw-bold mt-3">Ghi chú khiếu nại</label>
-          <textarea class="form-control"
-                    rows="3"
-                    maxlength="1000"
-                    [ngModel]="complaintNote"
-                    (ngModelChange)="complaintNoteChange.emit($event)"
-                    placeholder="Ví dụ: Khách chỉ nhận được 1 sản phẩm..."></textarea>
+          <div class="text-muted small mt-2">
+            Vui lòng kiểm tra lại số lượng hoặc chọn "Xác nhận chấp nhận chênh lệch" để hoàn tất đơn hàng.
+          </div>
         </div>
 
         <div *ngIf="receiptMode" class="d-flex flex-wrap justify-content-end gap-2 mt-4">
           <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="close.emit()" [disabled]="isSubmittingReceipt">
             Đóng
           </button>
-          <button *ngIf="receiptResponse && !receiptResponse.confirmed && receiptResponse.mismatches?.length"
-                  class="btn btn-outline-danger rounded-pill px-4 fw-bold"
-                  (click)="sendComplaint.emit()"
-                  [disabled]="isSubmittingReceipt">
-            Gửi khiếu nại
-          </button>
-          <button *ngIf="receiptResponse && !receiptResponse.confirmed && receiptResponse.mismatches?.length"
+          <button *ngIf="receiptResponse && !receiptResponse.completed && receiptResponse.mismatches?.length"
                   class="btn btn-warning rounded-pill px-4 fw-bold"
                   (click)="submitReceipt.emit(true)"
                   [disabled]="isSubmittingReceipt">
-            Vẫn xác nhận nhận hàng
+            <i class="bi bi-check-circle me-1"></i>Xác nhận chấp nhận chênh lệch
           </button>
           <button class="btn btn-primary rounded-pill px-4 fw-bold"
                   (click)="submitReceipt.emit(false)"
-                  [disabled]="isSubmittingReceipt || !orderDetail.items || orderDetail.items.length === 0">
+                  [disabled]="isSubmittingReceipt || !canConfirmReceipt || !orderDetail.items || orderDetail.items.length === 0">
             <span *ngIf="!isSubmittingReceipt">Xác nhận số lượng</span>
             <span *ngIf="isSubmittingReceipt">Đang xử lý...</span>
           </button>
         </div>
-
-        <!-- P8 Order Collaboration Panel (Agreement & Chat) -->
-        <section *ngIf="canShowCollaboration(orderDetail)" class="mt-4">
-          <app-order-collaboration
-            [order]="orderDetail"
-            mode="USER"
-            (orderUpdated)="orderUpdated.emit()">
-          </app-order-collaboration>
-        </section>
 
         <div *ngIf="!receiptMode" class="d-flex flex-wrap justify-content-end align-items-center gap-2 mt-4 pt-3 border-top">
           <button *ngIf="canPayOrder(orderDetail)"

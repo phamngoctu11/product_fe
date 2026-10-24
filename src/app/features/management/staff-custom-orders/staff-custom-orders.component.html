@@ -1,0 +1,126 @@
+<div class="staff-custom-orders-page container-fluid py-3">
+  <app-page-header
+    icon="bi-chat-heart-fill"
+    title="Trao đổi custom"
+    subtitle="Thảo luận mẫu thiết kế, thỏa thuận giá và cập nhật tiến độ sản xuất trực tuyến với khách hàng">
+    <button pageActions class="btn btn-outline-primary px-4 fw-bold" (click)="loadOrders(); onOrderUpdated()" [disabled]="isLoadingList">
+      <i class="bi bi-arrow-clockwise me-1" [class.spin]="isLoadingList"></i>Làm mới
+    </button>
+  </app-page-header>
+
+  <div class="row g-4 mt-1">
+    <!-- Left Column: Master List of Custom Orders -->
+    <aside class="col-12 col-xl-4 col-lg-5">
+      <div class="card border-0 h-100 master-card">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="color: var(--app-text, #ece5d8);">
+              <i class="bi bi-chat-square-text text-primary"></i>
+              Danh sách đơn trao đổi
+            </h5>
+            <span class="badge" style="background: rgba(197, 184, 165, 0.15); color: #c5b8a5; border: 1px solid rgba(197, 184, 165, 0.3);">
+              {{ filteredOrders.length }} đơn
+            </span>
+          </div>
+
+          <!-- Filter by Status using <select> -->
+          <div class="status-filter-wrapper mb-2">
+            <label class="form-label small fw-bold text-muted mb-1 d-flex align-items-center gap-1">
+              <i class="bi bi-funnel"></i> Lọc trạng thái đơn:
+            </label>
+            <select class="form-select form-select-sm" [(ngModel)]="statusFilter">
+              <option value="ALL">Tất cả trạng thái ({{ customOrders.length }})</option>
+              <option value="DISCUSSING">Đang trao đổi</option>
+              <option value="WAITING_STAFF_CONFIRMATION">Chờ nhân viên xác nhận</option>
+              <option value="ORDER_ACCEPTED">Đã chốt thỏa thuận</option>
+              <option value="ORDER_CREATING">Đang sản xuất</option>
+              <option value="DELIVERED">Đã giao hàng</option>
+              <option value="CANCELLED">Đã hủy</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card-body px-3 py-2 master-body">
+          <app-view-state [loading]="isLoadingList" loadingText="Đang tải danh sách đơn trao đổi...">
+            <div *ngIf="customOrders.length === 0" class="text-center py-5 px-3">
+              <div class="mb-3">
+                <i class="bi bi-inboxes text-muted opacity-50" style="font-size: 3rem;"></i>
+              </div>
+              <h6 class="fw-bold mb-1" style="color: var(--app-text, #ece5d8);">Chưa có đơn đặt riêng</h6>
+              <p class="text-muted small mb-0">
+                Hiện tại bạn chưa được phân công phụ trách đơn custom nào.
+              </p>
+            </div>
+
+            <div *ngIf="customOrders.length > 0 && filteredOrders.length === 0" class="text-center py-4 text-muted small">
+              <i class="bi bi-search fs-3 d-block mb-2 opacity-50"></i>
+              Không có đơn nào phù hợp với bộ lọc trạng thái được chọn.
+            </div>
+
+            <!-- List items -->
+            <div class="custom-orders-list d-flex flex-column gap-2">
+              @for (order of filteredOrders; track order.id) {
+                <div
+                  class="order-list-item p-3 border transition-all cursor-pointer"
+                  [class.is-selected]="selectedOrderId === order.id"
+                  (click)="selectOrder(order)">
+                  <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                    <div>
+                      <span class="text-primary fw-bold fs-6">#{{ order.id }}</span>
+                      <span class="badge ms-2 small" style="background: rgba(197, 184, 165, 0.15); color: #c5b8a5; border: 1px solid rgba(197, 184, 165, 0.3);">Custom</span>
+                    </div>
+                    <app-order-status-badge
+                      [status]="order.status"
+                      [paymentStatus]="order.paymentStatus"
+                      [paymentMethod]="order.paymentMethod"
+                      [compact]="true">
+                    </app-order-status-badge>
+                  </div>
+
+                  <div class="small text-muted mb-1 d-flex align-items-center justify-content-between">
+                    <span><i class="bi bi-calendar3 me-1"></i>{{ order.startOrderTime | date: 'dd/MM/yyyy HH:mm' }}</span>
+                    <strong class="text-danger fs-6">{{ order.finalPrice != null ? (order.finalPrice | number: '1.0-0') + ' đ' : 'Chưa chốt giá' }}</strong>
+                  </div>
+
+                  <div *ngIf="order.customerName" class="small text-muted d-flex align-items-center gap-1">
+                    <i class="bi bi-person text-primary"></i>
+                    <span>Khách hàng: <strong>{{ order.customerName }}</strong></span>
+                  </div>
+                </div>
+              }
+            </div>
+          </app-view-state>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Column: Dedicated Large Workspace for Order Collaboration -->
+    <main class="col-12 col-xl-8 col-lg-7">
+      <div class="card border-0 h-100 detail-workspace-card overflow-hidden">
+        @if (isLoadingDetail) {
+          <div class="text-center py-5 my-5 text-muted">
+            <span class="spinner-border spinner-border-lg text-primary mb-3" style="width: 3rem; height: 3rem;"></span>
+            <h5 class="fw-bold">Đang tải phòng trao đổi đơn #{{ selectedOrderId }}...</h5>
+            <p class="small text-muted">Hệ thống đang kết nối dữ liệu thỏa thuận và kênh chat trực tuyến.</p>
+          </div>
+        } @else if (selectedOrder) {
+          <!-- Full-featured Order Collaboration in Large Window -->
+          <app-order-collaboration
+            [order]="selectedOrder"
+            mode="STAFF"
+            (orderUpdated)="onOrderUpdated()">
+          </app-order-collaboration>
+        } @else {
+          <!-- Empty detail state -->
+          <div class="text-center py-5 my-5 px-4">
+            <i class="bi bi-chat-square-text text-muted opacity-25" style="font-size: 5rem;"></i>
+            <h5 class="fw-bold mt-3 mb-2" style="color: var(--app-text, #ece5d8);">Chọn đơn hàng để bắt đầu trao đổi</h5>
+            <p class="text-muted small mx-auto" style="max-width: 420px;">
+              Chọn một đơn hàng từ danh sách bên trái để xem tiến độ thỏa thuận, phản hồi yêu cầu của khách và nhắn tin trao đổi trực tiếp.
+            </p>
+          </div>
+        }
+      </div>
+    </main>
+  </div>
+</div>

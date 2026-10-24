@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { DashboardService } from '../../../service/dashboard.service';
@@ -226,8 +227,19 @@ export class AdminDashboard implements OnInit {
 
   constructor(
     private dashboardService: DashboardService,
-    private productService: ProductService
+    private productService: ProductService,
+    private router: Router
   ) {}
+
+  navigateToStatus(key: keyof DashboardStats): void {
+    if (key === 'pendingKCS') {
+      this.router.navigate(['/management/admin-orders'], { queryParams: { tab: 'kcs' } });
+    } else if (key === 'pendingAP') {
+      this.router.navigate(['/management/admin-orders'], { queryParams: { tab: 'reviews' } });
+    } else if (key === 'pendingWH') {
+      this.router.navigate(['/management/admin-orders'], { queryParams: { tab: 'assignments' } });
+    }
+  }
 
   ngOnInit(): void {
     this.loadStats();

@@ -10,6 +10,7 @@
     <nav class="sf-navbar__nav" aria-label="Điều hướng cửa hàng">
       <a class="sf-navbar__link" routerLink="/store/product" routerLinkActive="sf-navbar__link--active" [routerLinkActiveOptions]="{ exact: true }">Cửa hàng</a>
       <a class="sf-navbar__link" routerLink="/store/custom-requests" routerLinkActive="sf-navbar__link--active">Đặt làm riêng</a>
+      <a *ngIf="isCustomerSession" class="sf-navbar__link" routerLink="/store/custom-orders" routerLinkActive="sf-navbar__link--active">Trao đổi custom</a>
       <a class="sf-navbar__link" routerLink="/store/about" routerLinkActive="sf-navbar__link--active">Giới thiệu</a>
       <a class="sf-navbar__link" routerLink="/store/help/contact-support" routerLinkActive="sf-navbar__link--active">Liên hệ</a>
     </nav>
@@ -83,6 +84,7 @@
             <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/myinfor"><i class="bi bi-person-badge"></i>Thông tin cá nhân</a></li>
             <li><button class="dropdown-item sf-dropdown__item" type="button" (click)="openRewards()"><i class="bi bi-gift-fill"></i>Đổi voucher</button></li>
             <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/orders"><i class="bi bi-receipt-cutoff"></i>Đơn hàng của tôi</a></li>
+            <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/custom-orders"><i class="bi bi-chat-heart-fill"></i>Trao đổi custom</a></li>
             <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/cart"><i class="bi bi-bag-check-fill"></i>Giỏ hàng</a></li>
             <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/wishlist"><i class="bi bi-heart-fill"></i>Yêu thích</a></li>
             <li><a class="dropdown-item sf-dropdown__item" routerLink="/store/custom-requests"><i class="bi bi-pencil-square"></i>Tạo yêu cầu custom</a></li>
@@ -124,6 +126,10 @@
         </a>
         <a class="sf-navbar__drawer-link" routerLink="/store/custom-requests" (click)="closeMobileMenu()">
           <span>Đặt làm riêng</span>
+          <i class="bi bi-arrow-right"></i>
+        </a>
+        <a *ngIf="isCustomerSession" class="sf-navbar__drawer-link" routerLink="/store/custom-orders" (click)="closeMobileMenu()">
+          <span>Trao đổi custom</span>
           <i class="bi bi-arrow-right"></i>
         </a>
         <a class="sf-navbar__drawer-link" routerLink="/store/about" (click)="closeMobileMenu()">

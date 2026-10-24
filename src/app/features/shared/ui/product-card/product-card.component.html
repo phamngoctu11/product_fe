@@ -42,8 +42,8 @@
     </h2>
 
     <div class="mb-2 d-flex flex-wrap gap-1">
-      @if (product.tags) {
-        <span class="badge tag-badge rounded-pill">{{ product.tags }}</span>
+      @if (product.tags?.length) {
+        <span class="badge tag-badge rounded-pill">{{ product.tags?.join(', ') }}</span>
       }
       @if (product.variants?.length) {
         <span class="badge meta-badge rounded-pill">

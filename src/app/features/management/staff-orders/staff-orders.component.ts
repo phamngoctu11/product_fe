@@ -3,10 +3,18 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { ToastService } from '../../../service/toast.service';
 import { FormsModule } from '@angular/forms';
-import { Order, OrderAssignmentQueueItem, OrderItem, OrderListDTO } from '../../../model/order.model';
+import {
+  Order,
+  OrderAssignmentQueueItem,
+  OrderItem,
+  OrderListDTO,
+  ShippingHandoverItemRequest,
+  ShippingHandoverRequest,
+  ShippingHandoverResponse,
+} from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderService } from '../../../service/order.service';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   AppPaginationComponent,
   OrderItemsTableComponent,
@@ -43,9 +51,14 @@ export class StaffOrdersComponent implements OnInit {
   private readonly actionDialog = inject(ActionDialogService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router, { optional: true });
   claimableOrders: OrderAssignmentQueueItem[] = [];
   myOrders: OrderListDTO[] = [];
-  activeTab: 'pending' | 'mine' = 'pending';
+  activeTab: 'in_progress' | 'completed' | 'claimable' = 'in_progress';
+
+  inProgressStatusFilter = 'ALL';
+  completedStatusFilter = 'ALL';
+  claimableFilter = 'ALL';
 
   isLoading = false;
   pendingPage = 0;
@@ -60,20 +73,72 @@ export class StaffOrdersComponent implements OnInit {
   selectedOrder: Order | null = null;
   detailLoading = false;
 
+  chatOrder: Order | null = null;
+  showChatModal = false;
+  isChatOrderLoading = false;
+
   isStartingProduction = false;
   showStartProductionModal = false;
-  lateStartReason = '';
+  startingOrder: Order | null = null;
   startProductionKey: string | null = null;
 
+  isHandingOver = false;
+  showHandoverModal = false;
+  handoverOrder: Order | null = null;
+  handoverQuantities: { [orderItemId: number]: number } = {};
+  handoverNote = '';
+  handoverKey: string | null = null;
+
   constructor(private orderService: OrderService) {}
+
+  get inProgressOrders(): OrderListDTO[] {
+    const active = this.myOrders.filter((o) => {
+      const status = (o.status || '').toUpperCase();
+      return !['DELIVERED', 'CANCELLED'].includes(status);
+    });
+    if (this.inProgressStatusFilter === 'ALL') {
+      return active;
+    }
+    return active.filter((o) => (o.status || '').toUpperCase() === this.inProgressStatusFilter);
+  }
+
+  get completedOrders(): OrderListDTO[] {
+    const finished = this.myOrders.filter((o) => {
+      const status = (o.status || '').toUpperCase();
+      return ['DELIVERED', 'CANCELLED'].includes(status);
+    });
+    if (this.completedStatusFilter === 'ALL') {
+      return finished;
+    }
+    return finished.filter((o) => (o.status || '').toUpperCase() === this.completedStatusFilter);
+  }
+
+  get filteredClaimableOrders(): OrderAssignmentQueueItem[] {
+    if (this.claimableFilter === 'ALL') {
+      return this.claimableOrders;
+    }
+    return this.claimableOrders.filter((o) => (o.orderType || '').toUpperCase() === this.claimableFilter);
+  }
+
+  get totalInProgressCount(): number {
+    return this.myOrders.filter((o) => !['DELIVERED', 'CANCELLED'].includes((o.status || '').toUpperCase())).length;
+  }
+
+  get totalCompletedCount(): number {
+    return this.myOrders.filter((o) => ['DELIVERED', 'CANCELLED'].includes((o.status || '').toUpperCase())).length;
+  }
 
   ngOnInit(): void {
     this.loadData();
     this.route.queryParams.subscribe((params) => {
       const orderId = Number(params['orderId']);
       if (Number.isInteger(orderId) && orderId > 0) {
-        this.activeTab = 'mine';
-        this.openOrderDetailById(orderId);
+        this.activeTab = 'in_progress';
+        if (params['action'] === 'chat' || params['chat'] === 'true') {
+          this.openOrderChatById(orderId);
+        } else {
+          this.openOrderDetailById(orderId);
+        }
       }
     });
   }
@@ -172,7 +237,7 @@ export class StaffOrdersComponent implements OnInit {
       this.orderService.claimOrder(order.orderId, order.orderVersion).subscribe({
         next: (result) => {
           this.toast.notify(`Đã nhận đơn #${order.orderId} – trạng thái ${result.orderStatus}.`);
-          this.activeTab = 'mine';
+          this.activeTab = 'in_progress';
           this.loadData();
         },
         error: (err) => {
@@ -188,8 +253,59 @@ export class StaffOrdersComponent implements OnInit {
     });
   }
 
-  openOrderDetail(order: OrderListDTO): void {
-    this.openOrderDetailById(order.id, order.staffName);
+  openOrderChat(order: OrderListDTO | Order): void {
+    if (this.router) {
+      this.router.navigate(['/management/staff-custom-orders'], { queryParams: { orderId: order.id } });
+    }
+    this.openOrderChatById(order.id, (order as any).staffName);
+  }
+
+  openOrderChatById(orderId: number, fallbackStaffName?: string | null): void {
+    if (!orderId) return;
+    this.showChatModal = true;
+    this.isChatOrderLoading = true;
+    this.chatOrder = null;
+    this.orderService.getById(orderId).subscribe({
+      next: (detail) => {
+        this.chatOrder = {
+          ...detail,
+          staffName: detail.staffName || fallbackStaffName || null,
+        };
+        this.isChatOrderLoading = false;
+      },
+      error: (err) => {
+        this.toast.notify('Không thể tải thông tin đơn hàng để mở chat: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        this.isChatOrderLoading = false;
+        this.showChatModal = false;
+      },
+    });
+  }
+
+  closeOrderChat(): void {
+    this.showChatModal = false;
+    this.chatOrder = null;
+    this.isChatOrderLoading = false;
+  }
+
+  switchToFullDetailFromChat(): void {
+    const order = this.chatOrder;
+    this.closeOrderChat();
+    if (order) {
+      this.selectedOrder = order;
+    }
+  }
+
+  scrollToSection(sectionId: string): void {
+    setTimeout(() => {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
+
+  openOrderDetail(order: OrderListDTO | Order): void {
+    this.openOrderDetailById(order.id, (order as any).staffName);
   }
 
   private openOrderDetailById(orderId: number, fallbackStaffName?: string | null): void {
@@ -213,16 +329,30 @@ export class StaffOrdersComponent implements OnInit {
   closeOrderDetail(): void {
     this.selectedOrder = null;
     this.detailLoading = false;
+    this.showStartProductionModal = false;
+    this.startingOrder = null;
+    this.showHandoverModal = false;
+    this.handoverOrder = null;
+    this.handoverKey = null;
   }
 
   refreshSelectedOrder(): void {
-    if (!this.selectedOrder?.id) return;
-    this.orderService.getById(this.selectedOrder.id).subscribe({
+    const targetId = this.selectedOrder?.id || this.chatOrder?.id;
+    if (!targetId) return;
+    this.orderService.getById(targetId).subscribe({
       next: (detail) => {
-        this.selectedOrder = {
-          ...detail,
-          staffName: detail.staffName || this.selectedOrder?.staffName || null,
-        };
+        if (this.selectedOrder?.id === targetId) {
+          this.selectedOrder = {
+            ...detail,
+            staffName: detail.staffName || this.selectedOrder?.staffName || null,
+          };
+        }
+        if (this.chatOrder?.id === targetId) {
+          this.chatOrder = {
+            ...detail,
+            staffName: detail.staffName || this.chatOrder?.staffName || null,
+          };
+        }
       },
     });
   }
@@ -239,45 +369,37 @@ export class StaffOrdersComponent implements OnInit {
     return order.paymentMethod === 'ONLINE' && order.paymentStatus !== 'PAID';
   }
 
-  isPlannedStartOverdue(order: Order | null): boolean {
-    if (!order?.plannedStartAt) return false;
-    return Date.now() > new Date(order.plannedStartAt).getTime();
-  }
-
   openStartProductionDialog(): void {
     if (!this.selectedOrder || !this.canStartProduction(this.selectedOrder)) return;
-    this.lateStartReason = '';
+    this.startingOrder = this.selectedOrder;
     this.showStartProductionModal = true;
   }
 
   closeStartProductionDialog(): void {
     this.showStartProductionModal = false;
-    this.lateStartReason = '';
+    this.startingOrder = null;
   }
 
   confirmStartProduction(): void {
-    if (!this.selectedOrder?.id || this.isStartingProduction) return;
+    const order = this.startingOrder || this.selectedOrder;
+    if (!order?.id || this.isStartingProduction) return;
 
     this.isStartingProduction = true;
     if (!this.startProductionKey) {
       this.startProductionKey = this.orderService.generateIdempotencyKey(
         'staff-start-production',
-        this.selectedOrder.id
+        order.id
       );
     }
 
-    const req = {
-      orderVersion: this.selectedOrder.version ?? 0,
-      lateStartReason: this.lateStartReason.trim() || undefined,
-    };
-
-    this.orderService.startProduction(this.selectedOrder.id, req, this.startProductionKey).subscribe({
+    this.orderService.startProduction(order.id, this.startProductionKey).subscribe({
       next: (res) => {
         this.isStartingProduction = false;
         this.startProductionKey = null;
         this.showStartProductionModal = false;
+        this.startingOrder = null;
 
-        if (this.selectedOrder) {
+        if (this.selectedOrder && this.selectedOrder.id === res.orderId) {
           this.selectedOrder.status = res.status;
           this.selectedOrder.productionStartedAt = res.productionStartedAt;
           this.selectedOrder.version = res.orderVersion;
@@ -315,6 +437,134 @@ export class StaffOrdersComponent implements OnInit {
     });
   }
 
+  canHandoverShipping(order: Order | OrderListDTO | null): boolean {
+    if (!order) return false;
+    return (order.status || '').toUpperCase() === 'READY_TO_SHIP';
+  }
+
+  canShowChangeRequests(order: Order | null): boolean {
+    if (!order || this.activeTab === 'claimable') return false;
+    return ['ORDER_ACCEPTED', 'ORDER_CREATING'].includes((order.status || '').toUpperCase());
+  }
+
+  openShippingHandoverDialog(order?: Order | OrderListDTO | null): void {
+    const target = order || this.selectedOrder;
+    if (!target || !this.canHandoverShipping(target)) return;
+
+    if (!('items' in target) || !target.items) {
+      this.orderService.getById(target.id).subscribe({
+        next: (detail) => {
+          this.selectedOrder = detail;
+          this.setupHandoverModal(detail);
+        },
+        error: (err) => {
+          this.toast.notify('Không thể tải thông tin đơn hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
+        },
+      });
+      return;
+    }
+
+    this.setupHandoverModal(target as Order);
+  }
+
+  getHandoverItemKey(item: OrderItem): number {
+    return Number(item.orderItemId || item.id || 0);
+  }
+
+  private setupHandoverModal(order: Order): void {
+    this.handoverOrder = order;
+    this.handoverNote = '';
+    this.handoverQuantities = {};
+    this.handoverKey = null;
+
+    const items = order.items || order.orderItems || order.details || [];
+    items.forEach((item) => {
+      const itemId = Number(item.orderItemId || item.id);
+      this.handoverQuantities[itemId] = Number(item.quantity || 0);
+    });
+
+    this.showHandoverModal = true;
+  }
+
+  closeShippingHandoverDialog(): void {
+    this.showHandoverModal = false;
+    this.handoverOrder = null;
+    this.handoverQuantities = {};
+    this.handoverNote = '';
+    this.handoverKey = null;
+    this.isHandingOver = false;
+  }
+
+  confirmShippingHandover(): void {
+    const order = this.handoverOrder || this.selectedOrder;
+    if (!order?.id || this.isHandingOver) return;
+
+    const items = order.items || order.orderItems || order.details || [];
+    if (items.length === 0) {
+      this.toast.notify('Đơn hàng không có sản phẩm để bàn giao.');
+      return;
+    }
+
+    for (const item of items) {
+      const itemId = Number(item.orderItemId || item.id);
+      const qty = this.handoverQuantities[itemId];
+      if (qty === undefined || qty === null || qty < 0 || qty > item.quantity) {
+        this.toast.notify(`Số lượng xuất kho của ${item.productName || 'sản phẩm'} phải từ 0 đến ${item.quantity}.`);
+        return;
+      }
+    }
+
+    if (!this.handoverKey) {
+      this.handoverKey = this.orderService.generateIdempotencyKey(
+        'staff-shipping-handover',
+        order.id
+      );
+    }
+
+    const payloadItems: ShippingHandoverItemRequest[] = items.map((item) => ({
+      orderItemId: Number(item.orderItemId || item.id),
+      exportedQuantity: Number(this.handoverQuantities[Number(item.orderItemId || item.id)] ?? item.quantity),
+    }));
+
+    const req: ShippingHandoverRequest = {
+      orderVersion: order.version ?? 0,
+      items: payloadItems,
+      handoverNote: this.handoverNote.trim() || undefined,
+    };
+
+    this.isHandingOver = true;
+    this.orderService.shippingHandover(order.id, req, this.handoverKey).subscribe({
+      next: (res) => {
+        this.isHandingOver = false;
+        this.closeShippingHandoverDialog();
+
+        if (this.selectedOrder && this.selectedOrder.id === res.orderId) {
+          this.selectedOrder.status = res.status;
+          this.selectedOrder.version = res.orderVersion;
+        }
+
+        const msg = res.expectedDeliveryAt
+          ? `Bàn giao vận chuyển thành công đơn #${res.orderId}! Dự kiến giao lúc ${new Date(res.expectedDeliveryAt).toLocaleString('vi-VN')}.`
+          : `Bàn giao vận chuyển thành công đơn #${res.orderId}!`;
+        this.toast.notify(msg);
+        this.loadMyOrders();
+        this.refreshSelectedOrder();
+      },
+      error: (err) => {
+        this.isHandingOver = false;
+        if (err?.status === 409 || err?.error?.errorCode === 'ORDER_VERSION_CONFLICT') {
+          this.toast.notify('Dữ liệu đơn hàng đã thay đổi trên máy chủ, đang làm mới...');
+          this.handoverKey = null;
+          this.refreshSelectedOrder();
+          this.loadMyOrders();
+          this.closeShippingHandoverDialog();
+        } else {
+          this.toast.notify(getApiErrorMessage(err, 'Không thể bàn giao vận chuyển. Vui lòng thử lại.'));
+        }
+      },
+    });
+  }
+
   openClaimableOrderDetail(order: OrderAssignmentQueueItem): void {
     this.selectedOrder = null;
     this.detailLoading = true;
@@ -345,11 +595,11 @@ export class StaffOrdersComponent implements OnInit {
   }
 
   canShowCollaboration(order: Order | null): boolean {
-    if (!order || this.activeTab !== 'mine') return false;
+    if (!order || this.activeTab === 'claimable') return false;
     const isGuest = !!order.customer?.guest || !!order.guestSessionId || (!order.userId && !order.user_id && !order.customer?.userId);
-    if (isGuest) return false;
+    if (isGuest && order.orderType !== 'CUSTOM') return false;
     const s = (order.status || '').toUpperCase();
-    return s === 'DISCUSSING' || s === 'WAITING_STAFF_CONFIRMATION' || s === 'ORDER_ACCEPTED';
+    return s === 'DISCUSSING' || s === 'WAITING_STAFF_CONFIRMATION' || s === 'ORDER_ACCEPTED' || s === 'ORDER_CREATING';
   }
 
   onCollaborationOrderUpdated(updated: Order): void {

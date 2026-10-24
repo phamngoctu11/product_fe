@@ -14,13 +14,13 @@ import { AuthService } from '../../../service/auth.service';
 import { ProductReviewService } from '../../../service/product-review.service';
 import { ToastService } from '../../../service/toast.service';
 import { environment } from '../../../../environments/environment';
+import { RouterModule } from '@angular/router';
 import {
   OrderItemsTableComponent,
   OrderStatusBadgeComponent,
   ViewStateComponent,
 } from '../../shared/ui';
 import type { OrderItemQuantityChange } from '../../shared/ui';
-import { OrderCollaborationComponent } from '../order-collaboration/order-collaboration.component';
 import { OrderPaymentModalComponent } from '../order-payment/order-payment-modal.component';
 import { CustomerProductionProgressComponent } from '../production-checkpoint/customer-production-progress.component';
 import { ChangeRequestPanelComponent } from '../change-request/change-request-panel.component';
@@ -31,10 +31,10 @@ import { ChangeRequestPanelComponent } from '../change-request/change-request-pa
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     OrderItemsTableComponent,
     OrderStatusBadgeComponent,
     ViewStateComponent,
-    OrderCollaborationComponent,
     OrderPaymentModalComponent,
     CustomerProductionProgressComponent,
     ChangeRequestPanelComponent,
@@ -48,15 +48,14 @@ export class OrderDetailPopupComponent {
   @Input() error = '';
   @Input() receiptMode = false;
   @Input() guestToken: string | null = null;
-  @Input() receivedQuantities: { [variantId: number]: number } = {};
+  @Input() receivedQuantities: { [key: number]: number } = {};
   @Input() receiptResponse: ReceiptConfirmResponse | null = null;
   @Input() receiptError = '';
   @Input() isSubmittingReceipt = false;
-  @Input() complaintNote = '';
+  @Input() canConfirmReceipt = true;
+  @Input() dataWarning: string | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() submitReceipt = new EventEmitter<boolean>();
-  @Output() sendComplaint = new EventEmitter<void>();
-  @Output() complaintNoteChange = new EventEmitter<string>();
   @Output() orderUpdated = new EventEmitter<void>();
 
   readonly reviewStars = [1, 2, 3, 4, 5];
@@ -92,10 +91,19 @@ export class OrderDetailPopupComponent {
     );
   }
 
+  private isGuestOrder(order: Order | null): boolean {
+    if (!order) return true;
+    if (order.orderType === 'CUSTOM') return false;
+    if (order.customer?.guest) return true;
+    if (order.guestSessionId) return true;
+    const userId = order.userId ?? order.user_id ?? order.customer?.userId;
+    return !userId;
+  }
+
   canShowCollaboration(order: Order): boolean {
     if (this.receiptMode) return false;
     if (!order || !order.id) return false;
-    if (order.guestSessionId || !order.userId) return false;
+    if (this.isGuestOrder(order)) return false;
     return (
       order.status === 'DISCUSSING' ||
       order.status === 'WAITING_STAFF_CONFIRMATION' ||
@@ -104,15 +112,14 @@ export class OrderDetailPopupComponent {
   }
 
   canShowChangeRequests(order: Order): boolean {
-    const userId = order.userId || order.user_id || order.customer?.userId;
-    if (this.receiptMode || this.guestToken || order.guestSessionId || !userId) return false;
+    if (this.receiptMode || this.guestToken || this.isGuestOrder(order)) return false;
     return this.authService.isCustomer()
       && ['ORDER_ACCEPTED', 'ORDER_CREATING'].includes((order.status || '').toUpperCase());
   }
 
   canPayOrder(order: Order | null): boolean {
     if (!order || this.receiptMode) return false;
-    if (order.guestSessionId || !order.userId) return false;
+    if (this.isGuestOrder(order)) return false;
     return (
       order.status === 'ORDER_ACCEPTED' &&
       order.paymentMethod === 'ONLINE' &&
@@ -131,7 +138,12 @@ export class OrderDetailPopupComponent {
   }
 
   updateReceivedQuantity(change: OrderItemQuantityChange): void {
-    this.receivedQuantities[change.variantId] = change.quantity;
+    if (change.orderItemId) {
+      this.receivedQuantities[change.orderItemId] = change.quantity;
+    }
+    if (change.variantId) {
+      this.receivedQuantities[change.variantId] = change.quantity;
+    }
   }
 
   getOrderItems(order: Order): OrderItem[] {

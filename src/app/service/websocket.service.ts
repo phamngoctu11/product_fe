@@ -10,10 +10,14 @@ import { OrderChatMessage } from '../model/order.model';
   providedIn: 'root'
 })
 export class WebsocketService {
-  private client: Client;
+  private client!: Client;
   private notificationSubject = new Subject<any>();
   public notifications$ = this.notificationSubject.asObservable();
+  private connectionStateSubject = new Subject<boolean>();
+  public isConnected$ = this.connectionStateSubject.asObservable();
 
+  private connectedToken: string | null = null;
+  private connectedUserId: string | null = null;
   private isAdminState = false;
   private userIdState: string | null = null;
   private adminNotificationSub: StompSubscription | null = null;
@@ -23,6 +27,13 @@ export class WebsocketService {
   private orderChatStompSubs = new Map<number, StompSubscription>();
 
   constructor(private authService: AuthService) {
+    this.initClient();
+    this.authService.onLogout$.subscribe(() => {
+      this.disconnect();
+    });
+  }
+
+  private initClient(): void {
     this.client = new Client({
       webSocketFactory: () => new SockJS(environment.wsUrl),
       debug: (str) => {},
@@ -30,13 +41,37 @@ export class WebsocketService {
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
     });
+    this.client.onWebSocketClose = () => {
+      this.connectionStateSubject.next(false);
+    };
+    this.client.onDisconnect = () => {
+      this.connectionStateSubject.next(false);
+    };
+  }
+
+  matchesCurrentSession(): boolean {
+    const currentToken = this.authService.getToken();
+    return !currentToken || !this.connectedToken || this.connectedToken === currentToken;
   }
 
   connect(isAdmin: boolean = false, userId: string | null = null) {
+    const token = this.authService.getToken();
+    const tokenChanged = this.connectedToken !== token;
+    const userChanged = this.connectedUserId !== userId;
+    const roleChanged = this.isAdminState !== isAdmin;
+
+    if (this.client && (tokenChanged || userChanged || roleChanged)) {
+      if (this.client.active) {
+        try { this.client.deactivate(); } catch {}
+      }
+      this.initClient();
+    }
+
+    this.connectedToken = token;
+    this.connectedUserId = userId;
     this.isAdminState = isAdmin;
     this.userIdState = userId;
 
-    const token = this.authService.getToken();
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
     if (userId) headers['userId'] = String(userId);
@@ -51,6 +86,7 @@ export class WebsocketService {
     };
 
     this.client.onConnect = (frame) => {
+      this.connectionStateSubject.next(true);
       // 1. NẾU LÀ ADMIN -> Nghe kênh báo đơn hàng mới / hủy đơn chung
       if (this.isAdminState) {
         if (this.adminNotificationSub) {
@@ -106,10 +142,17 @@ export class WebsocketService {
     const listenerSet = this.orderChatListeners.get(orderId)!;
     listenerSet.add(callback);
 
-    if (this.client.connected && !this.orderChatStompSubs.has(orderId)) {
+    const currentToken = this.authService.getToken();
+    const currentUserId = this.authService.getUserId();
+    const tokenChanged = this.connectedToken && currentToken && this.connectedToken !== currentToken;
+
+    if (tokenChanged) {
+      this.disconnect();
+      this.connect(this.isAdminState, currentUserId);
+    } else if (this.client.connected && !this.orderChatStompSubs.has(orderId)) {
       this.subscribeOrderChatStomp(orderId);
     } else if (!this.client.active) {
-      this.connect(this.isAdminState, this.userIdState || this.authService.getUserId());
+      this.connect(this.isAdminState, this.userIdState || currentUserId);
     }
 
     return () => {
@@ -168,6 +211,13 @@ export class WebsocketService {
   }
 
   sendOrderChat(orderId: number, content: string): boolean {
+    const currentToken = this.authService.getToken();
+    if (this.connectedToken && currentToken && this.connectedToken !== currentToken) {
+      console.warn('WebSocket connection token mismatch. Disconnecting stale socket...');
+      this.disconnect();
+      return false;
+    }
+
     if (this.client && this.client.connected) {
       try {
         this.client.publish({
@@ -184,11 +234,25 @@ export class WebsocketService {
   }
 
   disconnect() {
+    this.connectedToken = null;
+    this.connectedUserId = null;
+    this.userIdState = null;
+    this.isAdminState = false;
+    this.connectionStateSubject.next(false);
     this.orderChatListeners.clear();
     this.orderChatStompSubs.clear();
-    if (this.client.active) {
-      this.client.deactivate();
+    if (this.adminNotificationSub) {
+      try { this.adminNotificationSub.unsubscribe(); } catch {}
+      this.adminNotificationSub = null;
+    }
+    if (this.userNotificationSub) {
+      try { this.userNotificationSub.unsubscribe(); } catch {}
+      this.userNotificationSub = null;
+    }
+    if (this.client && this.client.active) {
+      try { this.client.deactivate(); } catch {}
       console.log('Đã ngắt kết nối WebSocket.');
     }
+    this.initClient();
   }
 }

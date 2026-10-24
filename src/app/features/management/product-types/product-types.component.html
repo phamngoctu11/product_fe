@@ -1,0 +1,33 @@
+<main class="container py-4">
+  <h1>Loại sản phẩm</h1>
+  <p>Manager định nghĩa các trường bắt buộc và kiểu dữ liệu cho từng loại yêu cầu đặt làm riêng. Tag là từ khóa được nhập trực tiếp trong thông tin sản phẩm.</p>
+  @if (error) { <div class="alert alert-danger">{{ error }}</div> }
+  <div class="row g-4">
+    <section class="col-lg-8">
+      <div class="card p-4">
+        <h2>{{ editingType ? 'Chỉnh sửa loại sản phẩm' : 'Tạo loại sản phẩm' }}</h2>
+        <div class="row g-2">
+          <label class="col-md-4">Mã loại<input class="form-control" [(ngModel)]="typeForm.code" placeholder="do-gom"></label>
+          <label class="col-md-8">Tên hiển thị<input class="form-control" [(ngModel)]="typeForm.name" placeholder="Đồ gốm"></label>
+          <label class="col-12">Mô tả<input class="form-control" [(ngModel)]="typeForm.description"></label>
+        </div>
+        <h3 class="mt-4">Các trường bắt buộc</h3>
+        @for (field of typeForm.fields; track field.code; let i = $index) {
+          <div class="d-flex justify-content-between border rounded p-2 mb-2"><span>{{ field.label }} · {{ field.code }} · {{ field.kind }} · Bắt buộc</span><button class="btn btn-sm btn-outline-danger" type="button" (click)="removeField(i)">Xóa</button></div>
+        }
+        <div class="row g-2 align-items-end">
+          <label class="col-md-3">Mã trường<input class="form-control" [(ngModel)]="fieldDraft.code" placeholder="chieu_cao"></label>
+          <label class="col-md-3">Nhãn<input class="form-control" [(ngModel)]="fieldDraft.label" placeholder="Chiều cao"></label>
+          <label class="col-md-3">Kiểu dữ liệu<select class="form-select" [(ngModel)]="fieldDraft.kind"><option value="TEXT">Văn bản</option><option value="NUMBER">Số</option><option value="SINGLE_SELECT">Chọn một</option><option value="MULTI_SELECT">Chọn nhiều</option><option value="BOOLEAN">Có/không</option></select></label>
+          <label class="col-md-3">Đơn vị<input class="form-control" [(ngModel)]="fieldDraft.unit" placeholder="cm"></label>
+          @if (fieldDraft.kind === 'SINGLE_SELECT' || fieldDraft.kind === 'MULTI_SELECT') { <label class="col-9">Các lựa chọn, ngăn cách bằng dấu phẩy<input class="form-control" [(ngModel)]="optionText"></label> }
+          @if (fieldDraft.kind === 'TEXT') { <label class="col-md-4">Độ dài tối đa<input class="form-control" type="number" [(ngModel)]="fieldDraft.maxLength"></label> }
+          @if (fieldDraft.kind === 'NUMBER') { <label class="col-md-3">Tối thiểu<input class="form-control" type="number" [(ngModel)]="fieldDraft.minimum"></label><label class="col-md-3">Tối đa<input class="form-control" type="number" [(ngModel)]="fieldDraft.maximum"></label> }
+          <button class="col-md-3 btn btn-outline-primary" type="button" (click)="addField()">Thêm trường</button>
+        </div>
+        <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" [disabled]="busy || !typeForm.code || !typeForm.name" (click)="saveType()">Lưu loại</button><button class="btn btn-outline-secondary" (click)="resetType()">Làm mới</button></div>
+      </div>
+      <div class="card p-3 mt-3"><h2>Loại hiện có</h2>@for (type of types; track type.id) { <button class="btn btn-link text-start" (click)="editType(type)">{{ type.name }} ({{ type.code }}) · {{ type.fields.length }} trường {{ type.active ? '' : '· Đã tắt' }}</button> }</div>
+    </section>
+  </div>
+</main>

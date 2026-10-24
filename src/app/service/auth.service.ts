@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable, tap } from 'rxjs';
+import { map, Observable, Subject, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { ForgotPasswordRequest, LoginRequest, LoginResponse, ResetPasswordRequest } from '../model/user.model';
@@ -18,6 +18,8 @@ import {
 export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
   private readonly userUrl = `${environment.apiUrl}/users`;
+  private readonly logoutSubject = new Subject<void>();
+  public readonly onLogout$ = this.logoutSubject.asObservable();
 
   constructor(private readonly http: HttpClient) {}
 
@@ -52,6 +54,7 @@ export class AuthService {
 
   logout(): void {
     clearAuthStorage();
+    this.logoutSubject.next();
   }
 
   getUserId(): string | null {

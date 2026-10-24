@@ -1,4 +1,4 @@
-<div class="collab-container">
+<div class="collab-container" [class.only-chat]="onlyChat">
   <!-- Guest Order Notice -->
   <div *ngIf="isGuestOrder" class="alert alert-secondary d-flex align-items-center gap-2 m-3">
     <i class="bi bi-info-circle-fill fs-5"></i>
@@ -9,7 +9,7 @@
 
   <div *ngIf="!isGuestOrder" class="collab-body">
     <!-- Top Header Bar: Status & 24h Countdown Timer -->
-    <header class="collab-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3">
+    <header *ngIf="!onlyChat" class="collab-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3">
       <div class="d-flex align-items-center flex-wrap gap-2">
         <span class="badge" [ngClass]="isCustomOrder ? 'bg-primary' : 'bg-secondary'">
           {{ isCustomOrder ? 'Đơn đặt riêng (Custom)' : 'Đơn hàng Catalog' }}
@@ -35,7 +35,7 @@
     </header>
 
     <!-- Mobile Tab Selector -->
-    <div class="d-lg-none collab-tabs px-3 pt-2">
+    <div *ngIf="!onlyChat" class="d-lg-none collab-tabs px-3 pt-2">
       <ul class="nav nav-pills nav-fill gap-2">
         <li class="nav-item">
           <button
@@ -62,6 +62,7 @@
     <div class="row g-0 collab-grid">
       <!-- Left Column: Agreement Details & Form -->
       <section
+        *ngIf="!onlyChat"
         class="col-12 col-lg-6 collab-col collab-agreement"
         [class.d-none]="activeTab !== 'agreement'"
         [class.d-lg-block]="true">
@@ -101,6 +102,10 @@
           <div *ngIf="!isLoadingAgreement">
             <!-- Custom Order Form -->
             <div *ngIf="isCustomOrder" class="agreement-form">
+              <div *ngIf="customProductTypeName" class="alert alert-light border mb-3">
+                <div><strong>Phân khúc:</strong> {{ customProductTypeName }}</div>
+                <div *ngFor="let field of customFieldEntries" class="small mt-1"><strong>{{ field.label }}:</strong> {{ field.value }}</div>
+              </div>
               <div class="mb-3">
                 <label class="form-label fw-semibold small">Mô tả chi tiết yêu cầu <span class="text-danger">*</span></label>
                 <textarea
@@ -115,7 +120,7 @@
               <div class="mb-3">
                 <label class="form-label fw-semibold small d-flex justify-content-between">
                   <span>Ảnh mẫu / thiết kế tham khảo</span>
-                  <span class="text-muted">{{ customImageUrls.length }}/10</span>
+                  <span class="text-muted">{{ customImageUrls.length }} ảnh</span>
                 </label>
 
                 <div class="custom-image-grid d-flex flex-wrap gap-2 mb-2">
@@ -130,7 +135,7 @@
                     </button>
                   </div>
                   <label
-                    *ngIf="canUserSubmitAgreement && customImageUrls.length < 10"
+                    *ngIf="canUserSubmitAgreement"
                     class="btn-upload-box rounded border border-dashed d-flex flex-column align-items-center justify-content-center"
                     [class.disabled]="isUploadingImage">
                     <i class="bi bi-plus-lg fs-4 text-muted" *ngIf="!isUploadingImage"></i>
@@ -177,6 +182,20 @@
               </div>
 
               <div class="mb-3">
+                <label class="form-label fw-semibold small">Phương thức thanh toán <span class="text-danger">*</span></label>
+                <select
+                  class="form-select"
+                  [(ngModel)]="customPaymentMethod"
+                  [disabled]="!canUserSubmitAgreement || isSubmittingAgreement">
+                  <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                  <option value="ONLINE">Thanh toán trực tuyến (ONLINE / SePay)</option>
+                </select>
+                <div class="form-text smaller text-muted">
+                  Đơn hàng đặt làm theo yêu cầu (Custom) cho phép lựa chọn COD hoặc ONLINE trước khi gửi thỏa thuận.
+                </div>
+              </div>
+
+              <div class="mb-3">
                 <label class="form-label fw-semibold small">Ghi chú thêm</label>
                 <input
                   type="text"
@@ -190,7 +209,7 @@
             <!-- Catalog Order Snapshot View -->
             <div *ngIf="!isCustomOrder" class="catalog-snapshot mb-3">
               <label class="form-label fw-semibold small mb-2">Sản phẩm trong thỏa thuận</label>
-              <div class="border rounded p-2 bg-light">
+              <div class="rounded p-2" style="background-color: var(--app-surface-muted, #362f26); border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14));">
                 <div *ngFor="let item of order?.items || []" class="d-flex justify-content-between align-items-center py-2 border-bottom">
                   <div>
                     <div class="fw-semibold small">{{ item.productName }}</div>
@@ -206,6 +225,17 @@
 
             <!-- Financial Summary Box -->
             <div class="summary-box rounded p-3 mb-4 border">
+              <div class="d-flex justify-content-between py-1 small">
+                <span class="text-muted">Phương thức thanh toán:</span>
+                <span class="fw-semibold">
+                  <ng-container *ngIf="isCustomOrder">
+                    {{ customPaymentMethod === 'ONLINE' ? 'Trực tuyến (ONLINE / SePay)' : 'Khi nhận hàng (COD)' }}
+                  </ng-container>
+                  <ng-container *ngIf="!isCustomOrder">
+                    {{ order?.paymentMethod === 'ONLINE' ? 'Trực tuyến (ONLINE / SePay)' : 'Khi nhận hàng (COD)' }} (Cố định)
+                  </ng-container>
+                </span>
+              </div>
               <div class="d-flex justify-content-between py-1 small">
                 <span class="text-muted">Tạm tính thỏa thuận:</span>
                 <span class="fw-semibold">{{ computedSubtotal | number }} đ</span>
@@ -267,38 +297,73 @@
 
       <!-- Right Column: Real-time Order Chat -->
       <section
-        class="col-12 col-lg-6 collab-col collab-chat"
-        [class.d-none]="activeTab !== 'chat'"
+        [ngClass]="onlyChat ? 'col-12 collab-col collab-chat only-chat-col' : 'col-12 col-lg-6 collab-col collab-chat'"
+        [class.d-none]="!onlyChat && activeTab !== 'chat'"
         [class.d-lg-block]="true">
         <div class="collab-panel-inner d-flex flex-column h-100">
           <!-- Chat Header -->
           <div class="chat-header p-3 border-bottom d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-2">
-              <span class="status-dot"></span>
+              <span class="status-dot" [class.is-connected]="isWsConnected" [title]="isWsConnected ? 'WebSocket kết nối trực tuyến' : 'Đang kết nối lại...'"></span>
               <h6 class="mb-0 fw-bold">Trao đổi đơn #{{ order?.id }}</h6>
+              <span class="badge" [ngClass]="isWsConnected ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle'" style="font-size: 0.72rem;">
+                <i class="bi" [ngClass]="isWsConnected ? 'bi-broadcast' : 'bi-arrow-repeat spin'"></i>
+                {{ isWsConnected ? 'Socket trực tuyến' : 'Đang kết nối' }}
+              </span>
             </div>
-            <span class="badge text-bg-light small">
-              {{ mode === 'USER' ? 'Kênh nhân viên' : 'Kênh khách hàng' }}
-            </span>
+            <div class="d-flex align-items-center gap-2">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary rounded-pill"
+                [disabled]="isLoadingChat"
+                (click)="loadChatMessages()"
+                title="Làm mới tin nhắn">
+                <i class="bi bi-arrow-clockwise" [class.spin]="isLoadingChat"></i>
+              </button>
+              <span class="badge small" style="background: rgba(197, 184, 165, 0.15); color: #c5b8a5; border: 1px solid rgba(197, 184, 165, 0.3);">
+                {{ mode === 'USER' ? 'Kênh nhân viên' : 'Kênh khách hàng' }}
+              </span>
+            </div>
           </div>
 
           <!-- Chat Messages Area -->
           <div #chatScrollContainer class="chat-messages-container flex-grow-1 p-3">
             <!-- Loading & Thread Preparation -->
             <div *ngIf="isThreadPreparing" class="text-center py-5 text-muted">
-              <div class="spinner-border spinner-border-sm mb-2" role="status"></div>
-              <p class="small mb-0">Đang khởi tạo kênh trao đổi an toàn...</p>
+              <div class="spinner-border spinner-border-sm mb-2 text-primary" role="status"></div>
+              <p class="small mb-0 fw-medium">Đang kết nối phòng trao đổi trực tuyến với nhân viên...</p>
+              <small class="text-muted d-block mt-1">Hệ thống đang đồng bộ dữ liệu (lần thử {{ threadRetryCount }}/8)...</small>
             </div>
 
-            <div *ngIf="isLoadingChat && !isThreadPreparing" class="text-center py-5 text-muted">
+            <!-- When order is unassigned yet -->
+            <div *ngIf="!hasAssignedStaff && mode === 'USER' && !isThreadPreparing" class="text-center py-5 px-3">
+              <div class="mb-3">
+                <i class="bi bi-hourglass-split text-warning" style="font-size: 3rem;"></i>
+              </div>
+              <h6 class="fw-bold mb-1" style="color: var(--app-text, #ece5d8);">Đang chờ nhân viên tiếp nhận đơn</h6>
+              <p class="text-muted small mx-auto mb-3" style="max-width: 380px;">
+                Đơn đặt riêng của bạn đang trong hàng đợi xử lý. Phòng chat trực tuyến sẽ tự động kích hoạt ngay khi có nhân viên/nghệ nhân nhận đơn.
+              </p>
+              <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" (click)="refreshOrderState()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Kiểm tra tiếp nhận
+              </button>
+            </div>
+
+            <div *ngIf="isLoadingChat && !isThreadPreparing && hasAssignedStaff" class="text-center py-5 text-muted">
               <span class="spinner-border spinner-border-sm me-2"></span> Đang tải tin nhắn...
             </div>
 
-            <div *ngIf="chatError" class="alert alert-warning py-2 px-3 small my-3">
-              {{ chatError }}
+            <div *ngIf="chatError && !isThreadPreparing && hasAssignedStaff" class="alert alert-warning py-2 px-3 small my-3 d-flex align-items-center justify-content-between">
+              <div>
+                <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
+                <span>{{ chatError }}</span>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-warning rounded-pill" (click)="retryInitChat()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Thử lại
+              </button>
             </div>
 
-            <div *ngIf="!isLoadingChat && !isThreadPreparing && messages.length === 0" class="text-center py-5 text-muted small">
+            <div *ngIf="!isLoadingChat && !isThreadPreparing && hasAssignedStaff && messages.length === 0" class="text-center py-5 text-muted small">
               <i class="bi bi-chat-heart fs-1 d-block mb-2 opacity-50"></i>
               Chưa có tin nhắn nào. Hãy gửi lời chào và thảo luận chi tiết đơn hàng tại đây!
             </div>
@@ -325,7 +390,7 @@
                 maxlength="4000"
                 [(ngModel)]="chatInput"
                 (keydown)="onChatKeydown($event)"
-                [disabled]="isSendingMessage || isThreadPreparing"
+                [disabled]="isSendingMessage || isThreadPreparing || !hasAssignedStaff"
                 placeholder="Nhập nội dung trao đổi... (Nhấn Enter để gửi)"></textarea>
 
               <div class="d-flex align-items-center justify-content-between mt-2">
@@ -335,7 +400,7 @@
                 <button
                   type="button"
                   class="btn btn-primary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1"
-                  [disabled]="!chatInput.trim() || isSendingMessage || isThreadPreparing"
+                  [disabled]="!chatInput.trim() || isSendingMessage || isThreadPreparing || !hasAssignedStaff"
                   (click)="sendMessage()">
                   <span *ngIf="isSendingMessage" class="spinner-border spinner-border-sm"></span>
                   <i *ngIf="!isSendingMessage" class="bi bi-send-fill"></i>
@@ -351,7 +416,7 @@
 
   <!-- Staff Decision Modal Backdrop -->
   <div *ngIf="showDecisionModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center p-3">
-    <div class="modal-card-custom bg-white rounded-4 shadow-lg p-4">
+    <div class="modal-card-custom rounded-4 shadow-lg p-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="fw-bold mb-0">
           {{ staffDecision === 'CONFIRM' ? 'Xác nhận chốt thỏa thuận' : 'Yêu cầu khách hàng điều chỉnh' }}
@@ -362,7 +427,7 @@
       </div>
 
       <div *ngIf="staffDecision === 'CONFIRM'" class="mb-3 text-muted small">
-        Bạn đang thực hiện chốt thỏa thuận sản xuất cho đơn hàng #{{ order?.id }}. Đơn hàng sẽ chuyển sang trạng thái <strong>Đã nhận đơn (ORDER_ACCEPTED)</strong>.
+        Bạn đang thực hiện chốt thỏa thuận sản xuất cho đơn hàng #{{ order?.id }}. Đơn hàng sẽ chuyển sang trạng thái <strong>Đã nhận đơn</strong>.
       </div>
 
       <div *ngIf="staffDecision === 'REQUEST_CHANGES'" class="mb-3">
@@ -395,4 +460,3 @@
     </div>
   </div>
 </div>
-

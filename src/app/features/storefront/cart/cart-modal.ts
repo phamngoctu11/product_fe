@@ -536,7 +536,7 @@ export class CartModalComponent implements OnInit {
     return `checkout-${ownerKey}-${paymentMethod.toLowerCase()}-${randomPart}`;
   }
 
-  approve(paymentMethod: string) {
+  approve(paymentMethod: 'COD' | 'ONLINE') {
     if (!this.isCustomerCart) {
       this.submitGuestCheckout();
       return;
@@ -562,14 +562,12 @@ export class CartModalComponent implements OnInit {
 
     performUpdate$.subscribe({
       next: () => {
-        this.cartService.acceptCart(
-          this.userId,
-          productIdsToCheckout,
-          this.selectedVoucherId,
+        this.cartService.checkout({
+          variantIds: productIdsToCheckout,
+          userVoucherId: this.selectedVoucherId || undefined,
           paymentMethod,
-          this.note,
-          this.createCheckoutIdempotencyKey(paymentMethod),
-        ).subscribe({
+          note: typeof this.note === 'string' && this.note.trim() ? this.note.trim() : undefined,
+        }, this.createCheckoutIdempotencyKey(paymentMethod)).subscribe({
           next: (res: any) => {
             if (res && res.status === 'REDIRECT' && res.payUrl) {
               this.toast.notify(res.message || 'Äang xá»­ lÃ½ thanh toÃ¡n online...');

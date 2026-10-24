@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { environment } from '../../environments/environment';
 import { CartService } from './cart.service';
 
-describe('CartService guest cart', () => {
+describe('CartService', () => {
   let service: CartService;
   let httpMock: HttpTestingController;
 
@@ -108,6 +108,42 @@ describe('CartService guest cart', () => {
         maskedEmail: 'g***@example.com',
         guestWorkflowStatus: 'STARTED',
         message: 'OK',
+      },
+    });
+  });
+
+  it('posts registered-user checkout to the current checkout contract', () => {
+    service.checkout({
+      variantIds: [12, 15],
+      userVoucherId: 7,
+      paymentMethod: 'COD',
+      note: 'Gói hàng cẩn thận',
+    }, 'user-checkout-key').subscribe((response) => {
+      expect(response.orderId).toBe(100);
+      expect(response.status).toBe('PENDING_APPROVAL');
+    });
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/checkout`);
+
+    expect(req.request.method).toBe('POST');
+    expect(req.request.headers.get('Idempotency-Key')).toBe('user-checkout-key');
+    expect(req.request.headers.has('X-Guest-Session-Id')).toBeFalse();
+    expect(req.request.body).toEqual({
+      variantIds: [12, 15],
+      userVoucherId: 7,
+      paymentMethod: 'COD',
+      note: 'Gói hàng cẩn thận',
+    });
+
+    req.flush({
+      success: true,
+      status: 200,
+      message: 'OK',
+      data: {
+        orderId: 100,
+        status: 'PENDING_APPROVAL',
+        paymentMethod: 'COD',
+        message: 'Đơn hàng đã được tạo và đang chờ quản lý duyệt.',
       },
     });
   });

@@ -36,7 +36,11 @@ export function getApiErrorMessage(error: any, fallback: string = 'Đã xảy ra
     ? Object.values(rawError.errors).flat().join('\n')
     : '';
 
-  return localizeApiMessage(rawError?.message || validationMessage || error?.message || fallback);
+  const message = rawError?.message || validationMessage || error?.message || fallback;
+  if (typeof message === 'string' && message.startsWith('Http failure response for ')) {
+    return fallback;
+  }
+  return localizeApiMessage(message);
 }
 
 export function getRetryAfterSeconds(error: any): number | null {
