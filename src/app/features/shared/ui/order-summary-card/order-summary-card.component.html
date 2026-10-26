@@ -40,7 +40,7 @@
       }
       <div [class]="showStaff ? 'col-md-3' : 'col-md-4'">
         <div class="text-muted small">Tổng thanh toán</div>
-        <div class="fw-bold text-danger fs-5">{{ order.finalPrice | number: '1.0-0' }} đ</div>
+        <div class="fw-bold text-danger fs-5">{{ order.finalPrice != null ? (order.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</div>
       </div>
     </div>
   </div>

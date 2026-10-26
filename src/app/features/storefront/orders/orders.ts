@@ -410,7 +410,8 @@ export class Orders implements OnInit {
     }
   }
 
-  calculateExpectedDeduction(totalPrice: number): number {
+  calculateExpectedDeduction(totalPrice: number | null | undefined): number {
+    if (totalPrice === null || totalPrice === undefined) return 0;
     if (totalPrice < 1000000) return 1;
     if (totalPrice <= 5000000) return 2;
     if (totalPrice <= 10000000) return 3;
@@ -506,7 +507,7 @@ export class Orders implements OnInit {
     }
 
     const currentRep = this.userInfo?.reputation ?? 0;
-    const orderTotalPrice = Number(order.finalPrice || 0);
+    const orderTotalPrice = order.finalPrice == null ? null : Number(order.finalPrice);
     const deduction = this.calculateExpectedDeduction(orderTotalPrice);
     this.actionDialog.prompt({
       title: 'Hủy đơn hàng',
@@ -515,9 +516,9 @@ export class Orders implements OnInit {
       tone: 'danger',
       icon: 'bi-x-octagon-fill',
       details: [
-        { label: 'Giá trị đơn', value: `${orderTotalPrice.toLocaleString('vi-VN')} đ` },
+        { label: 'Giá trị đơn', value: orderTotalPrice === null ? 'Chưa thỏa thuận giá' : `${orderTotalPrice.toLocaleString('vi-VN')} đ` },
         { label: 'Điểm uy tín hiện tại', value: `${currentRep} điểm` },
-        { label: 'Điểm dự kiến bị trừ', value: `-${deduction} điểm` },
+        { label: 'Điểm dự kiến bị trừ', value: deduction === 0 ? '0 điểm (không trừ)' : `-${deduction} điểm` },
         { label: 'Điểm còn lại dự kiến', value: `${Math.max(0, Number(currentRep) - deduction)} điểm` },
       ],
       input: {
@@ -530,7 +531,7 @@ export class Orders implements OnInit {
       },
     }).subscribe((reason) => {
       if (reason === null) return;
-      this.orderService.cancelOrder(order.id, reason).subscribe({
+      this.orderService.cancelOrder(order.id, order.version ?? 0, reason).subscribe({
         next: () => {
           this.toast.notify('Hủy đơn hàng thành công!');
           this.loadMyOrders();

@@ -4,14 +4,12 @@ import { Order, OrderChangeRequest } from '../../../model/order.model';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { OrderService } from '../../../service/order.service';
 import { ToastService } from '../../../service/toast.service';
-import { UploadService } from '../../../service/upload.service';
 import { ChangeRequestPanelComponent } from './change-request-panel.component';
 
 describe('ChangeRequestPanelComponent', () => {
   let fixture: ComponentFixture<ChangeRequestPanelComponent>;
   let component: ChangeRequestPanelComponent;
   let orderService: jasmine.SpyObj<OrderService>;
-  let uploadService: jasmine.SpyObj<UploadService>;
   let toastService: jasmine.SpyObj<ToastService>;
   let dialogService: jasmine.SpyObj<ActionDialogService>;
 
@@ -34,6 +32,9 @@ describe('ChangeRequestPanelComponent', () => {
       productionStatus: 'INITIAL_IN_PROGRESS',
       specVersion: 1,
       description: 'Màu xanh',
+      productTypeName: 'Đồ gốm',
+      productTypeFields: [{ code: 'height', label: 'Chiều cao', kind: 'NUMBER', unit: 'cm', minimum: 1, maximum: 50 }],
+      fieldValues: { height: 18 },
     }],
   };
 
@@ -49,7 +50,8 @@ describe('ChangeRequestPanelComponent', () => {
     assignedStaffId: 'staff-456',
     baseAgreementVersion: 1,
     baseSpecVersion: 1,
-    proposedSpecSnapshot: '{"description":"Khắc tên lên thân bình","imageUrls":[]}',
+    baseSpecSnapshot: '{"productTypeFields":[{"code":"height","label":"Chiều cao","kind":"NUMBER","unit":"cm"}],"fieldValues":{"height":18}}',
+    proposedSpecSnapshot: '{"description":"Khắc tên lên thân bình","fieldValues":{"height":20}}',
     requestReason: 'Làm quà tặng tân gia',
     status: 'PENDING_REVIEW',
     createdAt: '2026-10-15T10:00:00',
@@ -61,7 +63,6 @@ describe('ChangeRequestPanelComponent', () => {
     orderService = jasmine.createSpyObj<OrderService>('OrderService', [
       'getChangeRequests', 'createChangeRequest', 'decideChangeRequest', 'generateIdempotencyKey',
     ]);
-    uploadService = jasmine.createSpyObj<UploadService>('UploadService', ['uploadImage']);
     toastService = jasmine.createSpyObj<ToastService>('ToastService', ['success', 'warning', 'fromError']);
     dialogService = jasmine.createSpyObj<ActionDialogService>('ActionDialogService', ['confirm']);
 
@@ -73,7 +74,6 @@ describe('ChangeRequestPanelComponent', () => {
       imports: [ChangeRequestPanelComponent],
       providers: [
         { provide: OrderService, useValue: orderService },
-        { provide: UploadService, useValue: uploadService },
         { provide: ToastService, useValue: toastService },
         { provide: ActionDialogService, useValue: dialogService },
       ],
@@ -86,61 +86,31 @@ describe('ChangeRequestPanelComponent', () => {
     fixture.detectChanges();
   });
 
-  // 1. USER tạo request không có ảnh
-  it('USER tạo request không có ảnh', () => {
+  // 1. USER gửi mô tả và thông số theo productType.
+  it('USER tạo yêu cầu gồm mô tả và thông số theo productType', () => {
     orderService.createChangeRequest.and.returnValue(of(pending));
     component.selectedItemId = 20;
+    component.selectItem();
     component.proposedDescription = 'Khắc tên lên thân bình';
+    component.proposedFieldValues = { height: 20 };
     component.reason = 'Quà tặng tân gia';
-    component.files = [];
 
     component.submit();
 
-    expect(uploadService.uploadImage).not.toHaveBeenCalled();
     expect(orderService.createChangeRequest).toHaveBeenCalledWith(10, {
       orderVersion: 3,
       orderItemId: 20,
       baseSpecVersion: 1,
       proposedDescription: 'Khắc tên lên thân bình',
-      proposedImageUrls: [],
+      fieldValues: { height: 20 },
       reason: 'Quà tặng tân gia',
     }, 'stable-test-key');
     expect(component.requests[0].id).toBe(100);
     expect(toastService.success).toHaveBeenCalledWith('Đã gửi yêu cầu chỉnh sửa cho staff phụ trách.');
   });
 
-  // 2. USER tạo request có ảnh
-  it('USER tạo request có ảnh', () => {
-    orderService.createChangeRequest.and.returnValue(of(pending));
-    uploadService.uploadImage.and.returnValue(of({
-      success: true,
-      status: 200,
-      message: 'OK',
-      data: { url: 'https://cdn.example.com/mock-image.png' },
-    }));
-
-    component.selectedItemId = 20;
-    component.proposedDescription = 'Thêm hoa văn hoa sen';
-    component.reason = 'Khách yêu cầu thêm họa tiết';
-    const fakeFile = new File(['mock content'], 'test.png', { type: 'image/png' });
-    component.files = [fakeFile];
-
-    component.submit();
-
-    expect(uploadService.uploadImage).toHaveBeenCalledWith(fakeFile);
-    expect(orderService.createChangeRequest).toHaveBeenCalledWith(10, {
-      orderVersion: 3,
-      orderItemId: 20,
-      baseSpecVersion: 1,
-      proposedDescription: 'Thêm hoa văn hoa sen',
-      proposedImageUrls: ['https://cdn.example.com/mock-image.png'],
-      reason: 'Khách yêu cầu thêm họa tiết',
-    }, 'stable-test-key');
-    expect(component.requests[0].id).toBe(100);
-  });
-
-  // 3. Chỉ item đủ điều kiện mới xuất hiện
-  it('Chỉ item đủ điều kiện mới xuất hiện (handmade=true và status hợp lệ)', () => {
+  // 3. Chỉ item có ID và còn trong giai đoạn sản xuất mới xuất hiện.
+  it('Chỉ item còn trong giai đoạn sản xuất mới xuất hiện', () => {
     const orderWithMixedItems: Order = {
       ...order,
       items: [
@@ -148,7 +118,7 @@ describe('ChangeRequestPanelComponent', () => {
         { orderItemId: 2, productId: 2, productName: 'Item hợp lệ 2', productionStatus: 'ASSIGNED', quantity: 1, price: 100 },
         { orderItemId: 3, productId: 3, productName: 'Item hợp lệ 3', productionStatus: 'INITIAL_IN_PROGRESS', quantity: 1, price: 100 },
         { orderItemId: 4, productId: 4, productName: 'Item hợp lệ 4', productionStatus: 'FINAL_IN_PROGRESS', quantity: 1, price: 100 },
-        { orderItemId: 5, productId: 5, productName: 'Item không handmade', productionStatus: 'INITIAL_IN_PROGRESS', quantity: 1, price: 100 },
+        { orderItemId: 5, productId: 5, productName: 'Item vẫn đang sản xuất', productionStatus: 'INITIAL_IN_PROGRESS', quantity: 1, price: 100 },
         { orderItemId: 6, productId: 6, productName: 'Item đã QC', productionStatus: 'FINAL_WAITING_QC', quantity: 1, price: 100 },
         { orderItemId: 7, productId: 7, productName: 'Item cần sửa', productionStatus: 'FINAL_REWORK_REQUIRED', quantity: 1, price: 100 },
         { orderItemId: 8, productId: 8, productName: 'Item đã sẵn sàng', productionStatus: 'READY', quantity: 1, price: 100 },
@@ -159,8 +129,8 @@ describe('ChangeRequestPanelComponent', () => {
     fixture.detectChanges();
 
     const eligible = component.eligibleItems;
-    expect(eligible.length).toBe(4);
-    expect(eligible.map(i => i.orderItemId)).toEqual([1, 2, 3, 4]);
+    expect(eligible.length).toBe(5);
+    expect(eligible.map(i => i.orderItemId)).toEqual([1, 2, 3, 4, 5]);
   });
 
   // 4. STAFF ACCEPT gửi đúng orderVersion và changeRequestVersion sau khi confirm dialog
@@ -263,20 +233,18 @@ describe('ChangeRequestPanelComponent', () => {
     expect(compiled.textContent).toContain('Đã tạo spec v2');
   });
 
-  // Bổ sung: upload error hiển thị toast và dừng lại
-  it('thông báo lỗi khi upload ảnh thất bại và không gửi request', () => {
-    uploadService.uploadImage.and.returnValue(throwError(() => new Error('Upload network error')));
+  it('chặn thông số vượt giới hạn do manager cấu hình', () => {
     component.selectedItemId = 20;
+    component.selectItem();
     component.proposedDescription = 'Thay đổi';
     component.reason = 'Lý do';
-    component.files = [new File(['mock'], 'fail.png', { type: 'image/png' })];
+    component.proposedFieldValues = { height: 51 };
 
     component.submit();
 
-    expect(uploadService.uploadImage).toHaveBeenCalled();
     expect(orderService.createChangeRequest).not.toHaveBeenCalled();
     expect(component.submitting).toBeFalse();
-    expect(toastService.fromError).toHaveBeenCalled();
+    expect(toastService.warning).toHaveBeenCalledWith('Vui lòng nhập giá trị hợp lệ cho trường “Chiều cao”.');
   });
 
   // Bổ sung: 403 Forbidden ẩn form và hiển thị alert
@@ -295,28 +263,6 @@ describe('ChangeRequestPanelComponent', () => {
     expect(compiled.textContent).toContain('Bạn không còn quyền truy cập hoặc thực hiện thao tác');
   });
 
-  // Bổ sung: Thu hồi Object URL khi remove file hoặc destroy component để tránh leak memory
-  it('thu hồi Object URL khi remove file và khi destroy', () => {
-    spyOn(URL, 'createObjectURL').and.returnValue('blob:http://localhost/mock-uuid');
-    spyOn(URL, 'revokeObjectURL');
-
-    const fakeFile = new File(['abc'], 'preview.png', { type: 'image/png' });
-    const event = { target: { files: [fakeFile], value: 'fake-path' } } as unknown as Event;
-    component.selectFiles(event);
-
-    expect(component.previews.length).toBe(1);
-    expect(URL.createObjectURL).toHaveBeenCalled();
-
-    component.removeFile(0);
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/mock-uuid');
-    expect(component.previews.length).toBe(0);
-
-    // Test ngOnDestroy
-    component.previews = ['blob:http://localhost/mock-uuid-2'];
-    component.ngOnDestroy();
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/mock-uuid-2');
-  });
-
   // Bổ sung: Tái sử dụng idempotency key khi retry cùng payload
   it('tái sử dụng idempotency key khi submit lại cùng payload sau lỗi transient', () => {
     let callCount = 0;
@@ -324,8 +270,10 @@ describe('ChangeRequestPanelComponent', () => {
     orderService.createChangeRequest.and.returnValue(throwError(() => ({ status: 500, error: { message: 'Network error' } })));
 
     component.selectedItemId = 20;
+    component.selectItem();
     component.proposedDescription = 'Mô tả A';
     component.reason = 'Lý do A';
+    component.proposedFieldValues = { height: 20 };
 
     // Lần 1 thất bại do lỗi 500
     component.submit();

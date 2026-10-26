@@ -99,6 +99,9 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
 
     this.subs.add(this.submitForm.valueChanges.subscribe(() => (this.submitKey = null)));
     this.subs.add(this.draftForm.valueChanges.subscribe(() => (this.submitKey = null)));
+    this.subs.add(this.draftForm.get('productTypeId')!.valueChanges.subscribe((value: number | null) => {
+      this.onProductTypeChange(value);
+    }));
   }
 
   get descriptionCtrl(): AbstractControl {
@@ -197,8 +200,8 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  onProductTypeChange(value: string | number | null) {
-    const type = this.productTypes.find((item) => item.id === Number(value));
+  onProductTypeChange(value: number | null) {
+    const type = this.productTypes.find((item) => item.id === value);
     this.selectedFields = type?.fields ?? [];
     this.rebuildFieldControls(this.selectedFields, {});
     this.draftForm.markAsDirty();

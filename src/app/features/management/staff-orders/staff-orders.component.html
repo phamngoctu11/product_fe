@@ -182,7 +182,7 @@
                 <div><span>Khách hàng</span><strong>{{ order.customerName || 'Khách hàng' }}</strong></div>
                 <div><span>Loại đơn</span><strong>{{ order.orderType }}</strong></div>
                 <div><span>Thanh toán</span><strong>{{ order.paymentMethod || 'Chưa xác định' }}</strong></div>
-                <div><span>Tổng tiền</span><strong class="text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</strong></div>
+                <div><span>Tổng tiền</span><strong class="text-danger">{{ order.finalPrice != null ? (order.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</strong></div>
                 <div class="claim-card__date"><span>Ngày tạo</span><strong>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong></div>
               </div>
               <div class="claim-card__actions">
@@ -275,7 +275,7 @@
             </div>
             <div class="col-md-3">
               <div class="text-muted small">Tổng tiền</div>
-              <div class="fw-bold text-danger">{{ selectedOrder.finalPrice | number: '1.0-0' }} đ</div>
+              <div class="fw-bold text-danger">{{ selectedOrder.finalPrice != null ? (selectedOrder.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</div>
             </div>
             <div class="col-md-3" *ngIf="selectedOrder.productionStartedAt">
               <div class="text-muted small">Bắt đầu sản xuất lúc</div>

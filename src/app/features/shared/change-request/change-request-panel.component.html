@@ -10,7 +10,7 @@
           </span>
         }
       </h5>
-      <p class="small text-muted mb-0">Giá, số lượng, thời lượng sản xuất và deadline không thay đổi trong luồng này.</p>
+      <p class="small text-muted mb-0">Chỉ có thể đề xuất đổi mô tả và thông số theo loại sản phẩm; không đổi loại, ảnh, giá, số lượng hay thời hạn.</p>
     </div>
     <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" (click)="load()" [disabled]="loading || submitting || decidingId !== null">
       <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
@@ -49,21 +49,44 @@
                     [disabled]="submitting || decidingId !== null" placeholder="Mô tả rõ phần cần thay đổi..."></textarea>
           <div class="text-end text-muted small">{{ proposedDescription.length }}/4000</div>
         </div>
+        @if (selectedFields.length) {
+          <div class="col-12">
+            <div class="small fw-bold mb-2">Thông số theo {{ selectedTypeName || 'loại sản phẩm' }}</div>
+            <div class="row g-3">
+              @for (field of selectedFields; track field.code) {
+                <div class="col-12 col-md-6">
+                  <label class="form-label small fw-bold">{{ field.label }} @if (field.unit) { ({{ field.unit }}) } *</label>
+                  @if (field.kind === 'TEXT') {
+                    <input class="form-control" type="text" [maxlength]="field.maxLength || 4000"
+                           [(ngModel)]="proposedFieldValues[field.code]" [disabled]="submitting || decidingId !== null">
+                  } @else if (field.kind === 'NUMBER') {
+                    <input class="form-control" type="number" [min]="field.minimum ?? null" [max]="field.maximum ?? null"
+                           [(ngModel)]="proposedFieldValues[field.code]" [disabled]="submitting || decidingId !== null">
+                  } @else if (field.kind === 'SINGLE_SELECT') {
+                    <select class="form-select" [(ngModel)]="proposedFieldValues[field.code]" [disabled]="submitting || decidingId !== null">
+                      <option [ngValue]="null">Chọn {{ field.label.toLowerCase() }}</option>
+                      @for (option of field.options || []; track option) { <option [ngValue]="option">{{ option }}</option> }
+                    </select>
+                  } @else if (field.kind === 'MULTI_SELECT') {
+                    <select class="form-select" multiple [(ngModel)]="proposedFieldValues[field.code]" [disabled]="submitting || decidingId !== null">
+                      @for (option of field.options || []; track option) { <option [ngValue]="option">{{ option }}</option> }
+                    </select>
+                  } @else {
+                    <label class="form-check">
+                      <input class="form-check-input" type="checkbox" [(ngModel)]="proposedFieldValues[field.code]" [disabled]="submitting || decidingId !== null">
+                      <span class="form-check-label">Có</span>
+                    </label>
+                  }
+                  @if (field.hint) { <div class="form-text">{{ field.hint }}</div> }
+                </div>
+              }
+            </div>
+          </div>
+        }
         <div class="col-12">
           <label class="form-label small fw-bold">Lý do chỉnh sửa *</label>
           <textarea class="form-control" rows="2" maxlength="2000" [(ngModel)]="reason"
                     [disabled]="submitting || decidingId !== null" placeholder="Vì sao bạn cần thay đổi?"></textarea>
-        </div>
-        <div class="col-12">
-          <label class="form-label small fw-bold">Ảnh tham chiếu mới (tùy chọn, tối đa 10)</label>
-          <input class="form-control" type="file" accept="image/*" multiple (change)="selectFiles($event)" [disabled]="submitting || decidingId !== null">
-          @if (previews.length) {
-            <div class="preview-list mt-2">
-              @for (preview of previews; track $index) {
-                <div class="preview"><img [src]="preview" alt="Ảnh tham chiếu"><button type="button" (click)="removeFile($index)">×</button></div>
-              }
-            </div>
-          }
         </div>
       </div>
       <div class="text-end mt-3">
@@ -120,9 +143,12 @@
         <div class="small text-muted fw-bold">Đặc tả đề xuất (từ spec v{{ request.baseSpecVersion }})</div>
         <div class="proposal-text mb-2">{{ proposalDescription(request) }}</div>
         <div class="small"><strong>Lý do từ khách hàng:</strong> {{ request.requestReason }}</div>
-        @if (proposalImages(request).length) {
-          <div class="proposal-images mt-2">
-            @for (image of proposalImages(request); track image) { <a [href]="image" target="_blank"><img [src]="image" alt="Ảnh đề xuất"></a> }
+        @if (proposalFieldEntries(request).length) {
+          <div class="small mt-2">
+            <strong>Thông số đề xuất:</strong>
+            @for (field of proposalFieldEntries(request); track field.label) {
+              <div>{{ field.label }}: {{ field.value }}</div>
+            }
           </div>
         }
         @if (request.decisionReason) {

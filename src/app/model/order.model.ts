@@ -1,3 +1,5 @@
+import type { ProductTypeField } from './custom-request.model';
+
 export interface OrderItem {
   id?: number;
   orderItemId?: number;
@@ -17,7 +19,7 @@ export interface OrderItem {
   productTypeCode?: string | null;
   productTypeName?: string | null;
   productTypeVersion?: number | null;
-  productTypeFields?: { code: string; label: string; unit?: string | null }[];
+  productTypeFields?: ProductTypeField[];
   fieldValues?: Record<string, unknown>;
   specSnapshot?: string | null;
   specVersion?: number;
@@ -49,7 +51,7 @@ export interface Order {
   orderItems?: OrderItem[];
   details?: OrderItem[];
   totalPrice: number;
-  finalPrice: number;
+  finalPrice: number | null;
   discountAmount?: number;
   voucherName?: string;
   startOrderTime: string;
@@ -86,7 +88,7 @@ export interface OrderCustomerInfo {
 export interface OrderListDTO {
   id: number;
   customerName: string;
-  finalPrice: number;
+  finalPrice: number | null;
   totalPrice?: number;
   status: string;
   startOrderTime: string;
@@ -95,6 +97,18 @@ export interface OrderListDTO {
   orderType?: 'CATALOG' | 'CUSTOM' | string | null;
   staffName?: string | null;
   version?: number;
+}
+
+export interface OrderCancellationResult {
+  orderId: number;
+  orderVersion: number;
+  status: string;
+  cancellationSource: string;
+  reason: string;
+  reputationPenalty: number;
+  voucherRestored: boolean;
+  assignmentReleased: boolean;
+  cancelledAt: string;
 }
 
 export interface ManagerOrderReviewSummary {
@@ -463,7 +477,7 @@ export interface CreateOrderChangeRequest {
   orderItemId: number;
   baseSpecVersion: number;
   proposedDescription: string;
-  proposedImageUrls: string[];
+  fieldValues: Record<string, unknown>;
   reason: string;
 }
 

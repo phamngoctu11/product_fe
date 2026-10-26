@@ -17,6 +17,7 @@ import {
   OrderAssignmentQueueItem,
   OrderAssignmentResult,
   OrderListDTO,
+  OrderCancellationResult,
   OrderStatusHistory,
   ReceiptConfirmRequest,
   ReceiptConfirmResponse,
@@ -115,12 +116,16 @@ export class OrderService {
       .pipe(map(unwrapApiResponse));
   }
 
-  cancelOrder(orderId: number, reason: string): Observable<string> {
-    const params = new HttpParams().set('reason', reason);
-    return this.http.put(`${this.apiUrl}/${orderId}/cancel`, null, {
-      params,
-      responseType: 'text',
-    });
+  cancelOrder(orderId: number, orderVersion: number, reason: string): Observable<OrderCancellationResult> {
+    const key = this.generateIdempotencyKey('user-cancel', orderId);
+    const headers = new HttpHeaders({ 'Idempotency-Key': key });
+    return this.http
+      .post<ApiResponse<OrderCancellationResult> | OrderCancellationResult>(
+        `${this.apiUrl}/${orderId}/cancellation`,
+        { orderVersion, reason },
+        { headers },
+      )
+      .pipe(map(unwrapApiResponse));
   }
 
   shippingHandover(

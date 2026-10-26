@@ -1,0 +1,196 @@
+﻿BÁO CÁO RÀ SOÁT UX/UI — CLAYART FRONTEND
+Ngày rà soát: 26/10/2026
+Phạm vi: Toàn bộ giao diện frontend trong dự án product_fe
+Trạng thái: Báo cáo và concept để review; chưa triển khai sửa mã nguồn.
+
+1. MỤC TIÊU VÀ CÁCH RÀ SOÁT
+Rà các màn hình và component theo hành trình thực tế của khách hàng, nhân viên và quản lý; bao gồm nội dung chi tiết sản phẩm, biểu mẫu, trạng thái rỗng/lỗi, đơn hàng, trao đổi custom, checkpoint sản xuất, hộp thoại và điều hướng. Kiểm tra desktop, tablet, mobile và quyền truy cập.
+
+- Đăng nhập thực tế với ba tài khoản test: admin (vai trò hệ thống MANAGER), staff04 (STAFF), user04 (USER). Thông tin xác thực không được lưu trong báo cáo.
+- Frontend: http://localhost:4200; API: localhost:8080.
+- Duyệt các route storefront, auth, help/policy và backoffice của cả ba vai trò; kiểm tra màn chi tiết sản phẩm, sản phẩm trong quản trị, danh sách/chi tiết đơn, lịch sử đơn, trao đổi custom, biểu mẫu yêu cầu custom, hồ sơ, trạng thái rỗng, workflow và kiểm soát quyền.
+- Màn chính xem ở desktop 1440 px; các luồng đại diện xem thêm ở 768 px và 390 px. Các màn đã lấy mẫu không bị tràn ngang.
+- Thực hiện kiểm kê source frontend: 71 component có @Component trong src/app (không tính file spec); danh sách đầy đủ nằm ở mục 6. Component được phân biệt giữa đã quan sát trực tiếp khi chạy và component dùng chung/nhánh trạng thái được rà theo template, không tuyên bố mọi tổ hợp dữ liệu và mọi thao tác nghiệp vụ đã được chạy.
+- Không gửi đơn, thanh toán, lưu hồ sơ, đổi voucher, xóa người dùng, tải ảnh, duyệt KCS, nhận đơn, replay/requeue hay gửi tin nhắn để tránh thay đổi dữ liệu.
+- Lần mở frontend bằng 127.0.0.1 gặp CORS do API dùng host localhost; xác nhận lại giao diện trên localhost:4200 nên không tính lần CORS này là lỗi UX/UI của sản phẩm.
+
+2. TÓM TẮT
+- Đăng nhập và phân quyền ba vai trò hoạt động; các route cấm được chuyển hướng.
+- Có lỗi làm người mua khó tin vào giá/chi tiết: giá không đổi theo phiên bản đã chọn, đơn custom chưa chốt giá hiển thị 0 đ; giỏ trống vẫn mở lựa chọn thanh toán.
+- Backoffice có dữ liệu vận hành thô và trạng thái tiếng Anh; nhân viên nhìn thấy màn rỗng trước khi nhận ra có 4 đơn chờ.
+- Nhãn biểu mẫu ở nhiều component không liên kết tới trường nhập; một số nút chọn màu chỉ có biểu tượng.
+- 20 vấn đề dưới đây được xác nhận trực tiếp hoặc rà từ template như ghi rõ ở từng mục. Mức ưu tiên đánh giá theo tác động trải nghiệm và rủi ro gây nhầm lẫn.
+
+3. VẤN ĐỀ ĐÃ GHI NHẬN
+
+UX-01 — CAO — Giỏ hàng trống vẫn cho chọn phương thức thanh toán
+Màn: user04 → /store/cart
+Bằng chứng: danh sách giỏ có 0 món; phần tổng giỏ không hiện nhưng hai nút “THANH TOÁN ONLINE” và “COD” vẫn enabled. Màn không có thông điệp trống nổi bật hoặc nút quay lại mua sắm.
+Ảnh hưởng: khách không hiểu cần thêm hàng trước; có thể bắt đầu luồng thanh toán không có sản phẩm.
+Đề xuất: hiện empty state “Giỏ hàng của bạn đang trống” và nút “Tiếp tục mua sắm”; ẩn/vô hiệu hóa thanh toán khi không có món hợp lệ; chỉ hiện tổng tiền và thông tin giao hàng sau khi có hàng.
+
+UX-02 — CAO — Chọn phiên bản sản phẩm nhưng giá và thông số vẫn theo phiên bản đầu
+Màn: user04 → /store/product/1
+Bằng chứng: trang có lựa chọn phiên bản giá 700.000 đ và 780.000 đ. Chọn phiên bản thứ hai đổi giá trị select nhưng giá lớn trên trang vẫn là 700.000 đ; phần thuộc tính cũng không cập nhật. Bấm “Chọn mua” lại mở modal yêu cầu chọn phiên bản lần nữa.
+Ảnh hưởng: giá và đặc tính sản phẩm không khớp lựa chọn của khách, làm giảm tin cậy và tăng nguy cơ đặt nhầm.
+Đề xuất: có một selectedVariant dùng chung; cập nhật giá, ảnh, thông số, tồn/trạng thái và thời gian làm hàng theo lựa chọn; truyền lựa chọn đó sang modal thêm giỏ thay vì bắt chọn lần hai.
+
+UX-03 — TRUNG BÌNH — Nội dung mô tả/thuộc tính ở trang sản phẩm chưa đủ để quyết định mua
+Màn: chi tiết sản phẩm storefront và component chi tiết sản phẩm dùng chung
+Bằng chứng: phần mô tả đang mang tính giới thiệu chung; khu vực thông số lấy dữ liệu của biến thể đầu và không theo biến thể khách chọn. Thông tin có ích để so sánh từng mẫu như chất liệu/kích thước/đặc điểm chưa được trình bày thành nhóm rõ ràng trong mẫu đã kiểm tra.
+Ảnh hưởng: khách phải đoán khác biệt giữa các phiên bản hoặc hỏi thêm trước khi mua.
+Đề xuất: biên tập mô tả riêng theo sản phẩm; nhóm thuộc tính thành các hàng dễ quét; hiển thị rõ biến thể đang chọn và chỉ đưa ra thuộc tính có dữ liệu xác thực.
+
+UX-04 — TRUNG BÌNH — Đơn custom chưa chốt giá hiện tổng dự kiến là 0 đ
+Màn: user04 → /store/custom-orders → đơn đang thảo luận
+Bằng chứng: thẻ danh sách nói “Chưa chốt giá”, nhưng panel chi tiết/thỏa thuận lại hiển thị “Tạm tính thỏa thuận: 0 đ” và “Tổng thanh toán dự kiến: 0 đ”.
+Ảnh hưởng: có thể bị hiểu là đơn được làm miễn phí hoặc số tiền cuối cùng bằng 0.
+Đề xuất: khi chưa có giá, thay các số 0 bằng “Chưa chốt giá”; chỉ tính và đặt tên “Tổng thanh toán” sau khi có đơn giá/số lượng/thỏa thuận hợp lệ.
+
+UX-05 — CAO — Workflow lộ exception thô, lặp lại và không hướng dẫn xử lý
+Màn: MANAGER → /management/workflow-operations
+Bằng chứng: các hàng DLQ lặp đoạn exception tiếng Anh, ví dụ lỗi xác thực mail “AuthenticationFailedException: 534-5.7.9 …”.
+Ảnh hưởng: danh sách khó quét, người vận hành khó phân biệt lỗi mới/trùng và không biết bước tiếp theo.
+Đề xuất: gom nhóm cùng loại lỗi, tóm tắt bằng tiếng Việt, thêm thời điểm/lần thử/trạng thái xử lý; để stack trace trong phần “Chi tiết kỹ thuật” mở rộng.
+
+UX-06 — TRUNG BÌNH — Nhân viên thấy tab rỗng dù đang có việc chờ nhận
+Màn: staff04 → /management/staff-orders
+Bằng chứng: mặc định tab “Đơn đang thực hiện (0)” trong khi tab “Đơn đang chờ nhận (4)” có việc. Điểm vào sau đăng nhập là quản lý sản phẩm.
+Ảnh hưởng: việc ưu tiên bị ẩn sau một tab rỗng; nhân viên mới có thể bỏ sót hàng đợi.
+Đề xuất: ưu tiên tab chờ nhận khi số lượng lớn hơn 0; cân nhắc cho STAFF vào thẳng hàng đợi; giữ badge số việc và hành động nhận đơn ở vị trí nổi bật.
+
+UX-07 — TRUNG BÌNH — Nhãn có hiển thị nhưng không gắn với input ở nhiều biểu mẫu
+Màn/component đã kiểm tra: /login, app-form-field trong hộp thoại quản lý người dùng, form trao đổi custom và hồ sơ.
+Bằng chứng: input của login, các trường app-form-field trong user detail và các trường trao đổi custom có số label liên kết bằng 0; component app-form-field tạo label không có for mặc định và input con không có id. Các nhãn trong một số form hồ sơ cũng không tham chiếu id.
+Ảnh hưởng: trình đọc màn hình không nhận được tên trường ổn định; thao tác bấm vào nhãn không đưa focus vào ô tương ứng.
+Đề xuất: cấp id duy nhất cho từng control và gắn label[for]; sửa app-form-field để truyền id tới control con; nối lỗi/giúp nhập bằng aria-describedby và autocomplete phù hợp.
+
+UX-08 — THẤP/TRUNG BÌNH — Một số điều khiển chỉ có biểu tượng, thiếu tên truy cập rõ ràng
+Màn/component: bảng người dùng quản trị và hộp thoại Cài đặt giao diện (rà template).
+Bằng chứng: nút chỉnh sửa/xóa trong bảng chỉ có icon và title; các nút màu preset trong settings chỉ hiển thị dấu kiểm khi được chọn, không có nhãn tên màu hoặc aria-label/title.
+Ảnh hưởng: người dùng bàn phím/trình đọc màn hình khó biết hành động hoặc màu nào sẽ được chọn.
+Đề xuất: đặt aria-label cụ thể cho nút chỉnh sửa/xóa theo hàng và cho từng swatch màu; có focus ring và trạng thái được chọn bằng aria-pressed.
+
+UX-09 — TRUNG BÌNH — Thẻ sản phẩm backoffice để lộ mã trạng thái kỹ thuật
+Màn: /management/product
+Bằng chứng: thẻ danh sách hiển thị nguyên enum “ACCEPTING_ORDERS”, trong khi trang chi tiết cùng sản phẩm có nhãn tiếng Việt “Đang nhận đơn”.
+Ảnh hưởng: nhân viên/manager phải tự diễn giải mã nội bộ; cách gọi trạng thái không nhất quán giữa danh sách và chi tiết.
+Đề xuất: dùng chung status-label map/localization giữa thẻ, chi tiết, badge và bộ lọc; không render enum trực tiếp.
+
+UX-10 — THẤP — Tiêu đề backoffice cố định và một nút tiếng Anh trong storefront
+Màn: các route /management/*; /store/product/1
+Bằng chứng: thanh đầu backoffice luôn ghi “Bảng điều khiển — Quản lý đơn hàng, sản phẩm và thông báo” kể cả khi đang ở hồ sơ, quản lý sản phẩm hay workflow. Trang sản phẩm giữa giao diện tiếng Việt có nút “BACK TO SHOP”.
+Ảnh hưởng: tiêu đề không giúp định hướng và có thể gây cảm giác đang ở sai màn; ngôn ngữ giao diện thiếu nhất quán.
+Đề xuất: tiêu đề/breadcrumb phản ánh route hiện tại; đổi nhãn sang “Quay lại cửa hàng” và dùng một nguồn nhãn thống nhất.
+
+4. THỨ TỰ ĐỀ XUẤT
+1) Đồng bộ phiên bản–giá–thông số trên chi tiết sản phẩm; sửa hiển thị giá chưa chốt trong custom.
+2) Thêm trạng thái giỏ trống và khóa thanh toán.
+3) Làm sạch bảng workflow bằng tóm tắt/gom nhóm lỗi.
+4) Đưa hàng đợi chờ nhận lên trước cho STAFF.
+5) Sửa liên kết nhãn biểu mẫu và tên truy cập của nút icon-only dùng chung.
+6) Chuẩn hóa trạng thái, tiêu đề route và ngôn ngữ.
+
+5. PHẠM VI ROUTE/COMPONENT VÀ ĐIỀU KIỆN KIỂM TRA
+Đã duyệt các nhóm route: auth (đăng nhập, đăng ký/khôi phục/đặt lại mật khẩu); cửa hàng/danh mục; chi tiết sản phẩm; giỏ; đơn hàng/lịch sử/chi tiết; yêu thích; yêu cầu custom và biểu mẫu tạo/sửa; trao đổi custom; hồ sơ; thanh toán thành công/đơn guest; toàn bộ trang giới thiệu, trợ giúp và chính sách; backoffice sản phẩm/loại sản phẩm/người dùng/dashboard/voucher/duyệt đơn/workflow; đơn sản xuất, custom và hồ sơ nhân viên. Route guest không có token hiển thị trạng thái đường dẫn không hợp lệ như dự kiến.
+
+Component có dữ liệu/runtime được mở trực tiếp trong các luồng gồm: product/product-page/product-tile/product-grid/add-to-cart; cart-item/cart-payment; orders/order-detail-popup/order-items-table/customer-production-progress/status/summary; custom-request-form/custom-request-list/custom-orders/order-collaboration; management-products/product-detail/product-variant-editor; user/userdetail; staff-orders; admin-order; workflow-operations; myinfor/form-field/view-state/page-header; layouts/sidebar/footer/pagination/toast và static-page shell. Component checkpoint KCS/staff, settings, reward và các trạng thái hiếm khác được đối chiếu theo template/component tree nếu dữ liệu test không đưa được tới nhánh tương ứng.
+
+Danh sách tất cả 71 component được kiểm kê:
+- App/layout (5): app-root, app-storefront-layout, app-backoffice-layout, app-sidebar, app-footer.
+- Auth (2): app-login, app-reset-password.
+- Management (10): app-admin-dashboard, app-admin-order, app-product-types, app-management-products, app-staff-custom-orders, app-staff-orders, app-user, app-userdetail, app-voucher-admin, app-workflow-operations.
+- Storefront (22): app-about-page, app-cart-item-row, app-cart-modal, app-cart-payment-panel, app-custom-orders, app-custom-request-form, app-custom-request-list, app-guest-order, app-hero-section, app-orders, app-payment-success, app-add-to-cart-modal, app-product, app-reward-dialog, sf-chip-group, sf-footer, sf-page-intro, sf-product-grid, sf-product-tile, sf-state, sf-wordmark, app-wishlist.
+- Shared (32): app-action-dialog, app-change-request-panel, app-myinfor, app-order-collaboration, app-order-detail-popup, app-order-payment-modal, app-product-detail, app-product-variant-editor, app-product-page, app-customer-production-progress, app-manager-kcs-dialog, app-staff-production-checkpoint, app-settings-modal, app-contact-support-page, app-info-page-shell, app-order-tracking-page, app-payment-methods-page, app-privacy-policy-page, app-returns-refunds-page, app-shipping-policy-page, app-shopping-guide-page, app-warranty-page, app-toast-container, app-pagination, app-form-field, app-metric-card, app-order-items-table, app-order-status-badge, app-order-summary-card, app-page-header, app-product-card, app-view-state.
+
+6. CONCEPT SAU KHẮC PHỤC
+Ảnh concept mở rộng: targetImage/UX-UI-redesign-concept-expanded.png
+Ảnh concept luồng user (custom, chat, hỗ trợ): targetImage/UX-UI-redesign-user-concept.png
+Ảnh minh họa hướng thiết kế dự kiến cho chi tiết sản phẩm/giá theo phiên bản, giỏ trống, hàng đợi nhân viên và bảng workflow đã tóm tắt. Đây là giả định để bạn review, chưa phải giao diện triển khai.
+Ảnh concept ban đầu (ba vai trò): targetImage/UX-UI-redesign-concept.png
+
+7. GIỚI HẠN
+Đây là rà soát UX/UI thủ công kết hợp kiểm tra cấu trúc/template frontend; không phải kiểm thử đầy đủ mọi tổ hợp dữ liệu, thiết bị, trình đọc màn hình hoặc toàn bộ giao dịch nghiệp vụ. Không thực hiện hành động có ghi dữ liệu. Chưa sửa mã nguồn. Các đề xuất trong báo cáo là để bạn xem xét trước khi yêu cầu triển khai.
+
+PHỤ LỤC — RÀ SOÁT CHI TIẾT CÁC LUỒNG BẠN BỔ SUNG
+Ngày bổ sung: 26/10/2026
+
+UX-11 — TRUNG BÌNH — Timeline đơn hàng hiển thị mã trạng thái thô
+Màn: user04 → /store/orders → Tiến trình đơn hàng
+Bằng chứng: timeline 8 bước hiển thị các giá trị như “PENDING_APPROVAL”, “DISCUSSING”, “WAITING_STAFF_CONFIRMATION”, “ORDER_ACCEPTED”, “ORDER_CREATING”, “READY_TO_SHIP”, “SHIPPING”, “DELIVERED”; trạng thái trước cũng được in nguyên mã.
+Ảnh hưởng: khách khó hiểu trạng thái và tiến độ đơn; mã tiếng Anh viết hoa tạo cảm giác đây là dữ liệu nội bộ.
+Đề xuất: dịch nhãn trạng thái qua cùng status map như badge; mô tả ngắn từng bước và nhấn rõ bước hiện tại.
+
+UX-12 — TRUNG BÌNH — Chi tiết từng sản phẩm in object rỗng “{}”
+Màn: popup chi tiết đơn user, chi tiết đơn staff và chi tiết duyệt đơn manager.
+Bằng chứng: dưới tên biến thể trong bảng sản phẩm xuất hiện “{}” thay cho thuộc tính có thể đọc được; hiện tượng lặp ở cả ba vai trò.
+Ảnh hưởng: khách và nhân viên không biết thuộc tính đó có ý nghĩa gì; giao diện trông như lộ JSON/dữ liệu kỹ thuật.
+Đề xuất: chuyển thuộc tính thành cặp tên–giá trị dễ quét; bỏ qua object rỗng; dùng “Chưa có thông tin thuộc tính” nếu cần.
+
+UX-13 — TRUNG BÌNH — Khách hàng không xem được các checkpoint hoàn thiện và làm lại
+Màn: chi tiết đơn user → Tiến trình chế tác; đối chiếu manager → KCS.
+Bằng chứng: cùng một đơn đã giao, view khách nhận và hiển thị duy nhất checkpoint tạo dáng ban đầu cho mỗi sản phẩm. Dialog KCS manager có thêm checkpoint sản phẩm hoàn thiện, các lần nộp và lịch sử “Yêu cầu làm lại” trước khi đạt.
+Ảnh hưởng: khách chỉ thấy ảnh tạo dáng ban đầu mà không biết sản phẩm đã hoàn thiện, bị yêu cầu làm lại hay đã qua KCS.
+Đề xuất: bổ sung timeline checkpoint phù hợp cho khách gồm trạng thái hoàn thiện, các cập nhật quan trọng và ảnh được phép chia sẻ; phân biệt rõ lần nộp lại và quyết định cuối.
+
+LUỒNG CHI TIẾT VÀ POPUP ĐÃ MỞ BỔ SUNG
+- Đơn user: danh sách đang xử lý rỗng; lịch sử có 5 đơn đã giao và 3 đơn đã hủy. Đã mở popup chi tiết đơn, bảng item, trạng thái đánh giá theo sản phẩm, component tiến trình sản xuất, popup lịch sử và timeline. Timeline có 8 bước. Một item hiển thị số lượng nhận 0 nên không cho đánh giá, item khác có số lượng nhận 3 và đã đánh giá; đây có thể là dữ liệu nhận hàng, cần backend xác minh trước khi kết luận lỗi UI.
+- Đơn staff: 0 đơn đang thực hiện, 10 đã hoàn thành, 4 chờ nhận. Đã mở chi tiết đơn hoàn tất và xem trước đơn chờ nhận; đã mở hộp xác nhận nhận đơn rồi chọn quay lại, không nhận đơn. Vì dữ liệu hiện tại không có đơn đang sản xuất của staff, chưa thể mở trực tiếp form gửi checkpoint hoặc luồng bắt đầu sản xuất.
+- Khung chat staff: đã mở dialog trao đổi, xem lịch sử 7 tin và chuyển sang tab chat ở mobile; khung chat không tràn ngang tại 390 px. Không gửi tin. Với một đơn lịch sử, chat có 7 tin nhưng phần thỏa thuận báo “Đơn hàng chưa có nhân viên phụ trách đang hoạt động”; cần xác minh kỳ vọng cho đơn đã hoàn tất.
+- Manager: tab “Chờ duyệt” hiện không có đơn nên không có bản ghi để mở chi tiết duyệt hoặc thao tác duyệt. Tab “Chờ phân công” có 4 đơn; đã mở chi tiết read-only, không chọn staff và không phân công. Tab KCS đã mở lịch sử checkpoint của đơn đã giao: hai sản phẩm có tổng cộng năm bản ghi checkpoint, gồm một lần yêu cầu làm lại và lần sau đạt. Đã mở popup phóng ảnh; dialog KCS không tràn ngang ở 390 px.
+- Dialog/popup dùng chung: đã mở user detail, hộp xác nhận ActionDialog, Cài đặt giao diện (7 swatch màu không có tên truy cập), Cửa hàng Đổi Thưởng (1 mẫu voucher, ví đang trống), popup chi tiết đơn và lightbox checkpoint. Hộp xác nhận nhận đơn được đóng an toàn; không phát sinh thao tác ghi dữ liệu.
+- Mở rộng UX-09: chi tiết đơn staff và manager cũng hiển thị loại đơn “CATALOG” nguyên mã. Nên bản địa hóa cả loại đơn bên cạnh trạng thái.
+
+BỔ SUNG ƯU TIÊN KHẮC PHỤC
+7) Dịch trạng thái ở timeline; làm sạch thuộc tính item; hiển thị đầy đủ tiến độ checkpoint phù hợp cho khách.
+
+GIỚI HẠN DỮ LIỆU CỦA CÁC LUỒNG NÀY
+Hàng đợi manager “Chờ duyệt” rỗng tại thời điểm kiểm tra nên chưa xem được popup duyệt đơn có bản ghi. Hàng “Chờ phân công” có dữ liệu và đã xem chi tiết. Staff không có đơn đang sản xuất nên form nhập checkpoint, tải ảnh và khởi động sản xuất chưa được mở trực tiếp. Hộp KCS chỉ được xem, không bấm Đạt hoặc Yêu cầu làm lại. Không gửi tin nhắn, thanh toán, lưu hay phân công.
+
+PHỤ LỤC 2 — GHI NHẬN TỪ ẢNH GIAO DIỆN USER BẠN GỬI
+
+UX-14 — CAO NẾU LÀ ẢNH THẬT CỦA ĐƠN — Ảnh checkpoint không liên quan sản phẩm ClayArt
+Màn: popup chi tiết đơn user → tiến trình checkpoint.
+Bằng chứng: ảnh checkpoint đang hiển thị trong ảnh bạn gửi là ảnh chụp giao diện một cửa hàng khác, không phải sản phẩm gốm/custom trong đơn.
+Ảnh hưởng: khách có thể nghĩ ảnh tiến độ bị gắn nhầm hoặc đơn hàng của mình đang bị lẫn với dữ liệu khác.
+Đề xuất: kiểm tra mapping ảnh theo orderItem/checkpoint và dữ liệu seed; trước khi hiển thị cần xác nhận ảnh thuộc đúng sản phẩm/đơn. Nếu không xác minh được, báo rõ ảnh chưa có thay vì hiện ảnh không liên quan.
+
+UX-15 — TRUNG BÌNH — Checkbox thuộc tính “Râu” bị kéo giãn và lệch khỏi nhãn
+Màn: /store/custom-requests/new, sau khi chọn phân khúc có trường boolean.
+Bằng chứng: trong ảnh, checkbox nằm xa nhãn “Râu”, còn chữ “Có” rơi xuống dòng riêng. Template có style chung cho mọi input trong .cr-field, áp cả width/padding của input text lên checkbox.
+Ảnh hưởng: người dùng khó hiểu ô nào thuộc câu hỏi nào và có thể bỏ sót thuộc tính.
+Đề xuất: style input[type=checkbox] riêng, nhóm checkbox với nhãn theo hàng ngang, giữ label có thể bấm để đổi trạng thái và có focus rõ.
+
+UX-16 — TRUNG BÌNH — Email hỗ trợ không thống nhất giữa trang liên hệ và footer
+Màn: /store/help/contact-support và footer.
+Bằng chứng: trang liên hệ hiển thị support@myapp.vn, footer hiển thị support@clayart.vn.
+Ảnh hưởng: khách không biết địa chỉ nào nhận yêu cầu; email generic làm giảm tin cậy thương hiệu.
+Đề xuất: chốt một địa chỉ hỗ trợ chính thức và dùng cùng một nguồn cấu hình ở mọi trang.
+
+UX-17 — TRUNG BÌNH — Danh sách yêu cầu custom lộ tiêu đề E2E/UAT như yêu cầu thật
+Màn: /store/custom-requests.
+Bằng chứng: ảnh có các mô tả tiếng Anh như “E2E cancellation retest”, “E2E cancellation test” và “UAT…”.
+Ảnh hưởng: danh sách khách hàng trộn dữ liệu kiểm thử với yêu cầu thực và làm người dùng tưởng có lỗi/hủy đơn.
+Đề xuất: tách seed E2E/UAT khỏi dữ liệu tài khoản dùng để review khách hàng; nếu đây là môi trường test, đánh dấu rõ môi trường/dữ liệu thử nghiệm.
+
+UX-18 — THẤP/TRUNG BÌNH — Hồ sơ còn giá trị tiếng Anh thô
+Màn: /store/myinfor và lịch sử điểm uy tín.
+Bằng chứng: ảnh hiển thị giới tính “male” và một lý do điểm “Completed order” trong trang còn lại bằng tiếng Việt.
+Ảnh hưởng: cách hiển thị hồ sơ không nhất quán, có vẻ như một phần dữ liệu chưa được dịch.
+Đề xuất: map giá trị giới tính và chuẩn hóa nội dung lịch sử điểm sang tiếng Việt trước khi render.
+
+UX-19 — TRUNG BÌNH — Trạng thái đơn, thỏa thuận và hạn chốt không thống nhất
+Màn: /store/custom-orders.
+Bằng chứng: trong cùng ảnh, thẻ đơn bên trái ghi “Đã giao”; phần đầu workspace lại ghi “Đang thảo luận”, bộ đếm ghi “Hết hạn”, đồng thời panel thỏa thuận báo chưa có nhân viên phụ trách đang hoạt động và vẫn trình bày các trường giống form nhập.
+Ảnh hưởng: khách không biết trạng thái nào đang có hiệu lực, còn cần thao tác hay chỉ đang xem lịch sử.
+Đề xuất: tách rõ trạng thái đơn với trạng thái thỏa thuận; với đơn đã giao/hết hạn, chuyển form sang chế độ chỉ đọc và giải thích vì sao không thể chỉnh sửa/gửi.
+
+UX-20 — TRUNG BÌNH — Một tin nhắn chat hiển thị dấu hỏi thay cho dấu tiếng Việt
+Màn: khung chat trong /store/custom-orders.
+Bằng chứng: ảnh gửi có nội dung tiếng Việt bị thay nhiều ký tự bằng dấu hỏi.
+Ảnh hưởng: nội dung yêu cầu có thể bị hiểu sai, nhất là kích thước/màu sắc sản phẩm custom.
+Đề xuất: kiểm tra encoding UTF-8 từ lúc lưu đến lúc tải tin nhắn; rà dữ liệu cũ bị lỗi và có quy trình hiển thị/khôi phục an toàn.
+
+GHI CHÚ VỀ BẰNG CHỨNG ẢNH
+Các nhận xét UX-14 đến UX-20 được bổ sung từ ảnh giao diện bạn gửi và đối chiếu với template/data hiển thị. Ảnh checkpoint sai sản phẩm và nội dung chat lỗi dấu có thể xuất phát từ dữ liệu upload/test hoặc API; cần xác minh nguồn dữ liệu trước khi quy kết lỗi riêng cho frontend.
+

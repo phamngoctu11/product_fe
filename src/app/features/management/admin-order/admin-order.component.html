@@ -104,7 +104,7 @@
                     <div class="small text-muted mt-1">{{ order.totalQuantity }} sản phẩm</div>
                   </td>
                   <td>{{ order.paymentMethod || 'Chưa xác định' }}</td>
-                  <td class="fw-bold text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</td>
+                  <td class="fw-bold text-danger">{{ order.finalPrice != null ? (order.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</td>
                   <td>
                     <select class="form-select form-select-sm staff-select"
                             [(ngModel)]="selectedStaffByOrder[order.orderId]"
@@ -161,7 +161,7 @@
                   <td class="fw-semibold">{{ order.customerName || 'Khách hàng' }}</td>
                   <td><span class="order-type" [class.custom]="order.orderType === 'CUSTOM'">{{ order.orderType }}</span></td>
                   <td>{{ order.paymentMethod || 'Chưa xác định' }}</td>
-                  <td class="fw-bold text-danger">{{ order.finalPrice | number: '1.0-0' }} đ</td>
+                  <td class="fw-bold text-danger">{{ order.finalPrice != null ? (order.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</td>
                   <td>
                     <select class="form-select form-select-sm staff-select"
                             [(ngModel)]="selectedStaffByOrder[order.orderId]"
@@ -286,7 +286,7 @@
                   </div>
                   <div class="col-md-3">
                     <span class="text-muted small d-block">Tổng giá trị</span>
-                    <strong class="text-danger fs-6">{{ kcsOrder.finalPrice | number: '1.0-0' }} đ</strong>
+                    <strong class="text-danger fs-6">{{ kcsOrder.finalPrice != null ? (kcsOrder.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</strong>
                   </div>
                   <div class="col-md-3">
                     <span class="text-muted small d-block">Nhân viên phụ trách</span>
@@ -468,7 +468,7 @@
             <div><span>Thanh toán</span><strong>{{ detail.order.paymentMethod || detail.order.paymentMethodType || '—' }}</strong></div>
             <div><span>Khách hàng</span><strong>{{ detail.order.customerName || detail.order.recipientName || 'Khách hàng' }}</strong></div>
             <div><span>Số điện thoại</span><strong>{{ detail.order.recipientPhone || detail.order.customer?.phone || '—' }}</strong></div>
-            <div><span>Tổng tiền</span><strong class="text-danger">{{ detail.order.finalPrice | number: '1.0-0' }} đ</strong></div>
+            <div><span>Tổng tiền</span><strong class="text-danger">{{ detail.order.finalPrice != null ? (detail.order.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</strong></div>
             <div><span>Hạn xác nhận</span><strong>{{ detail.confirmationDueAt ? (detail.confirmationDueAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</strong></div>
           </div>
 

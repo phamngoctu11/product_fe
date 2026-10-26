@@ -1,0 +1,14 @@
+ClayArt frontend screenshots
+Captured: 2026-10-26
+Format: PNG; browser viewport 1600 x 1000; route pages are full-page captures, dialogs and menus are viewport captures.
+Total screenshots: 83
+User: 38 screenshots in user/ (storefront, forms, orders, chat, profile, help and policy pages).
+Manager: 25 screenshots in manager/ (dashboard, products, users, vouchers, workflow, order review/assignment/KCS).
+Staff: 20 screenshots in staff/ (production queue tabs, order details, claim confirmation and custom-order chat).
+Open INDEX.html for a thumbnail gallery, or browse the role folders directly.
+
+Notes:
+- Captured with the supplied test accounts. Screenshots may show test-account and test-order data.
+- Only read-only screens were opened. No form was saved; no payment, approval, assignment, order claim, message send, cancellation or deletion was confirmed.
+- The manager approval queue was empty during capture. The staff in-progress tab was empty; completed and claimable tabs had data.
+- chat-loading-state.png records the short loading state reached from the staff chat-history shortcut; custom-order-chat-order-27.png and custom-orders-chat.png show the loaded chat workspace.

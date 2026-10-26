@@ -112,7 +112,7 @@ describe('OrderService - ChangeRequest Endpoints (WF06)', () => {
         orderItemId: 15,
         baseSpecVersion: 1,
         proposedDescription: 'Khắc chữ Tâm',
-        proposedImageUrls: ['https://example.com/ref.jpg'],
+        fieldValues: { height: 20 },
         reason: 'Tặng người thân',
       };
 
@@ -141,7 +141,7 @@ describe('OrderService - ChangeRequest Endpoints (WF06)', () => {
         orderItemId: 15,
         baseSpecVersion: 1,
         proposedDescription: 'Khắc chữ Tâm',
-        proposedImageUrls: [],
+        fieldValues: {},
         reason: 'Tặng người thân',
       };
 
@@ -415,5 +415,33 @@ describe('OrderService - ChangeRequest Endpoints (WF06)', () => {
       req.flush({ success: true, status: 200, message: 'OK', data: mockReorderResponse });
     });
   });
-});
 
+  describe('cancelOrder', () => {
+    it('should POST the versioned cancellation payload with an idempotency key', () => {
+      const orderId = 25;
+      const orderVersion = 0;
+      const reason = 'Customer requested cancellation';
+      const result = {
+        orderId,
+        orderVersion: 1,
+        status: 'CANCELLED',
+        cancellationSource: 'USER',
+        reason,
+        reputationPenalty: 0,
+        voucherRestored: false,
+        assignmentReleased: false,
+        cancelledAt: '2026-10-26T10:00:00',
+      };
+
+      service.cancelOrder(orderId, orderVersion, reason).subscribe((response) => {
+        expect(response).toEqual(result);
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/${orderId}/cancellation`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ orderVersion, reason });
+      expect(req.request.headers.get('Idempotency-Key')).toContain(`user-cancel-${orderId}-`);
+      req.flush({ success: true, status: 200, message: 'OK', data: result });
+    });
+  });
+});

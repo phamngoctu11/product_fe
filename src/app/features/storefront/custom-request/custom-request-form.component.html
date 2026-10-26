@@ -43,7 +43,7 @@
 
           <div class="cr-field">
             <label>Phân khúc sản phẩm <span>*</span></label>
-            <select formControlName="productTypeId" (change)="onProductTypeChange($any($event.target).value)" [disabled]="!!currentDraft || isReadonly">
+            <select formControlName="productTypeId" [disabled]="!!currentDraft || isReadonly">
               <option [ngValue]="null">Chọn loại sản phẩm</option>
               @for (type of productTypes; track type.id) {
                 <option [ngValue]="type.id">{{ type.name }}</option>

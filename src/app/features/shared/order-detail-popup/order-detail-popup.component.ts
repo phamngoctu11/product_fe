@@ -164,10 +164,11 @@ export class OrderDetailPopupComponent {
     return Number(order.totalPrice || 0);
   }
 
-  getFinalTotal(order: Order): number {
+  getFinalTotal(order: Order): number | null {
     if (order.finalPrice !== null && order.finalPrice !== undefined) {
       return Number(order.finalPrice || 0);
     }
+    if (order.orderType === 'CUSTOM') return null;
     return Math.max(0, this.getOriginalTotal(order) - Number(order.discountAmount || 0));
   }
 

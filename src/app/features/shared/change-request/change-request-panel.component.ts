@@ -1,18 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, map, of } from 'rxjs';
-import { getApiErrorMessage, unwrapApiResponse } from '../../../model/api-response.model';
+import { getApiErrorMessage } from '../../../model/api-response.model';
 import {
   ChangeRequestDecision,
   Order,
   OrderChangeRequest,
   OrderItem,
 } from '../../../model/order.model';
+import type { ProductTypeField } from '../../../model/custom-request.model';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { OrderService } from '../../../service/order.service';
 import { ToastService } from '../../../service/toast.service';
-import { UploadService } from '../../../service/upload.service';
 
 @Component({
   selector: 'app-change-request-panel',
@@ -21,13 +20,12 @@ import { UploadService } from '../../../service/upload.service';
   templateUrl: './change-request-panel.component.html',
   styleUrl: './change-request-panel.component.css',
 })
-export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
+export class ChangeRequestPanelComponent implements OnChanges {
   @Input({ required: true }) order!: Order;
   @Input({ required: true }) mode: 'USER' | 'STAFF' = 'USER';
   @Output() changed = new EventEmitter<void>();
 
   private readonly orderService = inject(OrderService);
-  private readonly uploadService = inject(UploadService);
   private readonly toast = inject(ToastService);
   private readonly dialogService = inject(ActionDialogService);
 
@@ -38,18 +36,18 @@ export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
   isForbidden = false;
   selectedItemId: number | null = null;
   proposedDescription = '';
+  selectedTypeName = '';
+  selectedFields: ProductTypeField[] = [];
+  proposedFieldValues: Record<string, unknown> = {};
   reason = '';
-  files: File[] = [];
-  previews: string[] = [];
   decisionReasons: Record<number, string> = {};
   decidingId: number | null = null;
   private createKey: string | null = null;
-  private cachedUploadedUrls: string[] = [];
   private lastSubmittedPayload: {
     itemId: number;
     description: string;
     reason: string;
-    filesCount: number;
+    fieldValues: Record<string, unknown>;
   } | null = null;
   private decisionKeys: Record<number, string> = {};
 
@@ -62,10 +60,6 @@ export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
       this.isForbidden = false;
       this.load();
     }
-  }
-
-  ngOnDestroy(): void {
-    this.clearPreviews();
   }
 
   get isGuest(): boolean {
@@ -124,40 +118,21 @@ export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
   selectItem(): void {
     const item = this.eligibleItems.find((candidate) => candidate.orderItemId === this.selectedItemId);
     this.proposedDescription = item?.description || this.snapshotDescription(item?.specSnapshot) || '';
-    this.files = [];
-    this.clearPreviews();
-    this.cachedUploadedUrls = [];
-    this.createKey = null;
-    this.lastSubmittedPayload = null;
-  }
-
-  selectFiles(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const incoming = Array.from(input.files || []);
-    if (this.files.length + incoming.length > 10) {
-      this.toast.warning('Chỉ được chọn tối đa 10 ảnh tham chiếu.');
-    }
-    const combinedFiles = [...this.files, ...incoming].slice(0, 10);
-    this.clearPreviews();
-    this.files = combinedFiles;
-    this.previews = this.files.map((file) => URL.createObjectURL(file));
-    this.cachedUploadedUrls = [];
-    this.createKey = null;
-    this.lastSubmittedPayload = null;
-    input.value = '';
-  }
-
-  removeFile(index: number): void {
-    if (this.previews[index]) {
+    this.selectedTypeName = item?.productTypeName || '';
+    this.selectedFields = item?.productTypeFields || [];
+    this.proposedFieldValues = { ...(item?.fieldValues || {}) };
+    if (item?.specSnapshot) {
       try {
-        URL.revokeObjectURL(this.previews[index]);
+        const snapshot = JSON.parse(item.specSnapshot);
+        this.selectedTypeName ||= snapshot.productType?.name || '';
+        this.selectedFields = this.selectedFields.length ? this.selectedFields : (snapshot.productTypeFields || []);
+        if (!Object.keys(this.proposedFieldValues).length) {
+          this.proposedFieldValues = { ...(snapshot.fieldValues || {}) };
+        }
       } catch {
-        // ignore
+        // Keep the typed order item fields when reading a legacy plain-text snapshot.
       }
     }
-    this.files = this.files.filter((_, fileIndex) => fileIndex !== index);
-    this.previews = this.previews.filter((_, fileIndex) => fileIndex !== index);
-    this.cachedUploadedUrls = [];
     this.createKey = null;
     this.lastSubmittedPayload = null;
   }
@@ -180,49 +155,53 @@ export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
       this.toast.warning('Vui lòng nhập đặc tả mong muốn và lý do chỉnh sửa.');
       return;
     }
+    const fields = item.productTypeFields?.length ? item.productTypeFields : this.selectedFields;
+    const invalidField = fields.find((field) => {
+      const value = this.proposedFieldValues[field.code];
+      if (value === null || value === undefined || value === '' || Array.isArray(value) && value.length === 0) return true;
+      switch (field.kind) {
+        case 'TEXT': return typeof value !== 'string' || !!field.maxLength && value.length > field.maxLength;
+        case 'NUMBER': return typeof value !== 'number' || !Number.isFinite(value)
+          || field.minimum != null && value < field.minimum || field.maximum != null && value > field.maximum;
+        case 'BOOLEAN': return typeof value !== 'boolean';
+        case 'SINGLE_SELECT': return typeof value !== 'string' || !field.options?.includes(value);
+        case 'MULTI_SELECT': return !Array.isArray(value) || value.some((option) => typeof option !== 'string' || !field.options?.includes(option));
+      }
+    });
+    if (invalidField) {
+      this.toast.warning(`Vui lòng nhập giá trị hợp lệ cho trường “${invalidField.label}”.`);
+      return;
+    }
     if (this.submitting || this.decidingId !== null) {
       return;
     }
 
+    const fieldValues = Object.fromEntries(fields.map((field) => [
+      field.code,
+      this.proposedFieldValues[field.code],
+    ]));
     const currentPayload = {
       itemId: item.orderItemId,
       description: this.proposedDescription.trim(),
       reason: this.reason.trim(),
-      filesCount: this.files.length,
+      fieldValues,
     };
 
     const isSamePayload = this.lastSubmittedPayload
       && this.lastSubmittedPayload.itemId === currentPayload.itemId
       && this.lastSubmittedPayload.description === currentPayload.description
       && this.lastSubmittedPayload.reason === currentPayload.reason
-      && this.lastSubmittedPayload.filesCount === currentPayload.filesCount;
+      && JSON.stringify(this.lastSubmittedPayload.fieldValues) === JSON.stringify(currentPayload.fieldValues);
 
     if (!isSamePayload) {
       this.createKey = this.orderService.generateIdempotencyKey('user-change-request', this.order.id);
-      this.cachedUploadedUrls = [];
       this.lastSubmittedPayload = currentPayload;
     } else if (!this.createKey) {
       this.createKey = this.orderService.generateIdempotencyKey('user-change-request', this.order.id);
     }
 
     this.submitting = true;
-    if (this.files.length > 0 && this.cachedUploadedUrls.length === this.files.length) {
-      this.sendCreate(item, this.cachedUploadedUrls);
-      return;
-    }
-
-    const uploads = this.files.map((file) => this.uploadService.uploadImage(file).pipe(map(unwrapApiResponse)));
-    const uploaded$ = uploads.length > 0 ? forkJoin(uploads) : of([] as { url: string }[]);
-    uploaded$.subscribe({
-      next: (uploaded) => {
-        this.cachedUploadedUrls = uploaded.map((value) => value.url);
-        this.sendCreate(item, this.cachedUploadedUrls);
-      },
-      error: (error) => {
-        this.submitting = false;
-        this.toast.fromError(error, 'Không thể tải ảnh đính kèm.');
-      },
-    });
+    this.sendCreate(item, fieldValues);
   }
 
   decide(request: OrderChangeRequest, decision: ChangeRequestDecision): void {
@@ -304,10 +283,17 @@ export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
     return this.snapshotDescription(request.proposedSpecSnapshot) || request.proposedSpecSnapshot;
   }
 
-  proposalImages(request: OrderChangeRequest): string[] {
+  proposalFieldEntries(request: OrderChangeRequest): { label: string; value: string }[] {
     try {
-      const parsed = JSON.parse(request.proposedSpecSnapshot);
-      return Array.isArray(parsed?.imageUrls) ? parsed.imageUrls : [];
+      const base = request.baseSpecSnapshot ? JSON.parse(request.baseSpecSnapshot) : {};
+      const proposal = JSON.parse(request.proposedSpecSnapshot);
+      const fields: ProductTypeField[] = Array.isArray(base?.productTypeFields) ? base.productTypeFields : [];
+      const values = proposal?.fieldValues || base?.fieldValues || {};
+      return fields.map((field) => {
+        const value = values[field.code];
+        const text = Array.isArray(value) ? value.join(', ') : typeof value === 'boolean' ? (value ? 'Có' : 'Không') : String(value ?? '');
+        return { label: field.label, value: `${text}${field.unit ? ` ${field.unit}` : ''}` };
+      });
     } catch {
       return [];
     }
@@ -346,18 +332,17 @@ export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
     return Number(item.orderItemId || 0);
   }
 
-  private sendCreate(item: OrderItem, imageUrls: string[]): void {
+  private sendCreate(item: OrderItem, fieldValues: Record<string, unknown>): void {
     this.orderService.createChangeRequest(this.order.id, {
       orderVersion: this.order.version!,
       orderItemId: item.orderItemId!,
       baseSpecVersion: item.specVersion ?? 1,
       proposedDescription: this.proposedDescription.trim(),
-      proposedImageUrls: imageUrls,
+      fieldValues,
       reason: this.reason.trim(),
     }, this.createKey!).subscribe({
       next: (created) => {
         this.createKey = null;
-        this.cachedUploadedUrls = [];
         this.lastSubmittedPayload = null;
         this.submitting = false;
         this.requests = [created, ...this.requests];
@@ -369,7 +354,6 @@ export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
         this.submitting = false;
         if (error?.status === 409) {
           this.createKey = null;
-          this.cachedUploadedUrls = [];
           this.lastSubmittedPayload = null;
           this.load();
           this.changed.emit();
@@ -395,27 +379,14 @@ export class ChangeRequestPanelComponent implements OnChanges, OnDestroy {
     }
   }
 
-  private clearPreviews(): void {
-    if (this.previews.length > 0) {
-      for (const url of this.previews) {
-        try {
-          URL.revokeObjectURL(url);
-        } catch {
-          // ignore
-        }
-      }
-      this.previews = [];
-    }
-  }
-
   private resetDraft(): void {
     this.selectedItemId = null;
     this.proposedDescription = '';
+    this.selectedTypeName = '';
+    this.selectedFields = [];
+    this.proposedFieldValues = {};
     this.reason = '';
-    this.files = [];
-    this.clearPreviews();
     this.createKey = null;
-    this.cachedUploadedUrls = [];
     this.lastSubmittedPayload = null;
   }
 }
