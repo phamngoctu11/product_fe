@@ -24,6 +24,12 @@ export interface ProductVariant {
   image_url?: string;
 }
 
+export interface ProductSearchSuggestions {
+  productTypes: Array<{ id: number; code: string; name: string }>;
+  products: Product[];
+  totalProducts: number;
+}
+
 export interface BestSellingProduct {
   productId: number;
   productName: string;

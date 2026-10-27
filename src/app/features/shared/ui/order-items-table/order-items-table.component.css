@@ -1,7 +1,8 @@
 .order-items-table-wrap {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid var(--bs-border-color);
-  border-radius: 0.75rem;
+  border-radius: var(--clay-radius-md, 9px);
 }
 
 .order-item-image,
@@ -12,7 +13,7 @@
   flex: 0 0 48px;
   place-items: center;
   border: 1px solid var(--bs-border-color);
-  border-radius: 0.5rem;
+  border-radius: var(--clay-radius-sm, 5px);
   object-fit: cover;
 }
 
@@ -34,4 +35,11 @@
 
 .quantity-input {
   min-width: 100px;
+}
+
+@media (max-width: 575.98px) {
+  .order-item-product { gap: 0.5rem; }
+  .quantity-column { width: 128px; }
+  .order-item-image,
+  .order-item-image-placeholder { width: 40px; height: 40px; flex-basis: 40px; }
 }

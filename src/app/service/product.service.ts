@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BestSellingProduct, Product, PageResponse, ProductVariant, ProductAvailabilityStatus } from '../model/product.model';
+import { BestSellingProduct, Product, PageResponse, ProductVariant, ProductAvailabilityStatus, ProductSearchSuggestions } from '../model/product.model';
 import { ProductTypeField, ProductTypeOption } from '../model/custom-request.model';
 import { ApiResponse, unwrapApiResponse } from '../model/api-response.model';
 import { environment } from '../../environments/environment';
@@ -11,6 +11,7 @@ export interface ProductQueryParams {
   keyword?: string | null;
   minPrice?: number | null;
   maxPrice?: number | null;
+  productTypeIds?: number[];
 }
 export interface SaveProductType { code: string; name: string; description?: string; fields: ProductTypeField[]; active: boolean; }
 
@@ -40,9 +41,23 @@ export class ProductService {
     if (filters.maxPrice !== null && filters.maxPrice !== undefined && filters.maxPrice > 0) {
       params = params.set('maxPrice', filters.maxPrice.toString());
     }
+    for (const productTypeId of filters.productTypeIds || []) {
+      if (Number.isInteger(productTypeId) && productTypeId > 0) {
+        params = params.append('productTypeIds', String(productTypeId));
+      }
+    }
 
     return this.http
       .get<ApiResponse<PageResponse<Product>> | PageResponse<Product>>(this.apiUrl, { params })
+      .pipe(map(unwrapApiResponse));
+  }
+
+  getSearchSuggestions(keyword: string, limit = 3): Observable<ProductSearchSuggestions> {
+    const params = new HttpParams()
+      .set('keyword', keyword.trim())
+      .set('limit', String(Math.min(Math.max(limit, 1), 3)));
+    return this.http
+      .get<ApiResponse<ProductSearchSuggestions> | ProductSearchSuggestions>(`${this.apiUrl}/search/suggestions`, { params })
       .pipe(map(unwrapApiResponse));
   }
 
@@ -55,6 +70,11 @@ export class ProductService {
     const request = id ? this.http.put<ApiResponse<ProductTypeOption>>(`${environment.apiUrl}/product-types/${id}`, type)
       : this.http.post<ApiResponse<ProductTypeOption>>(`${environment.apiUrl}/product-types`, type);
     return request.pipe(map(unwrapApiResponse));
+  }
+
+  deactivateProductType(id: number): Observable<ProductTypeOption> {
+    return this.http.delete<ApiResponse<ProductTypeOption>>(`${environment.apiUrl}/product-types/${id}`)
+      .pipe(map(unwrapApiResponse));
   }
 
   getBestSelling(period: string = 'day', page: number = 0, size: number = 5): Observable<BestSellingProduct[]> {

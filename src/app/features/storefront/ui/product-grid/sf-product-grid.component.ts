@@ -45,8 +45,9 @@ import { SfProductTileComponent } from '../product-tile/sf-product-tile.componen
   styles: [`
     .sf-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(14px, 1.8vw, 24px);
+      align-items: stretch;
     }
 
     .sf-grid__item {
@@ -54,7 +55,9 @@ import { SfProductTileComponent } from '../product-tile/sf-product-tile.componen
     }
 
     .sf-grid__skeleton {
-      aspect-ratio: 421 / 400;
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--sf-line);
+      border-radius: var(--clay-radius-md, 9px);
       background: linear-gradient(100deg, var(--sf-bg-elev) 30%, var(--sf-bg-soft) 50%, var(--sf-bg-elev) 70%);
       background-size: 300% 100%;
       animation: sf-shimmer 1.4s ease-in-out infinite;
@@ -65,11 +68,15 @@ import { SfProductTileComponent } from '../product-tile/sf-product-tile.componen
       to { background-position: 0 0; }
     }
 
-    @media (max-width: 991.98px) {
+    @media (max-width: 1199.98px) {
+      .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 767.98px) {
       .sf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
-    @media (max-width: 575.98px) {
+    @media (max-width: 359.98px) {
       .sf-grid { grid-template-columns: 1fr; }
     }
   `],

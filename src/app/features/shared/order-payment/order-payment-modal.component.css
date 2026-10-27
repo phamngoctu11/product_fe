@@ -13,20 +13,55 @@
   width: 100%;
   max-width: 680px;
   max-height: 90vh;
+  border: 1px solid var(--app-border);
+  border-radius: var(--clay-radius-lg);
+  background: var(--app-surface);
+  color: var(--app-text);
   display: flex;
   flex-direction: column;
 }
 
+.payment-modal-header {
+  background: var(--clay-surface-soft) !important;
+  color: var(--app-text) !important;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.payment-modal-body { background: var(--app-surface); color: var(--app-text); }
+.payment-modal-card .bg-light,
+.payment-modal-card .bg-white {
+  border-color: var(--app-border) !important;
+  background: var(--app-surface-muted) !important;
+  color: var(--app-text) !important;
+}
+.payment-modal-card .text-dark,
+.payment-modal-card h1,
+.payment-modal-card h2,
+.payment-modal-card h3,
+.payment-modal-card h4,
+.payment-modal-card h5,
+.payment-modal-card h6 { color: var(--app-text) !important; }
+.payment-modal-card .text-muted { color: var(--app-muted-text) !important; }
+.payment-modal-card .btn-light { border-color: var(--app-border); background: var(--app-surface-muted); color: var(--app-text); }
+.payment-modal-card .btn-primary { border-color: var(--clay-accent); background: var(--clay-accent); color: var(--clay-accent-ink); }
+.payment-modal-card .text-primary,
+.payment-modal-card .text-info { color: var(--clay-accent-hover) !important; }
+.payment-modal-card .alert { border: 1px solid var(--app-border); background: var(--app-surface-muted); color: var(--app-text); }
+.payment-modal-card .alert-danger { border-color: color-mix(in srgb, var(--clay-danger) 38%, transparent); background: color-mix(in srgb, var(--clay-danger) 12%, var(--app-surface)); color: var(--clay-danger); }
+.payment-modal-card .alert-success { border-color: color-mix(in srgb, var(--clay-success) 38%, transparent); background: color-mix(in srgb, var(--clay-success) 12%, var(--app-surface)); color: var(--clay-success); }
+.payment-modal-card .text-danger { color: var(--clay-danger) !important; }
+.payment-modal-card .text-success { color: var(--clay-success) !important; }
+
 .countdown-banner {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeeba;
+  background-color: color-mix(in srgb, var(--clay-warning) 12%, var(--app-surface));
+  color: var(--clay-warning);
+  border: 1px solid color-mix(in srgb, var(--clay-warning) 32%, transparent);
 }
 
 .countdown-banner.is-urgent {
-  background-color: #f8d7da;
-  color: #721c24;
-  border-color: #f5c6cb;
+  background-color: color-mix(in srgb, var(--clay-danger) 12%, var(--app-surface));
+  color: var(--clay-danger);
+  border-color: color-mix(in srgb, var(--clay-danger) 32%, transparent);
 }
 
 .qr-container {
@@ -34,6 +69,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (max-width: 540px) {
+  .payment-modal-backdrop { align-items: flex-end !important; padding: 0 !important; }
+  .payment-modal-card { max-height: 94dvh; border-radius: var(--clay-radius-lg) var(--clay-radius-lg) 0 0; }
 }
 
 .qr-loading-placeholder {

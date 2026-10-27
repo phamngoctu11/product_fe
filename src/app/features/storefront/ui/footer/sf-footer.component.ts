@@ -17,9 +17,8 @@ export class SfFooterComponent {
   items: SF_FOOTER_COLUMNS[0].links},
   {title: 'Cửa hàng',
   items: SF_FOOTER_COLUMNS[1].links}],
-  socials: [{name: 'Instagram', url: '#'},
-  {name: 'Facebook', url: '#'}],
-  copyrightYear: 2026 };
+  socials: [{ name: 'Instagram' }, { name: 'Facebook' }],
+  copyrightYear: new Date().getFullYear() };
 }
 
 

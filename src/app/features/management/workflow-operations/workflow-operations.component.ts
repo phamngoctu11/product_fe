@@ -59,6 +59,24 @@ export class WorkflowOperationsComponent implements OnInit {
   // Access control
   accessDenied = false;
 
+  errorSummary(raw?: string | null): string {
+    const value = (raw || '').toLowerCase();
+    if (!value) return 'Chưa có thông tin lỗi.';
+    if (value.includes('authenticationfailed') || value.includes('5.7.9') || value.includes('535')) {
+      return 'Không xác thực được dịch vụ gửi email.';
+    }
+    if (value.includes('timeout') || value.includes('timed out')) {
+      return 'Dịch vụ đích phản hồi quá thời gian chờ.';
+    }
+    if (value.includes('connection refused') || value.includes('econnreset') || value.includes('unreachable')) {
+      return 'Không kết nối được dịch vụ đích.';
+    }
+    if (value.includes('validation') || value.includes('invalid')) {
+      return 'Dữ liệu sự kiện không hợp lệ.';
+    }
+    return 'Tác vụ tự động thất bại. Mở chi tiết kỹ thuật để xem nguyên nhân.';
+  }
+
   ngOnInit(): void {
     this.loadAll();
   }

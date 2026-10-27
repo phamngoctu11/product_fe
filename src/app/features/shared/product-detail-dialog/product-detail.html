@@ -1,4 +1,4 @@
-<div class="product-detail-modal">
+<div class="product-detail-modal" [class.is-view-mode]="isView">
   <div class="detail-header">
     <div>
       <span class="detail-kicker">
@@ -51,16 +51,24 @@
         <div class="info-grid">
           <div class="field-block field-wide">
             <label>Tên sản phẩm</label>
-            <input type="text" class="form-control form-control-custom" formControlName="product_name" placeholder="Ví dụ: Giày thể thao nam" />
+            @if (isView) {
+              <div class="detail-value detail-value--title">{{ rawProduct.product_name || 'Chưa có tên' }}</div>
+            } @else {
+              <input type="text" class="form-control form-control-custom" formControlName="product_name" placeholder="Ví dụ: Giày thể thao nam" />
+            }
             <div class="text-danger small mt-1" *ngIf="isInvalid('product_name')">Tên sản phẩm là bắt buộc.</div>
           </div>
 
           <div class="field-block">
             <label>Giá tham chiếu</label>
-            <div class="input-group">
-              <input type="number" class="form-control form-control-custom border-end-0" formControlName="price" placeholder="0" />
-              <span class="input-group-text border-start-0">đ</span>
-            </div>
+            @if (isView) {
+              <div class="detail-value">{{ rawProduct.price | number }} ₫</div>
+            } @else {
+              <div class="input-group">
+                <input type="number" class="form-control form-control-custom border-end-0" formControlName="price" placeholder="0" />
+                <span class="input-group-text border-start-0">đ</span>
+              </div>
+            }
             <div class="text-danger small mt-1" *ngIf="isInvalid('price')">Giá phải lớn hơn hoặc bằng 0.</div>
           </div>
 
@@ -73,20 +81,18 @@
           </div>
         </div>
 
-        <div class="field-block mb-3">
-          <label>Quy trình sản xuất</label>
-          <label class="form-check d-flex align-items-center gap-2 mt-2">
-          </label>
-        </div>
-
         <div class="info-grid mb-3">
           <div class="field-block">
             <label>Trạng thái catalog</label>
-            <select class="form-select form-control-custom" formControlName="availabilityStatus" [disabled]="isView || !canManageCatalog">
-              <option value="ACCEPTING_ORDERS">Đang nhận đơn</option>
-              <option value="PAUSED">Tạm ngưng nhận đơn</option>
-              <option value="DISCONTINUED">Ngừng kinh doanh</option>
-            </select>
+            @if (isView) {
+              <div class="detail-value"><span class="availability-dot" [class.is-paused]="rawProduct.availabilityStatus === 'PAUSED'" [class.is-discontinued]="rawProduct.availabilityStatus === 'DISCONTINUED'"></span>{{ availabilityLabel }}</div>
+            } @else {
+              <select class="form-select form-control-custom" formControlName="availabilityStatus">
+                <option value="ACCEPTING_ORDERS">Đang nhận đơn</option>
+                <option value="PAUSED">Tạm ngưng nhận đơn</option>
+                <option value="DISCONTINUED">Ngừng kinh doanh</option>
+              </select>
+            }
             <small class="text-muted mt-1 d-block" *ngIf="!canManageCatalog && !isView">
               * Chỉ Manager mới có quyền cập nhật trạng thái catalog.
             </small>
@@ -95,10 +101,14 @@
 
           <div class="field-block">
             <label>Thời gian chế tác (ngày)</label>
-            <div class="input-group">
-              <input type="number" class="form-control form-control-custom border-end-0" formControlName="madeDay" placeholder="3" min="2" step="0.5" />
-              <span class="input-group-text border-start-0">ngày</span>
-            </div>
+            @if (isView) {
+              <div class="detail-value">Khoảng {{ rawProduct.madeDay || 3 }} ngày</div>
+            } @else {
+              <div class="input-group">
+                <input type="number" class="form-control form-control-custom border-end-0" formControlName="madeDay" placeholder="3" min="2" step="0.5" />
+                <span class="input-group-text border-start-0">ngày</span>
+              </div>
+            }
             <div class="text-danger small mt-1" *ngIf="isInvalid('madeDay')">Thời gian chế tác tối thiểu 2 ngày.</div>
           </div>
         </div>
@@ -111,15 +121,23 @@
 
           <div class="field-block mb-3">
             <label>Loại sản phẩm (cấu hình trường đặt làm riêng)</label>
-            <select class="form-select" formControlName="productTypeId">
-              <option [ngValue]="null">Không áp dụng</option>
-              @for (type of productTypes; track type.id) { <option [ngValue]="type.id">{{ type.name }}</option> }
-            </select>
+            @if (isView) {
+              <div class="detail-value">{{ productTypeLabel }}</div>
+            } @else {
+              <select class="form-select form-control-custom" formControlName="productTypeId">
+                <option [ngValue]="null">Không áp dụng</option>
+                @for (type of productTypes; track type.id) { <option [ngValue]="type.id">{{ type.name }}</option> }
+              </select>
+            }
           </div>
           <div class="field-block mb-3">
             <label>Thẻ dùng để lọc danh mục</label>
-            <input class="form-control" type="text" formControlName="tags" placeholder="Gốm sứ, quà tặng, trang trí">
-            <small class="text-muted">Tạo hoặc đổi tên thẻ tại mục Loại sản phẩm &amp; thẻ.</small>
+            @if (isView) {
+              <div class="detail-value">{{ rawProduct.tags || 'Chưa gắn thẻ' }}</div>
+            } @else {
+              <input class="form-control form-control-custom" type="text" formControlName="tags" placeholder="Gốm sứ, quà tặng, trang trí">
+              <small class="text-muted">Tạo hoặc đổi tên thẻ tại mục Loại sản phẩm &amp; thẻ.</small>
+            }
           </div>
 
           <div class="input-group tag-input" *ngIf="false">
@@ -145,26 +163,6 @@
           </div>
         </div>
 
-        <div class="detail-section" *ngIf="!isView || customFields.length > 0">
-          <div class="section-title">
-            <i class="bi bi-sliders2"></i>
-            <span>Thông tin mở rộng</span>
-          </div>
-
-          <div class="input-group tag-input" *ngIf="!isView">
-            <input type="text" class="form-control" placeholder="VD: Dung lượng pin..." [(ngModel)]="newCustomFieldInput" [ngModelOptions]="{standalone: true}" (keyup.enter)="addCustomField()">
-            <button class="btn btn-warning fw-bold px-4" type="button" (click)="addCustomField()">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-          </div>
-
-          <div class="chip-row">
-            <span class="muted-empty" *ngIf="customFields.length === 0">Chưa có trường mở rộng.</span>
-            <span class="detail-chip warning" *ngFor="let field of customFields">
-              {{ getLabel(field) }} <i class="bi bi-x-circle-fill ms-1 clickable" *ngIf="!isView" (click)="removeCustomField(field)"></i>
-            </span>
-          </div>
-        </div>
       </section>
 
       <section class="variant-panel" formArrayName="variants">
@@ -317,7 +315,7 @@
           <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" (click)="onCancel()">
             {{ isView ? 'Đóng' : 'Hủy bỏ' }}
           </button>
-          @if (isView) {
+          @if (isView && canPurchaseInView) {
             <button
               type="button"
               class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm"

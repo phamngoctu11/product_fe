@@ -115,6 +115,25 @@ describe('OrderCollaborationComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  describe('agreement state labels and actions', () => {
+    it('labels an unsubmitted custom quote as a proposal', () => {
+      component.order = { ...mockOrder, orderType: 'CUSTOM', status: 'DISCUSSING' };
+      component.agreement = null;
+      expect(component.hasSubmittedAgreement).toBeFalse();
+    });
+
+    it('recognizes a submitted agreement while staff is reviewing it', () => {
+      component.agreement = { agreementStatus: 'USER_SUBMITTED' } as any;
+      expect(component.hasSubmittedAgreement).toBeTrue();
+    });
+
+    it('does not allow a customer to submit an agreement for a terminal order', () => {
+      component.mode = 'USER';
+      component.order = { ...mockOrder, orderType: 'CUSTOM', status: 'DELIVERED' };
+      expect(component.canUserSubmitAgreement).toBeFalse();
+    });
+  });
+
   it('should stop the confirmation countdown from OrderAgreement.submittedAt', () => {
     component.order = {
       ...mockOrder,

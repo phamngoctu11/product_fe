@@ -73,25 +73,31 @@ describe('CustomerProductionProgressComponent', () => {
     expect(component.items.length).toBe(1);
   });
 
-  it('should only return INITIAL_SHAPE checkpoint for customer view', () => {
+  it('should return all customer-visible checkpoint stages in chronological order', () => {
     const item = mockItems[0];
-    const initialCp = component.getInitialShapeCheckpoint(item);
-    expect(initialCp).toBeTruthy();
-    expect(initialCp?.stage).toBe('INITIAL_SHAPE');
-    expect(initialCp?.note).toBe('Đã hoàn thiện tạo hình phôi');
+    const checkpoints = component.getVisibleCheckpoints({
+      ...item,
+      checkpoints: [
+        { ...item.checkpoints[0], id: 2, stage: 'FINAL_PRODUCT', submittedAt: '2026-10-18T08:00:00Z' },
+        item.checkpoints[0],
+      ],
+    });
+    expect(checkpoints.map(checkpoint => checkpoint.stage)).toEqual(['INITIAL_SHAPE', 'FINAL_PRODUCT']);
+    expect(checkpoints[0].note).toBe('Đã hoàn thiện tạo hình phôi');
   });
 
   it('should render INITIAL_SHAPE details without any review/approval buttons', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Bình hoa gốm');
-    expect(compiled.textContent).toContain('Đã hoàn thành tạo dáng ban đầu');
+    expect(compiled.textContent).toContain('Tạo dáng ban đầu');
+    expect(compiled.textContent).toContain('Đã hoàn tất bước này');
     // Ensure no approve/reject/review buttons exist in customer UI
     expect(compiled.querySelector('button.btn-success')).toBeNull();
     expect(compiled.querySelector('button.btn-danger')).toBeNull();
   });
 
-  it('should never render FINAL_PRODUCT decision details in the customer view', () => {
+  it('should hide rework notes and unapproved photos from the customer view', () => {
     fixture.detectChanges();
     component.items = [{
       ...mockItems[0],
@@ -117,5 +123,37 @@ describe('CustomerProductionProgressComponent', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent || '';
     expect(text).not.toContain('Ghi chú nội bộ KCS');
     expect(text).not.toContain('Lý do nội bộ');
+    expect((fixture.nativeElement as HTMLElement).querySelector('img[src="https://example.com/final.jpg"]')).toBeNull();
+    expect(text).toContain('Đang hoàn thiện lại');
+  });
+
+  it('should show the approved final checkpoint and its customer-safe update', () => {
+    fixture.detectChanges();
+    component.items = [{
+      ...mockItems[0],
+      checkpoints: [
+        ...mockItems[0].checkpoints,
+        {
+          id: 2,
+          orderItemId: 101,
+          stage: 'FINAL_PRODUCT',
+          status: 'PASSED',
+          attemptNumber: 2,
+          note: 'Sản phẩm đã hoàn thiện và kiểm tra đạt',
+          managerReviewRequired: true,
+          submittedAt: '2026-10-18T08:00:00Z',
+          images: [{ imageUrl: 'https://example.com/approved-final.jpg' }],
+          version: 2,
+        },
+      ],
+    }];
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Sản phẩm hoàn thiện');
+    expect(compiled.textContent).toContain('Lần 2');
+    expect(compiled.textContent).toContain('Đã hoàn tất bước này');
+    expect(compiled.textContent).toContain('Sản phẩm đã hoàn thiện và kiểm tra đạt');
+    expect(compiled.querySelector('img[src="https://example.com/approved-final.jpg"]')).not.toBeNull();
   });
 });

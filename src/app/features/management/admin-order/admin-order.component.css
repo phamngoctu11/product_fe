@@ -10,7 +10,7 @@
   gap: 1rem;
   padding: 1rem 1.25rem;
   border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14));
-  border-radius: 0;
+  border-radius: var(--clay-radius-lg, 14px);
   background: var(--app-surface, #2b251e);
   color: var(--app-text, #ece5d8);
   text-align: left;
@@ -43,7 +43,7 @@
   place-items: center;
   flex: 0 0 46px;
   height: 46px;
-  border-radius: 0;
+  border-radius: var(--clay-radius-md, 9px);
   background: rgba(197, 184, 165, 0.15);
   color: #c5b8a5;
   font-size: 1.25rem;
@@ -95,13 +95,13 @@ tbody td {
 
 .order-type {
   margin-top: 0;
-  background: rgba(13, 110, 253, 0.1);
-  color: #0d6efd;
+  background: color-mix(in srgb, var(--clay-info) 14%, transparent);
+  color: var(--clay-info);
 }
 
 .order-type.custom {
-  background: rgba(111, 66, 193, 0.12);
-  color: #6f42c1;
+  background: rgba(var(--app-primary-rgb), 0.14);
+  color: var(--app-primary-light);
 }
 
 .staff-select {
@@ -124,15 +124,15 @@ tbody td {
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgba(2, 6, 23, 0.72);
+  background: rgb(0 0 0 / 72%);
   backdrop-filter: blur(3px);
 }
 
 .detail-modal {
   width: min(100%, 960px);
-  max-height: 92vh;
+  max-height: 92dvh;
   overflow: hidden;
-  border-radius: 1.25rem;
+  border-radius: var(--clay-radius-lg, 14px);
   background: var(--app-surface, #2b251e);
   border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14));
   box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.55);
@@ -144,9 +144,9 @@ tbody td {
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, #362f26, #2b251e);
-  border-bottom: 1px solid rgba(236, 229, 216, 0.14);
-  color: #ece5d8;
+  background: linear-gradient(135deg, var(--app-surface-muted), var(--app-surface));
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-text);
 }
 
 .detail-header h3 {
@@ -163,7 +163,7 @@ tbody td {
 }
 
 .detail-body {
-  max-height: calc(92vh - 92px);
+  max-height: calc(92dvh - 92px);
   padding: 1.5rem;
   overflow-y: auto;
 }
@@ -328,18 +328,18 @@ tbody td {
   justify-content: space-between;
   gap: 1.25rem;
   padding: 0.65rem 1rem;
-  border-radius: 0 !important;
+  border-radius: var(--clay-radius-sm, 5px) !important;
   max-width: fit-content;
 }
 
 .kcs-callout-warning {
-  background: rgba(245, 158, 11, 0.08) !important;
-  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  background: color-mix(in srgb, var(--clay-warning) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--clay-warning) 38%, transparent) !important;
 }
 
 .kcs-callout-success {
-  background: rgba(74, 222, 128, 0.08) !important;
-  border: 1px solid rgba(74, 222, 128, 0.35) !important;
+  background: color-mix(in srgb, var(--clay-success) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--clay-success) 38%, transparent) !important;
 }
 
 .kcs-decision-compact {
@@ -358,40 +358,40 @@ tbody td {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  border-radius: 0 !important;
+  border-radius: var(--clay-radius-sm, 5px) !important;
   white-space: nowrap;
   max-width: fit-content;
 }
 
 .kcs-decision-tag.kcs-pass {
-  background: rgba(74, 222, 128, 0.12) !important;
-  border: 1px solid rgba(74, 222, 128, 0.4) !important;
-  color: #4ade80 !important;
+  background: color-mix(in srgb, var(--clay-success) 14%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--clay-success) 44%, transparent) !important;
+  color: var(--clay-success) !important;
 }
 
 .kcs-decision-tag.kcs-rework {
-  background: rgba(239, 68, 68, 0.12) !important;
-  border: 1px solid rgba(239, 68, 68, 0.45) !important;
-  color: #fb7185 !important;
+  background: color-mix(in srgb, var(--clay-danger) 14%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--clay-danger) 48%, transparent) !important;
+  color: var(--clay-danger) !important;
 }
 
 .kcs-decision-reason {
   display: block;
   max-width: 100%;
   padding: 0.4rem 0.75rem;
-  background: rgba(0, 0, 0, 0.28);
-  border-left: 3px solid #fb7185;
-  color: #ece5d8;
+  background: color-mix(in srgb, var(--app-shell-bg) 72%, transparent);
+  border-left: 3px solid var(--clay-danger);
+  color: var(--app-text);
   font-size: 0.8rem;
   line-height: 1.4;
-  border-radius: 0 !important;
+  border-radius: var(--clay-radius-sm, 5px) !important;
 }
 
 .kcs-staff-note {
   padding: 0.45rem 0.75rem;
-  background: rgba(0, 0, 0, 0.24);
-  border: 1px solid rgba(236, 229, 216, 0.08);
-  color: #ece5d8;
+  background: color-mix(in srgb, var(--app-shell-bg) 76%, transparent);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
   font-size: 0.82rem;
-  border-radius: 0 !important;
+  border-radius: var(--clay-radius-sm, 5px) !important;
 }

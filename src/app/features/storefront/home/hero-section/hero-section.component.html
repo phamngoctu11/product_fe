@@ -1,44 +1,45 @@
-<section class="hero-section">
-  <!-- Background texture -->
-  <div class="hero-bg-texture"></div>
+<section class="hero-section" aria-labelledby="hero-title">
+  <div class="hero-grain" aria-hidden="true"></div>
+  <div class="hero-layout">
+    <div class="hero-content">
+      <p class="hero-eyebrow"><span></span> ClayArt · Gốm và đồ thủ công</p>
+      <h1 id="hero-title" class="hero-headline">
+        <span>Đồ gốm</span>
+        <span>thủ công cho</span>
+        <em>những khoảnh khắc</em>
+        <em>bình yên.</em>
+      </h1>
+      <p class="hero-subtitle">
+        Mỗi tác phẩm được tạo nên bằng đôi tay người nghệ nhân, để mang vẻ đẹp mộc mạc vào từng góc nhỏ trong nhà bạn.
+      </p>
+      <div class="hero-actions">
+        <a class="hero-btn hero-btn--primary" routerLink="/store/product">
+          Khám phá bộ sưu tập <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        </a>
+        <a class="hero-btn hero-btn--ghost" routerLink="/store/custom-requests">Đặt làm riêng</a>
+      </div>
+      <div class="hero-note">
+        <i class="bi bi-stars" aria-hidden="true"></i>
+        <span>Được làm bằng tay, dành riêng cho bạn</span>
+      </div>
+    </div>
 
-  <!-- Các ảnh sản phẩm trôi nổi -->
-  <div class="hero-float-images" aria-hidden="true">
-    <div class="hero-img-wrap hero-img-1 float-anim-1">
-      <img src="/images/storefront/hero-hands-clay.jpg" alt="" class="hero-img-inner">
+    <div class="hero-visual">
+      <figure class="hero-image-wrap">
+        <img
+          src="/images/storefront/hero-vases-garden.jpg"
+          alt="Bộ sưu tập bình gốm thủ công với lớp men tự nhiên trong xưởng gốm"
+          fetchpriority="high">
+        <figcaption class="hero-image-caption">
+          <span>01 / 04</span>
+          <span>Đất · Men · Lửa</span>
+        </figcaption>
+      </figure>
+      <div class="hero-stamp" aria-hidden="true">
+        <i class="bi bi-flower1"></i>
+        <span>Made<br>by hand</span>
+      </div>
+      <div class="hero-side-label" aria-hidden="true">A little imperfect, made with care</div>
     </div>
-    <div class="hero-img-wrap hero-img-2 float-anim-2">
-      <img src="/images/storefront/hero-white-ceramics.jpg" alt="" class="hero-img-inner">
-    </div>
-    <div class="hero-img-wrap hero-img-3 float-anim-3">
-      <img src="/images/storefront/hero-plate-pattern.jpg" alt="" class="hero-img-inner">
-    </div>
-    <div class="hero-img-wrap hero-img-4 float-anim-1" style="animation-delay: -2s;">
-      <img src="/images/storefront/hero-clay-figurine.jpg" alt="" class="hero-img-inner">
-    </div>
-  </div>
-
-  <!-- Nội dung Hero chính giữa -->
-  <div class="hero-content">
-    <h1 class="hero-headline">
-      <span class="hero-headline__line1">WE ARE</span>
-      <span class="hero-headline__line2">CLAYART</span>
-    </h1>
-
-    <div class="hero-actions">
-      <a class="hero-btn hero-btn--primary" routerLink="/store/product">
-        Cửa hàng
-      </a>
-      <a class="hero-btn hero-btn--ghost" routerLink="/store/custom-requests">
-        Đặt làm riêng
-      </a>
-    </div>
-  </div>
-
-  <!-- Scroll indicator -->
-  <div class="hero-scroll-hint" aria-hidden="true">
-    <span>Keep scrolling</span>
-    <i class="bi bi-chevron-down hero-scroll-icon"></i>
   </div>
 </section>
-

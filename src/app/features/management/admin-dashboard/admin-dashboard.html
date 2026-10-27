@@ -1,7 +1,6 @@
 <div class="container-fluid p-4 app-fade-in">
 
   <app-page-header
-    icon="bi-bar-chart-line-fill"
     title="Tổng quan kinh doanh"
     subtitle="Thống kê hiệu suất và dữ liệu vận hành">
   </app-page-header>
@@ -168,8 +167,8 @@
                     <td class="text-center">
                       <span
                         class="rank-badge"
-                        [style.background]="i === 0 ? 'linear-gradient(135deg,#f59e0b,#d97706)' : (i === 1 ? 'linear-gradient(135deg,#94a3b8,#64748b)' : (i === 2 ? 'linear-gradient(135deg,#f97316,#ea580c)' : 'rgba(99,102,241,0.1)'))"
-                        [style.color]="i < 3 ? '#fff' : '#6366f1'"
+                        [style.background]="i === 0 ? 'linear-gradient(135deg,#f59e0b,#d97706)' : (i === 1 ? 'linear-gradient(135deg,#94a3b8,#64748b)' : (i === 2 ? 'linear-gradient(135deg,#f97316,#ea580c)' : 'rgba(190,160,120,0.12)'))"
+                        [style.color]="i < 3 ? '#fff' : '#d7c5a5'"
                         [style.box-shadow]="i < 3 ? '0 4px 10px rgba(0,0,0,0.15)' : 'none'">
                         #{{ i + 1 }}
                       </span>

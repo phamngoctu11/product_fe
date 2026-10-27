@@ -26,8 +26,8 @@
         </button>
 
         <div class="topbar-heading">
-          <span class="topbar-title">Bảng điều khiển</span>
-          <span class="topbar-subtitle">Quản lý đơn hàng, sản phẩm và thông báo</span>
+          <span class="topbar-title">{{ currentPageTitle }}</span>
+          <span class="topbar-subtitle">{{ currentPageSubtitle }}</span>
         </div>
       </div>
 
@@ -135,6 +135,5 @@
       <div class="app-content">
         <router-outlet></router-outlet>
       </div>
-      <app-footer></app-footer>
     </main>
   </div>

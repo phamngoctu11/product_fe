@@ -24,6 +24,7 @@ import { UserInforDTO } from '../../../model/user.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../../shared/order-detail-popup/order-detail-popup.component';
 import { OrderPaymentModalComponent } from '../../shared/order-payment/order-payment-modal.component';
+import { getOrderStatusLabel } from '../../shared/ui/order-status-badge/order-status.config';
 import {
   AppPaginationComponent,
   OrderSummaryCardComponent,
@@ -76,6 +77,10 @@ export class Orders implements OnInit {
     { value: 'OVER_5M_TO_10M', label: 'Trên 5 đến 10 triệu', min: 5_000_001, max: 10_000_000 },
     { value: 'OVER_10M', label: 'Trên 10 triệu', min: 10_000_001, max: null },
   ];
+
+  statusLabel(status: string | null | undefined): string {
+    return getOrderStatusLabel(status);
+  }
   selectedPriceRange = 'ALL';
 
   selectedOrderDetail: Order | null = null;

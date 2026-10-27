@@ -25,9 +25,9 @@ export const APP_DIALOG_SIZE = {
     maxHeight: '78vh',
   },
   addToCart: {
-    width: '860px',
-    maxWidth: 'calc(100vw - 48px)',
-    maxHeight: '78vh',
+    width: '560px',
+    maxWidth: 'calc(100vw - 32px)',
+    maxHeight: 'min(84dvh, 760px)',
   },
   cart: {
     width: '900px',

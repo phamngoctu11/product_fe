@@ -20,7 +20,7 @@ type StatusFilter = CustomRequestStatus | 'ALL';
       <sf-page-intro
         eyebrow="ĐẶT LÀM RIÊNG"
         title="Yêu cầu custom của tôi"
-        description="Lưu nhiều bản nháp, chọn một bản để gửi thành đơn. Đơn sẽ chờ quản lý duyệt khả năng làm.">
+        subtitle="Lưu nhiều bản nháp, chọn một bản để gửi thành đơn. Đơn sẽ chờ quản lý duyệt khả năng làm.">
       </sf-page-intro>
 
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">

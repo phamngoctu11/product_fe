@@ -1,0 +1,142 @@
+[
+  {
+    "id": 22,
+    "name": "Móc khóa cá voi xanh",
+    "typeId": 6,
+    "typeName": "Phụ kiện gốm & móc khóa",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074077/oh7qi0zgadjnqk6rvf9k.jpg"
+  },
+  {
+    "id": 21,
+    "name": "Móc khóa mèo ngủ",
+    "typeId": 6,
+    "typeName": "Phụ kiện gốm & móc khóa",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074072/nkfi40j6ezy8dadrzntc.jpg"
+  },
+  {
+    "id": 20,
+    "name": "Bình hoa quà tân gia",
+    "typeId": 7,
+    "typeName": "Decor gốm & đất sét",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074068/nea1dg26rxwbthles13i.jpg"
+  },
+  {
+    "id": 19,
+    "name": "Đĩa trang sức gốm quà tặng",
+    "typeId": 6,
+    "typeName": "Phụ kiện gốm & móc khóa",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074064/rp2p8aprevan4c9govpq.jpg"
+  },
+  {
+    "id": 18,
+    "name": "Bộ cốc đôi thủ công",
+    "typeId": 5,
+    "typeName": "Quà tặng thủ công",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074059/jx5gmhyem6ubpi08idnd.jpg"
+  },
+  {
+    "id": 17,
+    "name": "Nến thơm trong hũ gốm",
+    "typeId": 5,
+    "typeName": "Quà tặng thủ công",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074055/tuxvylcrudnhwtmvisyc.jpg"
+  },
+  {
+    "id": 16,
+    "name": "Bộ lót ly gốm hoa cỏ",
+    "typeId": 5,
+    "typeName": "Quà tặng thủ công",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074051/hshz1n2inrqhy6xfwqzh.jpg"
+  },
+  {
+    "id": 15,
+    "name": "Bộ quà trà men ngọc",
+    "typeId": 5,
+    "typeName": "Quà tặng thủ công",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074047/x2fqvteyc7snrswdtdw7.jpg"
+  },
+  {
+    "id": 14,
+    "name": "Tượng cá koi thủ công",
+    "typeId": 7,
+    "typeName": "Decor gốm & đất sét",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074041/vczc0thpcmtb20w8kxyn.jpg"
+  },
+  {
+    "id": 13,
+    "name": "Thỏ đất sét ngồi đọc sách",
+    "typeId": 7,
+    "typeName": "Decor gốm & đất sét",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074037/eo1q8wvqdgz1ykf4ueda.jpg"
+  },
+  {
+    "id": 12,
+    "name": "Tượng chim sẻ men xanh",
+    "typeId": 4,
+    "typeName": "Tượng đất sét mini",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074033/vfhamm9bcu8lxlypm0is.jpg"
+  },
+  {
+    "id": 11,
+    "name": "Nhà nấm đất sét mini",
+    "typeId": 4,
+    "typeName": "Tượng đất sét mini",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793074011/wu1v5ku01wbsnoyx4byk.jpg"
+  },
+  {
+    "id": 10,
+    "name": "Tượng cô gái ôm hoa",
+    "typeId": 4,
+    "typeName": "Tượng đất sét mini",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793073955/twgvljxproknat0eeo4g.jpg"
+  },
+  {
+    "id": 9,
+    "name": "Tượng mèo cuộn tròn",
+    "typeId": 4,
+    "typeName": "Tượng đất sét mini",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793073876/zbzmcuufofujm9gkxh2z.jpg"
+  },
+  {
+    "id": 8,
+    "name": "Hũ nến gốm thủ công",
+    "typeId": 7,
+    "typeName": "Decor gốm & đất sét",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793073873/k0mvox5xh279rvfydide.jpg"
+  },
+  {
+    "id": 7,
+    "name": "Khay trang sức hình lá",
+    "typeId": 6,
+    "typeName": "Phụ kiện gốm & móc khóa",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793073830/knq8ufkwupaynrd5mexu.jpg"
+  },
+  {
+    "id": 6,
+    "name": "Cặp chén trà lam",
+    "typeId": 3,
+    "typeName": "Đồ gốm trang trí",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793073777/x3t5vvvshufifp0lagye.jpg"
+  },
+  {
+    "id": 5,
+    "name": "Đĩa gốm vẽ hoa cúc",
+    "typeId": 3,
+    "typeName": "Đồ gốm trang trí",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793073721/ivjdhtb6jlfgmrrgkjdb.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Bình hoa men tro xanh",
+    "typeId": 3,
+    "typeName": "Đồ gốm trang trí",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793073694/ubbylg3jxrpgdwnwbdgl.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Cốc gốm men ngọc",
+    "typeId": 3,
+    "typeName": "Đồ gốm trang trí",
+    "image": "http://res.cloudinary.com/dgoolohc8/image/upload/v1793073326/zr3psjvl38euaij0ynpz.jpg"
+  }
+]

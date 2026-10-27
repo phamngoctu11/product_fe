@@ -10,6 +10,7 @@ import {
   OrderAssignmentQueueItem,
 } from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
+import { formatOrderAttributes } from '../../../model/order-display';
 import {
   OrderItemProductionDTO,
   ReviewProductionCheckpointResultDTO,
@@ -25,6 +26,7 @@ import {
   ViewStateComponent,
 } from '../../shared/ui';
 import { ManagerKcsDialogComponent } from '../../shared/production-checkpoint/manager-kcs-dialog.component';
+import { getOrderTypeLabel } from '../../shared/ui/order-status-badge/order-status.config';
 
 export type ManagerOrderTab = 'reviews' | 'assignments' | 'kcs';
 
@@ -52,6 +54,14 @@ export class AdminOrderComponent implements OnInit {
   private readonly router = inject(Router);
 
   activeTab: ManagerOrderTab = 'reviews';
+
+  orderTypeLabel(type: string | null | undefined): string {
+    return getOrderTypeLabel(type);
+  }
+
+  itemVariantLabel(item: { variantName?: string | null; attributes?: unknown }): string {
+    return item.variantName || formatOrderAttributes(item.attributes) || 'Không có phân loại';
+  }
   reviews: ManagerOrderReviewSummary[] = [];
   assignmentQueue: OrderAssignmentQueueItem[] = [];
   availableStaff: AvailableStaff[] = [];

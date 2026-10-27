@@ -1,10 +1,9 @@
-<div class="container mt-4 mb-5 app-fade-in">
+<div class="user-management-page mt-4 mb-5 app-fade-in">
   <app-page-header
-    icon="bi-people"
     title="Quản lý người dùng"
     subtitle="Quản lý tài khoản, vai trò và trạng thái người dùng">
-    <button pageActions class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center" (click)="openUserDialog()">
-      <i class="bi bi-person-plus-fill me-2 fs-5"></i> Thêm Người Dùng
+    <button pageActions type="button" class="app-primary-action-button" (click)="openUserDialog()">
+      <i class="bi bi-person-plus-fill" aria-hidden="true"></i> Thêm người dùng
     </button>
   </app-page-header>
 
@@ -53,7 +52,7 @@
         emptyIcon="bi-people">
       <div class="table-responsive">
         <table class="table table-hover table-custom align-middle mb-0">
-          <thead class="table-light text-secondary text-uppercase small text-center">
+          <thead class="user-table-head text-uppercase small text-center">
             <tr class="fw-semibold">
               <th scope="col" class="user-id-column">ID</th>
               <th scope="col" class="user-name-column text-start ps-4">Họ và Tên</th>
@@ -96,14 +95,18 @@
                       <div class="d-flex gap-2">
                         <button
                           class="btn-icon-action edit"
+                          type="button"
                           (click)="openUserDialog(u.id); $event.stopPropagation()"
+                          [attr.aria-label]="'Chỉnh sửa người dùng ' + u.firstname + ' ' + u.lastname"
                           title="Chỉnh sửa"
                         >
                           <i class="bi bi-pencil-square"></i>
                         </button>
                         <button
                           class="btn-icon-action delete"
+                          type="button"
                           (click)="deleteUser(u.id); $event.stopPropagation()"
+                          [attr.aria-label]="'Xóa người dùng ' + u.firstname + ' ' + u.lastname"
                           title="Xóa"
                         >
                           <i class="bi bi-trash"></i>

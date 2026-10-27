@@ -30,6 +30,7 @@ import {
   OrderChatThread,
   SubmitOrderAgreementRequest,
 } from '../../../model/order.model';
+import { getOrderStatusLabel } from '../ui/order-status-badge/order-status.config';
 import { AuthService } from '../../../service/auth.service';
 import { OrderService } from '../../../service/order.service';
 import { ToastService } from '../../../service/toast.service';
@@ -131,10 +132,28 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
     return false;
   }
 
+  get isTerminalOrder(): boolean {
+    return ['DELIVERED', 'CANCELLED'].includes((this.order?.status || '').toUpperCase());
+  }
+
+  get isAgreementExpired(): boolean {
+    return this.countdownPastDue && (this.order?.status || '').toUpperCase() === 'DISCUSSING';
+  }
+
+  get hasSubmittedAgreement(): boolean {
+    const status = (this.agreement?.agreementStatus || this.agreement?.status || '').toUpperCase();
+    return ['USER_SUBMITTED', 'PENDING_REVIEW', 'STAFF_CONFIRMED', 'AGREED', 'CHANGES_REQUESTED', 'AMENDMENT_REQUESTED'].includes(status)
+      || (this.order?.status || '').toUpperCase() === 'WAITING_STAFF_CONFIRMATION';
+  }
+
+  get orderStatusLabel(): string {
+    return getOrderStatusLabel(this.order?.status);
+  }
+
   get canUserSubmitAgreement(): boolean {
     if (this.mode !== 'USER') return false;
     const status = this.order?.status;
-    return status === 'DISCUSSING';
+    return status === 'DISCUSSING' && !this.countdownPastDue && !this.isTerminalOrder;
   }
 
   get canStaffDecideAgreement(): boolean {
@@ -146,6 +165,11 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
 
   get agreementStatusBadge(): { text: string; bgClass: string } {
     const status = this.agreement?.agreementStatus || this.agreement?.status;
+    if (!status) {
+      if (this.isTerminalOrder) return { text: 'Không thể cập nhật thêm', bgClass: 'badge-secondary' };
+      if ((this.order?.status || '').toUpperCase() === 'DISCUSSING') return { text: 'Chưa chốt thỏa thuận', bgClass: 'badge-info' };
+      if ((this.order?.status || '').toUpperCase() === 'WAITING_STAFF_CONFIRMATION') return { text: 'Chờ nhân viên xác nhận', bgClass: 'badge-warning' };
+    }
     switch (status) {
       case 'USER_SUBMITTED':
       case 'PENDING_REVIEW':
@@ -455,8 +479,21 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
     const agreementSubmittedAt = this.agreement?.submittedAt;
     const dueAtStr = this.order?.confirmationDueAt || this.agreement?.confirmationDueAt;
 
+    if (this.isTerminalOrder) {
+      this.countdownPastDue = false;
+      this.timerStopped = true;
+      this.countdownDisplay = '';
+      this.timerStoppedText = '';
+      if (this.timerIntervalId) {
+        clearInterval(this.timerIntervalId);
+        this.timerIntervalId = null;
+      }
+      return;
+    }
+
     // Rule: Timer stops immediately upon valid submission, does not restart on REQUEST_CHANGES
     if (agreementSubmittedAt) {
+      this.countdownPastDue = false;
       this.timerStopped = true;
       this.countdownDisplay = '';
       this.timerStoppedText = 'Đã nộp đề xuất thỏa thuận';
@@ -468,6 +505,7 @@ export class OrderCollaborationComponent implements OnInit, OnChanges, OnDestroy
     }
 
     if (!dueAtStr) {
+      this.countdownPastDue = false;
       this.timerStopped = true;
       this.countdownDisplay = '';
       this.timerStoppedText = '';

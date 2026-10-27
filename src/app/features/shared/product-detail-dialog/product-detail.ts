@@ -67,7 +67,7 @@ export class ProductDetailComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<ProductDetailComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { id: number | null, availableTags: string[], isView?: boolean, staffMode?: boolean },
+    @Inject(MAT_DIALOG_DATA) public data: { id: number | null, availableTags: string[], isView?: boolean, staffMode?: boolean, allowPurchase?: boolean },
     private productService: ProductService,
     private productReviewService: ProductReviewService,
     private http: HttpClient,
@@ -97,6 +97,16 @@ export class ProductDetailComponent implements OnInit {
 
   get canManageCatalog(): boolean {
     return this.authService.isManager();
+  }
+
+  get canPurchaseInView(): boolean {
+    return this.data.allowPurchase ?? (!this.authService.isLoggedIn() || this.authService.isCustomer());
+  }
+
+  get productTypeLabel(): string {
+    const productTypeId = Number(this.rawProduct.productTypeId);
+    if (!productTypeId) return 'Không áp dụng';
+    return this.productTypes.find((type) => type.id === productTypeId)?.name || `Loại đã ngừng · #${productTypeId}`;
   }
 
   get availabilityLabel(): string {
@@ -459,6 +469,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   buy() {
+    if (!this.canPurchaseInView) return;
     this.dialogRef.close({ action: 'buy', product: this.rawProduct });
   }
 

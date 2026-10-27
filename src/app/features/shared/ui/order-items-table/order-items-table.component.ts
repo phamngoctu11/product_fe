@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderItem } from '../../../../model/order.model';
+import { formatOrderAttributes } from '../../../../model/order-display';
 
 export type OrderItemsMode = 'readonly' | 'receipt';
 
@@ -52,7 +53,7 @@ export class OrderItemsTableComponent {
   }
 
   getVariantLabel(item: OrderItem): string {
-    return item.attributes || (item.productVariantId ? `Variant #${item.productVariantId}` : 'Chưa có thuộc tính');
+    return formatOrderAttributes(item.attributes);
   }
 
   updateQuantity(item: OrderItem, value: number | string): void {

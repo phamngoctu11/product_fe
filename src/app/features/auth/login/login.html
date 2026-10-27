@@ -69,11 +69,12 @@
 
         <form #loginForm="ngForm" (ngSubmit)="handleLogin(loginForm)" novalidate>
           <div class="auth-form-group">
-            <label class="auth-form-label">Tên đăng nhập</label>
+            <label class="auth-form-label" for="login-username">Tên đăng nhập</label>
             <div class="auth-input-group">
               <i class="bi bi-person auth-input-icon"></i>
               <input
                 type="text"
+                id="login-username"
                 class="auth-input"
                 name="loginUsername"
                 #loginUsername="ngModel"
@@ -87,11 +88,12 @@
           </div>
 
           <div class="auth-form-group auth-form-group-spacious">
-            <label class="auth-form-label">Mật khẩu</label>
+            <label class="auth-form-label" for="login-password">Mật khẩu</label>
             <div class="auth-input-group">
               <i class="bi bi-lock auth-input-icon"></i>
               <input
                 type="password"
+                id="login-password"
                 class="auth-input"
                 name="loginPassword"
                 #loginPassword="ngModel"
@@ -146,11 +148,12 @@
 
         <form #forgotForm="ngForm" (ngSubmit)="handleForgotPassword(forgotForm)" novalidate>
           <div class="auth-form-group auth-form-group-spacious">
-            <label class="auth-form-label">Username hoặc email</label>
+            <label class="auth-form-label" for="forgot-identifier">Tên đăng nhập hoặc email</label>
             <div class="auth-input-group">
               <i class="bi bi-person-vcard auth-input-icon"></i>
               <input
                 type="text"
+                id="forgot-identifier"
                 class="auth-input"
                 name="forgotIdentifier"
                 #forgotIdentifier="ngModel"
@@ -195,9 +198,10 @@
 
           <div class="auth-form-row">
             <div class="auth-form-group">
-              <label class="auth-form-label">Họ đệm <span class="auth-required">*</span></label>
+              <label class="auth-form-label" for="register-lastname">Họ đệm <span class="auth-required">*</span></label>
               <input
                 type="text"
+                id="register-lastname"
                 class="auth-input"
                 name="firstname"
                 #firstname="ngModel"
@@ -209,9 +213,10 @@
               </div>
             </div>
             <div class="auth-form-group">
-              <label class="auth-form-label">Tên <span class="auth-required">*</span></label>
+              <label class="auth-form-label" for="register-firstname">Tên <span class="auth-required">*</span></label>
               <input
                 type="text"
+                id="register-firstname"
                 class="auth-input"
                 name="lastname"
                 #lastname="ngModel"
@@ -225,11 +230,12 @@
           </div>
 
           <div class="auth-form-group">
-            <label class="auth-form-label">Tên đăng nhập <span class="auth-required">*</span></label>
+            <label class="auth-form-label" for="register-username">Tên đăng nhập <span class="auth-required">*</span></label>
             <div class="auth-input-group">
               <i class="bi bi-at auth-input-icon"></i>
               <input
                 type="text"
+                id="register-username"
                 class="auth-input"
                 name="username"
                 #username="ngModel"
@@ -246,11 +252,12 @@
 
           <div class="auth-form-row">
             <div class="auth-form-group">
-              <label class="auth-form-label">Mật khẩu <span class="auth-required">*</span></label>
+              <label class="auth-form-label" for="register-password">Mật khẩu <span class="auth-required">*</span></label>
               <div class="auth-input-group">
                 <i class="bi bi-lock auth-input-icon"></i>
                 <input
                   type="password"
+                  id="register-password"
                   class="auth-input"
                   name="password"
                   #password="ngModel"
@@ -265,11 +272,12 @@
               </div>
             </div>
             <div class="auth-form-group">
-              <label class="auth-form-label">Xác nhận mật khẩu <span class="auth-required">*</span></label>
+              <label class="auth-form-label" for="register-confirm-password">Xác nhận mật khẩu <span class="auth-required">*</span></label>
               <div class="auth-input-group">
                 <i class="bi bi-shield-lock auth-input-icon"></i>
                 <input
                   type="password"
+                  id="register-confirm-password"
                   class="auth-input"
                   name="confirmPassword"
                   #confirmPassword="ngModel"
@@ -285,8 +293,8 @@
 
           <div class="auth-form-row">
             <div class="auth-form-group">
-              <label class="auth-form-label">Giới tính <span class="auth-required">*</span></label>
-              <select class="auth-select" name="gender" #gender="ngModel" [(ngModel)]="registerData.gender" required>
+              <label class="auth-form-label" for="register-gender">Giới tính <span class="auth-required">*</span></label>
+              <select id="register-gender" class="auth-select" name="gender" #gender="ngModel" [(ngModel)]="registerData.gender" required>
                 <option value="male">Nam</option>
                 <option value="female">Nữ</option>
                 <option value="other">Khác</option>
@@ -296,11 +304,12 @@
               </div>
             </div>
             <div class="auth-form-group">
-              <label class="auth-form-label">Số điện thoại <span class="auth-required">*</span></label>
+              <label class="auth-form-label" for="register-phone">Số điện thoại <span class="auth-required">*</span></label>
               <div class="auth-input-group">
                 <i class="bi bi-telephone auth-input-icon"></i>
                 <input
                   type="text"
+                  id="register-phone"
                   class="auth-input"
                   name="phone"
                   #phone="ngModel"
@@ -317,15 +326,16 @@
 
           <div class="auth-form-row">
             <div class="auth-form-group">
-              <label class="auth-form-label">Ngày sinh</label>
-              <input type="date" class="auth-input" name="birth" [(ngModel)]="registerData.birth" />
+              <label class="auth-form-label" for="register-birth">Ngày sinh</label>
+              <input id="register-birth" type="date" class="auth-input" name="birth" [(ngModel)]="registerData.birth" />
             </div>
             <div class="auth-form-group">
-              <label class="auth-form-label">Email</label>
+              <label class="auth-form-label" for="register-email">Email</label>
               <div class="auth-input-group">
                 <i class="bi bi-envelope auth-input-icon"></i>
                 <input
                   type="email"
+                  id="register-email"
                   class="auth-input"
                   name="email"
                   #email="ngModel"
@@ -340,9 +350,10 @@
           </div>
 
           <div class="auth-form-group auth-form-group-spacious">
-            <label class="auth-form-label">Địa chỉ</label>
+            <label class="auth-form-label" for="register-address">Địa chỉ</label>
             <textarea
               class="auth-textarea"
+              id="register-address"
               rows="2"
               name="address"
               [(ngModel)]="registerData.address"

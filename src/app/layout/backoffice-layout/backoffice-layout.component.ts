@@ -10,7 +10,6 @@ import { NotificationService } from '../../service/notification.service';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { filter, Subscription } from 'rxjs';
 import { AppSidebarComponent } from '../app-sidebar/app-sidebar.component';
-import { AppFooterComponent } from '../app-footer/app-footer.component';
 import { APP_DIALOG_SIZE } from '../../config/dialog.config';
 
 @Component({
@@ -21,7 +20,6 @@ import { APP_DIALOG_SIZE } from '../../config/dialog.config';
     RouterLink,
     TimeAgoPipe,
     AppSidebarComponent,
-    AppFooterComponent,
   ],
   templateUrl: './backoffice-layout.component.html',
 })
@@ -62,6 +60,40 @@ export class BackofficeLayoutComponent implements OnInit, OnDestroy {
 
   get displayName(): string {
     return this.currentUserDisplayName;
+  }
+
+  get currentPageTitle(): string {
+    const path = this.currentRoutePath;
+    if (path === '/management/product') return 'Quản lý sản phẩm';
+    if (path.startsWith('/management/product/')) return 'Chi tiết sản phẩm';
+    if (path === '/management/product-types') return 'Loại sản phẩm & thẻ';
+    if (path === '/management/user') return 'Quản lý người dùng';
+    if (path === '/management/admin-orders') return 'Duyệt đơn & KCS';
+    if (path === '/management/admin-vouchers') return 'Cấu hình voucher';
+    if (path === '/management/workflow-operations') return 'Vận hành Workflow';
+    if (path === '/management/staff-orders') return 'Đơn sản xuất';
+    if (path === '/management/staff-custom-orders') return 'Trao đổi custom';
+    if (path === '/management/myinfor') return 'Hồ sơ cá nhân';
+    return 'Bảng điều khiển';
+  }
+
+  get currentPageSubtitle(): string {
+    const path = this.currentRoutePath;
+    if (path === '/management/staff-orders') return 'Theo dõi đơn đang làm và việc chờ nhận';
+    if (path === '/management/staff-custom-orders') return 'Trao đổi yêu cầu và cập nhật tiến độ đơn riêng';
+    if (path === '/management/admin-orders') return 'Duyệt đơn, phân công và kiểm tra chất lượng';
+    if (path === '/management/workflow-operations') return 'Theo dõi tác vụ tự động và hàng chờ xử lý';
+    if (path === '/management/myinfor') return 'Thông tin tài khoản và liên hệ của bạn';
+    if (path === '/management/user') return 'Tài khoản, vai trò và trạng thái người dùng';
+    if (path === '/management/product-types') return 'Quản lý phân khúc và thuộc tính sản phẩm';
+    if (path === '/management/admin-vouchers') return 'Quản lý mã giảm giá và điều kiện áp dụng';
+    if (path.startsWith('/management/product/')) return 'Thông tin sản phẩm và các phân loại';
+    if (path === '/management/product') return 'Danh sách sản phẩm và phân loại hàng';
+    return `Khu vực ${this.currentRole.toLocaleLowerCase('vi-VN')}`;
+  }
+
+  private get currentRoutePath(): string {
+    return this.router.url.split(/[?#]/, 1)[0].replace(/\/$/, '') || '/management';
   }
 
   get notificationRoute(): string {

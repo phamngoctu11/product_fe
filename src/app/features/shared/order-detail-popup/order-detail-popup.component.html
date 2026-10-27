@@ -1,18 +1,24 @@
 <div *ngIf="isVisible"
-     class="order-detail-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3"
-     (click)="close.emit()">
-  <div class="bg-white rounded-4 shadow-lg overflow-hidden w-100 order-detail-modal"
+     class="order-detail-backdrop"
+     [class.order-detail-backdrop--modal]="presentation === 'modal'"
+     [class.order-detail-backdrop--embedded]="presentation === 'embedded'"
+     [attr.role]="presentation === 'modal' ? 'dialog' : null"
+     [attr.aria-modal]="presentation === 'modal' ? 'true' : null"
+     [attr.aria-labelledby]="presentation === 'modal' ? 'order-detail-title' : null"
+     (click)="presentation === 'modal' && close.emit()">
+  <div class="order-detail-modal"
+       [class.order-detail-modal--embedded]="presentation === 'embedded'"
        (click)="$event.stopPropagation()">
-    <div class="bg-primary text-white p-4 d-flex justify-content-between align-items-center gap-3">
+    <div class="order-detail-header p-4 d-flex justify-content-between align-items-center gap-3">
       <div>
-        <h4 class="fw-bold mb-1">
+        <h4 id="order-detail-title" class="fw-bold mb-1">
           {{ receiptMode ? 'Xác nhận nhận hàng' : 'Chi tiết đơn hàng' }} {{ order ? '#' + order.id : '' }}
         </h4>
         <div class="small opacity-75">
           {{ receiptMode ? 'Kiểm tra và nhập số lượng thực nhận cho từng item' : 'Thông tin người phụ trách, người duyệt và từng item trong đơn' }}
         </div>
       </div>
-      <button type="button" class="btn btn-sm btn-light rounded-circle flex-shrink-0" (click)="close.emit()">
+      <button *ngIf="presentation === 'modal'" type="button" class="btn btn-sm btn-light rounded-circle flex-shrink-0" (click)="close.emit()" aria-label="Đóng chi tiết đơn hàng">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -327,7 +333,7 @@
                   (click)="openPaymentModal()">
             <i class="bi bi-qr-code-scan me-1"></i> Thanh toán đơn hàng
           </button>
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="close.emit()">
+          <button *ngIf="presentation === 'modal'" type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" (click)="close.emit()">
             Đóng
           </button>
         </div>

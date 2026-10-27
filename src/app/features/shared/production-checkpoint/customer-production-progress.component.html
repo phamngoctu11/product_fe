@@ -15,7 +15,7 @@
         <h5 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
           <i class="bi bi-hammer text-primary"></i> Tiến trình chế tác thủ công từ xưởng
         </h5>
-        <div class="small text-muted">Hình ảnh thực tế tạo dáng ban đầu do nghệ nhân/nhân viên trực tiếp thực hiện.</div>
+        <div class="small text-muted">Theo dõi các lần cập nhật từ xưởng. Ảnh sản phẩm hoàn thiện chỉ hiện sau khi được kiểm tra đạt.</div>
       </div>
       <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill">
         {{ items.length }} loại sản phẩm
@@ -32,6 +32,7 @@
                 <span class="text-muted small ms-1">({{ item.variantName }})</span>
               }
               <span class="badge bg-secondary-subtle text-secondary ms-2">{{ item.quantity }} chiếc</span>
+              <span class="badge progress-status ms-1">{{ productionStatusLabel(item.productionStatus) }}</span>
             </div>
 
             @if (item.computedCompletionAt) {
@@ -41,38 +42,56 @@
             }
           </div>
 
-          <!-- INITIAL_SHAPE -->
-          @if (getInitialShapeCheckpoint(item); as initial) {
-            <div class="initial-shape-box bg-white p-3 rounded-3 border mt-2">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill small">
-                  <i class="bi bi-check-circle-fill me-1"></i>Đã hoàn thành tạo dáng ban đầu
-                </span>
-                <small class="text-muted">Cập nhật lúc: {{ initial.submittedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
-              </div>
-
-              @if (initial.note) {
-                <p class="small text-secondary mb-2 fst-italic">
-                  "{{ initial.note }}"
-                </p>
-              }
-
-              <!-- Ảnh sản phẩm -->
-              <div class="d-flex flex-wrap gap-2 mt-2">
-                @for (img of initial.images; track img.imageUrl) {
-                  <div class="customer-thumb rounded overflow-hidden position-relative border" (click)="openImageModal(img.imageUrl)">
-                    <img [src]="img.imageUrl" alt="Ảnh tiến độ chế tác" class="w-100 h-100 object-fit-cover">
-                    <div class="thumb-hover-overlay d-flex align-items-center justify-content-center">
-                      <i class="bi bi-zoom-in text-white fs-5"></i>
+          @if (getVisibleCheckpoints(item).length > 0) {
+            <ol class="checkpoint-timeline mt-3 mb-0" [attr.aria-label]="'Tiến trình chế tác của ' + item.productName">
+              @for (checkpoint of getVisibleCheckpoints(item); track checkpoint.id) {
+                <li class="checkpoint-event">
+                  <article class="initial-shape-box p-3 rounded-3 border">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                      <div class="d-flex flex-wrap align-items-center gap-2">
+                        <strong>{{ checkpointStageLabel(checkpoint) }}</strong>
+                        <span class="badge rounded-pill" [ngClass]="checkpoint.status === 'PASSED' ? 'bg-success-subtle text-success border border-success-subtle' : (checkpoint.status === 'REWORK_REQUIRED' ? 'bg-warning-subtle text-warning border border-warning-subtle' : 'bg-info-subtle text-info border border-info-subtle')">
+                          {{ checkpointStatusLabel(checkpoint) }}
+                        </span>
+                        @if (checkpoint.stage === 'FINAL_PRODUCT') {
+                          <span class="badge attempt-badge rounded-pill">Lần {{ checkpoint.attemptNumber }}</span>
+                        }
+                      </div>
+                      <small class="text-muted">{{ checkpoint.submittedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
                     </div>
-                  </div>
-                }
-              </div>
-            </div>
+
+                    @if (canShowCheckpointNote(checkpoint) && checkpoint.note) {
+                      <p class="small text-secondary mb-2">{{ checkpoint.note }}</p>
+                    }
+
+                    @if (checkpoint.status === 'REWORK_REQUIRED') {
+                      <p class="small text-muted mb-0">Xưởng đang tiếp tục hoàn thiện. Cập nhật tiếp theo sẽ xuất hiện tại đây.</p>
+                    }
+
+                    @if (canShowCheckpointImages(checkpoint) && checkpoint.images.length > 0) {
+                      <div class="d-flex flex-wrap gap-2 mt-2">
+                        @for (img of checkpoint.images; track img.imageUrl; let imageIndex = $index) {
+                          <button
+                            type="button"
+                            class="customer-thumb rounded overflow-hidden position-relative border p-0"
+                            (click)="openImageModal(img.imageUrl)"
+                            [attr.aria-label]="'Phóng to ảnh ' + (imageIndex + 1) + ' của bước ' + checkpointStageLabel(checkpoint)">
+                            <img [src]="img.imageUrl" [alt]="checkpointStageLabel(checkpoint) + ' — ' + item.productName" class="w-100 h-100 object-fit-cover">
+                            <span class="thumb-hover-overlay d-flex align-items-center justify-content-center" aria-hidden="true">
+                              <i class="bi bi-zoom-in text-white fs-5"></i>
+                            </span>
+                          </button>
+                        }
+                      </div>
+                    }
+                  </article>
+                </li>
+              }
+            </ol>
           } @else {
             <div class="text-muted small fst-italic p-2 bg-white rounded border mt-2">
               <i class="bi bi-hourglass-split me-1 text-warning"></i>
-              Xưởng đang chuẩn bị nguyên liệu và định hình dáng phôi ban đầu. Hình ảnh tiến trình sẽ sớm xuất hiện tại đây.
+              Xưởng chưa đăng cập nhật tiến trình cho sản phẩm này.
             </div>
           }
         </div>
@@ -84,10 +103,13 @@
 <!-- Modal xem ảnh phóng to -->
 @if (enlargedImageUrl) {
   <div class="image-modal-backdrop position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3"
+       role="dialog"
+       aria-modal="true"
+       aria-label="Ảnh tiến độ chế tác"
        style="z-index: 1090;"
        (click)="closeImageModal()">
     <div class="position-relative bg-white rounded-3 p-2 shadow-lg overflow-hidden" (click)="$event.stopPropagation()" style="max-width: 90vw; max-height: 90vh;">
-      <button class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle" (click)="closeImageModal()" aria-label="Đóng">
+      <button type="button" class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle" (click)="closeImageModal()" aria-label="Đóng ảnh">
         <i class="bi bi-x-lg"></i>
       </button>
       <img [src]="enlargedImageUrl" alt="Hình ảnh tiến độ chế tác" class="d-block w-100 h-100 object-fit-contain" style="max-height: 85vh;">

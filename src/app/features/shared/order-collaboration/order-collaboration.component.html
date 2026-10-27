@@ -12,10 +12,13 @@
     <header *ngIf="!onlyChat" class="collab-header d-flex flex-wrap align-items-center justify-content-between gap-3 p-3">
       <div class="d-flex align-items-center flex-wrap gap-2">
         <span class="badge" [ngClass]="isCustomOrder ? 'bg-primary' : 'bg-secondary'">
-          {{ isCustomOrder ? 'Đơn đặt riêng (Custom)' : 'Đơn hàng Catalog' }}
+          {{ isCustomOrder ? 'Đơn đặt riêng' : 'Đơn hàng cửa hàng' }}
+        </span>
+        <span class="badge bg-secondary-subtle text-secondary-emphasis border">
+          Đơn: {{ orderStatusLabel }}
         </span>
         <span class="badge" [ngClass]="agreementStatusBadge.bgClass">
-          {{ agreementStatusBadge.text }}
+          Thỏa thuận: {{ agreementStatusBadge.text }}
         </span>
         <span class="text-muted small">Phiên bản #{{ agreement?.agreementVersion ?? (order?.version || 1) }}</span>
       </div>
@@ -102,13 +105,20 @@
           <div *ngIf="!isLoadingAgreement">
             <!-- Custom Order Form -->
             <div *ngIf="isCustomOrder" class="agreement-form">
+              <div *ngIf="isTerminalOrder" class="alert alert-secondary py-2 px-3 small" role="status">
+                Đơn hàng đã {{ order?.status === 'DELIVERED' ? 'hoàn tất' : 'hủy' }}. Thỏa thuận được giữ ở chế độ chỉ xem.
+              </div>
+              <div *ngIf="isAgreementExpired" class="alert alert-warning py-2 px-3 small" role="status">
+                Đã hết thời hạn gửi đề xuất. Liên hệ nhân viên phụ trách nếu bạn cần hỗ trợ.
+              </div>
               <div *ngIf="customProductTypeName" class="alert alert-light border mb-3">
                 <div><strong>Phân khúc:</strong> {{ customProductTypeName }}</div>
                 <div *ngFor="let field of customFieldEntries" class="small mt-1"><strong>{{ field.label }}:</strong> {{ field.value }}</div>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold small">Mô tả chi tiết yêu cầu <span class="text-danger">*</span></label>
+                <label for="agreement-description" class="form-label fw-semibold small">Mô tả chi tiết yêu cầu <span class="text-danger">*</span></label>
                 <textarea
+                  id="agreement-description"
                   class="form-control"
                   rows="3"
                   [(ngModel)]="customDescription"
@@ -130,7 +140,8 @@
                       *ngIf="canUserSubmitAgreement"
                       type="button"
                       class="btn btn-sm btn-danger btn-remove-img position-absolute top-0 end-0 p-0"
-                      (click)="removeImage(i)">
+                      (click)="removeImage(i)"
+                      [attr.aria-label]="'Xóa ảnh tham khảo ' + (i + 1)">
                       <i class="bi bi-x"></i>
                     </button>
                   </div>
@@ -143,6 +154,7 @@
                     <input
                       type="file"
                       class="d-none"
+                      aria-label="Tải ảnh mẫu hoặc thiết kế tham khảo lên"
                       accept="image/*"
                       [disabled]="isUploadingImage"
                       (change)="onImageSelected($event)">
@@ -153,8 +165,9 @@
               <!-- Numerical fields -->
               <div class="row g-2 mb-3">
                 <div class="col-6">
-                  <label class="form-label fw-semibold small">Số lượng</label>
+                  <label for="agreement-quantity" class="form-label fw-semibold small">Số lượng</label>
                   <input
+                    id="agreement-quantity"
                     type="number"
                     min="1"
                     class="form-control"
@@ -162,8 +175,9 @@
                     [disabled]="!canUserSubmitAgreement || isSubmittingAgreement">
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-semibold small">Đơn giá đề xuất (đ)</label>
+                  <label for="agreement-unit-price" class="form-label fw-semibold small">Đơn giá đề xuất (đ)</label>
                   <input
+                    id="agreement-unit-price"
                     type="number"
                     min="0"
                     class="form-control"
@@ -171,8 +185,9 @@
                     [disabled]="!canUserSubmitAgreement || isSubmittingAgreement">
                 </div>
                 <div class="col-12">
-                  <label class="form-label fw-semibold small">Thời gian dự kiến hoàn thành (ngày)</label>
+                  <label for="agreement-duration" class="form-label fw-semibold small">Thời gian dự kiến hoàn thành (ngày)</label>
                   <input
+                    id="agreement-duration"
                     type="number"
                     min="1"
                     class="form-control"
@@ -182,8 +197,9 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label fw-semibold small">Phương thức thanh toán <span class="text-danger">*</span></label>
+                <label for="agreement-payment-method" class="form-label fw-semibold small">Phương thức thanh toán <span class="text-danger">*</span></label>
                 <select
+                  id="agreement-payment-method"
                   class="form-select"
                   [(ngModel)]="customPaymentMethod"
                   [disabled]="!canUserSubmitAgreement || isSubmittingAgreement">
@@ -196,8 +212,9 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label fw-semibold small">Ghi chú thêm</label>
+                <label for="agreement-note" class="form-label fw-semibold small">Ghi chú thêm</label>
                 <input
+                  id="agreement-note"
                   type="text"
                   class="form-control"
                   [(ngModel)]="customNote"
@@ -237,16 +254,16 @@
                 </span>
               </div>
               <div class="d-flex justify-content-between py-1 small">
-                <span class="text-muted">Tạm tính thỏa thuận:</span>
-                <span class="fw-semibold">{{ computedSubtotal | number }} đ</span>
+                <span class="text-muted">{{ isCustomOrder && !hasSubmittedAgreement ? 'Tạm tính theo đề xuất:' : 'Tạm tính thỏa thuận:' }}</span>
+                <span class="fw-semibold">{{ computedSubtotal > 0 ? ((computedSubtotal | number) + ' đ') : 'Chưa chốt giá' }}</span>
               </div>
-              <div class="d-flex justify-content-between py-1 small" *ngIf="agreement?.discountAmount || order?.discountAmount">
+              <div class="d-flex justify-content-between py-1 small" *ngIf="computedSubtotal > 0 && (agreement?.discountAmount || order?.discountAmount)">
                 <span class="text-muted">Giảm giá voucher:</span>
                 <span class="text-success fw-semibold">-{{ (agreement?.discountAmount || order?.discountAmount || 0) | number }} đ</span>
               </div>
               <div class="d-flex justify-content-between py-2 border-top mt-2 fs-6">
                 <span class="fw-bold">Tổng thanh toán dự kiến:</span>
-                <span class="fw-bold text-primary">{{ computedFinalPrice | number }} đ</span>
+                <span class="fw-bold text-primary">{{ computedSubtotal > 0 ? ((computedFinalPrice | number) + ' đ') : 'Chưa chốt giá' }}</span>
               </div>
             </div>
 
@@ -264,7 +281,7 @@
                   {{ isSubmittingAgreement ? 'Đang gửi...' : 'Gửi đề xuất thỏa thuận' }}
                 </button>
                 <div *ngIf="!canUserSubmitAgreement" class="text-muted small fst-italic">
-                  Thỏa thuận đang ở trạng thái không thể chỉnh sửa.
+                  {{ isTerminalOrder ? 'Đơn đã kết thúc; thông tin thỏa thuận chỉ để xem.' : (isAgreementExpired ? 'Đã hết hạn gửi đề xuất thỏa thuận.' : 'Thỏa thuận đang ở trạng thái không thể chỉnh sửa.') }}
                 </div>
               </div>
 
@@ -385,6 +402,7 @@
           <div class="chat-footer p-3 border-top">
             <div class="chat-input-wrapper">
               <textarea
+                aria-label="Nội dung tin nhắn trao đổi đơn hàng"
                 class="form-control chat-textarea"
                 rows="2"
                 maxlength="4000"
@@ -431,8 +449,9 @@
       </div>
 
       <div *ngIf="staffDecision === 'REQUEST_CHANGES'" class="mb-3">
-        <label class="form-label fw-semibold small">Lý do / Hướng dẫn điều chỉnh <span class="text-danger">*</span></label>
+        <label for="staff-decision-reason" class="form-label fw-semibold small">Lý do / Hướng dẫn điều chỉnh <span class="text-danger">*</span></label>
         <textarea
+          id="staff-decision-reason"
           class="form-control"
           rows="3"
           [(ngModel)]="staffDecisionReason"

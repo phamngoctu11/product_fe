@@ -65,7 +65,7 @@
   overflow: hidden;
   border: 1px solid rgba(var(--app-primary-rgb), 0.16);
   border-radius: 0.75rem;
-  background: rgba(7, 11, 25, 0.62);
+  background: var(--app-surface-muted);
   color: rgba(var(--app-primary-rgb), 0.42);
 }
 
@@ -99,7 +99,7 @@
   padding: 0.2rem;
   border: 1px solid rgba(var(--app-primary-rgb), 0.16);
   border-radius: 999px;
-  background: rgba(7, 11, 25, 0.48);
+  background: var(--app-surface-muted);
 }
 
 .cart-qty-btn {
@@ -116,13 +116,13 @@
 }
 
 .cart-qty-btn.minus:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
+  background: color-mix(in srgb, var(--clay-danger) 12%, transparent);
+  color: var(--clay-danger);
 }
 
 .cart-qty-btn.plus:hover {
-  background: rgba(16, 185, 129, 0.1);
-  color: #34d399;
+  background: color-mix(in srgb, var(--clay-success) 12%, transparent);
+  color: var(--clay-success);
 }
 
 .cart-qty-val,
@@ -171,15 +171,15 @@
 
 .cart-del-btn:hover:not(:disabled) {
   border-color: rgba(239, 68, 68, 0.28);
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
+  background: color-mix(in srgb, var(--clay-danger) 12%, transparent);
+  color: var(--clay-danger);
 }
 
 .cart-delete-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(248, 113, 113, 0.25);
-  border-top-color: #f87171;
+  border: 2px solid color-mix(in srgb, var(--clay-danger) 25%, transparent);
+  border-top-color: var(--clay-danger);
   border-radius: 50%;
   animation: cart-item-spin 0.8s linear infinite;
 }
@@ -207,4 +207,23 @@ html[data-app-theme="light"] .cart-total-price {
   .cart-unit-price {
     display: none;
   }
+
+  .cart-item.is-owner {
+    grid-template-areas:
+      "select product delete"
+      "select quantity total";
+    row-gap: .6rem;
+  }
+  .cart-item.is-owner > .cart-checkbox { grid-area: select; }
+  .cart-item.is-owner > .cart-product-info { grid-area: product; }
+  .cart-item.is-owner > .cart-qty { grid-area: quantity; justify-self: start; }
+  .cart-item.is-owner > .cart-total-price { grid-area: total; }
+  .cart-item.is-owner > .cart-del-btn { grid-area: delete; }
+  .cart-item:not(.is-owner) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "product quantity" "total total";
+  }
+  .cart-item:not(.is-owner) > .cart-product-info { grid-area: product; }
+  .cart-item:not(.is-owner) > .cart-readonly-quantity { grid-area: quantity; }
+  .cart-item:not(.is-owner) > .cart-total-price { grid-area: total; text-align: right; }
 }

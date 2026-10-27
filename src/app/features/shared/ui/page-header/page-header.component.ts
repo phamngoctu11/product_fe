@@ -8,5 +8,4 @@ import { Component, Input } from '@angular/core';
 export class PageHeaderComponent {
   @Input({ required: true }) title = '';
   @Input() subtitle = '';
-  @Input() icon = 'bi-grid';
 }

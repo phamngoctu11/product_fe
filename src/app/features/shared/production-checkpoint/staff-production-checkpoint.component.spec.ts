@@ -62,6 +62,18 @@ describe('StaffProductionCheckpointComponent', () => {
     expect(itemCards.length).toBe(1);
   });
 
+  it('should translate every known production status instead of rendering enum codes', () => {
+    mockCheckpointService.getProgress.and.returnValue(of([{
+      ...mockItemWithQuantity20,
+      productionStatus: 'WAITING_ASSIGNMENT',
+    }]));
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent || '';
+    expect(text).toContain('Chờ phân công');
+    expect(text).not.toContain('WAITING_ASSIGNMENT');
+  });
+
   it('should allow submitting INITIAL_SHAPE and auto-advance to FINAL_PRODUCT without waiting for manager review', () => {
     const file = new File(['dummy'], 'photo.jpg', { type: 'image/jpeg' });
     component.initialFiles[301] = [file];

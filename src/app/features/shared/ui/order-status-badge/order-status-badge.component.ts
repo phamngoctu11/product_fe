@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import {
   DEFAULT_ORDER_STATUS_PRESENTATION,
+  getOrderStatusLabel,
   ORDER_STATUS_PRESENTATION,
   OrderStatusPresentation,
 } from './order-status.config';
@@ -39,7 +40,7 @@ export class OrderStatusBadgeComponent {
     }
     const fallback = {
       ...DEFAULT_ORDER_STATUS_PRESENTATION,
-      label: this.status || DEFAULT_ORDER_STATUS_PRESENTATION.label,
+      label: getOrderStatusLabel(this.status),
     };
     return ORDER_STATUS_PRESENTATION[this.status] ?? fallback;
   }

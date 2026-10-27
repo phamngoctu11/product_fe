@@ -1,98 +1,137 @@
-<div class="modal-content shadow-lg border-0 add-cart-modal">
-  <div class="modal-header bg-success text-white border-0 px-4 py-3">
-    <h5 class="modal-title m-0 fw-bold text-truncate">
-      <i class="bi bi-cart-plus me-2"></i>Chọn tùy chọn mua hàng
-    </h5>
-    <button type="button" class="btn-close btn-close-white" (click)="onCancel()"></button>
-  </div>
-
-  <div class="modal-body p-3 add-cart-body">
-    <div class="product-summary align-items-center mb-3 pb-3 border-bottom">
-
-      <div class="bg-light rounded p-1 text-center border d-flex justify-content-center align-items-center overflow-hidden shadow-sm product-thumb">
-        <img *ngIf="getDisplayImage()"
-             [src]="getDisplayImage()"
-             class="product-thumb-image">
-        <i *ngIf="!getDisplayImage()" class="bi bi-box-seam text-secondary fs-1"></i>
-      </div>
-
-      <div class="min-w-0">
-        <h5 class="fw-bold text-dark m-0 text-truncate" [title]="product.product_name">{{ product.product_name }}</h5>
-        <span class="badge bg-secondary mt-1 product-tags" *ngIf="product.tags?.length" [title]="product.tags?.join(', ')">{{ product.tags?.join(', ') }}</span>
-
-        <div class="text-danger fw-bold mt-1 fs-5">
-           {{ selectedVariant ? (selectedVariant.price | number) : ('Từ ' + (product.price | number)) }}đ
-        </div>
-      </div>
+<section class="modal-content add-cart-modal" aria-labelledby="add-cart-title">
+  <header class="modal-header add-cart-header">
+    <div class="min-w-0">
+      <p class="add-cart-eyebrow">Thêm vào giỏ hàng</p>
+      <h2 id="add-cart-title" class="modal-title">Chọn phân loại</h2>
     </div>
+    <button type="button" class="add-cart-close" (click)="onCancel()" aria-label="Đóng cửa sổ">
+      <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+  </header>
 
-    <div class="mb-3 bg-light p-3 filter-panel" *ngIf="getObjectKeys(availableFilters).length > 0">
-      <label class="fw-bold text-dark mb-3 filter-title"><i class="bi bi-funnel me-1"></i>Bộ lọc phân loại</label>
-      <div class="filter-row mb-2" *ngFor="let key of getObjectKeys(availableFilters)">
-        <span class="text-primary small fw-bold filter-label" [title]="getLabel(key)">{{ getLabel(key) }}:</span>
-        <div class="filter-options">
-          <div class="form-check" *ngFor="let val of availableFilters[key]">
-          <input class="form-check-input border-secondary" type="checkbox" [id]="key + val" [value]="val" (change)="toggleFilter(key, val, $event)">
-            <label class="form-check-label text-dark" [for]="key + val" [title]="val">{{ val }}</label>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label fw-bold text-dark mb-3 result-title">Kết quả phân loại</label>
-      <div class="variant-grid">
-        @for (v of filteredVariants; track v.id) {
-          <button class="btn text-start border variant-option"
-                  [ngClass]="{
-                    'btn-outline-secondary': selectedVariant?.id !== v.id,
-                    'btn-success text-white border-success shadow-sm': selectedVariant?.id === v.id
-                  }"
-                  (click)="selectVariant(v)">
-            <div class="fw-bold mb-1 variant-name" [title]="v.variantName">{{ v.variantName }}</div>
-
-            <div class="d-flex flex-wrap gap-1 mt-1">
-              @for (key of getObjectKeys(v.parsedAttributes); track key) {
-                <span class="badge variant-attribute-badge"
-                      [title]="getLabel(key) + ': ' + v.parsedAttributes[key]"
-                      [ngClass]="selectedVariant?.id === v.id ? 'bg-white text-success' : 'bg-light text-secondary border'">
-                  {{ getLabel(key) }}: {{ v.parsedAttributes[key] }}
-                </span>
-              }
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-              <span class="small fw-bold text-danger" [ngClass]="{'text-white': selectedVariant?.id === v.id}">{{ v.price | number }}đ</span>
-              <span class="small opacity-75"><i class="bi bi-clock-history me-1"></i>Làm theo yêu cầu</span>
-            </div>
-          </button>
-        } @empty {
-          <div class="alert alert-warning w-100 py-2"><i class="bi bi-exclamation-triangle me-2"></i>Không tìm thấy phân loại hàng nào phù hợp với bộ lọc.</div>
+  <div class="modal-body add-cart-body">
+    <section class="product-summary" aria-label="Sản phẩm đang chọn">
+      <div class="product-thumb">
+        @if (getDisplayImage(); as imageUrl) {
+          <img [src]="imageUrl" [alt]="product.product_name" class="product-thumb-image">
+        } @else {
+          <i class="bi bi-box-seam" aria-hidden="true"></i>
         }
       </div>
-    </div>
+      <div class="product-summary__content">
+        <h3 [title]="product.product_name">{{ product.product_name }}</h3>
+        @if (product.productTypeName) {
+          <p class="product-type">{{ product.productTypeName }}</p>
+        }
+        @if (selectedVariant) {
+          <p class="selected-variant">Đang chọn: <strong>{{ getVariantDisplayName(selectedVariant) }}</strong></p>
+        }
+        <p class="product-price">
+          @if (selectedVariant) {
+            {{ selectedVariant.price | number }} ₫
+          } @else {
+            Từ {{ product.price | number }} ₫
+          }
+        </p>
+      </div>
+    </section>
 
-    <div class="mb-2" *ngIf="selectedVariant">
-      <label class="form-label fw-bold text-dark mb-2 quantity-title">Chọn số lượng đặt làm</label>
-      <div class="quantity-input input-group">
-        <button class="btn btn-outline-secondary" type="button" (click)="quantity = quantity > 1 ? quantity - 1 : 1">
-          <i class="bi bi-dash"></i>
+    <section class="quantity-section" aria-labelledby="quantity-title">
+      <div class="section-heading">
+        <div>
+          <p class="add-cart-eyebrow">Số lượng</p>
+          <h3 id="quantity-title">Bạn muốn đặt bao nhiêu?</h3>
+        </div>
+        <span class="made-time"><i class="bi bi-hammer" aria-hidden="true"></i> Khoảng {{ product.madeDay || 3 }} ngày chế tác</span>
+      </div>
+      <div class="quantity-control">
+        <button type="button" (click)="quantity = quantity > 1 ? quantity - 1 : 1" aria-label="Giảm số lượng">
+          <i class="bi bi-dash" aria-hidden="true"></i>
         </button>
-        <input type="number" class="form-control text-center fw-bold" [(ngModel)]="quantity" [min]="1" />
-        <button class="btn btn-outline-secondary" type="button" (click)="quantity = quantity + 1">
-          <i class="bi bi-plus"></i>
+        <input type="number" [(ngModel)]="quantity" min="1" step="1" inputmode="numeric" aria-label="Số lượng">
+        <button type="button" (click)="quantity = quantity + 1" aria-label="Tăng số lượng">
+          <i class="bi bi-plus" aria-hidden="true"></i>
         </button>
       </div>
-      <div class="form-text text-success mt-1 fw-semibold">
-        <i class="bi bi-check2-circle me-1"></i>Sản phẩm thủ công theo yêu cầu (ước tính ~{{ product.madeDay || 3 }} ngày chế tác)
+      @if (!selectedVariant) {
+        <p class="quantity-hint">Chọn một phân loại phía dưới để thêm sản phẩm vào giỏ hàng.</p>
+      }
+    </section>
+
+    @if (getObjectKeys(availableFilters).length > 0) {
+      <section class="filter-panel" aria-labelledby="variant-filter-title">
+        <h3 id="variant-filter-title"><i class="bi bi-funnel" aria-hidden="true"></i>Bộ lọc phân loại</h3>
+        @for (key of getObjectKeys(availableFilters); track key) {
+          <fieldset class="filter-row">
+            <legend>{{ getLabel(key) }}</legend>
+            <div class="filter-options">
+              @for (value of availableFilters[key]; track value) {
+                <label class="filter-option" [for]="'filter-' + key + '-' + value">
+                  <input
+                    type="checkbox"
+                    [id]="'filter-' + key + '-' + value"
+                    [checked]="activeFilters[key]?.includes(value)"
+                    (change)="toggleFilter(key, value, $event)">
+                  <span>{{ value }}</span>
+                </label>
+              }
+            </div>
+          </fieldset>
+        }
+      </section>
+    }
+
+    <section class="variant-section" aria-labelledby="variant-results-title">
+      <div class="section-heading">
+        <div>
+          <p class="add-cart-eyebrow">Tùy chọn có sẵn</p>
+          <h3 id="variant-results-title">Chọn phân loại</h3>
+        </div>
+        <span class="variant-count">{{ filteredVariants.length }} lựa chọn</span>
       </div>
-    </div>
+
+      <div class="variant-grid">
+        @for (variant of filteredVariants; track variant.id) {
+          <button
+            type="button"
+            class="variant-option"
+            [class.is-selected]="selectedVariant?.id === variant.id"
+            [attr.aria-pressed]="selectedVariant?.id === variant.id"
+            (click)="selectVariant(variant)">
+            <span class="variant-option__heading">
+              <span class="variant-name">{{ getVariantDisplayName(variant) }}</span>
+              @if (selectedVariant?.id === variant.id) {
+                <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+              }
+            </span>
+            @if (getObjectKeys(variant.parsedAttributes).length > 0) {
+              <span class="variant-attributes">
+                @for (key of getObjectKeys(variant.parsedAttributes); track key) {
+                  <span class="variant-attribute-badge">{{ getLabel(key) }}: {{ variant.parsedAttributes[key] }}</span>
+                }
+              </span>
+            }
+            <span class="variant-option__footer">
+              <strong>{{ variant.price | number }} ₫</strong>
+              <span><i class="bi bi-clock" aria-hidden="true"></i> Làm theo yêu cầu</span>
+            </span>
+          </button>
+        } @empty {
+          <div class="variant-empty" role="status">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <strong>Không tìm thấy phân loại phù hợp</strong>
+            <span>Hãy thử bỏ bớt điều kiện lọc.</span>
+          </div>
+        }
+      </div>
+    </section>
+
   </div>
 
-  <div class="modal-footer px-4 py-3 bg-light border-0 d-flex justify-content-between gap-3">
-    <button class="btn btn-secondary px-4 rounded-pill fw-bold" (click)="onCancel()">Hủy bỏ</button>
-    <button class="btn btn-success px-4 rounded-pill fw-bold" [disabled]="!selectedVariant || quantity < 1" (click)="onConfirm()">
-      <i class="bi bi-cart-plus me-1"></i> Xác nhận thêm vào giỏ
+  <footer class="modal-footer add-cart-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="onCancel()">Để sau</button>
+    <button type="button" class="btn btn-primary" [disabled]="!selectedVariant || quantity < 1" (click)="onConfirm()">
+      <i class="bi bi-bag-plus" aria-hidden="true"></i> Thêm vào giỏ
     </button>
-  </div>
-</div>
+  </footer>
+</section>

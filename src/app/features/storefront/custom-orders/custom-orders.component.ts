@@ -38,7 +38,7 @@ export class CustomOrdersComponent implements OnInit {
 
   isLoadingList = false;
   isLoadingDetail = false;
-  statusFilter = 'ALL';
+  statusFilter = 'DISCUSSING';
 
   ngOnInit(): void {
     this.loadOrders();
@@ -108,8 +108,8 @@ export class CustomOrdersComponent implements OnInit {
 
         // Auto-select first order if none selected or currently selected is not in list
         if (this.customOrders.length > 0 && !this.selectedOrderId) {
-          const first = this.filteredOrders[0] || this.customOrders[0];
-          this.selectOrder(first);
+          const first = this.filteredOrders[0];
+          if (first) this.selectOrder(first);
         }
       },
       error: (err) => {
@@ -120,9 +120,6 @@ export class CustomOrdersComponent implements OnInit {
   }
 
   get filteredOrders(): OrderListDTO[] {
-    if (this.statusFilter === 'ALL') {
-      return this.customOrders;
-    }
     return this.customOrders.filter((o) => (o.status || '').toUpperCase() === this.statusFilter);
   }
 
@@ -140,6 +137,9 @@ export class CustomOrdersComponent implements OnInit {
       next: (detail) => {
         this.selectedOrder = detail;
         this.isLoadingDetail = false;
+        if (!this.customOrders.some((order) => order.id === detail.id && (order.status || '').toUpperCase() === this.statusFilter)) {
+          this.statusFilter = (detail.status || 'DISCUSSING').toUpperCase();
+        }
         const exists = this.customOrders.some((o) => o.id === detail.id);
         if (!exists) {
           this.customOrders.unshift({

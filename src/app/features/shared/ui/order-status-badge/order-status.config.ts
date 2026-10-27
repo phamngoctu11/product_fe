@@ -8,7 +8,7 @@ export const ORDER_STATUS_PRESENTATION: Readonly<Record<string, OrderStatusPrese
   PENDING_APPROVAL: { label: 'Chờ duyệt', icon: 'bi-hourglass-split', tone: 'warning' },
   PENDING_ASSIGNMENT: { label: 'Chờ phân công', icon: 'bi-person-plus', tone: 'warning' },
   DISCUSSING: { label: 'Đang trao đổi', icon: 'bi-chat-dots', tone: 'info' },
-  WAITING_STAFF_CONFIRMATION: { label: 'Chờ staff xác nhận', icon: 'bi-person-check', tone: 'info' },
+  WAITING_STAFF_CONFIRMATION: { label: 'Chờ nhân viên xác nhận', icon: 'bi-person-check', tone: 'info' },
   ORDER_ACCEPTED: { label: 'Đã nhận đơn', icon: 'bi-check-circle', tone: 'success' },
   ORDER_CREATING: { label: 'Đang sản xuất', icon: 'bi-tools', tone: 'primary' },
   READY_TO_SHIP: { label: 'Sẵn sàng giao', icon: 'bi-box-seam', tone: 'success' },
@@ -22,3 +22,18 @@ export const DEFAULT_ORDER_STATUS_PRESENTATION: OrderStatusPresentation = {
   icon: 'bi-info-circle',
   tone: 'secondary',
 };
+
+export function getOrderStatusLabel(status: string | null | undefined): string {
+  const normalized = (status || '').trim().toUpperCase();
+  if (!normalized) return DEFAULT_ORDER_STATUS_PRESENTATION.label;
+  return ORDER_STATUS_PRESENTATION[normalized]?.label
+    ?? normalized.replace(/[_-]+/g, ' ').toLocaleLowerCase('vi-VN').replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase('vi-VN'));
+}
+
+export function getOrderTypeLabel(type: string | null | undefined): string {
+  switch ((type || '').trim().toUpperCase()) {
+    case 'CUSTOM': return 'Đặt riêng';
+    case 'CATALOG': return 'Cửa hàng';
+    default: return type ? type.replace(/[_-]+/g, ' ').toLocaleLowerCase('vi-VN') : 'Cửa hàng';
+  }
+}

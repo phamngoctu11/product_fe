@@ -14,6 +14,7 @@ import {
 } from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderService } from '../../../service/order.service';
+import { getOrderTypeLabel } from '../../shared/ui/order-status-badge/order-status.config';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   AppPaginationComponent,
@@ -55,6 +56,7 @@ export class StaffOrdersComponent implements OnInit {
   claimableOrders: OrderAssignmentQueueItem[] = [];
   myOrders: OrderListDTO[] = [];
   activeTab: 'in_progress' | 'completed' | 'claimable' = 'in_progress';
+  private prioritizeClaimQueue = true;
 
   inProgressStatusFilter = 'ALL';
   completedStatusFilter = 'ALL';
@@ -90,6 +92,10 @@ export class StaffOrdersComponent implements OnInit {
   handoverKey: string | null = null;
 
   constructor(private orderService: OrderService) {}
+
+  orderTypeLabel(type: string | null | undefined): string {
+    return getOrderTypeLabel(type);
+  }
 
   get inProgressOrders(): OrderListDTO[] {
     const active = this.myOrders.filter((o) => {
@@ -133,6 +139,7 @@ export class StaffOrdersComponent implements OnInit {
     this.route.queryParams.subscribe((params) => {
       const orderId = Number(params['orderId']);
       if (Number.isInteger(orderId) && orderId > 0) {
+        this.prioritizeClaimQueue = false;
         this.activeTab = 'in_progress';
         if (params['action'] === 'chat' || params['chat'] === 'true') {
           this.openOrderChatById(orderId);
@@ -154,6 +161,10 @@ export class StaffOrdersComponent implements OnInit {
         this.pageSize = page.size || this.pageSize;
         this.pendingTotalPages = page.totalPages || 0;
         this.pendingTotalElements = page.totalElements || 0;
+        if (this.prioritizeClaimQueue) {
+          if (this.pendingTotalElements > 0) this.activeTab = 'claimable';
+          this.prioritizeClaimQueue = false;
+        }
         this.loadMyOrders();
       },
       error: (err) => {
@@ -237,6 +248,7 @@ export class StaffOrdersComponent implements OnInit {
       this.orderService.claimOrder(order.orderId, order.orderVersion).subscribe({
         next: (result) => {
           this.toast.notify(`Đã nhận đơn #${order.orderId} – trạng thái ${result.orderStatus}.`);
+          this.prioritizeClaimQueue = false;
           this.activeTab = 'in_progress';
           this.loadData();
         },

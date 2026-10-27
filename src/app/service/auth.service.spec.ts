@@ -36,11 +36,14 @@ describe('AuthService navigation', () => {
     expect(service.getHomeRoute()).toBe('/store/product');
   });
 
-  it('routes customers to the storefront and backoffice roles to management', () => {
+  it('routes customers to the storefront and staff to their order queue', () => {
     localStorage.setItem('accessToken', createRoleToken('USER'));
     expect(service.getHomeRoute()).toBe('/store/product');
 
     localStorage.setItem('accessToken', createRoleToken('STAFF'));
+    expect(service.getHomeRoute()).toBe('/management/staff-orders');
+
+    localStorage.setItem('accessToken', createRoleToken('MANAGER'));
     expect(service.getHomeRoute()).toBe('/management/product');
   });
 });

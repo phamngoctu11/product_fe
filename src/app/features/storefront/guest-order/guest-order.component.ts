@@ -30,20 +30,21 @@ import { FormsModule } from '@angular/forms';
     ViewStateComponent,
   ],
   template: `
-    <div class="sf-container py-12 min-h-screen">
+    <div class="sf-container guest-order-page">
       <sf-page-intro
         title="Tra cứu đơn hàng của bạn"
-        description="Xem trạng thái, chi tiết và xác nhận nhận hàng."
+        subtitle="Xem trạng thái, chi tiết và xác nhận nhận hàng."
       ></sf-page-intro>
 
       <app-view-state
         [loading]="isLoading"
         [error]="error"
         [empty]="!order"
-        (retry)="loadOrder()"
+        actionLabel="Thử tải lại"
+        (action)="loadOrder()"
       >
-        <div *ngIf="order" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
-          <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <div *ngIf="order" class="guest-order-card">
+          <div class="guest-order-header">
             <div>
               <h3 class="text-xl font-medium text-gray-900">Đơn hàng #{{ order.id }}</h3>
               <p class="text-gray-500 mt-1">Trạng thái hiện tại: <span class="font-medium text-primary-600">{{ getStatusLabel(order.status) }}</span></p>
@@ -66,7 +67,7 @@ import { FormsModule } from '@angular/forms';
             </div>
           </div>
 
-          <div class="p-0 md:p-6 bg-gray-50/50">
+          <div class="guest-order-content">
             <!-- Reuse OrderDetailPopup UI logically but embedded directly for Guest -->
             <app-order-detail-popup
               *ngIf="!receiptMode"
@@ -74,10 +75,11 @@ import { FormsModule } from '@angular/forms';
               [isLoading]="isLoading"
               [error]="error"
               [guestToken]="token"
+              presentation="embedded"
             ></app-order-detail-popup>
 
             <!-- Receipt Confirm UI -->
-            <div *ngIf="receiptMode" class="bg-white p-6 rounded-lg shadow-sm">
+            <div *ngIf="receiptMode" class="guest-receipt-card">
               <h4 class="font-medium text-lg mb-4 text-gray-900 border-b pb-3">Xác nhận số lượng thực nhận</h4>
 
               <div *ngIf="receiptView?.dataWarning" class="bg-amber-50 text-amber-700 p-4 rounded-lg mb-4 text-sm flex gap-2 border border-amber-200">
@@ -96,7 +98,7 @@ import { FormsModule } from '@angular/forms';
               </div>
 
               <div class="space-y-4">
-                <div *ngFor="let item of (receiptView?.items || [])" class="flex flex-col sm:flex-row items-center gap-4 p-4 border rounded-lg">
+                <div *ngFor="let item of (receiptView?.items || [])" class="guest-receipt-item">
                   <div class="flex-1">
                     <p class="font-medium text-gray-800">{{ item.productName || item.variantName || 'Sản phẩm #' + item.orderItemId }}</p>
                     <p class="text-sm text-gray-500 mt-1" *ngIf="item.variantName && item.variantName !== item.productName">{{ item.variantName }}</p>
@@ -181,13 +183,12 @@ import { FormsModule } from '@angular/forms';
 
       <!-- Timeline Modal -->
       <div 
-        class="modal fade" 
+        class="modal fade guest-timeline-modal"
         id="guestTimelineModal" 
         tabindex="-1" 
         aria-hidden="true"
         [class.show]="isTimelineModalOpen"
         [style.display]="isTimelineModalOpen ? 'block' : 'none'"
-        [class.modal-backdrop-show]="isTimelineModalOpen"
       >
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
           <div class="modal-content border-0 rounded-2xl shadow-xl">
@@ -203,10 +204,10 @@ import { FormsModule } from '@angular/forms';
               <div *ngIf="!isLoadingTimeline && history.length === 0" class="text-center py-8 text-gray-500">
                 Chưa có lịch sử trạng thái cho đơn hàng này.
               </div>
-              <div *ngIf="!isLoadingTimeline && history.length > 0" class="timeline relative pl-4">
-                <div class="absolute top-0 bottom-0 left-[11px] w-px bg-gray-200"></div>
-                <div *ngFor="let step of history; let last = last" class="relative mb-6 last:mb-0">
-                  <div class="absolute -left-[22px] top-1 w-[14px] h-[14px] rounded-full"
+              <div *ngIf="!isLoadingTimeline && history.length > 0" class="guest-timeline">
+                <div class="guest-timeline-line"></div>
+                <div *ngFor="let step of history; let last = last" class="guest-timeline-item">
+                  <div class="guest-timeline-dot"
                     [ngClass]="last ? 'bg-primary-500 ring-4 ring-primary-50' : 'bg-gray-300'"
                   ></div>
                   <div>
@@ -221,12 +222,10 @@ import { FormsModule } from '@angular/forms';
           </div>
         </div>
       </div>
-      <div *ngIf="isTimelineModalOpen" class="modal-backdrop fade show"></div>
+      <div *ngIf="isTimelineModalOpen" class="modal-backdrop fade show guest-timeline-backdrop"></div>
     </div>
   `,
-  styles: [`
-    .modal-backdrop-show { background: rgba(0,0,0,0.5); }
-  `]
+  styleUrl: './guest-order.component.css',
 })
 export class GuestOrderComponent implements OnInit {
   private readonly toast = injectToast(ToastService);

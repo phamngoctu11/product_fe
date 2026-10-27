@@ -13,7 +13,7 @@
             <ul class="sf-footer__list">
               @for (link of group.items; track link.label) {
                 <li>
-                  <a [routerLink]="link.path" class="sf-link sf-footer__link">{{ link.label }}</a>
+                  <a [routerLink]="link.path" [queryParams]="link.queryParams || null" class="sf-link sf-footer__link">{{ link.label }}</a>
                 </li>
               }
             </ul>
@@ -25,7 +25,7 @@
     <div class="sf-footer__bottom">
       <div class="sf-footer__social">
         @for (social of footer.socials; track social.name) {
-          <a [href]="social.url" target="_blank" rel="noopener noreferrer" class="sf-link">{{ social.name }}</a>
+          <span class="sf-link sf-footer__social-name">{{ social.name }}</span>
         }
       </div>
       <div class="sf-footer__copyright">

@@ -1,6 +1,5 @@
 <div class="container-fluid py-3 staff-orders-page">
   <app-page-header
-    icon="bi-tools"
     title="Đơn sản xuất"
     subtitle="Nhận đơn và theo dõi các đơn đang phụ trách">
     <button pageActions class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm" (click)="loadData()" [disabled]="isLoading">
@@ -180,7 +179,7 @@
               </div>
               <div class="claim-card__body">
                 <div><span>Khách hàng</span><strong>{{ order.customerName || 'Khách hàng' }}</strong></div>
-                <div><span>Loại đơn</span><strong>{{ order.orderType }}</strong></div>
+                <div><span>Loại đơn</span><strong>{{ orderTypeLabel(order.orderType) }}</strong></div>
                 <div><span>Thanh toán</span><strong>{{ order.paymentMethod || 'Chưa xác định' }}</strong></div>
                 <div><span>Tổng tiền</span><strong class="text-danger">{{ order.finalPrice != null ? (order.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</strong></div>
                 <div class="claim-card__date"><span>Ngày tạo</span><strong>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong></div>
@@ -271,7 +270,7 @@
             </div>
             <div class="col-md-3">
               <div class="text-muted small">Loại đơn</div>
-              <div class="fw-bold">{{ selectedOrder.orderType || 'CATALOG' }}</div>
+              <div class="fw-bold">{{ orderTypeLabel(selectedOrder.orderType) }}</div>
             </div>
             <div class="col-md-3">
               <div class="text-muted small">Tổng tiền</div>
@@ -490,7 +489,7 @@
         <div>
           <h5 class="fw-bold mb-0">Phòng trao đổi & thỏa thuận — Đơn #{{ chatOrder?.id || '...' }}</h5>
           <small class="text-white-50" *ngIf="chatOrder">
-            Khách hàng: {{ chatOrder.customerName || chatOrder.customer?.name || chatOrder.recipientName || 'Khách hàng' }} • Loại đơn: {{ chatOrder.orderType || 'CATALOG' }}
+            Khách hàng: {{ chatOrder.customerName || chatOrder.customer?.name || chatOrder.recipientName || 'Khách hàng' }} • Loại đơn: {{ orderTypeLabel(chatOrder.orderType) }}
           </small>
         </div>
       </div>

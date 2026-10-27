@@ -1,61 +1,124 @@
 <app-hero-section></app-hero-section>
 
-<div class="sf-container product-page mt-4 mb-5 app-fade-in">
-  <sf-page-intro
-    title="SẢN PHẨM THỦ CÔNG CLAY ART"
-    subtitle="Khám phá các sản phẩm nghệ thuật độc bản, được chế tác tỉ mỉ từ đôi bàn tay của những nghệ nhân tâm huyết. Mỗi tác phẩm mang một câu chuyện riêng."
-    align="center">
-    
-    <sf-chip-group
-      [items]="categories"
-      [active]="selectedCategory"
-      [toggleable]="false"
-      (selected)="onCategorySelect($event)">
-    </sf-chip-group>
-  </sf-page-intro>
+<section class="sf-container product-page app-fade-in" aria-label="Cửa hàng ClayArt">
+  <div class="catalog-layout">
+    <aside class="shop-filters" aria-label="Bộ lọc sản phẩm">
+      <div class="shop-filters__inner">
+        <div class="catalog-sidebar-brand" aria-label="ClayArt">
+          <sf-wordmark size="md"></sf-wordmark>
+          <span>Tác phẩm thủ công</span>
+        </div>
 
-  @if (loadError) {
-    <sf-state
-      title="Lỗi tải dữ liệu"
-      [text]="loadError"
-      icon="bi-exclamation-triangle"
-      actionLabel="Thử lại"
-      (action)="getAll(currentPage, pageSize)">
-    </sf-state>
-  } @else {
-    <sf-product-grid
-      [products]="filteredProducts"
-      [loading]="isLoading"
-      [skeletonCount]="12"
-      [showFavorite]="canUseWishlist"
-      [favoriteIds]="favoriteProductIds"
-      [busyIds]="favoriteBusyProductIds"
-      (favoriteToggled)="toggleFavorite($event)"
-      (viewed)="viewProduct($event.id)"
-      (buy)="openAddToCartModal($event)">
-      <sf-state
-        sfEmpty
-        title="Không tìm thấy sản phẩm"
-        text="Không có sản phẩm nào khớp với điều kiện lọc của bạn."
-        icon="bi-search"
-        actionLabel="Xóa bộ lọc"
-        (action)="clearFilters()">
-      </sf-state>
-    </sf-product-grid>
+        <div class="shop-filters__heading">
+          <p class="filter-label">Bộ lọc tìm kiếm</p>
+          <span>{{ selectedProductTypeIds.size }}/{{ productTypes.length }} loại</span>
+        </div>
 
-    @if (totalPages > 1 && !isLoading) {
-      <div class="mt-5">
-        <app-pagination
-          [currentPage]="currentPage"
-          [totalPages]="totalPages"
-          [totalElements]="totalElements"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="pageSizeOptions"
-          [disabled]="isLoading"
-          (pageChange)="changePage($event)"
-          (pageSizeChange)="changePageSize($event)">
-        </app-pagination>
+        <div class="catalog-type-filter">
+          <span class="catalog-filter-title">Loại sản phẩm</span>
+          <div class="product-type-list">
+            <label class="product-type-option product-type-option--all">
+              <input type="checkbox" [checked]="allProductTypesSelected" (change)="toggleAllProductTypes()">
+              <span>Tất cả loại sản phẩm</span>
+            </label>
+            <label class="product-type-option" *ngFor="let type of visibleProductTypes">
+              <input type="checkbox" [checked]="selectedProductTypeIds.has(type.id)" (change)="toggleProductType(type.id)">
+              <span>{{ type.name }}</span>
+            </label>
+            @if (!productTypes.length && productTypesLoaded) {
+              <p class="product-type-empty">Chưa có loại sản phẩm.</p>
+            }
+            @if (productTypes.length > productTypePreviewCount) {
+              <button type="button" class="product-type-more" (click)="showAllProductTypes = !showAllProductTypes" [attr.aria-expanded]="showAllProductTypes">
+                {{ showAllProductTypes ? 'Thu gọn' : 'Thêm' }}
+                <i class="bi" [class.bi-chevron-down]="!showAllProductTypes" [class.bi-chevron-up]="showAllProductTypes" aria-hidden="true"></i>
+              </button>
+            }
+          </div>
+        </div>
+
+        <label class="catalog-price-filter">
+          <span class="catalog-filter-title">Giá tối đa</span>
+          <span class="catalog-price-filter__control">
+            <input
+              type="number"
+              min="0"
+              step="50000"
+              [ngModel]="searchPrice"
+              (ngModelChange)="onPriceChange($event)"
+              placeholder="Không giới hạn"
+              inputmode="numeric">
+            <span>₫</span>
+          </span>
+        </label>
+
+        @if (searchPrice || !allProductTypesSelected) {
+          <button type="button" class="filter-reset" (click)="clearFilters()">
+            <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Xóa bộ lọc
+          </button>
+        }
       </div>
-    }
-  }
-</div>
+    </aside>
+
+    <div class="catalog-content">
+      <header class="catalog-heading">
+        <div>
+          <p class="sf-eyebrow">Tạo tác từ đất và đôi tay</p>
+          <h2 id="catalog-title" class="catalog-title">Tác phẩm thủ công</h2>
+          <p class="catalog-subtitle">Mỗi món đồ mang một dáng hình riêng, được làm cẩn thận trong xưởng ClayArt.</p>
+        </div>
+        @if (!isLoading) {
+          <p class="catalog-count"><strong>{{ totalElements | number }}</strong> sản phẩm</p>
+        }
+      </header>
+
+      @if (searchTerm.trim()) {
+        <h2 class="search-results-heading">Kết quả tìm kiếm cho từ khóa “{{ searchTerm.trim() }}”</h2>
+      }
+
+      @if (loadError) {
+        <sf-state
+          title="Chưa tải được sản phẩm"
+          [text]="loadError"
+          icon="bi-exclamation-triangle"
+          actionLabel="Thử lại"
+          (action)="getAll(currentPage, pageSize)">
+        </sf-state>
+      } @else {
+        <sf-product-grid
+          [products]="filteredProducts"
+          [loading]="isLoading"
+          [skeletonCount]="12"
+          [showFavorite]="canUseWishlist"
+          [favoriteIds]="favoriteProductIds"
+          [busyIds]="favoriteBusyProductIds"
+          (favoriteToggled)="toggleFavorite($event)"
+          (viewed)="viewProduct($event.id)"
+          (buy)="openAddToCartModal($event)">
+          <sf-state
+            sfEmpty
+            title="Chưa có sản phẩm phù hợp"
+            text="Hãy đổi từ khóa, chọn thêm loại sản phẩm hoặc mở rộng mức giá để xem thêm tác phẩm."
+            icon="bi-search"
+            actionLabel="Xóa điều kiện lọc"
+            (action)="clearFilters()">
+          </sf-state>
+        </sf-product-grid>
+
+        @if (totalPages > 1 && !isLoading) {
+          <app-pagination
+            class="catalog-pagination"
+            [currentPage]="currentPage"
+            [totalPages]="totalPages"
+            [totalElements]="totalElements"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            [disabled]="isLoading"
+            (pageChange)="changePage($event)"
+            (pageSizeChange)="changePageSize($event)">
+          </app-pagination>
+        }
+      }
+    </div>
+  </div>
+</section>

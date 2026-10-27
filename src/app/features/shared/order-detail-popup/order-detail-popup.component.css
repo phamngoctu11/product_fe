@@ -2,21 +2,97 @@
   z-index: 2000;
 }
 
+.order-detail-backdrop--modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 62%);
+}
+
+.order-detail-backdrop--embedded {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: transparent;
+}
+
 .order-detail-modal {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
   max-width: 1120px;
-  max-height: 92vh;
+  max-height: 92dvh;
   min-width: 0;
+  overflow: hidden;
+  box-shadow: var(--clay-shadow-lg);
+  border: 1px solid var(--app-border);
+  border-radius: var(--clay-radius-lg);
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+
+.order-detail-modal--embedded {
+  max-width: none;
+  max-height: none;
+  box-shadow: none;
+}
+
+.order-detail-header {
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--clay-surface-soft);
+  color: var(--app-text);
 }
 
 .order-detail-body {
-  max-height: calc(92vh - 96px);
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(92dvh - 96px);
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+
+.order-detail-modal--embedded .order-detail-body {
+  max-height: none;
+  overflow: visible !important;
+}
+
+.order-detail-modal .text-white { color: var(--app-text) !important; }
+.order-detail-modal .text-primary,
+.order-detail-modal .text-primary-emphasis { color: var(--clay-accent-hover) !important; }
+.order-detail-modal .text-danger { color: var(--clay-danger) !important; }
+.order-detail-modal .text-success { color: var(--clay-success) !important; }
+.order-detail-modal .btn-primary {
+  border-color: var(--clay-accent);
+  background: var(--clay-accent);
+  color: var(--clay-accent-ink);
+}
+.order-detail-modal .btn-primary:hover {
+  border-color: var(--clay-accent-hover);
+  background: var(--clay-accent-hover);
+  color: var(--clay-accent-ink);
+}
+
+.order-detail-modal .bg-light {
+  background: var(--app-surface-muted) !important;
+  color: var(--app-text) !important;
+}
+
+.order-detail-modal .btn-light {
+  border-color: var(--app-border);
+  background: var(--app-surface-muted);
+  color: var(--app-text);
 }
 
 .review-section {
   padding: 1rem;
   border: 1px solid rgba(var(--app-primary-rgb), 0.2);
   border-radius: 0.9rem;
-  background: rgba(43, 37, 30, 0.88);
+  background: var(--app-surface);
   color: var(--app-text);
 }
 
@@ -68,8 +144,8 @@
 }
 
 .review-item-card.is-reviewed {
-  border-color: rgba(34, 197, 94, 0.22);
-  background: rgba(34, 197, 94, 0.08);
+  border-color: color-mix(in srgb, var(--clay-success) 35%, transparent);
+  background: color-mix(in srgb, var(--clay-success) 9%, var(--app-surface));
 }
 
 .review-item-main {
@@ -89,7 +165,7 @@
 }
 
 .review-image-placeholder {
-  background: #17140f;
+  background: var(--clay-control-bg);
   color: var(--app-muted-text);
 }
 
@@ -105,8 +181,8 @@
   padding: 1rem;
   border: 1px solid rgba(var(--app-primary-rgb), 0.26);
   border-radius: 0.9rem;
-  background: rgba(34, 29, 24, 0.96);
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.4);
+  background: var(--app-surface-muted);
+  box-shadow: var(--clay-shadow-md);
 }
 
 .rating-row {
@@ -137,8 +213,8 @@
 .review-editor .review-comment-input {
   min-height: 150px;
   border-color: rgba(255, 255, 255, 0.14);
-  background: #070b19;
-  color: #e2e8f0;
+  background: var(--clay-control-bg);
+  color: var(--clay-ink);
   caret-color: var(--app-primary-light);
   line-height: 1.55;
   resize: vertical;
@@ -150,18 +226,24 @@
 }
 
 .review-editor .review-comment-input::placeholder {
-  color: rgba(148, 163, 184, 0.86);
+  color: var(--clay-ink-muted);
 }
 
 .review-image-toolbar .btn-outline-secondary {
   border-color: rgba(255, 255, 255, 0.16);
-  color: #dbeafe;
+  color: var(--app-text);
 }
 
 .review-image-toolbar .btn-outline-secondary:hover {
   border-color: rgba(var(--app-primary-rgb), 0.42);
   background: rgba(var(--app-primary-rgb), 0.12);
-  color: #fff;
+  color: var(--app-text);
+}
+
+@media (max-width: 640px) {
+  .order-detail-backdrop--modal { padding: .5rem; align-items: flex-end; }
+  .order-detail-modal { max-height: 96dvh; border-radius: var(--clay-radius-lg) var(--clay-radius-lg) 0 0; }
+  .order-detail-body { max-height: calc(96dvh - 90px); }
 }
 
 .review-image-list {
@@ -177,7 +259,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.7rem;
-  background: #070b19;
+  background: var(--clay-control-bg);
 }
 
 .review-thumb img {

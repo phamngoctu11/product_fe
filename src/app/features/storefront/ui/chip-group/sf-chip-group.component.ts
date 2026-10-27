@@ -33,8 +33,8 @@ export interface SfChipItem {
     .sf-chips {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
-      gap: 1rem;
+      justify-content: flex-start;
+      gap: 0.55rem;
     }
 
     @media (max-width: 575.98px) {

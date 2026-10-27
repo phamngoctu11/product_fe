@@ -38,6 +38,30 @@ export class Myinfor implements OnInit {
     confirmPassword: '',
   };
 
+  genderLabel(gender?: string | null): string {
+    switch ((gender || '').trim().toLowerCase()) {
+      case 'male': case 'm': case 'nam': return 'Nam';
+      case 'female': case 'f': case 'nữ': case 'nu': return 'Nữ';
+      case 'other': case 'khác': case 'khac': return 'Khác';
+      default: return gender?.trim() || 'Chưa cập nhật';
+    }
+  }
+
+  reputationReasonLabel(reason?: string | null): string {
+    const normalized = (reason || '').trim().toLowerCase().replace(/[_-]+/g, ' ');
+    const knownReasons: Readonly<Record<string, string>> = {
+      'completed order': 'Hoàn tất đơn hàng',
+      'order completed': 'Hoàn tất đơn hàng',
+      'complete order': 'Hoàn tất đơn hàng',
+      'cancelled order': 'Hủy đơn hàng',
+      'canceled order': 'Hủy đơn hàng',
+      'order cancellation': 'Hủy đơn hàng',
+      'voucher redeemed': 'Đổi voucher',
+      'redeem voucher': 'Đổi voucher',
+    };
+    return knownReasons[normalized] || reason || 'Điều chỉnh điểm uy tín';
+  }
+
   constructor(
     private userService: UserService,
     private dialog: MatDialog,

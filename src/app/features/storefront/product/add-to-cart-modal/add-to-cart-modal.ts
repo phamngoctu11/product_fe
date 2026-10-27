@@ -30,7 +30,7 @@ export class AddToCartModalComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<AddToCartModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { product: Product }
+    @Inject(MAT_DIALOG_DATA) public data: { product: Product; selectedVariantId?: number }
   ) {
     this.product = data.product;
   }
@@ -38,11 +38,18 @@ export class AddToCartModalComponent implements OnInit {
   ngOnInit(): void {
     if (this.product.variants) {
       this.product.variants.forEach(v => {
-        try { v.parsedAttributes = v.attributes ? JSON.parse(v.attributes) : {}; }
-        catch (e) { v.parsedAttributes = {}; }
+        try {
+          v.parsedAttributes = typeof v.attributes === 'string'
+            ? (v.attributes ? JSON.parse(v.attributes) : {})
+            : (v.attributes && typeof v.attributes === 'object' ? v.attributes : {});
+        } catch {
+          v.parsedAttributes = {};
+        }
       });
       this.filteredVariants = [...this.product.variants];
       this.extractFilters();
+      const preselected = this.filteredVariants.find((variant) => variant.id === this.data.selectedVariantId);
+      if (preselected) this.selectVariant(preselected);
     }
   }
 
@@ -102,6 +109,17 @@ export class AddToCartModalComponent implements OnInit {
 
   getObjectKeys(obj: any): string[] { return obj ? Object.keys(obj) : []; }
   getLabel(key: string): string { return this.attributeDictionary[key] || key; }
+
+  getVariantDisplayName(variant: ProductVariant | null): string {
+    if (!variant) return '';
+    const name = String(variant.variantName || '').trim();
+    if (name) return name;
+    const fallback = Object.values(variant.parsedAttributes || {})
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .join(' · ');
+    return fallback || (variant.id ? `Phân loại #${variant.id}` : 'Phân loại sản phẩm');
+  }
 
   selectVariant(variant: ProductVariant) {
     this.selectedVariant = variant;

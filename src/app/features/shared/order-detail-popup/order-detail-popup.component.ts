@@ -47,6 +47,7 @@ export class OrderDetailPopupComponent {
   @Input() isLoading = false;
   @Input() error = '';
   @Input() receiptMode = false;
+  @Input() presentation: 'modal' | 'embedded' = 'modal';
   @Input() guestToken: string | null = null;
   @Input() receivedQuantities: { [key: number]: number } = {};
   @Input() receiptResponse: ReceiptConfirmResponse | null = null;

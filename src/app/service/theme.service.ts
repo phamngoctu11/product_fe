@@ -6,8 +6,8 @@ import { Inject, Injectable } from '@angular/core';
 })
 export class ThemeService {
   private readonly THEME_KEY = 'app_custom_theme_color';
-  private readonly DEFAULT_COLOR = '#f4f5f7';
-  private readonly DEFAULT_PRIMARY = '#6366f1';
+  private readonly DEFAULT_COLOR = '#25211b';
+  private readonly DEFAULT_PRIMARY = '#bea078';
 
   constructor(@Inject(DOCUMENT) private readonly document: Document) {
     this.loadSavedTheme();

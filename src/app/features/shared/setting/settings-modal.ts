@@ -12,17 +12,16 @@ import { ThemeService } from '../../../service/theme.service'; // Đổi đườ
   styleUrl: './settings-modal.css',
 })
 export class SettingsModalComponent implements OnInit {
-  selectedColor: string = '#f4f5f7';
+  selectedColor = '#25211b';
 
-  // Cung cấp sẵn vài màu đẹp (Màu pastel, Dark mode...)
   presetColors = [
-    '#f4f5f7', // Xám nhạt (Mặc định)
-    '#ffffff', // Trắng tinh
-    '#e3f2fd', // Xanh dương nhạt
-    '#fce4ec', // Hồng phấn
-    '#e8f5e9', // Xanh lá nhạt
-    '#fff3e0', // Cam nhạt
-    '#212529'  // Đen (Dark Mode cơ bản)
+    { color: '#25211b', label: 'ClayArt (mặc định)' },
+    { color: '#383127', label: 'Nâu đất' },
+    { color: '#17140f', label: 'Đen ấm' },
+    { color: '#fcf7ec', label: 'Kem sáng' },
+    { color: '#e9e1d3', label: 'Cát nhạt' },
+    { color: '#e3f2fd', label: 'Xanh nhạt' },
+    { color: '#fce4ec', label: 'Hồng nhạt' },
   ];
 
   constructor(
@@ -43,7 +42,7 @@ export class SettingsModalComponent implements OnInit {
 
   // Bấm nút khôi phục
   resetColor() {
-    this.selectedColor = '#f4f5f7';
+    this.selectedColor = '#25211b';
     this.themeService.resetTheme();
   }
 

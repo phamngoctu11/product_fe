@@ -9,7 +9,7 @@
     <strong>Không thể tải dữ liệu</strong>
     <span>{{ error }}</span>
     @if (actionLabel) {
-      <button type="button" class="btn btn-outline-danger rounded-pill px-4" (click)="action.emit()">
+      <button type="button" class="btn btn-outline-danger px-4" (click)="action.emit()">
         <i [class]="'bi ' + actionIcon" aria-hidden="true"></i>
         {{ actionLabel }}
       </button>
@@ -23,7 +23,7 @@
       <span>{{ emptyText }}</span>
     }
     @if (actionLabel) {
-      <button type="button" class="btn btn-outline-primary rounded-pill px-4" (click)="action.emit()">
+      <button type="button" class="btn btn-primary px-4" (click)="action.emit()">
         <i [class]="'bi ' + actionIcon" aria-hidden="true"></i>
         {{ actionLabel }}
       </button>

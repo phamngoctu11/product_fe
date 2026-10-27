@@ -23,8 +23,29 @@
           <i class="bi bi-exclamation-triangle-fill"></i>
           <span>{{ checkoutErrorMessage }}</span>
         </div>
+
+        @if (isLoading) {
+          <div class="cart-state" role="status" aria-live="polite">
+            <span class="cart-spinner" aria-hidden="true"></span>
+            <p>Đang tải giỏ hàng…</p>
+          </div>
+        } @else if (cartLoadError) {
+          <div class="cart-state" role="alert">
+            <i class="bi bi-cloud-slash cart-state-icon" aria-hidden="true"></i>
+            <h2>Chưa tải được giỏ hàng</h2>
+            <p>Kiểm tra kết nối rồi thử tải lại.</p>
+            <button type="button" class="cart-state-primary" (click)="loadCart()">Thử lại</button>
+          </div>
+        } @else if (cartData && cartData.items.length === 0) {
+          <div class="cart-state" role="status">
+            <i class="bi bi-bag-x cart-state-icon" aria-hidden="true"></i>
+            <h2>Giỏ hàng của bạn đang trống</h2>
+            <p>Thêm một món đồ thủ công để tiếp tục đặt hàng.</p>
+            <button type="button" class="cart-state-primary" (click)="onClose()">Tiếp tục mua sắm</button>
+          </div>
+        }
         
-        <section class="cart-checkout-panel">
+        <section class="cart-checkout-panel" *ngIf="!isLoading && !cartLoadError && (cartData?.items?.length ?? 0) > 0">
           <div class="cart-note-wrap">
             <i class="bi bi-pencil-square cart-note-icon"></i>
             <input

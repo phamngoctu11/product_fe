@@ -1,33 +1,218 @@
-<main class="container py-4">
-  <h1>Loại sản phẩm</h1>
-  <p>Manager định nghĩa các trường bắt buộc và kiểu dữ liệu cho từng loại yêu cầu đặt làm riêng. Tag là từ khóa được nhập trực tiếp trong thông tin sản phẩm.</p>
-  @if (error) { <div class="alert alert-danger">{{ error }}</div> }
-  <div class="row g-4">
-    <section class="col-lg-8">
-      <div class="card p-4">
-        <h2>{{ editingType ? 'Chỉnh sửa loại sản phẩm' : 'Tạo loại sản phẩm' }}</h2>
-        <div class="row g-2">
-          <label class="col-md-4">Mã loại<input class="form-control" [(ngModel)]="typeForm.code" placeholder="do-gom"></label>
-          <label class="col-md-8">Tên hiển thị<input class="form-control" [(ngModel)]="typeForm.name" placeholder="Đồ gốm"></label>
-          <label class="col-12">Mô tả<input class="form-control" [(ngModel)]="typeForm.description"></label>
+<main class="product-types-page app-fade-in">
+  <header class="type-page-header">
+    <div>
+      <h1>Loại sản phẩm</h1>
+      <p>Quản lý các loại đặt làm riêng và những thông tin cần thu thập cho từng loại.</p>
+    </div>
+    <button class="type-primary-button" type="button" (click)="openCreate()">
+      <i class="bi bi-plus-circle-fill" aria-hidden="true"></i> Tạo loại sản phẩm
+    </button>
+  </header>
+
+  @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+
+  @if (isEditorOpen) {
+    <div class="type-dialog-backdrop type-editor-backdrop">
+    <section class="type-editor type-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="type-editor-title" (click)="$event.stopPropagation()">
+      <div class="type-section-heading">
+        <div>
+          <span class="eyebrow">{{ editingType ? 'Chỉnh sửa' : 'Thêm mới' }}</span>
+          <h2 id="type-editor-title">{{ editingType ? 'Cập nhật loại sản phẩm' : 'Tạo loại sản phẩm' }}</h2>
         </div>
-        <h3 class="mt-4">Các trường bắt buộc</h3>
-        @for (field of typeForm.fields; track field.code; let i = $index) {
-          <div class="d-flex justify-content-between border rounded p-2 mb-2"><span>{{ field.label }} · {{ field.code }} · {{ field.kind }} · Bắt buộc</span><button class="btn btn-sm btn-outline-danger" type="button" (click)="removeField(i)">Xóa</button></div>
-        }
-        <div class="row g-2 align-items-end">
-          <label class="col-md-3">Mã trường<input class="form-control" [(ngModel)]="fieldDraft.code" placeholder="chieu_cao"></label>
-          <label class="col-md-3">Nhãn<input class="form-control" [(ngModel)]="fieldDraft.label" placeholder="Chiều cao"></label>
-          <label class="col-md-3">Kiểu dữ liệu<select class="form-select" [(ngModel)]="fieldDraft.kind"><option value="TEXT">Văn bản</option><option value="NUMBER">Số</option><option value="SINGLE_SELECT">Chọn một</option><option value="MULTI_SELECT">Chọn nhiều</option><option value="BOOLEAN">Có/không</option></select></label>
-          <label class="col-md-3">Đơn vị<input class="form-control" [(ngModel)]="fieldDraft.unit" placeholder="cm"></label>
-          @if (fieldDraft.kind === 'SINGLE_SELECT' || fieldDraft.kind === 'MULTI_SELECT') { <label class="col-9">Các lựa chọn, ngăn cách bằng dấu phẩy<input class="form-control" [(ngModel)]="optionText"></label> }
-          @if (fieldDraft.kind === 'TEXT') { <label class="col-md-4">Độ dài tối đa<input class="form-control" type="number" [(ngModel)]="fieldDraft.maxLength"></label> }
-          @if (fieldDraft.kind === 'NUMBER') { <label class="col-md-3">Tối thiểu<input class="form-control" type="number" [(ngModel)]="fieldDraft.minimum"></label><label class="col-md-3">Tối đa<input class="form-control" type="number" [(ngModel)]="fieldDraft.maximum"></label> }
-          <button class="col-md-3 btn btn-outline-primary" type="button" (click)="addField()">Thêm trường</button>
-        </div>
-        <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" [disabled]="busy || !typeForm.code || !typeForm.name" (click)="saveType()">Lưu loại</button><button class="btn btn-outline-secondary" (click)="resetType()">Làm mới</button></div>
+        <button class="icon-button" type="button" aria-label="Đóng biểu mẫu" [disabled]="busy" (click)="resetType()">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
       </div>
-      <div class="card p-3 mt-3"><h2>Loại hiện có</h2>@for (type of types; track type.id) { <button class="btn btn-link text-start" (click)="editType(type)">{{ type.name }} ({{ type.code }}) · {{ type.fields.length }} trường {{ type.active ? '' : '· Đã tắt' }}</button> }</div>
+
+      <div class="type-form-grid type-form-grid--identity">
+        <label>Mã loại
+          <input class="form-control" [(ngModel)]="typeForm.code" placeholder="do-gom" autocomplete="off">
+        </label>
+        <label>Tên hiển thị
+          <input class="form-control" [(ngModel)]="typeForm.name" placeholder="Đồ gốm">
+        </label>
+        <label class="span-all">Mô tả
+          <input class="form-control" [(ngModel)]="typeForm.description" placeholder="Mô tả ngắn về loại sản phẩm">
+        </label>
+        <label class="type-active-toggle">
+          <input type="checkbox" [(ngModel)]="typeForm.active">
+          <span>Đang sử dụng</span>
+        </label>
+      </div>
+
+      <div class="type-section-heading fields-heading">
+        <div>
+          <span class="eyebrow">Biểu mẫu đặt riêng</span>
+          <h3>Trường thông tin cần khách cung cấp</h3>
+        </div>
+        <span class="field-count">{{ typeForm.fields.length }} trường</span>
+      </div>
+
+      @if (typeForm.fields.length > 0) {
+        <div class="field-list">
+          @for (field of typeForm.fields; track field.code; let i = $index) {
+            <article class="field-list-item">
+              <span class="field-list-icon"><i class="bi bi-input-cursor-text" aria-hidden="true"></i></span>
+              <span class="field-list-copy">
+                <strong>{{ field.label }}</strong>
+                <small>{{ field.code }} · {{ fieldKindLabel(field.kind) }}{{ field.unit ? ' · ' + field.unit : '' }}</small>
+              </span>
+              <button class="icon-button danger" type="button" (click)="removeField(i)" [attr.aria-label]="'Xóa trường ' + field.label">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+              </button>
+            </article>
+          }
+        </div>
+      } @else {
+        <p class="field-empty">Chưa có trường nào. Thêm ít nhất một trường để khách mô tả yêu cầu.</p>
+      }
+
+      <div class="field-builder">
+        <label>Mã trường
+          <input class="form-control" [(ngModel)]="fieldDraft.code" placeholder="chieu_cao" autocomplete="off">
+        </label>
+        <label>Nhãn hiển thị
+          <input class="form-control" [(ngModel)]="fieldDraft.label" placeholder="Chiều cao">
+        </label>
+        <label>Kiểu dữ liệu
+          <select class="form-select" [(ngModel)]="fieldDraft.kind">
+            <option value="TEXT">Văn bản</option>
+            <option value="NUMBER">Số</option>
+            <option value="SINGLE_SELECT">Chọn một</option>
+            <option value="MULTI_SELECT">Chọn nhiều</option>
+            <option value="BOOLEAN">Có / không</option>
+          </select>
+        </label>
+        <label>Đơn vị
+          <input class="form-control" [(ngModel)]="fieldDraft.unit" placeholder="cm">
+        </label>
+        @if (fieldDraft.kind === 'SINGLE_SELECT' || fieldDraft.kind === 'MULTI_SELECT') {
+          <label class="span-two">Các lựa chọn <span class="label-hint">Ngăn cách bằng dấu phẩy</span>
+            <input class="form-control" [(ngModel)]="optionText" placeholder="Nhỏ, Vừa, Lớn">
+          </label>
+        }
+        @if (fieldDraft.kind === 'TEXT') {
+          <label>Độ dài tối đa
+            <input class="form-control" type="number" [(ngModel)]="fieldDraft.maxLength" min="1" max="4000">
+          </label>
+        }
+        @if (fieldDraft.kind === 'NUMBER') {
+          <label>Giá trị nhỏ nhất
+            <input class="form-control" type="number" [(ngModel)]="fieldDraft.minimum">
+          </label>
+          <label>Giá trị lớn nhất
+            <input class="form-control" type="number" [(ngModel)]="fieldDraft.maximum">
+          </label>
+        }
+        <button class="type-secondary-button add-field-button" type="button" (click)="addField()" [disabled]="!fieldDraft.code.trim() || !fieldDraft.label.trim()">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i> Thêm trường
+        </button>
+      </div>
+
+      <footer class="type-editor-actions">
+        <button class="type-secondary-button" type="button" [disabled]="busy" (click)="resetType()">Hủy</button>
+        <button class="type-primary-button" type="button" [disabled]="busy || !typeForm.code.trim() || !typeForm.name.trim() || typeForm.fields.length === 0" (click)="saveType()">
+          @if (busy) { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> }
+          {{ editingType ? 'Lưu thay đổi' : 'Tạo loại' }}
+        </button>
+      </footer>
     </section>
-  </div>
+    </div>
+  }
+
+  <section class="type-catalog" aria-labelledby="type-catalog-title">
+    <div class="type-section-heading">
+      <div>
+        <span class="eyebrow">Cấu hình hiện có</span>
+        <h2 id="type-catalog-title">Các loại sản phẩm</h2>
+      </div>
+      <span class="field-count">{{ types.length }} loại</span>
+    </div>
+
+    @if (types.length > 0) {
+      <div class="type-card-grid">
+        @for (type of types; track type.id) {
+          <article class="type-card" [class.is-inactive]="!type.active">
+            <button class="type-card-main" type="button" (click)="viewType(type)" [attr.aria-label]="'Xem thông tin loại ' + type.name">
+              <span class="type-card-icon"><i class="bi bi-tag-fill" aria-hidden="true"></i></span>
+              <span class="type-card-copy">
+                <strong>{{ type.name }}</strong>
+                <small>{{ type.fields.length }} trường · {{ type.active ? 'Đang sử dụng' : 'Đã ngừng' }}</small>
+              </span>
+              <i class="bi bi-arrow-right type-card-arrow" aria-hidden="true"></i>
+            </button>
+            <div class="type-card-actions">
+              <button class="type-secondary-button" type="button" (click)="editType(type)">
+                <i class="bi bi-pencil-square" aria-hidden="true"></i> Sửa
+              </button>
+              <button class="type-danger-button" type="button" (click)="requestDeleteType(type)" [disabled]="busy || !type.active" [title]="type.active ? 'Ngừng sử dụng loại này' : 'Loại này đã ngừng sử dụng'">
+                <i class="bi bi-trash3" aria-hidden="true"></i> Xóa
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="type-empty-state">
+        <i class="bi bi-tags" aria-hidden="true"></i>
+        <strong>Chưa có loại sản phẩm</strong>
+        <span>Tạo loại đầu tiên để cấu hình thông tin đặt làm riêng.</span>
+      </div>
+    }
+  </section>
+
+  @if (viewingType; as type) {
+    <div class="type-dialog-backdrop" (click)="closeTypeDetails()">
+      <section class="type-detail-dialog" role="dialog" aria-modal="true" [attr.aria-label]="'Thông tin loại ' + type.name" (click)="$event.stopPropagation()">
+        <header class="type-dialog-header">
+          <span class="type-card-icon"><i class="bi bi-tag-fill" aria-hidden="true"></i></span>
+          <div><span class="eyebrow">Chi tiết loại sản phẩm</span><h2>{{ type.name }}</h2></div>
+          <button class="icon-button" type="button" aria-label="Đóng" (click)="closeTypeDetails()"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </header>
+        <div class="type-dialog-body">
+          <div class="type-detail-meta">
+            <div><span>Mã loại</span><strong>{{ type.code }}</strong></div>
+            <div><span>Trạng thái</span><strong>{{ type.active ? 'Đang sử dụng' : 'Đã ngừng' }}</strong></div>
+            <div class="span-all"><span>Mô tả</span><strong>{{ type.description || 'Chưa có mô tả' }}</strong></div>
+          </div>
+          <div class="type-dialog-fields-heading"><h3>Trường thông tin</h3><span>{{ type.fields.length }}</span></div>
+          @for (field of type.fields; track field.code) {
+            <article class="type-detail-field">
+              <div><strong>{{ field.label }}</strong><small>{{ field.code }} · {{ fieldKindLabel(field.kind) }}</small></div>
+              <span>{{ field.unit || 'Bắt buộc' }}</span>
+              @if (field.options?.length) { <small class="span-all">Lựa chọn: {{ field.options?.join(', ') }}</small> }
+            </article>
+          } @empty {
+            <p class="field-empty">Loại này chưa cấu hình trường thông tin.</p>
+          }
+        </div>
+        <footer class="type-dialog-actions">
+          <button class="type-danger-button" type="button" (click)="requestDeleteType(type)" [disabled]="busy || !type.active"><i class="bi bi-trash3" aria-hidden="true"></i> Xóa</button>
+          <button class="type-secondary-button" type="button" (click)="closeTypeDetails()">Đóng</button>
+          <button class="type-primary-button" type="button" (click)="editType(type)"><i class="bi bi-pencil-square" aria-hidden="true"></i> Sửa thông tin</button>
+        </footer>
+      </section>
+    </div>
+  }
+
+  @if (pendingDeleteType; as type) {
+    <div class="type-dialog-backdrop delete-confirm-backdrop" (click)="cancelDeleteType()">
+      <section class="type-detail-dialog type-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="type-delete-title" aria-describedby="type-delete-description" (click)="$event.stopPropagation()">
+        <header class="type-dialog-header">
+          <span class="type-card-icon is-danger"><i class="bi bi-trash3" aria-hidden="true"></i></span>
+          <div><span class="eyebrow">Xóa loại sản phẩm</span><h2 id="type-delete-title">{{ type.name }}</h2></div>
+        </header>
+        <div class="type-dialog-body">
+          <p id="type-delete-description" class="delete-confirm-copy">Loại này sẽ ngừng xuất hiện trong biểu mẫu đặt mới. Sản phẩm và yêu cầu cũ vẫn giữ nguyên thông tin liên kết.</p>
+        </div>
+        <footer class="type-dialog-actions">
+          <button class="type-secondary-button" type="button" (click)="cancelDeleteType()">Hủy</button>
+          <button class="type-danger-button" type="button" [disabled]="busy" (click)="confirmDeleteType()">
+            @if (busy) { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> }
+            Ngừng sử dụng
+          </button>
+        </footer>
+      </section>
+    </div>
+  }
 </main>

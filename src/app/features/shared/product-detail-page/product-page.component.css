@@ -69,6 +69,20 @@
   text-decoration: none;
 }
 
+.sf-back-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sf-product-variant-label {
+  margin-bottom: 0.5rem;
+  color: var(--sf-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 /* Price */
 .sf-product-info__price {
   font-size: 0.95rem;

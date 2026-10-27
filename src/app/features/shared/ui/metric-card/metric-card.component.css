@@ -8,12 +8,12 @@
   display: grid;
   height: 100%;
   gap: 0.35rem;
-  padding: 1.1rem;
+  padding: 1.15rem;
   overflow: hidden;
-  border: 1px solid rgba(var(--app-primary-rgb), 0.16);
-  border-radius: 1rem;
-  background: rgba(15, 22, 41, 0.78);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--app-border);
+  border-radius: var(--clay-radius-md, 9px);
+  background: var(--app-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .metric-icon {
@@ -28,7 +28,7 @@
 .metric-label {
   padding-right: 1.75rem;
   color: var(--app-muted-text);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -45,7 +45,7 @@
   line-height: 1.4;
 }
 
-.metric-card[data-tone='primary'] { --metric-color: #818cf8; }
-.metric-card[data-tone='success'] { --metric-color: #34d399; }
-.metric-card[data-tone='warning'] { --metric-color: #fbbf24; }
-.metric-card[data-tone='danger'] { --metric-color: #f87171; }
+.metric-card[data-tone='primary'] { --metric-color: var(--app-primary, #bea078); }
+.metric-card[data-tone='success'] { --metric-color: var(--clay-success, #91c5a3); }
+.metric-card[data-tone='warning'] { --metric-color: var(--clay-warning, #e2bd79); }
+.metric-card[data-tone='danger'] { --metric-color: var(--clay-danger, #df8c79); }

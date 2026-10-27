@@ -34,6 +34,7 @@ export class CartModalComponent implements OnInit {
   private readonly toast = inject(ToastService);
   authService = inject(AuthService);
   isLoading = false;
+  cartLoadError = false;
   router = inject(Router);
   deletingProductIds: number[] = [];
   listCurQuan: number[] = [];
@@ -107,6 +108,7 @@ export class CartModalComponent implements OnInit {
 
   loadCart() {
     this.isLoading = true;
+    this.cartLoadError = false;
     this.cartService.getCartByUserId(this.userId).subscribe({
       next: (res) => {
         this.cartData = res;
@@ -118,7 +120,8 @@ export class CartModalComponent implements OnInit {
         this.loadVoucherOptions();
       },
       error: (err) => {
-        console.error('Lá»—i khi táº£i giá» hÃ ng:', err);
+        console.error('Lỗi khi tải giỏ hàng:', err);
+        this.cartLoadError = true;
         this.isLoading = false;
       }
     });
@@ -154,12 +157,12 @@ export class CartModalComponent implements OnInit {
     if (!this.isOwner || this.isDeleting(itemId)) return;
 
     const item = this.cartData?.items.find((cartItem) => this.getCartItemId(cartItem) === itemId);
-    const productName = this.getCartItemName(item) || `sáº£n pháº©m ID: ${itemId}`;
+    const productName = this.getCartItemName(item) || `sản phẩm ID: ${itemId}`;
 
     this.actionDialog.confirm({
-      title: 'XÃ³a khá»i giá» hÃ ng',
-      message: `Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a ${productName} khá»i giá» hÃ ng?`,
-      confirmText: 'XÃ³a sáº£n pháº©m',
+      title: 'Xóa khỏi giỏ hàng',
+      message: `Bạn có chắc muốn xóa ${productName} khỏi giỏ hàng?`,
+      confirmText: 'Xóa sản phẩm',
       tone: 'danger',
       icon: 'bi-cart-x-fill',
     }).subscribe((confirmed) => {
@@ -182,7 +185,7 @@ export class CartModalComponent implements OnInit {
       },
       error: (err) => {
         this.deletingProductIds = this.deletingProductIds.filter((id) => id !== itemId);
-        this.toast.notify('KhÃ´ng thá»ƒ xÃ³a sáº£n pháº©m khá»i giá» hÃ ng: ' + getApiErrorMessage(err, 'Vui lÃ²ng thá»­ láº¡i.'));
+        this.toast.notify('Không thể xóa sản phẩm khỏi giỏ hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
       },
       });
     });
@@ -340,7 +343,7 @@ export class CartModalComponent implements OnInit {
         ? option.unavailableReason
         : applicable
           ? null
-          : `Cáº§n thÃªm ${Math.ceil(option.template.minOrderValue - this.tempTotalPrice).toLocaleString('vi-VN')}Ä‘ Ä‘á»ƒ Ã¡p dá»¥ng voucher nÃ y.`,
+          : `Cần thêm ${Math.ceil(option.template.minOrderValue - this.tempTotalPrice).toLocaleString('vi-VN')}đ để áp dụng voucher này.`,
     };
   }
 
@@ -503,11 +506,11 @@ export class CartModalComponent implements OnInit {
       next: (userVoucher) => {
         this.selectedVoucherId = userVoucher.id;
         this.loadVoucherOptions(true);
-        this.toast.notify('ÄÃ£ Ä‘á»•i vÃ  Ã¡p dá»¥ng voucher cho giá» hÃ ng.');
+        this.toast.notify('Đã đổi và áp dụng voucher cho giỏ hàng.');
         this.redeemingTemplateIds.delete(option.templateId);
       },
       error: (err) => {
-        this.toast.notify(getApiErrorMessage(err, 'KhÃ´ng thá»ƒ Ä‘á»•i voucher nÃ y.'));
+        this.toast.notify(getApiErrorMessage(err, 'Không thể đổi voucher này.'));
         this.redeemingTemplateIds.delete(option.templateId);
       },
     });
@@ -551,7 +554,7 @@ export class CartModalComponent implements OnInit {
       : this.cartData.items.map((item: any) => this.getCartItemId(item));
 
     if (productIdsToCheckout.length === 0) {
-      this.toast.notify('Vui lÃ²ng chá»n Ã­t nháº¥t 1 sáº£n pháº©m Ä‘á»ƒ thanh toÃ¡n!');
+      this.toast.notify('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!');
       return;
     }
 
@@ -570,11 +573,11 @@ export class CartModalComponent implements OnInit {
         }, this.createCheckoutIdempotencyKey(paymentMethod)).subscribe({
           next: (res: any) => {
             if (res && res.status === 'REDIRECT' && res.payUrl) {
-              this.toast.notify(res.message || 'Äang xá»­ lÃ½ thanh toÃ¡n online...');
+              this.toast.notify(res.message || 'Đang xử lý thanh toán online...');
               this.showOnlinePayment(res);
             } else {
-              // Xá»­ lÃ½ luá»“ng COD nhÆ° bÃ¬nh thÆ°á»ng
-              this.toast.notify(res?.message || 'Äáº·t hÃ ng thÃ nh cÃ´ng.');
+              // Xử lý luồng COD như bình thường
+              this.toast.notify(res?.message || 'Đặt hàng thành công.');
               this.cartService.notifyCheckoutSuccess();
               this.closeCart(undefined, false);
               this.router.navigate(['/store/orders']);
@@ -584,14 +587,14 @@ export class CartModalComponent implements OnInit {
             this.isLoading = false;
             this.checkoutErrorMessage = getApiErrorMessage(
               err,
-              'KhÃ´ng thá»ƒ táº¡o Ä‘Æ¡n hÃ ng. Vui lÃ²ng kiá»ƒm tra láº¡i giá» hÃ ng.',
+              'Không thể tạo đơn hàng. Vui lòng kiểm tra lại giỏ hàng.',
             );
             this.toast.notify(this.checkoutErrorMessage);
           },
         });
       },
       error: (err: any) => {
-        this.toast.notify('Lá»—i cáº­p nháº­t sá»‘ lÆ°á»£ng: ' + getApiErrorMessage(err, 'KhÃ´ng thá»ƒ cáº­p nháº­t sá»‘ lÆ°á»£ng.'));
+        this.toast.notify('Lỗi cập nhật số lượng: ' + getApiErrorMessage(err, 'Không thể cập nhật số lượng.'));
         this.isLoading = false;
       }
     });
@@ -703,9 +706,9 @@ this.closeCart(data);
         errorCorrectionLevel: 'M',
       });
     } catch (error) {
-      console.error('Lá»—i khi táº¡o QR thanh toÃ¡n:', error);
+      console.error('Lỗi khi tạo QR thanh toán:', error);
       this.paymentQrDataUrl = '';
-      this.toast.notify('KhÃ´ng thá»ƒ táº¡o mÃ£ QR thanh toÃ¡n. Báº¡n cÃ³ thá»ƒ má»Ÿ trang thanh toÃ¡n báº±ng nÃºt bÃªn dÆ°á»›i.');
+      this.toast.notify('Không thể tạo mã QR thanh toán. Bạn có thể mở trang thanh toán bằng nút bên dưới.');
     } finally {
       this.isGeneratingPaymentQr = false;
     }
@@ -742,10 +745,10 @@ this.closeCart(data);
     const updates = this.getUpdateRequests();
     if (updates.length > 0) {
       this.actionDialog.confirm({
-        title: 'LÆ°u thay Ä‘á»•i giá» hÃ ng',
-        message: 'Báº¡n Ä‘Ã£ thay Ä‘á»•i sá»‘ lÆ°á»£ng sáº£n pháº©m. Báº¡n cÃ³ muá»‘n lÆ°u trÆ°á»›c khi Ä‘Ã³ng giá» hÃ ng khÃ´ng?',
-        confirmText: 'LÆ°u vÃ  Ä‘Ã³ng',
-        cancelText: 'ÄÃ³ng khÃ´ng lÆ°u',
+        title: 'Lưu thay đổi giỏ hàng',
+        message: 'Bạn đã thay đổi số lượng sản phẩm. Bạn có muốn lưu trước khi đóng giỏ hàng không?',
+        confirmText: 'Lưu và đóng',
+        cancelText: 'Đóng không lưu',
         tone: 'warning',
         icon: 'bi-floppy-fill',
       }).subscribe((confirmed) => {
@@ -762,7 +765,7 @@ this.closeCart(data);
           },
           error: (err) => {
             this.isLoading = false;
-            this.toast.notify('KhÃ´ng thá»ƒ lÆ°u thay Ä‘á»•i giá» hÃ ng: ' + getApiErrorMessage(err, 'Vui lÃ²ng thá»­ láº¡i.'));
+            this.toast.notify('Không thể lưu thay đổi giỏ hàng: ' + getApiErrorMessage(err, 'Vui lòng thử lại.'));
           },
         });
       });

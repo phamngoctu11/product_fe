@@ -1,10 +1,9 @@
 <div class="container-fluid management-products app-fade-in">
   <app-page-header
-    icon="bi-boxes"
     title="Quản lý sản phẩm"
-    subtitle="Quản lý sản phẩm theo từng danh mục">
+    subtitle="Quản lý sản phẩm theo loại sản phẩm">
     @if (canManageCatalog) {
-      <button pageActions type="button" class="add-product-button" (click)="addProduct()">
+      <button pageActions type="button" class="app-primary-action-button" (click)="addProduct()">
         <i class="bi bi-plus-circle-fill"></i> Thêm sản phẩm
       </button>
     }
@@ -14,9 +13,9 @@
     [loading]="isLoading"
     [error]="loadError"
     [empty]="!isLoading && !loadError && products.length === 0"
-    loadingText="Đang tải danh mục sản phẩm..."
+    loadingText="Đang tải loại sản phẩm..."
     emptyTitle="Chưa có sản phẩm"
-    emptyText="Danh mục sẽ xuất hiện khi có dữ liệu sản phẩm."
+    emptyText="Loại sản phẩm sẽ xuất hiện khi có dữ liệu sản phẩm."
     emptyIcon="bi-box-seam"
     [actionLabel]="loadError ? 'Thử lại' : ''"
     (action)="loadProducts()">
@@ -25,10 +24,10 @@
       <section class="category-section">
         <div class="section-heading">
           <div>
-            <span class="eyebrow">Danh mục</span>
+            <span class="eyebrow">Loại sản phẩm</span>
             <h2>Chọn loại sản phẩm cần quản lý</h2>
           </div>
-          <span class="category-total">{{ categories.length }} danh mục</span>
+          <span class="category-total">{{ categories.length }} loại</span>
         </div>
 
         <div class="category-grid">
@@ -48,11 +47,11 @@
       <section class="product-section">
         <div class="product-toolbar">
           <button type="button" class="back-button" (click)="closeCategory()">
-            <i class="bi bi-arrow-left"></i> Danh mục
+            <i class="bi bi-arrow-left"></i> Loại sản phẩm
           </button>
           <div class="selected-category-title">
             <span class="category-icon small"><i class="bi" [class]="'bi ' + selectedCategory.icon"></i></span>
-            <div><span class="eyebrow">Danh mục đang chọn</span><h2>{{ selectedCategory.label }}</h2></div>
+            <div><span class="eyebrow">Loại sản phẩm đang chọn</span><h2>{{ selectedCategory.label }}</h2></div>
           </div>
           <label class="product-search">
             <i class="bi bi-search"></i>
@@ -75,7 +74,7 @@
                     class="availability-select is-readonly"
                     [class.is-paused]="product.availabilityStatus === 'PAUSED'"
                     [class.is-discontinued]="product.availabilityStatus === 'DISCONTINUED'">
-                    {{ product.availabilityStatus || 'ACCEPTING_ORDERS' }}
+                    {{ availabilityLabel(product.availabilityStatus) }}
                   </span>
                 </span>
                 <span class="product-actions">

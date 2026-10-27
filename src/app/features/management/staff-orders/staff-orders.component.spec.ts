@@ -193,8 +193,8 @@ describe('StaffOrdersComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should initialize with in_progress active tab and load orders', () => {
-    expect(component.activeTab).toBe('in_progress');
+  it('should prioritize the claimable queue when work is waiting', () => {
+    expect(component.activeTab).toBe('claimable');
     expect(orderService.getClaimableOrders).toHaveBeenCalled();
     expect(orderService.getMyStaffOrders).toHaveBeenCalled();
     expect(component.myOrders.length).toBe(4);

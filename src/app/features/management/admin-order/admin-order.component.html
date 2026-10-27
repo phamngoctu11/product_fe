@@ -1,6 +1,5 @@
 <div class="container-fluid p-4 admin-order-page">
   <app-page-header
-    icon="bi-clipboard-check"
     title="Duyệt đơn, phân công & KCS"
     subtitle="Duyệt đơn, phân công nhân viên và kiểm định chất lượng sản phẩm">
     <div pageActions class="d-flex align-items-center gap-2">
@@ -100,7 +99,7 @@
                     <span class="customer-kind">{{ order.guest ? 'Khách vãng lai' : 'Tài khoản' }}</span>
                   </td>
                   <td>
-                    <span class="order-type" [class.custom]="order.orderType === 'CUSTOM'">{{ order.orderType }}</span>
+                    <span class="order-type" [class.custom]="order.orderType === 'CUSTOM'">{{ orderTypeLabel(order.orderType) }}</span>
                     <div class="small text-muted mt-1">{{ order.totalQuantity }} sản phẩm</div>
                   </td>
                   <td>{{ order.paymentMethod || 'Chưa xác định' }}</td>
@@ -159,7 +158,7 @@
                     <app-order-status-badge [status]="order.status" [compact]="true"></app-order-status-badge>
                   </td>
                   <td class="fw-semibold">{{ order.customerName || 'Khách hàng' }}</td>
-                  <td><span class="order-type" [class.custom]="order.orderType === 'CUSTOM'">{{ order.orderType }}</span></td>
+                  <td><span class="order-type" [class.custom]="order.orderType === 'CUSTOM'">{{ orderTypeLabel(order.orderType) }}</span></td>
                   <td>{{ order.paymentMethod || 'Chưa xác định' }}</td>
                   <td class="fw-bold text-danger">{{ order.finalPrice != null ? (order.finalPrice | number: '1.0-0') + ' đ' : 'Chưa thỏa thuận giá' }}</td>
                   <td>
@@ -265,7 +264,7 @@
                 <div class="d-flex align-items-center gap-2">
                   <h5 class="fw-bold text-primary mb-0">Đơn hàng #{{ kcsOrder.id }}</h5>
                   <app-order-status-badge [status]="kcsOrder.status" [compact]="true"></app-order-status-badge>
-                  <span class="order-type" [class.custom]="kcsOrder.orderType === 'CUSTOM'">{{ kcsOrder.orderType || 'CATALOG' }}</span>
+                  <span class="order-type" [class.custom]="kcsOrder.orderType === 'CUSTOM'">{{ orderTypeLabel(kcsOrder.orderType) }}</span>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
@@ -464,7 +463,7 @@
           <div class="detail-summary">
             <div><span>Trạng thái</span><app-order-status-badge [status]="detail.order.status"></app-order-status-badge></div>
             <div><span>Phiên bản</span><strong>{{ detail.order.version ?? '—' }}</strong></div>
-            <div><span>Loại đơn</span><strong>{{ detail.order.orderType || '—' }}</strong></div>
+            <div><span>Loại đơn</span><strong>{{ orderTypeLabel(detail.order.orderType) }}</strong></div>
             <div><span>Thanh toán</span><strong>{{ detail.order.paymentMethod || detail.order.paymentMethodType || '—' }}</strong></div>
             <div><span>Khách hàng</span><strong>{{ detail.order.customerName || detail.order.recipientName || 'Khách hàng' }}</strong></div>
             <div><span>Số điện thoại</span><strong>{{ detail.order.recipientPhone || detail.order.customer?.phone || '—' }}</strong></div>
@@ -484,9 +483,9 @@
                 <div class="item-content">
                   <div class="item-title-row">
                     <strong>{{ item.productName || 'Sản phẩm tùy chỉnh' }}</strong>
-                    <span class="order-type" [class.custom]="item.sourceType === 'CUSTOM'">{{ item.sourceType || 'CATALOG' }}</span>
+                    <span class="order-type" [class.custom]="item.sourceType === 'CUSTOM'">{{ orderTypeLabel(item.sourceType) }}</span>
                   </div>
-                  <div class="small text-muted">{{ item.variantName || item.attributes || 'Không có phân loại' }}</div>
+                  <div class="small text-muted">{{ itemVariantLabel(item) }}</div>
                   @if (item.description) { <p class="item-description">{{ item.description }}</p> }
                   <div class="item-meta">
                     <span>Số lượng: <strong>{{ item.quantity }}</strong></span>

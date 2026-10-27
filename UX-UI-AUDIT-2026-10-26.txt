@@ -1,7 +1,7 @@
 ﻿BÁO CÁO RÀ SOÁT UX/UI — CLAYART FRONTEND
 Ngày rà soát: 26/10/2026
 Phạm vi: Toàn bộ giao diện frontend trong dự án product_fe
-Trạng thái: Báo cáo và concept để review; chưa triển khai sửa mã nguồn.
+Trạng thái: Báo cáo baseline và concept đã review; các sửa đổi frontend đã triển khai theo hướng được duyệt. Xem “PHỤ LỤC — TÌNH TRẠNG TRIỂN KHAI” để biết phạm vi, kiểm tra và phần còn phụ thuộc backend/dữ liệu.
 
 1. MỤC TIÊU VÀ CÁCH RÀ SOÁT
 Rà các màn hình và component theo hành trình thực tế của khách hàng, nhân viên và quản lý; bao gồm nội dung chi tiết sản phẩm, biểu mẫu, trạng thái rỗng/lỗi, đơn hàng, trao đổi custom, checkpoint sản xuất, hộp thoại và điều hướng. Kiểm tra desktop, tablet, mobile và quyền truy cập.
@@ -110,7 +110,7 @@ Danh sách tất cả 71 component được kiểm kê:
 Ảnh concept ban đầu (ba vai trò): targetImage/UX-UI-redesign-concept.png
 
 7. GIỚI HẠN
-Đây là rà soát UX/UI thủ công kết hợp kiểm tra cấu trúc/template frontend; không phải kiểm thử đầy đủ mọi tổ hợp dữ liệu, thiết bị, trình đọc màn hình hoặc toàn bộ giao dịch nghiệp vụ. Không thực hiện hành động có ghi dữ liệu. Chưa sửa mã nguồn. Các đề xuất trong báo cáo là để bạn xem xét trước khi yêu cầu triển khai.
+Đây là rà soát UX/UI thủ công kết hợp kiểm tra cấu trúc/template frontend; không phải kiểm thử đầy đủ mọi tổ hợp dữ liệu, thiết bị, trình đọc màn hình hoặc toàn bộ giao dịch nghiệp vụ. Giai đoạn rà soát ban đầu không thực hiện hành động có ghi dữ liệu. Các cập nhật triển khai sau khi concept được duyệt được ghi ở phụ lục cuối báo cáo.
 
 PHỤ LỤC — RÀ SOÁT CHI TIẾT CÁC LUỒNG BẠN BỔ SUNG
 Ngày bổ sung: 26/10/2026
@@ -194,3 +194,63 @@ Bằng chứng: ảnh gửi có nội dung tiếng Việt bị thay nhiều ký 
 GHI CHÚ VỀ BẰNG CHỨNG ẢNH
 Các nhận xét UX-14 đến UX-20 được bổ sung từ ảnh giao diện bạn gửi và đối chiếu với template/data hiển thị. Ảnh checkpoint sai sản phẩm và nội dung chat lỗi dấu có thể xuất phát từ dữ liệu upload/test hoặc API; cần xác minh nguồn dữ liệu trước khi quy kết lỗi riêng cho frontend.
 
+PHỤ LỤC — TÌNH TRẠNG TRIỂN KHAI
+Ngày cập nhật: 26/10/2026
+
+ĐÃ CẬP NHẬT FRONTEND
+- Đồng bộ màu ClayArt và trạng thái focus/toàn bàn phím; tiêu đề backoffice thay đổi theo trang. Footer storefront theo bố cục tham chiếu; manager/staff không còn footer giới thiệu web.
+- Giỏ hàng có trạng thái đang tải, lỗi có nút thử lại và empty state; ẩn checkout khi không có sản phẩm.
+- Trang chi tiết dùng một lựa chọn biến thể xuyên suốt cho giá, thuộc tính và dialog thêm giỏ; nhãn tiếng Anh “BACK TO SHOP” được đổi sang tiếng Việt.
+- Đề xuất custom chưa có giá hiển thị “Chưa chốt giá”; trạng thái thỏa thuận/đơn kết thúc được tách rõ và form chuyển sang chỉ xem. Giá đề xuất không bị trình bày nhầm thành giá đã chốt.
+- Staff được đưa tới màn hàng đợi và mặc định chọn hàng chờ nhận khi có đơn; tiêu đề backoffice theo route.
+- Workflow có tóm tắt lỗi tiếng Việt và giữ exception trong vùng chi tiết mở rộng; trạng thái đơn, timeline, loại đơn, trạng thái sản phẩm và thuộc tính JSON được trình bày dễ hiểu hơn.
+- Timeline checkpoint khách hàng hiện các lần tạo dáng/sản phẩm hoàn thiện theo thời gian; trạng thái checkpoint của staff cũng không còn lộ enum. Ảnh sản phẩm hoàn thiện chỉ hiện sau khi đạt kiểm tra; ghi chú/lý do của lần yêu cầu làm lại không hiện cho khách. Ảnh có nhãn truy cập và mở/đóng bằng bàn phím.
+- Liên kết nhãn với trường nhập được bổ sung ở các form đã kiểm tra; nút chỉ có biểu tượng/swatches có tên truy cập; checkbox custom được căn cùng nhãn. Giới tính/lý do điểm uy tín được dịch và email liên hệ được thống nhất theo footer.
+
+KIỂM TRA SAU CẬP NHẬT
+- `npm.cmd run build`: thành công.
+- `npm.cmd test -- --watch=false`: 134/134 test thành công.
+- Đã tạo đúng 83 ảnh giao diện sau cập nhật ở `targetImage/ui-screenshots-after-2026-10-26/`: user 38, manager 25, staff 20. Vì API auth/Keycloak chưa sẵn sàng, các màn cần đăng nhập được chụp bằng JWT và fixture API giả lập trong trình duyệt; đây là ảnh review giao diện, không phải phiên đăng nhập thật hay dữ liệu production. `README.txt` ghi rõ giới hạn này và `manifest.json` liệt kê route của từng ảnh. Bản xem ảnh: `INDEX.html`; gói ZIP: `targetImage/ClayArt-UI-Screenshots-After-2026-10-26.zip`.
+- Request API được chặn trong phiên chụp. Không gửi thay đổi dữ liệu lên backend; không hoàn tất nhận/phân công đơn, duyệt KCS, lưu hồ sơ, thanh toán, đổi voucher hay gửi tin nhắn.
+
+CHƯA THỂ XÁC MINH TRỰC TIẾP SAU CẬP NHẬT
+- Đăng nhập tài khoản thật sau cập nhật chưa xác minh được: request trên origin `localhost:4200` nhận HTTP 503 “Không thể kết nối tới Keycloak”; Docker daemon không chạy để khởi động backend local. Bộ ảnh hiện tại dùng dữ liệu fixture để review bố cục/trạng thái UI; kiểm tra tích hợp với phiên và dữ liệu thật vẫn cần chạy lại khi Keycloak/API hoạt động.
+- Đã xem lại ảnh popup thêm giỏ và sửa kịch bản chụp để mở đúng dialog; ảnh cuối hiển thị ảnh sản phẩm dạng thumbnail, bộ lọc phân loại và lựa chọn phiên bản trong khung dialog gọn.
+- Kết nối WebSocket không được giả lập trong kịch bản chụp và trả HTTP 403; ảnh chat thể hiện bố cục cùng trạng thái UI, nhưng không xác minh gửi/nhận tin realtime.
+- UX-14 (ảnh checkpoint không liên quan), UX-17 (dữ liệu E2E/UAT lẫn dữ liệu user), UX-20 (mất dấu trong chat) phụ thuộc xác minh mapping/seed/encoding ở backend hoặc dữ liệu. Frontend không tự ý thay dữ liệu nguồn.
+- Email `support@clayart.vn` được giữ thống nhất theo footer hiện có; cần xác nhận đó là hộp thư chính thức trước khi phát hành.
+
+
+ĐIỀU CHỈNH BỔ SUNG THEO REVIEW
+- Dialog chi tiết sản phẩm chuyển các giá trị sang bố cục chỉ đọc dễ quét; bỏ trường quy trình sản xuất rỗng và sửa các ô trạng thái/loại không còn hiển thị như input.
+- Dialog mua hàng luôn hiển thị bộ chọn số lượng ngay khi mở, kể cả trước khi chọn phân loại; nút thêm giỏ vẫn yêu cầu chọn phân loại hợp lệ.
+- Chat custom của user và staff mặc định lọc “Đang trao đổi”; bỏ lựa chọn “Tất cả trạng thái”. Đơn được mở bằng liên kết trực tiếp sẽ tự chuyển bộ lọc theo trạng thái đơn đó.
+- Tăng khoảng đệm cho thẻ liên hệ và thanh toán, đồng thời đưa icon vào vùng nội dung có khoảng cách đều.
+- Trang loại sản phẩm manager dùng thẻ danh mục, có nút sửa/xóa và xem chi tiết dạng chỉ đọc. Form cấu hình trường được thu gọn; thao tác xóa dùng soft delete/ngừng kích hoạt để giữ liên kết lịch sử.
+- Thêm endpoint DELETE `/api/product-types/{id}` cho manager/admin để ngừng kích hoạt loại; loại ngừng sử dụng vẫn xuất hiện trong danh sách quản lý để xem và chỉnh sửa.
+- Đã chụp lại các màn bị ảnh hưởng trong bộ 83 ảnh; số ảnh vẫn là 83 và manifest vẫn gồm đủ 83 route. Thông tin đăng nhập thật vẫn không được xác minh trong phiên chụp fixture.
+
+
+ĐIỀU CHỈNH BỔ SUNG THEO REVIEW — 27/10/2026
+- Bỏ icon đứng trước tiêu đề trong component dùng chung `app-page-header`; tiêu đề và mô tả bắt đầu sát mép nội dung.
+- Đồng bộ font hiển thị, cỡ chữ và độ đậm của tiêu đề/mô tả component chung với trang “Loại sản phẩm”.
+- Căn trang “Loại sản phẩm & thẻ” theo cùng lề trái với thanh tiêu đề backoffice. Icon điều hướng sidebar giữ theo ảnh tham chiếu.
+- Chụp lại toàn bộ 83 ảnh cho user, manager và staff; gói ZIP và manifest đều có đủ 83 route.
+- `npm.cmd run build`: thành công; `npm.cmd test -- --watch=false`: 134/134 test thành công.
+ĐIỀU CHỈNH GIAO DIỆN THEO REVIEW — 27/10/2026
+- Trang quản lý sản phẩm nhóm sản phẩm theo `productTypeId` và tên loại; không dùng tag sản phẩm làm danh mục. Tên loại được lấy theo ID từ API loại sản phẩm, rồi mới dùng tên trên sản phẩm làm dự phòng.
+- Nền, sidebar, bề mặt thẻ, trường nhập và dialog dùng các sắc độ dẫn xuất từ màu theme sáng đã chọn. Lớp phủ chi tiết sản phẩm cũng nhận cùng palette; native controls chuyển sang light color-scheme.
+- Tăng độ rõ của 2 thẻ phân loại trong chi tiết sản phẩm bằng nền riêng, viền rõ hơn và vạch màu nhấn.
+- Dùng chung style nút hành động chính của sản phẩm cho nút “Thêm người dùng”.
+- Form tạo và sửa loại sản phẩm chuyển thành popup có vùng cuộn, nút đóng và hỗ trợ Escape.
+- Cập nhật 6 ảnh liên quan trong bộ 83 ảnh và tạo 6 ảnh preview theme sáng tại `targetImage/ui-preview-review-2026-10-27/`; ảnh preview dùng fixture với ID loại sản phẩm nhất quán.
+- `npm.cmd run build`: thành công; `npm.cmd test -- --watch=false`: 134/134 test thành công.
+
+
+ĐIỀU CHỈNH THEO REVIEW TIẾP THEO — 27/10/2026
+- Sửa dialog quản lý người dùng để phủ kín pane, bỏ phần khung thừa; căn nội dung trang quản lý người dùng sát lề trái và đổi hàng tiêu đề bảng sang màu theme ClayArt.
+- Bộ lọc cửa hàng chuyển từ tag sang loại sản phẩm; hỗ trợ chọn nhiều loại, mặc định chọn tất cả. Bộ lọc ghim bên trái trong phạm vi trang catalog; bộ lọc giá tối đa nằm ngay dưới loại sản phẩm.
+- Thêm icon tìm kiếm trên thanh điều hướng. Gợi ý được gọi sau 500 ms, tìm theo tên sản phẩm, tag và loại; API mới trả tối đa 3 sản phẩm cùng danh sách loại khớp. “Xem thêm kết quả” mở catalog theo từ khóa và phân trang.
+- Chi tiết sản phẩm trong màn quản lý không còn nút mua. Thẻ sản phẩm và popup chọn mua hiển thị tên loại thay cho tag; popup hiển thị tên biến thể đang chọn và dùng giá trị dự phòng nếu dữ liệu tên rỗng.
+- Làm mới 7 ảnh màn hình liên quan trong bộ 83 ảnh; ZIP và manifest vẫn giữ 83 ảnh.
+- `npm.cmd run build`: thành công. `mvnw.cmd -q -DskipTests compile` tại `product_be`: thành công.

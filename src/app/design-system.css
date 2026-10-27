@@ -1,0 +1,434 @@
+/* ClayArt foundations shared by the storefront and back office. */
+:root {
+  color-scheme: dark;
+  --bs-body-bg: var(--clay-bg);
+  --bs-body-color: var(--clay-ink);
+  --bs-tertiary-bg: var(--clay-surface-soft);
+  --bs-secondary-color: var(--clay-ink-soft);
+  --bs-border-color: var(--clay-line);
+  --bs-primary: var(--clay-accent);
+  --bs-primary-rgb: 199, 168, 121;
+  --bs-link-color: var(--clay-accent-hover);
+  --bs-link-hover-color: var(--clay-ink);
+  --clay-bg: #1b1813;
+  --clay-bg-raised: #242019;
+  --clay-surface: #2d271f;
+  --clay-surface-soft: #342d23;
+  --clay-line: #514638;
+  --clay-line-strong: #75634a;
+  --clay-ink: #f0e9dc;
+  --clay-ink-soft: #c4b8a4;
+  --clay-ink-muted: #9c907d;
+  --clay-accent: #c7a879;
+  --clay-accent-hover: #d6bd94;
+  --clay-accent-ink: #211a12;
+  --clay-success: #91c5a3;
+  --clay-warning: #e2bd79;
+  --clay-danger: #df8c79;
+  --clay-info: #91bac6;
+  --clay-control-bg: #1d1914;
+  --clay-control-line: #62533f;
+  --clay-control-height: 44px;
+  --clay-radius-sm: 5px;
+  --clay-radius-md: 9px;
+  --clay-radius-lg: 14px;
+  --clay-shadow-sm: 0 2px 8px rgb(0 0 0 / 18%);
+  --clay-shadow-md: 0 12px 36px rgb(0 0 0 / 28%);
+  --clay-shadow-lg: 0 28px 72px rgb(0 0 0 / 44%);
+
+  /* Existing feature styles use app-prefixed tokens; these are their source. */
+  --app-shell-bg: var(--clay-bg);
+  --app-surface: var(--clay-surface);
+  --app-surface-muted: var(--clay-surface-soft);
+  --app-surface-glass: rgb(45 39 31 / 94%);
+  --app-text: var(--clay-ink);
+  --app-muted-text: var(--clay-ink-soft);
+  --app-border: var(--clay-line);
+  --app-hover-bg: rgb(240 233 220 / 7%);
+  --app-primary: var(--clay-accent);
+  --app-primary-rgb: 199, 168, 121;
+  --app-primary-dark: #9f8055;
+  --app-primary-light: var(--clay-accent-hover);
+  --app-secondary: var(--clay-ink-soft);
+  --app-secondary-rgb: 196, 184, 164;
+  --app-gradient: linear-gradient(135deg, #d6bd94, #c7a879);
+  --app-gradient-soft: linear-gradient(135deg, rgb(199 168 121 / 16%), rgb(159 128 85 / 10%));
+  --sidebar-bg: #17140f;
+  --sidebar-surface: rgb(240 233 220 / 5%);
+  --sidebar-border: #40372b;
+  --sidebar-text: var(--clay-ink-soft);
+  --sidebar-text-active: #211a12;
+  --shadow-sm: var(--clay-shadow-sm);
+  --shadow-md: var(--clay-shadow-md);
+  --shadow-lg: var(--clay-shadow-lg);
+  --shadow-primary: 0 8px 22px rgb(0 0 0 / 24%);
+  --app-font-sans: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif;
+  --app-font-display: 'Imbue', 'Didot', 'Bodoni 72', serif;
+  --app-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --app-sidebar-current-width: 272px;
+  --app-topbar-current-height: 68px;
+  --app-dialog-vertical-gap: clamp(24px, 4dvh, 48px);
+}
+
+html {
+  min-height: 100%;
+  scroll-padding-top: 88px;
+  background: var(--clay-bg);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--clay-bg);
+  color: var(--clay-ink);
+  font-family: var(--app-font-sans);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--clay-accent-hover);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgb(199 168 121 / 46%);
+  color: #fffaf0;
+}
+
+/* Authenticated shell shares the same warm surface scale as the storefront. */
+.app-shell {
+  --shell-bg: var(--app-shell-bg);
+  --sidebar-bg: #17140f;
+  min-height: 100vh;
+  background: var(--shell-bg);
+  color: var(--clay-ink);
+}
+
+.app-shell.sidebar-collapsed {
+  --app-sidebar-current-width: 80px;
+}
+
+.app-shell .app-main,
+.app-shell .app-content {
+  background: var(--shell-bg);
+}
+
+.app-shell .app-content {
+  overflow-x: clip;
+}
+
+.app-sidebar {
+  background-color: var(--sidebar-bg);
+  background-image: linear-gradient(180deg, #211c15, #17140f 70%);
+  border-right-color: var(--sidebar-border);
+}
+
+.sidebar-heading,
+.sidebar-nav {
+  border-color: var(--sidebar-border);
+}
+
+.custom-sidebar-link {
+  min-height: 44px;
+  border-radius: var(--clay-radius-sm);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.custom-sidebar-link:hover {
+  background: rgb(240 233 220 / 7%);
+  color: var(--clay-ink);
+}
+
+.custom-sidebar-link.active {
+  background: var(--clay-accent);
+  color: var(--clay-accent-ink);
+  box-shadow: none;
+}
+
+.custom-sidebar-link.active i {
+  color: var(--clay-accent-ink);
+}
+
+.app-topbar {
+  background: rgb(29 25 19 / 96%);
+  border-bottom-color: var(--sidebar-border);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 3%);
+}
+
+.brand-mark,
+.sidebar-toggle {
+  border-radius: var(--clay-radius-sm);
+  background: var(--clay-accent);
+  color: var(--clay-accent-ink);
+  box-shadow: none;
+}
+
+.topbar-icon-button {
+  border-color: var(--clay-line);
+  border-radius: var(--clay-radius-md);
+  background: var(--clay-surface);
+  color: var(--clay-ink);
+  box-shadow: none;
+}
+
+.topbar-icon-button:hover {
+  border-color: var(--clay-line-strong);
+  background: var(--clay-surface-soft);
+  color: var(--clay-accent-hover);
+  box-shadow: var(--clay-shadow-sm);
+}
+
+/* Shared controls stay inside the two application shells, avoiding vendor-wide
+   overrides that previously changed unrelated widgets and embedded content. */
+.app-shell :is(.card, .modal-content, .dropdown-menu, .list-group-item),
+.sf-shell :is(.card, .modal-content, .dropdown-menu, .list-group-item) {
+  border-color: var(--app-border);
+}
+
+.app-shell .card:not(.product-card),
+.sf-shell main .card:not(.product-card) {
+  border-radius: var(--clay-radius-md);
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+
+.app-shell :is(.form-control, .form-select, textarea),
+.sf-shell :is(.form-control, .form-select, textarea) {
+  min-height: var(--clay-control-height);
+  border-color: var(--clay-control-line);
+  border-radius: var(--clay-radius-sm);
+  background-color: var(--clay-control-bg);
+  color: var(--clay-ink);
+}
+
+.app-shell textarea,
+.sf-shell textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.app-shell :is(.form-control, textarea)::placeholder,
+.sf-shell :is(.form-control, textarea)::placeholder {
+  color: var(--clay-ink-muted);
+  opacity: 1;
+}
+
+.app-shell :is(.form-control, .form-select):disabled,
+.sf-shell :is(.form-control, .form-select):disabled {
+  background-color: #30291f;
+  color: var(--clay-ink-soft);
+  opacity: 0.72;
+}
+
+.app-shell :is(input[type='checkbox'], input[type='radio']),
+.sf-shell :is(input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--clay-accent);
+}
+
+.app-shell .btn,
+.sf-shell main .btn {
+  min-height: 40px;
+  border-radius: var(--clay-radius-sm);
+  font-weight: 650;
+}
+
+.app-shell .btn-primary,
+.sf-shell main .btn-primary {
+  border-color: var(--clay-accent);
+  background: var(--clay-accent);
+  color: var(--clay-accent-ink);
+}
+
+.app-shell .btn-primary:hover,
+.sf-shell main .btn-primary:hover {
+  border-color: var(--clay-accent-hover);
+  background: var(--clay-accent-hover);
+  color: var(--clay-accent-ink);
+}
+
+/* Semantic Bootstrap helpers use the same muted clay palette in both roles. */
+.app-shell .bg-primary:not(.bg-opacity-10),
+.sf-shell main .bg-primary:not(.bg-opacity-10) { background-color: var(--clay-accent) !important; color: var(--clay-accent-ink) !important; }
+.app-shell .bg-primary.bg-opacity-10,
+.sf-shell main .bg-primary.bg-opacity-10 { background-color: color-mix(in srgb, var(--clay-accent) 12%, var(--clay-surface)) !important; color: var(--clay-accent-hover) !important; }
+.app-shell .bg-primary.text-white,
+.sf-shell main .bg-primary.text-white { color: var(--clay-accent-ink) !important; }
+.app-shell .text-primary,
+.sf-shell main .text-primary { color: var(--clay-accent-hover) !important; }
+.app-shell .border-primary,
+.sf-shell main .border-primary { border-color: var(--clay-accent) !important; }
+.app-shell .bg-primary-subtle,
+.sf-shell main .bg-primary-subtle { background-color: color-mix(in srgb, var(--clay-accent) 14%, var(--clay-surface)) !important; }
+
+.app-shell .bg-success:not(.bg-opacity-10),
+.sf-shell main .bg-success:not(.bg-opacity-10) { background-color: var(--clay-success) !important; color: var(--clay-accent-ink) !important; }
+.app-shell .bg-success.bg-opacity-10,
+.sf-shell main .bg-success.bg-opacity-10 { background-color: color-mix(in srgb, var(--clay-success) 12%, var(--clay-surface)) !important; color: var(--clay-success) !important; }
+.app-shell .text-success,
+.sf-shell main .text-success { color: var(--clay-success) !important; }
+.app-shell .border-success,
+.sf-shell main .border-success { border-color: var(--clay-success) !important; }
+.app-shell .bg-success-subtle,
+.sf-shell main .bg-success-subtle { background-color: color-mix(in srgb, var(--clay-success) 14%, var(--clay-surface)) !important; }
+
+.app-shell .bg-warning:not(.bg-opacity-10),
+.sf-shell main .bg-warning:not(.bg-opacity-10) { background-color: var(--clay-warning) !important; color: var(--clay-accent-ink) !important; }
+.app-shell .bg-warning.bg-opacity-10,
+.sf-shell main .bg-warning.bg-opacity-10 { background-color: color-mix(in srgb, var(--clay-warning) 12%, var(--clay-surface)) !important; color: var(--clay-warning) !important; }
+.app-shell .text-warning,
+.sf-shell main .text-warning { color: var(--clay-warning) !important; }
+.app-shell .border-warning,
+.sf-shell main .border-warning { border-color: var(--clay-warning) !important; }
+.app-shell .bg-warning-subtle,
+.sf-shell main .bg-warning-subtle { background-color: color-mix(in srgb, var(--clay-warning) 14%, var(--clay-surface)) !important; }
+
+.app-shell .bg-danger:not(.bg-opacity-10),
+.sf-shell main .bg-danger:not(.bg-opacity-10) { background-color: var(--clay-danger) !important; color: var(--clay-accent-ink) !important; }
+.app-shell .bg-danger.bg-opacity-10,
+.sf-shell main .bg-danger.bg-opacity-10 { background-color: color-mix(in srgb, var(--clay-danger) 12%, var(--clay-surface)) !important; color: var(--clay-danger) !important; }
+.app-shell .text-danger,
+.sf-shell main .text-danger { color: var(--clay-danger) !important; }
+.app-shell .border-danger,
+.sf-shell main .border-danger { border-color: var(--clay-danger) !important; }
+.app-shell .bg-danger-subtle,
+.sf-shell main .bg-danger-subtle { background-color: color-mix(in srgb, var(--clay-danger) 14%, var(--clay-surface)) !important; }
+
+.app-shell .bg-info:not(.bg-opacity-10),
+.sf-shell main .bg-info:not(.bg-opacity-10) { background-color: var(--clay-info) !important; color: var(--clay-accent-ink) !important; }
+.app-shell .bg-info.bg-opacity-10,
+.sf-shell main .bg-info.bg-opacity-10 { background-color: color-mix(in srgb, var(--clay-info) 12%, var(--clay-surface)) !important; color: var(--clay-info) !important; }
+.app-shell .text-info,
+.sf-shell main .text-info { color: var(--clay-info) !important; }
+.app-shell .border-info,
+.sf-shell main .border-info { border-color: var(--clay-info) !important; }
+.app-shell .bg-info-subtle,
+.sf-shell main .bg-info-subtle { background-color: color-mix(in srgb, var(--clay-info) 14%, var(--clay-surface)) !important; }
+
+.app-shell .bg-secondary:not(.bg-opacity-10),
+.sf-shell main .bg-secondary:not(.bg-opacity-10) { background-color: var(--clay-surface-soft) !important; color: var(--clay-ink) !important; }
+.app-shell .bg-secondary.bg-opacity-10,
+.sf-shell main .bg-secondary.bg-opacity-10 { background-color: color-mix(in srgb, var(--clay-ink-soft) 10%, var(--clay-surface)) !important; color: var(--clay-ink-soft) !important; }
+.app-shell .text-secondary,
+.sf-shell main .text-secondary { color: var(--clay-ink-soft) !important; }
+.app-shell .text-dark,
+.sf-shell main .text-dark { color: var(--app-text) !important; }
+.app-shell :is(.bg-primary, .bg-success, .bg-warning, .bg-danger, .bg-info).text-dark,
+.sf-shell main :is(.bg-primary, .bg-success, .bg-warning, .bg-danger, .bg-info).text-dark { color: var(--clay-accent-ink) !important; }
+.app-shell .border-secondary,
+.sf-shell main .border-secondary { border-color: var(--clay-line-strong) !important; }
+
+.app-shell .btn-outline-primary,
+.sf-shell main .btn-outline-primary { border-color: var(--clay-line-strong); color: var(--clay-ink); }
+.app-shell .btn-outline-primary:hover,
+.sf-shell main .btn-outline-primary:hover { border-color: var(--clay-accent); background: color-mix(in srgb, var(--clay-accent) 14%, transparent); color: var(--clay-ink); }
+.app-shell .btn-outline-secondary,
+.sf-shell main .btn-outline-secondary { border-color: var(--clay-line-strong); color: var(--clay-ink-soft); }
+.app-shell .btn-outline-secondary:hover,
+.sf-shell main .btn-outline-secondary:hover { border-color: var(--clay-line-strong); background: var(--clay-surface-soft); color: var(--clay-ink); }
+.app-shell .btn-outline-danger,
+.sf-shell main .btn-outline-danger { border-color: color-mix(in srgb, var(--clay-danger) 68%, var(--clay-line)); color: var(--clay-danger); }
+.app-shell .btn-outline-danger:hover,
+.sf-shell main .btn-outline-danger:hover { background: color-mix(in srgb, var(--clay-danger) 14%, transparent); color: var(--clay-danger); }
+
+.app-shell .table-responsive,
+.sf-shell main .table-responsive {
+  max-width: 100%;
+  border-radius: var(--clay-radius-md);
+  scrollbar-color: var(--clay-line-strong) var(--clay-control-bg);
+}
+
+.app-shell .table,
+.sf-shell main .table {
+  --bs-table-color: var(--clay-ink);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--clay-line);
+  margin-bottom: 0;
+  font-size: 0.92rem;
+}
+
+.app-shell .table :is(th, td),
+.sf-shell main .table :is(th, td) {
+  vertical-align: middle;
+}
+
+.app-shell .table thead th,
+.sf-shell main .table thead th {
+  color: var(--clay-ink-soft);
+  font-size: 0.8rem;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+
+.app-shell .modal-dialog,
+.sf-shell main .modal-dialog {
+  width: min(100% - 24px, 960px);
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.app-shell .modal-body,
+.sf-shell main .modal-body {
+  min-height: 0;
+}
+
+.sf-shell .dropdown-menu {
+  --bs-dropdown-bg: var(--clay-surface);
+  --bs-dropdown-color: var(--clay-ink);
+  --bs-dropdown-link-color: var(--clay-ink);
+  --bs-dropdown-link-hover-bg: rgb(240 233 220 / 7%);
+  --bs-dropdown-link-hover-color: var(--clay-ink);
+  --bs-dropdown-border-color: var(--clay-line);
+  --bs-dropdown-divider-bg: var(--clay-line);
+  border-radius: var(--clay-radius-md);
+  box-shadow: var(--clay-shadow-md);
+}
+
+.sf-shell .sf-navbar__icon-btn,
+.sf-shell .sf-navbar__user-btn,
+.sf-shell .sf-navbar__auth-link {
+  min-height: 42px;
+}
+
+.cdk-overlay-container {
+  z-index: 11000;
+}
+
+.cdk-overlay-pane .mat-mdc-dialog-surface {
+  border: 1px solid var(--clay-line);
+  border-radius: var(--clay-radius-lg);
+  background: var(--clay-surface);
+  color: var(--clay-ink);
+  box-shadow: var(--clay-shadow-lg);
+}
+
+@media (max-width: 991.98px) {
+  body:has(.app-shell) .cdk-global-overlay-wrapper {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .app-shell .btn,
+  .sf-shell main .btn {
+    min-height: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -124,9 +124,9 @@
 </app-order-detail-popup>
 
 <!-- Modal Kết quả Mua lại đơn hàng (Catalog Reorder) -->
-<div *ngIf="showReorderModal" class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style="background: rgba(0,0,0,0.55); z-index: 2050;">
-  <div class="bg-white rounded-4 shadow-lg overflow-hidden w-100" style="max-width: 520px;">
-    <div class="bg-primary text-white p-3 px-4 d-flex justify-content-between align-items-center">
+<div *ngIf="showReorderModal" class="reorder-modal-backdrop">
+  <div class="reorder-modal-card">
+    <div class="reorder-modal-header p-3 px-4 d-flex justify-content-between align-items-center">
       <h5 class="fw-bold mb-0"><i class="bi bi-cart-check me-2"></i>Kết quả mua lại đơn hàng</h5>
       <button class="btn btn-sm btn-light rounded-circle" (click)="closeReorderModal()" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
@@ -239,13 +239,13 @@
               [class.cancelled]="step.newstatus === 'CANCELLED'"
               [class.active]="i === selectedOrderHistory.length - 1 && step.newstatus !== 'DELIVERED' && step.newstatus !== 'CANCELLED'">
             <div class="fw-bold fs-6" [ngClass]="{'text-danger': step.newstatus === 'CANCELLED', 'text-success': step.newstatus === 'DELIVERED'}">
-              {{ step.newstatus }}
+              {{ statusLabel(step.newstatus) }}
             </div>
             <div class="timeline-date">
               <i class="bi bi-calendar3 me-1"></i> {{ step.updatetime | date:'dd/MM/yyyy HH:mm:ss' }}
             </div>
             <div class="timeline-previous-status" *ngIf="step.oldstatus">
-              <i class="bi bi-arrow-return-right me-1"></i> Từ: {{ step.oldstatus }}
+              <i class="bi bi-arrow-return-right me-1"></i> Trước đó: {{ statusLabel(step.oldstatus) }}
             </div>
           </li>
         </ul>
@@ -262,7 +262,7 @@
     <div class="modal-content orders-modal-content overflow-hidden">
       <div class="modal-header orders-modal-header">
         <h5 class="modal-title fw-bold"><i class="bi bi-shield-exclamation me-2"></i> Chính sách điểm uy tín</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
       </div>
       <div class="modal-body orders-modal-body">
         <h6 class="fw-bold text-danger mb-3"><i class="bi bi-dash-circle me-2"></i>Quy định trừ điểm:</h6>

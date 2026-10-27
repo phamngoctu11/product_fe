@@ -45,12 +45,13 @@
           <div class="col-md-6">
             <app-form-field
               label="Tên đăng nhập"
+              for="user-username"
               [required]="true"
               [control]="userForm.controls['username']"
               [errorMap]="usernameErrors">
               <div class="input-group shadow-sm rounded-pill overflow-hidden border">
                 <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-person"></i></span>
-                <input type="text" class="form-control border-0 ps-0 shadow-none bg-white fw-bold text-primary"
+                <input id="user-username" type="text" class="form-control border-0 ps-0 shadow-none bg-white fw-bold text-primary"
                        name="username"
                        [(ngModel)]="currentUser.username"
                        [disabled]="isEdit || isView"
@@ -64,12 +65,13 @@
             <div class="col-md-6">
               <app-form-field
                 label="Mật khẩu"
+                for="user-password"
                 [required]="true"
                 [control]="userForm.controls['password']"
                 [errorMap]="passwordErrors">
                 <div class="input-group shadow-sm rounded-pill overflow-hidden border">
                   <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-key"></i></span>
-                  <input type="password" class="form-control border-0 ps-0 shadow-none bg-white"
+                  <input id="user-password" type="password" class="form-control border-0 ps-0 shadow-none bg-white"
                          name="password"
                          [(ngModel)]="currentUser.password"
                          required minlength="6" maxlength="100"
@@ -80,8 +82,8 @@
           }
 
           <div class="col-md-6" *ngIf="!isSelfEdit">
-            <app-form-field label="Vai trò">
-              <select class="form-select form-control-custom shadow-sm" name="role" [(ngModel)]="currentUser.role" [disabled]="isView">
+            <app-form-field label="Vai trò" for="user-role">
+              <select id="user-role" class="form-select form-control-custom shadow-sm" name="role" [(ngModel)]="currentUser.role" [disabled]="isView">
                 <option value="USER">Người dùng (USER)</option>
                 <option value="ADMIN">Quản trị (ADMIN)</option>
                 <option value="MANAGER">Chủ shop (MANAGER)</option>
@@ -102,23 +104,23 @@
 
         <div class="row g-3">
           <div class="col-md-6">
-            <app-form-field label="Họ" [required]="true" [control]="userForm.controls['lastname']">
-              <input type="text" class="form-control form-control-custom shadow-sm"
+            <app-form-field label="Họ" for="user-lastname" [required]="true" [control]="userForm.controls['lastname']">
+              <input id="user-lastname" type="text" class="form-control form-control-custom shadow-sm"
                      name="lastname" [(ngModel)]="currentUser.lastname"
                      [disabled]="isView" required placeholder="VD: Nguyễn Văn">
             </app-form-field>
           </div>
           <div class="col-md-6">
-            <app-form-field label="Tên" [required]="true" [control]="userForm.controls['firstname']">
-              <input type="text" class="form-control form-control-custom shadow-sm"
+            <app-form-field label="Tên" for="user-firstname" [required]="true" [control]="userForm.controls['firstname']">
+              <input id="user-firstname" type="text" class="form-control form-control-custom shadow-sm"
                      name="firstname" [(ngModel)]="currentUser.firstname"
                      [disabled]="isView" required placeholder="VD: A">
             </app-form-field>
           </div>
 
           <div class="col-md-6">
-            <app-form-field label="Giới tính" [required]="true" [control]="userForm.controls['gender']">
-              <select class="form-select form-control-custom shadow-sm"
+            <app-form-field label="Giới tính" for="user-gender" [required]="true" [control]="userForm.controls['gender']">
+              <select id="user-gender" class="form-select form-control-custom shadow-sm"
                       name="gender" [(ngModel)]="currentUser.gender" [disabled]="isView" required>
                 <option value="male">Nam</option>
                 <option value="female">Nữ</option>
@@ -127,8 +129,8 @@
           </div>
 
           <div class="col-md-6">
-            <app-form-field label="Ngày sinh">
-              <input type="date" class="form-control form-control-custom shadow-sm"
+            <app-form-field label="Ngày sinh" for="user-birth">
+              <input id="user-birth" type="date" class="form-control form-control-custom shadow-sm"
                      name="birth" [ngModel]="currentUser.birth | date: 'yyyy-MM-dd'"
                      (ngModelChange)="currentUser.birth = $event" [disabled]="isView">
             </app-form-field>
@@ -137,12 +139,13 @@
           <div class="col-md-6">
             <app-form-field
               label="Số điện thoại"
+              for="user-phone"
               [required]="true"
               [control]="userForm.controls['phone']"
               [errorMap]="phoneErrors">
               <div class="input-group shadow-sm rounded-pill overflow-hidden border">
                 <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-telephone"></i></span>
-                <input type="text" class="form-control border-0 ps-0 shadow-none bg-white"
+                <input id="user-phone" type="text" class="form-control border-0 ps-0 shadow-none bg-white"
                        name="phone" [(ngModel)]="currentUser.phone"
                        [disabled]="isView" required maxlength="20"
                        placeholder="VD: 0987654321">
@@ -151,10 +154,10 @@
           </div>
 
           <div class="col-md-6">
-            <app-form-field label="Email" [control]="userForm.controls['email']">
+            <app-form-field label="Email" for="user-email" [control]="userForm.controls['email']">
               <div class="input-group shadow-sm rounded-pill overflow-hidden border">
                 <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control border-0 ps-0 shadow-none bg-white"
+                <input id="user-email" type="email" class="form-control border-0 ps-0 shadow-none bg-white"
                        name="email" [(ngModel)]="currentUser.email"
                        [disabled]="isView" email placeholder="Nhập Email">
               </div>
@@ -162,8 +165,8 @@
           </div>
 
           <div class="col-md-12">
-            <app-form-field label="Địa chỉ">
-              <textarea class="form-control form-control-custom shadow-sm" rows="2" name="address" [(ngModel)]="currentUser.address" [disabled]="isView" placeholder="Nhập địa chỉ cụ thể..."></textarea>
+            <app-form-field label="Địa chỉ" for="user-address">
+              <textarea id="user-address" class="form-control form-control-custom shadow-sm" rows="2" name="address" [(ngModel)]="currentUser.address" [disabled]="isView" placeholder="Nhập địa chỉ cụ thể..."></textarea>
             </app-form-field>
           </div>
         </div>

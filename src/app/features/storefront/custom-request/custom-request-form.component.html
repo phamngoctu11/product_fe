@@ -3,7 +3,7 @@
     <sf-page-intro
       eyebrow="ĐẶT LÀM RIÊNG"
       [title]="draftId ? 'Yêu cầu custom #' + draftId : 'Tạo yêu cầu custom'"
-      description="Mô tả sản phẩm bạn muốn đặt làm riêng. Giá sẽ được chốt sau khi quản lý duyệt và nhân viên trao đổi với bạn.">
+      subtitle="Mô tả sản phẩm bạn muốn đặt làm riêng. Giá sẽ được chốt sau khi quản lý duyệt và nhân viên trao đổi với bạn.">
     </sf-page-intro>
 
     @if (isLoading) {
@@ -16,7 +16,7 @@
       <div class="cr-success-panel">
         <i class="bi bi-check-circle fs-1"></i>
         <h4>Đã tạo đơn #{{ submission.orderId }}</h4>
-        <p>Loại đơn: <strong>{{ submission.orderType }}</strong> · Trạng thái: <strong>Chờ quản lý duyệt</strong></p>
+        <p>Loại đơn: <strong>Đặt riêng</strong> · Trạng thái: <strong>Chờ quản lý duyệt</strong></p>
         <p class="cr-success-hint">
           Đơn chưa được nhận làm và chưa có giá chính thức. Bạn sẽ nhận email/thông báo khi quản lý duyệt.
         </p>
@@ -42,8 +42,8 @@
           <h5>1. Thông tin sản phẩm</h5>
 
           <div class="cr-field">
-            <label>Phân khúc sản phẩm <span>*</span></label>
-            <select formControlName="productTypeId" [disabled]="!!currentDraft || isReadonly">
+            <label for="custom-product-type">Phân khúc sản phẩm <span>*</span></label>
+            <select id="custom-product-type" formControlName="productTypeId" [disabled]="!!currentDraft || isReadonly">
               <option [ngValue]="null">Chọn loại sản phẩm</option>
               @for (type of productTypes; track type.id) {
                 <option [ngValue]="type.id">{{ type.name }}</option>
@@ -58,17 +58,17 @@
             <div class="cr-type-fields" formGroupName="fieldValues">
               @for (field of selectedFields; track field.code) {
                 <div class="cr-field">
-                  <label>{{ field.label }} <span>*</span></label>
+                  <label [for]="'custom-field-' + field.code">{{ field.label }} <span>*</span></label>
                   @if (field.kind === 'TEXT') {
-                    <input type="text" [formControlName]="field.code" [attr.maxlength]="field.maxLength || null" [placeholder]="field.hint || ''">
+                    <input [id]="'custom-field-' + field.code" type="text" [formControlName]="field.code" [attr.maxlength]="field.maxLength || null" [placeholder]="field.hint || ''">
                   } @else if (field.kind === 'NUMBER') {
-                    <input type="number" [formControlName]="field.code" [attr.min]="field.minimum" [attr.max]="field.maximum" [placeholder]="field.hint || ''">
+                    <input [id]="'custom-field-' + field.code" type="number" [formControlName]="field.code" [attr.min]="field.minimum" [attr.max]="field.maximum" [placeholder]="field.hint || ''">
                   } @else if (field.kind === 'SINGLE_SELECT') {
-                    <select [formControlName]="field.code"><option [ngValue]="null">Chọn {{ field.label.toLowerCase() }}</option>@for (option of field.options || []; track option) { <option [value]="option">{{ option }}</option> }</select>
+                    <select [id]="'custom-field-' + field.code" [formControlName]="field.code"><option [ngValue]="null">Chọn {{ field.label.toLowerCase() }}</option>@for (option of field.options || []; track option) { <option [value]="option">{{ option }}</option> }</select>
                   } @else if (field.kind === 'MULTI_SELECT') {
-                    <select [formControlName]="field.code" multiple>@for (option of field.options || []; track option) { <option [value]="option">{{ option }}</option> }</select>
+                    <select [id]="'custom-field-' + field.code" [formControlName]="field.code" multiple>@for (option of field.options || []; track option) { <option [value]="option">{{ option }}</option> }</select>
                   } @else {
-                    <label class="cr-checkbox"><input type="checkbox" [formControlName]="field.code"> Có</label>
+                    <label class="cr-checkbox"><input type="checkbox" [id]="'custom-field-' + field.code" [formControlName]="field.code"> <span>Có</span></label>
                   }
                   @if (field.hint) { <small class="cr-hint">{{ field.hint }} @if (field.unit) { ({{ field.unit }}) }</small> }
                   @if (draftForm.get('fieldValues')?.get(field.code)?.touched && draftForm.get('fieldValues')?.get(field.code)?.invalid) {
@@ -80,8 +80,8 @@
           }
 
           <div class="cr-field">
-            <label>Mô tả chi tiết <span>*</span></label>
-            <textarea formControlName="description" rows="5"
+            <label for="custom-description">Mô tả chi tiết <span>*</span></label>
+            <textarea id="custom-description" formControlName="description" rows="5"
               placeholder="Kích thước, màu sắc, chất liệu, phong cách, mục đích sử dụng..."></textarea>
             <div class="cr-field-footer">
               <span class="cr-error">
@@ -93,8 +93,8 @@
           </div>
 
           <div class="cr-field cr-field--short">
-            <label>Số lượng <span>*</span></label>
-            <input type="number" formControlName="quantity" min="1" step="1">
+            <label for="custom-quantity">Số lượng <span>*</span></label>
+            <input id="custom-quantity" type="number" formControlName="quantity" min="1" step="1">
             @if (draftForm.get('quantity')?.touched && draftForm.get('quantity')?.invalid) {
               <div class="cr-error">Số lượng phải là số nguyên lớn hơn 0.</div>
             }

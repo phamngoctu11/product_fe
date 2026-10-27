@@ -3,10 +3,10 @@
   flex-direction: column;
   background-color: var(--app-surface, #2b251e);
   color: var(--app-text, #ece5d8);
-  border-radius: 1.25rem;
+  border-radius: var(--clay-radius-lg);
   overflow: hidden;
   border: 1px solid var(--app-border, rgba(236, 229, 216, 0.14));
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--clay-shadow-sm);
 }
 
 .collab-header {
@@ -21,24 +21,24 @@
   gap: 0.4rem;
   padding: 0.35rem 0.85rem;
   border-radius: 2rem;
-  background-color: rgba(224, 138, 111, 0.18);
-  color: #e08a6f;
-  border: 1px solid rgba(224, 138, 111, 0.35);
+  background-color: color-mix(in srgb, var(--clay-danger) 14%, transparent);
+  color: var(--clay-danger);
+  border: 1px solid color-mix(in srgb, var(--clay-danger) 34%, transparent);
   font-size: 0.85rem;
   font-weight: 600;
 }
 
 .timer-badge.is-urgent {
-  background-color: rgba(224, 138, 111, 0.32);
-  color: #ff9f80;
-  border-color: rgba(224, 138, 111, 0.6);
+  background-color: color-mix(in srgb, var(--clay-danger) 22%, transparent);
+  color: var(--clay-danger);
+  border-color: color-mix(in srgb, var(--clay-danger) 54%, transparent);
   animation: pulse-danger 1.5s infinite;
 }
 
 .timer-badge.is-done {
-  background-color: rgba(169, 193, 154, 0.18);
-  color: #a9c19a;
-  border-color: rgba(169, 193, 154, 0.35);
+  background-color: color-mix(in srgb, var(--clay-success) 14%, transparent);
+  color: var(--clay-success);
+  border-color: color-mix(in srgb, var(--clay-success) 34%, transparent);
 }
 
 @keyframes pulse-danger {
@@ -48,7 +48,7 @@
 }
 
 .collab-grid {
-  min-height: 520px;
+  min-height: 0;
 }
 
 .collab-col {
@@ -70,12 +70,13 @@
 .collab-chat {
   display: flex;
   flex-direction: column;
-  height: 640px;
-  background-color: #221d18;
+  height: min(640px, calc(100dvh - 280px));
+  min-height: 440px;
+  background-color: var(--app-shell-bg);
 }
 
 .collab-container.only-chat .collab-chat {
-  height: 540px;
+  height: min(540px, calc(100dvh - 280px));
 }
 
 .chat-header {
@@ -89,21 +90,21 @@
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  background-color: #221d18;
+  background-color: var(--app-shell-bg);
 }
 
 .status-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background-color: #ffc107;
+  background-color: var(--clay-warning);
   display: inline-block;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .status-dot.is-connected {
-  background-color: #a9c19a;
-  box-shadow: 0 0 8px rgba(169, 193, 154, 0.7);
+  background-color: var(--clay-success);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--clay-success) 60%, transparent);
 }
 
 .chat-bubble-row {
@@ -125,15 +126,15 @@
 
 /* Other / Partner messages */
 .chat-bubble-row:not(.is-mine) .chat-bubble {
-  background-color: #362f26;
-  color: #ece5d8;
-  border: 1px solid rgba(236, 229, 216, 0.12);
+  background-color: var(--app-surface-muted);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
   border-bottom-left-radius: 0.2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .chat-bubble-row:not(.is-mine) .bubble-sender {
-  color: #c5b8a5;
+  color: var(--app-primary-light);
   font-weight: 700;
 }
 
@@ -152,21 +153,21 @@
 
 /* My messages */
 .chat-bubble-row.is-mine .chat-bubble {
-  background: linear-gradient(135deg, #c5b8a5 0%, #b3a48e 100%);
-  color: #1c1813;
+  background: linear-gradient(135deg, var(--clay-accent-hover), var(--clay-accent));
+  color: var(--clay-accent-ink);
   font-weight: 500;
   border-bottom-right-radius: 0.2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 .chat-bubble-row.is-mine .bubble-sender {
-  color: #1c1813;
+  color: var(--clay-accent-ink);
   font-weight: 700;
 }
 
 .chat-bubble-row.is-mine .bubble-role-tag {
-  background-color: rgba(28, 24, 19, 0.18);
-  color: #1c1813;
+  background-color: color-mix(in srgb, var(--clay-accent-ink) 18%, transparent);
+  color: var(--clay-accent-ink);
   font-weight: 600;
   font-size: 0.7rem;
   border-radius: 0.4rem;
@@ -174,7 +175,7 @@
 }
 
 .chat-bubble-row.is-mine .bubble-time {
-  color: rgba(28, 24, 19, 0.7) !important;
+  color: color-mix(in srgb, var(--clay-accent-ink) 72%, transparent) !important;
   font-size: 0.72rem;
 }
 
@@ -194,15 +195,15 @@
 .chat-textarea {
   resize: none;
   font-size: 0.9rem;
-  background-color: #17140f !important;
-  border: 1px solid rgba(236, 229, 216, 0.18) !important;
-  color: #ece5d8 !important;
-  border-radius: 0.75rem;
+  background-color: var(--clay-control-bg) !important;
+  border: 1px solid var(--clay-control-line) !important;
+  color: var(--clay-ink) !important;
+  border-radius: var(--clay-radius-md);
 }
 
 .chat-textarea:focus {
-  border-color: #c5b8a5 !important;
-  box-shadow: 0 0 0 2px rgba(197, 184, 165, 0.25) !important;
+  border-color: var(--clay-accent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--clay-accent) 22%, transparent) !important;
 }
 
 .custom-image-grid {
@@ -235,16 +236,16 @@
   width: 60px;
   height: 60px;
   cursor: pointer;
-  background-color: #17140f;
-  border: 2px dashed rgba(236, 229, 216, 0.2);
-  color: #c5b8a5;
-  border-radius: 0.75rem;
+  background-color: var(--clay-control-bg);
+  border: 2px dashed var(--clay-control-line);
+  color: var(--clay-accent-hover);
+  border-radius: var(--clay-radius-md);
   transition: all 0.18s ease;
 }
 
 .btn-upload-box:hover {
-  background-color: rgba(197, 184, 165, 0.08);
-  border-color: #c5b8a5;
+  background-color: color-mix(in srgb, var(--clay-accent) 10%, transparent);
+  border-color: var(--clay-accent);
 }
 
 .smaller {
@@ -261,9 +262,23 @@
 }
 
 .summary-box {
-  background-color: #221d18;
-  border: 1px solid rgba(236, 229, 216, 0.12);
-  border-radius: 0.85rem;
+  background-color: var(--app-shell-bg);
+  border: 1px solid var(--app-border);
+  border-radius: var(--clay-radius-md);
+}
+
+@media (max-width: 991.98px) {
+  .collab-container { border-radius: var(--clay-radius-md); }
+  .collab-chat,
+  .collab-container.only-chat .collab-chat { height: min(620px, 70dvh); min-height: 440px; }
+  .collab-agreement { max-height: none; }
+}
+
+@media (max-width: 575.98px) {
+  .collab-chat,
+  .collab-container.only-chat .collab-chat { height: min(560px, 72dvh); min-height: 380px; }
+  .chat-bubble { max-width: 92%; }
+  .collab-header { align-items: flex-start !important; }
 }
 
 /* Decision Modal */

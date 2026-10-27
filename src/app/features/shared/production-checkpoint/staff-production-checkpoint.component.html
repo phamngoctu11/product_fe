@@ -42,6 +42,15 @@
             <!-- Item Production Status Badge -->
             <div>
               @switch (item.productionStatus) {
+                @case ('NOT_REQUIRED') {
+                  <span class="badge bg-secondary text-white px-3 py-2 rounded-pill">Không yêu cầu chế tác</span>
+                }
+                @case ('WAITING_ASSIGNMENT') {
+                  <span class="badge bg-secondary text-white px-3 py-2 rounded-pill">Chờ phân công</span>
+                }
+                @case ('ASSIGNED') {
+                  <span class="badge bg-secondary text-white px-3 py-2 rounded-pill">Đã phân công</span>
+                }
                 @case ('INITIAL_IN_PROGRESS') {
                   <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="bi bi-palette me-1"></i>Đang tạo dáng ban đầu</span>
                 }
@@ -58,7 +67,7 @@
                   <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>Đã đạt KCS hoàn thiện</span>
                 }
                 @default {
-                  <span class="badge bg-secondary text-white px-3 py-2 rounded-pill">{{ item.productionStatus }}</span>
+                  <span class="badge bg-secondary text-white px-3 py-2 rounded-pill">Đang cập nhật</span>
                 }
               }
             </div>

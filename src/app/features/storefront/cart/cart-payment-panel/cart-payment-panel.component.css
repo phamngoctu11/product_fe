@@ -24,7 +24,7 @@
   overflow: hidden;
   border: 1px solid rgba(var(--app-primary-rgb), 0.18);
   border-radius: 1rem;
-  background: rgba(7, 11, 25, 0.58);
+  background: var(--app-surface-muted);
 }
 
 .cart-qr-box img {
@@ -112,7 +112,7 @@
 .cart-qr-btn-main {
   border: 0;
   background: var(--app-gradient);
-  color: #fff;
+  color: var(--clay-accent-ink);
   box-shadow: var(--shadow-primary);
 }
 

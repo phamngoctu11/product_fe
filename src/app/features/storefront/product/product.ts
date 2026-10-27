@@ -1,9 +1,10 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ActionDialogService } from '../../../service/action-dialog.service';
 import { ToastService } from '../../../service/toast.service';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CartService } from '../../../service/cart.service';
 import { AuthService } from '../../../service/auth.service';
 import { ProductService } from '../../../service/product.service';
@@ -16,23 +17,21 @@ import { getApiErrorMessage } from '../../../model/api-response.model';
 import { AppPaginationComponent } from '../../shared/ui';
 import { APP_DIALOG_SIZE } from '../../../config/dialog.config';
 import { HeroSectionComponent } from '../home/hero-section/hero-section.component';
-import { SfPageIntroComponent } from '../ui/page-intro/sf-page-intro.component';
-import { SfChipGroupComponent, SfChipItem } from '../ui/chip-group/sf-chip-group.component';
 import { SfProductGridComponent } from '../ui/product-grid/sf-product-grid.component';
 import { SfStateComponent } from '../ui/state/sf-state.component';
+import { SfWordmarkComponent } from '../ui/wordmark/sf-wordmark.component';
+import { ProductTypeOption } from '../../../model/custom-request.model';
 
 @Component({
   selector: 'app-product',
   standalone: true,
   imports: [
     HeroSectionComponent,
-    SfPageIntroComponent,
-    SfChipGroupComponent,
     SfProductGridComponent,
     SfStateComponent,
+    SfWordmarkComponent,
     FormsModule,
     CommonModule,
-    ReactiveFormsModule,
     MatDialogModule,
     AppPaginationComponent,
   ],
@@ -40,12 +39,41 @@ import { SfStateComponent } from '../ui/state/sf-state.component';
   styleUrl: './product.css',
 })
 export class ProductComponent implements OnInit, OnDestroy {
-  categories: SfChipItem[] = [{ value: 'all', label: 'TẤT CẢ' }];
-  selectedCategory: string | null = 'all';
+  productTypes: ProductTypeOption[] = [];
+  selectedProductTypeIds = new Set<number>();
+  productTypesLoaded = false;
+  showAllProductTypes = false;
+  readonly productTypePreviewCount = 6;
 
-  onCategorySelect(category: string | null) {
-    this.selectedCategory = category;
+  get visibleProductTypes(): ProductTypeOption[] {
+    return this.showAllProductTypes
+      ? this.productTypes
+      : this.productTypes.slice(0, this.productTypePreviewCount);
+  }
+
+  get allProductTypesSelected(): boolean {
+    return this.productTypes.length === 0 || this.selectedProductTypeIds.size === this.productTypes.length;
+  }
+
+  toggleAllProductTypes(): void {
+    this.selectedProductTypeIds = this.allProductTypesSelected
+      ? new Set<number>()
+      : new Set(this.productTypes.map((type) => type.id));
     this.getAll(0, this.pageSize);
+  }
+
+  toggleProductType(typeId: number): void {
+    const selected = new Set(this.selectedProductTypeIds);
+    if (selected.has(typeId)) selected.delete(typeId);
+    else selected.add(typeId);
+    this.selectedProductTypeIds = selected;
+    this.getAll(0, this.pageSize);
+  }
+
+  onPriceChange(value: number | string | null): void {
+    const nextPrice = value === null || value === '' ? null : Number(value);
+    this.searchPrice = nextPrice !== null && Number.isFinite(nextPrice) && nextPrice > 0 ? nextPrice : null;
+    this.filterProducts();
   }
 
   private readonly actionDialog = inject(ActionDialogService);
@@ -79,7 +107,9 @@ export class ProductComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private productService: ProductService,
     private wishlistService: WishlistService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -88,9 +118,43 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.isStaff = false;
     this.canPurchase = !this.authService.isLoggedIn() || this.authService.isCustomer();
     this.canUseWishlist = !!this.currentUserId && this.authService.isCustomer();
-    this.getAll(this.currentPage, this.pageSize);
+    this.subscriptions.add(this.route.queryParamMap.subscribe((params) => {
+      this.searchTerm = params.get('keyword') || '';
+      this.searchPrice = null;
+      if (this.productTypesLoaded) {
+        const routeTypeIds = [
+          ...params.getAll('productTypeIds').flatMap((value) => value.split(',')),
+          ...(params.get('productTypeId') ? [params.get('productTypeId')!] : []),
+        ].map(Number).filter((id) => Number.isInteger(id) && id > 0);
+        this.selectedProductTypeIds = routeTypeIds.length
+          ? new Set(routeTypeIds.filter((id) => this.productTypes.some((type) => type.id === id)))
+          : new Set(this.productTypes.map((type) => type.id));
+        this.getAll(0, this.pageSize);
+      }
+    }));
 
-    this.subscriptions.add(this.filterChanges.pipe(debounceTime(350)).subscribe(() => {
+    this.subscriptions.add(this.productService.getProductTypes().subscribe({
+      next: (types) => {
+        this.productTypes = types.filter((type) => type.active !== false);
+        this.productTypesLoaded = true;
+        const params = this.route.snapshot.queryParamMap;
+        const routeTypeIds = [
+          ...params.getAll('productTypeIds').flatMap((value) => value.split(',')),
+          ...(params.get('productTypeId') ? [params.get('productTypeId')!] : []),
+        ].map(Number).filter((id) => Number.isInteger(id) && id > 0);
+        this.selectedProductTypeIds = routeTypeIds.length
+          ? new Set(routeTypeIds.filter((id) => this.productTypes.some((type) => type.id === id)))
+          : new Set(this.productTypes.map((type) => type.id));
+        this.getAll(0, this.pageSize);
+      },
+      error: () => {
+        this.productTypes = [];
+        this.productTypesLoaded = true;
+        this.getAll(0, this.pageSize);
+      },
+    }));
+
+    this.subscriptions.add(this.filterChanges.pipe(debounceTime(300)).subscribe(() => {
       this.getAll(0, this.pageSize);
     }));
 
@@ -104,16 +168,28 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   getAll(page: number = 0, size: number = 10) {
+    if (this.productTypesLoaded && this.productTypes.length > 0 && this.selectedProductTypeIds.size === 0) {
+      this.plist = [];
+      this.filteredProducts = [];
+      this.currentPage = 0;
+      this.totalPages = 0;
+      this.totalElements = 0;
+      this.isLoading = false;
+      this.loadError = '';
+      return;
+    }
+
     this.isLoading = true;
     this.loadError = '';
     this.productService.getAll(page, size, {
-      keyword: this.selectedCategory && this.selectedCategory !== 'all' ? this.selectedCategory : this.searchTerm,
+      keyword: this.searchTerm.trim(),
       maxPrice: this.searchPrice,
+      productTypeIds: this.selectedProductTypeIds.size < this.productTypes.length
+        ? [...this.selectedProductTypeIds]
+        : undefined,
     }).subscribe({
       next: (res: any) => {
         this.plist = res.content || [];
-        const tags = Array.from(new Set(this.plist.flatMap((product) => product.tags || [])));
-        this.categories = [{ value: 'all', label: 'TẤT CẢ' }, ...tags.map((tag) => ({ value: tag, label: tag.toLocaleUpperCase('vi') }))];
         this.filteredProducts = [...this.plist];
         this.currentPage = res.number || 0;
         this.pageSize = res.size || 10;
@@ -135,13 +211,9 @@ export class ProductComponent implements OnInit, OnDestroy {
   }
 
   clearFilters(): void {
-    this.searchTerm = '';
     this.searchPrice = null;
-    this.getAll(0, this.pageSize);
-  }
-
-  getAvailableTags(): string[] {
-    return Array.from(new Set(this.plist.flatMap((product) => product.tags || [])));
+    this.selectedProductTypeIds = new Set(this.productTypes.map((type) => type.id));
+    this.router.navigate(['/store/product']);
   }
 
   // HÀM MỚI: XEM CHI TIẾT SẢN PHẨM (READ-ONLY)
@@ -149,7 +221,7 @@ export class ProductComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ProductDetailComponent, {
       ...APP_DIALOG_SIZE.product,
       panelClass: 'product-detail-dialog-panel',
-      data: { id: id || null, availableTags: this.getAvailableTags(), isView: true },
+      data: { id: id || null, availableTags: [], isView: true, allowPurchase: this.canPurchase },
       disableClose: false,
     });
 
@@ -171,7 +243,7 @@ export class ProductComponent implements OnInit, OnDestroy {
       panelClass: 'product-detail-dialog-panel',
       data: {
         id: id || null,
-        availableTags: this.getAvailableTags(),
+        availableTags: [],
         isView: false,
         staffMode: this.isStaff && !this.isAdmin,
       },

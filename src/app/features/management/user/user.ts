@@ -82,6 +82,7 @@ export class UserComponent implements OnInit {
   openUserDialog(id: string | null = null) {
     const dialogRef = this.dialog.open(Userdetail, {
       ...APP_DIALOG_SIZE.userForm,
+      panelClass: 'user-detail-dialog-panel',
       data: { id: id, action: 'edit' },
       disableClose: true,
     });
@@ -139,6 +140,7 @@ export class UserComponent implements OnInit {
   viewUser(id: string) {
     this.dialog.open(Userdetail, {
       ...APP_DIALOG_SIZE.userForm,
+      panelClass: 'user-detail-dialog-panel',
       data: { id: id, action: 'view' },
       disableClose: false,
     });

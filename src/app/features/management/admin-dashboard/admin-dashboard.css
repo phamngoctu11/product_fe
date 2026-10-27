@@ -1,14 +1,14 @@
 .dashboard-panel {
-    border: 1px solid rgba(var(--app-primary-rgb), 0.18) !important;
-    border-radius: 1.1rem;
+    border: 1px solid var(--app-border) !important;
+    border-radius: var(--clay-radius-lg);
   }
 
   .dashboard-panel-header {
-    border-radius: 1.1rem 1.1rem 0 0;
+    border-radius: var(--clay-radius-lg) var(--clay-radius-lg) 0 0;
   }
 
   .dashboard-panel-title {
-    color: #0f172a;
+    color: var(--app-text);
     font-size: 0.95rem;
   }
 
@@ -35,10 +35,10 @@
   }
 
   .detail-row {
-    border-radius: 0.65rem;
+    border-radius: var(--clay-radius-md);
     padding: 0.9rem 1rem;
     margin-bottom: 0.5rem;
-    border: 1px solid rgba(var(--app-primary-rgb), 0.1);
+    border: 1px solid var(--app-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -50,8 +50,8 @@
 
   .mini-stat-card {
     border-radius: 0.85rem;
-    background: linear-gradient(180deg, #10172b 0%, #0d1427 100%);
-    border: 1px solid rgba(var(--app-primary-rgb), 0.18);
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
     padding: 1rem;
     min-height: 158px;
     display: flex;
@@ -87,17 +87,17 @@
   .mini-stat-card .mini-stat-icon {
     border-color: rgba(var(--app-primary-rgb), 0.36);
     background: var(--app-gradient) !important;
-    color: #fff !important;
+    color: var(--clay-accent-ink) !important;
     box-shadow: var(--shadow-primary);
   }
 
   .mini-stat-card .mini-stat-icon i {
-    color: #fff !important;
+    color: var(--clay-accent-ink) !important;
     opacity: 1;
   }
 
   .mini-stat-card .text-secondary {
-    color: #a5b4fc !important;
+    color: var(--app-primary-light) !important;
   }
 
   /* Best seller table */
@@ -105,24 +105,24 @@
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: #cbd5e1;
-    border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.18);
+    color: var(--app-muted-text);
+    border-bottom: 1px solid var(--app-border);
     font-weight: 700;
     padding: 0.75rem 1rem;
   }
   .best-seller-table tbody td {
     padding: 0.85rem 1rem;
-    border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.12);
+    border-bottom: 1px solid var(--app-border);
     vertical-align: middle;
   }
   .best-seller-table tbody tr:last-child td { border-bottom: none; }
-  .best-seller-table tbody tr:hover td { background: rgba(var(--app-primary-rgb),0.08); }
+  .best-seller-table tbody tr:hover td { background: var(--app-hover-bg); }
 
   .rank-column { width: 64px; }
 
   .best-seller-count {
-    background: rgba(239,68,68,0.08);
-    color: #ef4444;
+    background: color-mix(in srgb, var(--clay-warning) 14%, var(--app-surface));
+    color: var(--clay-warning);
     font-size: 0.75rem;
     font-weight: 700;
   }
@@ -131,7 +131,7 @@
     width: 50px;
     height: 50px;
     flex-shrink: 0;
-    background: #f8f9ff;
+    background: var(--clay-control-bg);
   }
 
   .best-seller-image-content {
@@ -142,19 +142,19 @@
 
   .best-seller-name {
     max-width: 480px;
-    color: #0f172a;
+    color: var(--app-text);
     font-size: 0.88rem;
   }
 
   .product-id-badge {
-    background: rgba(99,102,241,0.08);
-    color: #6366f1;
+    background: rgba(var(--app-primary-rgb), 0.12);
+    color: var(--app-primary-light);
     font-size: 0.75rem;
     font-weight: 700;
   }
 
   .sold-quantity {
-    color: #10b981;
+    color: var(--clay-success);
     font-size: 0.95rem;
   }
 

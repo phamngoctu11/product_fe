@@ -16,7 +16,7 @@ interface ProductCategory {
   key: string;
   label: string;
   icon: string;
-  aliases: string[];
+  productTypeId: number | null;
 }
 
 @Component({
@@ -27,20 +27,10 @@ interface ProductCategory {
   styleUrl: './management-products.component.css',
 })
 export class ManagementProductsComponent implements OnInit {
-  private readonly seededCategories: ProductCategory[] = [
-    { key: 'quan', label: 'Quần', icon: 'bi-person-standing', aliases: ['quan', 'quần', 'pants', 'jeans'] },
-    { key: 'ao', label: 'Áo', icon: 'bi-person-arms-up', aliases: ['ao', 'áo', 'shirt', 'top'] },
-    { key: 'vong-tay', label: 'Vòng tay', icon: 'bi-circle', aliases: ['vongtay', 'vòng tay', 'bracelet'] },
-    { key: 'vong-co', label: 'Vòng cổ', icon: 'bi-gem', aliases: ['vongco', 'vòng cổ', 'necklace'] },
-    { key: 'nhan', label: 'Nhẫn', icon: 'bi-record-circle', aliases: ['nhan', 'nhẫn', 'ring'] },
-    { key: 'bong-tai', label: 'Bông tai', icon: 'bi-stars', aliases: ['bongtai', 'bông tai', 'earring'] },
-    { key: 'tui-xach', label: 'Túi xách', icon: 'bi-handbag', aliases: ['tuixach', 'túi xách', 'bag'] },
-    { key: 'giay-dep', label: 'Giày dép', icon: 'bi-bag', aliases: ['giay', 'giày', 'dep', 'dép', 'shoe'] },
-  ];
-
   products: Product[] = [];
   categories: ProductCategory[] = [];
   selectedCategory: ProductCategory | null = null;
+  private productTypeNames = new Map<number, string>();
   searchTerm = '';
   isLoading = false;
   loadError = '';
@@ -55,6 +45,13 @@ export class ManagementProductsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
+    this.productService.getProductTypes().subscribe({
+      next: (types) => {
+        this.productTypeNames = new Map(types.map((type) => [Number(type.id), type.name]));
+        this.categories = this.buildCategories(this.products);
+      },
+      error: () => undefined,
+    });
   }
 
   get visibleProducts(): Product[] {
@@ -135,6 +132,15 @@ export class ManagementProductsComponent implements OnInit {
     return this.authService.isAdmin();
   }
 
+  availabilityLabel(status?: string | null): string {
+    switch ((status || 'ACCEPTING_ORDERS').toUpperCase()) {
+      case 'PAUSED': return 'Tạm ngưng nhận đơn';
+      case 'DISCONTINUED': return 'Ngừng kinh doanh';
+      case 'ACCEPTING_ORDERS': return 'Đang nhận đơn';
+      default: return 'Trạng thái chưa xác định';
+    }
+  }
+
   private openProductDialog(id: number | null | undefined, isView: boolean): void {
     if (!isView && !this.authService.isManager()) {
       this.toast.notify('Bạn không có quyền thực hiện chức năng này.');
@@ -148,6 +154,7 @@ export class ManagementProductsComponent implements OnInit {
         id: id || null,
         availableTags: this.availableTags(),
         isView,
+        allowPurchase: false,
         staffMode: false,
       },
       disableClose: !isView,
@@ -169,24 +176,30 @@ export class ManagementProductsComponent implements OnInit {
   }
 
   private buildCategories(products: Product[]): ProductCategory[] {
-    const categories = [...this.seededCategories];
-    const knownAliases = new Set(categories.flatMap((category) => category.aliases.map((alias) => this.normalize(alias))));
-
+    const categories = new Map<string, ProductCategory>();
     for (const product of products) {
-      for (const rawTag of this.productTags(product)) {
-        const normalizedTag = this.normalize(rawTag);
-        if (!normalizedTag || knownAliases.has(normalizedTag)) continue;
-        categories.push({
-          key: normalizedTag.replace(/\s+/g, '-'),
-          label: this.toDisplayLabel(rawTag),
-          icon: 'bi-tags',
-          aliases: [rawTag],
+      const productTypeId = Number(product.productTypeId);
+      const hasProductTypeId = Number.isInteger(productTypeId) && productTypeId > 0;
+      const productTypeName = (hasProductTypeId ? this.productTypeNames.get(productTypeId) : '')
+        || product.productTypeName?.trim()
+        || '';
+      const key = hasProductTypeId
+        ? `id:${productTypeId}`
+        : productTypeName
+          ? `name:${this.normalize(productTypeName)}`
+          : 'unassigned';
+
+      if (!categories.has(key)) {
+        categories.set(key, {
+          key,
+          label: productTypeName || (hasProductTypeId ? `Loại sản phẩm #${productTypeId}` : 'Chưa gán loại sản phẩm'),
+          icon: 'bi-tag-fill',
+          productTypeId: hasProductTypeId ? productTypeId : null,
         });
-        knownAliases.add(normalizedTag);
       }
     }
 
-    return categories.filter((category) => this.productCountFor(products, category) > 0);
+    return [...categories.values()].sort((a, b) => a.label.localeCompare(b.label, 'vi'));
   }
 
   private productCountFor(products: Product[], category: ProductCategory): number {
@@ -194,11 +207,13 @@ export class ManagementProductsComponent implements OnInit {
   }
 
   private belongsToCategory(product: Product, category: ProductCategory): boolean {
-    const searchableValues = [...this.productTags(product), product.product_name].map((value) => this.normalize(value));
-    return category.aliases.some((alias) => {
-      const normalizedAlias = this.normalize(alias);
-      return searchableValues.some((value) => value === normalizedAlias || value.includes(normalizedAlias));
-    });
+    if (category.key === 'unassigned') {
+      return !product.productTypeId && !product.productTypeName?.trim();
+    }
+    if (category.productTypeId !== null) {
+      return Number(product.productTypeId) === category.productTypeId;
+    }
+    return `name:${this.normalize(product.productTypeName || '')}` === category.key;
   }
 
   private productTags(product: Product): string[] {
@@ -209,8 +224,4 @@ export class ManagementProductsComponent implements OnInit {
     return value.toLocaleLowerCase('vi').replace(/^#/, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
 
-  private toDisplayLabel(tag: string): string {
-    const cleanTag = tag.replace(/^#/, '').trim();
-    return cleanTag ? cleanTag.charAt(0).toLocaleUpperCase('vi') + cleanTag.slice(1) : 'Khác';
-  }
 }

@@ -30,28 +30,27 @@
         
         <!-- Header: Back link & Category Tag -->
         <div class="sf-product-info__header">
-          <a class="sf-link sf-link--back" href="javascript:void(0)" (click)="goToStore()">BACK TO SHOP</a>
+          <button type="button" class="sf-link sf-link--back sf-back-link" (click)="goToStore()">Quay lại cửa hàng</button>
           <span class="sf-tag">{{ product.tags?.[0] || 'SẢN PHẨM' }}</span>
         </div>
 
         <!-- Price -->
         <div class="sf-product-info__price sf-mono">
-          {{ product.price | number }} ₫
+          {{ (selectedVariant?.price ?? product.price) | number }} ₫
         </div>
 
         <!-- Name -->
         <h1 class="sf-product-info__name sf-display">{{ product.product_name }}</h1>
 
         <!-- Description -->
-        <p class="sf-product-info__desc">
-          Đây là mẫu thiết kế của shop và sẽ được thực hiện theo yêu cầu sau khi đơn được duyệt. Khách hàng vui lòng kiểm tra kỹ phân loại, màu sắc và kích cỡ trước khi đặt. Thời gian chế tác dự kiến được hiển thị bên dưới và được lưu vào đơn tại thời điểm đặt hàng.
-        </p>
+        <p class="sf-product-info__desc">Chọn phân loại để xem giá và thông số tương ứng trước khi đặt mua.</p>
 
         <!-- Variants Selection -->
         <div class="sf-product-info__variants" *ngIf="product.variants && product.variants.length > 0">
-          <select class="sf-select mb-4">
-            <option *ngFor="let v of product.variants" [value]="v.id">
-              {{ v.variantName }} - {{ v.price | number }} ₫
+          <label for="product-variant" class="sf-product-variant-label">Phân loại</label>
+          <select id="product-variant" name="productVariant" class="sf-select mb-4" [(ngModel)]="selectedVariant">
+            <option *ngFor="let v of product.variants" [ngValue]="v">
+              {{ v.variantName }}
             </option>
           </select>
         </div>
@@ -77,9 +76,9 @@
             <span class="sf-product-attr-value">~{{ product.madeDay || 3 }} ngày (thủ công)</span>
           </div>
           
-          <ng-container *ngIf="product.variants && product.variants.length > 0 && product.variants[0].parsedAttributes">
-            <div class="sf-product-attr-row" *ngFor="let attr of product.variants[0].parsedAttributes | keyvalue">
-              <span class="sf-product-attr-label">{{ getLabel($any(attr.key)) }}</span>
+          <ng-container *ngIf="selectedAttributes.length > 0">
+            <div class="sf-product-attr-row" *ngFor="let attr of selectedAttributes">
+              <span class="sf-product-attr-label">{{ getLabel(attr.key) }}</span>
               <span class="sf-product-attr-value">{{ attr.value }}</span>
             </div>
           </ng-container>

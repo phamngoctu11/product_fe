@@ -17,6 +17,66 @@
 
     <!-- Actions bên phải -->
     <div class="sf-navbar__actions">
+      <div class="sf-search" (click)="$event.stopPropagation()">
+        <button class="sf-navbar__icon-btn" type="button" title="Tìm kiếm sản phẩm"
+          aria-label="Tìm kiếm sản phẩm" [attr.aria-expanded]="isSearchOpen" (click)="toggleSearch()">
+          <i class="bi bi-search"></i>
+        </button>
+        @if (isSearchOpen) {
+          <section class="sf-search__panel" aria-label="Tìm kiếm sản phẩm">
+            <form class="sf-search__form" (submit)="$event.preventDefault(); submitSearch()">
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <input type="search" aria-label="Tên, thẻ hoặc loại sản phẩm" placeholder="Tên, thẻ hoặc loại sản phẩm"
+                [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)" name="storeSearch" autocomplete="off">
+              @if (searchTerm) {
+                <button type="button" class="sf-search__clear" aria-label="Xóa nội dung tìm kiếm"
+                  (click)="onSearchChange('')"><i class="bi bi-x-lg"></i></button>
+              }
+            </form>
+            @if (searchTerm.trim().length < 2) {
+              <p class="sf-search__hint">Nhập ít nhất 2 ký tự để tìm sản phẩm.</p>
+            } @else if (isSearchLoading) {
+              <p class="sf-search__hint" role="status">Đang tìm kiếm…</p>
+            } @else if (searchFailed) {
+              <p class="sf-search__hint" role="status">Chưa thể tải gợi ý. Nhấn Enter để xem kết quả.</p>
+            } @else {
+              @if (searchSuggestions.productTypes.length) {
+                <div class="sf-search__group">
+                  <p class="sf-search__label">Loại sản phẩm</p>
+                  @for (type of searchSuggestions.productTypes; track type.id) {
+                    <button type="button" class="sf-search__type" (click)="openProductType(type.id)">
+                      <span>{{ type.name }}</span><i class="bi bi-arrow-up-left" aria-hidden="true"></i>
+                    </button>
+                  }
+                </div>
+              }
+              @if (searchSuggestions.products.length) {
+                <div class="sf-search__group">
+                  <p class="sf-search__label">Sản phẩm phù hợp</p>
+                  @for (product of searchSuggestions.products; track product.id ?? $index) {
+                    <button type="button" class="sf-search__product" (click)="openProductSuggestion(product)">
+                      @if (product.image_url) { <img [src]="product.image_url" [alt]="" loading="lazy"> }
+                      @else { <span class="sf-search__placeholder"><i class="bi bi-flower1"></i></span> }
+                      <span class="sf-search__product-copy">
+                        <strong>{{ product.product_name }}</strong>
+                        <small>{{ product.productTypeName || 'Sản phẩm thủ công' }} · {{ product.price | number }} ₫</small>
+                      </span>
+                    </button>
+                  }
+                </div>
+              }
+              @if (!searchSuggestions.products.length && !searchSuggestions.productTypes.length) {
+                <p class="sf-search__hint">Không tìm thấy gợi ý phù hợp.</p>
+              }
+              <button type="button" class="sf-search__all" (click)="submitSearch()">
+                Xem tất cả kết quả cho “{{ searchTerm.trim() }}”
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+              </button>
+            }
+          </section>
+        }
+      </div>
+
       <!-- Giỏ hàng -->
       <a class="sf-navbar__icon-btn" routerLink="/store/cart" title="Giỏ hàng" aria-label="Giỏ hàng">
         <i class="bi bi-bag"></i>

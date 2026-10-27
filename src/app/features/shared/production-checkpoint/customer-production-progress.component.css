@@ -4,31 +4,88 @@
 
 .customer-progress-section {
   background: var(--app-surface, #26211a) !important;
-  border-color: rgba(236, 229, 216, 0.12) !important;
-  border-radius: 0 !important;
-  color: #ece5d8;
+  border-color: var(--app-border) !important;
+  border-radius: var(--clay-radius-lg) !important;
+  color: var(--app-text);
+}
+
+.customer-progress-section .text-dark { color: var(--app-text, #eee7d8) !important; }
+.customer-progress-section .bg-white,
+.customer-progress-section .bg-light { background: var(--app-surface-muted) !important; color: var(--app-text) !important; }
+.customer-progress-section .bg-primary-subtle,
+.customer-progress-section .bg-success-subtle { background: color-mix(in srgb, var(--clay-accent) 14%, var(--app-surface)) !important; }
+.customer-progress-section .text-primary,
+.customer-progress-section .text-primary-emphasis { color: var(--clay-accent-hover) !important; }
+.customer-progress-section .text-success,
+.customer-progress-section .text-success-emphasis { color: var(--clay-success) !important; }
+.customer-progress-section .text-muted,
+.customer-progress-section .text-secondary { color: var(--app-muted-text, #c2b6a2) !important; }
+
+.progress-status,
+.attempt-badge {
+  background: color-mix(in srgb, var(--clay-accent) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--clay-accent) 34%, transparent);
+  color: var(--app-text, #eee7d8);
+  white-space: normal;
+}
+
+.checkpoint-timeline {
+  list-style: none;
+  padding-left: 1rem;
+  border-left: 1px solid var(--app-border, rgba(236, 229, 216, 0.14));
+}
+
+.checkpoint-event { position: relative; padding-bottom: 0.75rem; }
+.checkpoint-event:last-child { padding-bottom: 0; }
+.checkpoint-event::before {
+  content: '';
+  position: absolute;
+  left: calc(-1rem - 4px);
+  top: 0.75rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--app-primary);
 }
 
 .progress-item-card {
-  background: #1c1813 !important;
-  border-color: rgba(236, 229, 216, 0.1) !important;
-  border-radius: 0 !important;
-  color: #ece5d8;
+  background: var(--app-surface) !important;
+  border-color: var(--app-border) !important;
+  border-radius: var(--clay-radius-md) !important;
+  color: var(--app-text);
 }
 
 .initial-shape-box {
-  background: #241e18 !important;
-  border-color: rgba(236, 229, 216, 0.1) !important;
-  border-radius: 0 !important;
-  color: #ece5d8;
+  background: var(--app-surface-muted) !important;
+  border-color: var(--app-border) !important;
+  border-radius: var(--clay-radius-md) !important;
+  color: var(--app-text);
 }
+
+.customer-thumb {
+  width: 100px;
+  height: 100px;
+  flex: 0 0 100px;
+  cursor: zoom-in;
+  background: transparent;
+}
+
+.customer-thumb:focus-visible {
+  outline: 3px solid var(--app-primary);
+  outline-offset: 3px;
+}
+
+.customer-thumb img { object-fit: cover; }
+.thumb-hover-overlay { position: absolute; inset: 0; opacity: 0; background: rgba(0, 0, 0, 0.42); transition: opacity 0.15s ease; }
+.customer-thumb:hover .thumb-hover-overlay,
+.customer-thumb:focus-visible .thumb-hover-overlay { opacity: 1; }
 
 .initial-photo-thumb {
   width: 100px;
   height: 100px;
   cursor: pointer;
   object-fit: cover;
-  border-radius: 0 !important;
+  border-radius: var(--clay-radius-sm) !important;
   border-color: rgba(236, 229, 216, 0.15) !important;
   transition: transform 0.15s ease-in-out;
 }
@@ -39,13 +96,13 @@
 
 .initial-photo-thumb-wrap {
   position: relative;
-  border-radius: 0 !important;
+  border-radius: var(--clay-radius-sm) !important;
 }
 
 .initial-photo-overlay {
   transition: opacity 0.15s ease;
   pointer-events: none;
-  border-radius: 0 !important;
+  border-radius: var(--clay-radius-sm) !important;
 }
 
 .initial-photo-thumb-wrap:hover .initial-photo-overlay {
@@ -53,16 +110,16 @@
 }
 
 .badge-success {
-  background-color: #198754;
-  color: #fff;
+  background-color: color-mix(in srgb, var(--clay-success) 18%, var(--app-surface));
+  color: var(--clay-success);
 }
 
 .badge-info {
-  background-color: #0dcaf0;
-  color: #000;
+  background-color: color-mix(in srgb, var(--clay-info) 18%, var(--app-surface));
+  color: var(--clay-info);
 }
 
 .badge-secondary {
-  background-color: #6c757d;
-  color: #fff;
+  background-color: var(--app-surface-muted);
+  color: var(--app-muted-text);
 }

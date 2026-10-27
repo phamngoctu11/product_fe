@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { inject as injectToast } from '@angular/core';
 import { ToastService } from '../../../service/toast.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -11,18 +12,19 @@ import { AddToCartModalComponent } from '../../storefront/product/add-to-cart-mo
 import { APP_DIALOG_SIZE } from '../../../config/dialog.config';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { ViewStateComponent } from '../ui';
-import { Product } from '../../../model/product.model';
+import { Product, ProductVariant } from '../../../model/product.model';
 
 @Component({
   selector: 'app-product-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, ViewStateComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ViewStateComponent],
   templateUrl: './product-page.component.html',
   styleUrl: './product-page.component.css',
 })
 export class ProductPageComponent implements OnInit {
   private readonly toast = injectToast(ToastService);
   product: Product | null = null;
+  selectedVariant: ProductVariant | null = null;
   isLoading = true;
 
   // Từ điển dịch thuộc tính sang Tiếng Việt
@@ -61,14 +63,16 @@ export class ProductPageComponent implements OnInit {
     this.productService.getById(id).subscribe({
       next: (res) => {
         this.product = res;
-        // Giải mã JSON thuộc tính của từng biến thể để hiển thị lên giao diện
-        if (this.product.variants) {
-          this.product.variants.forEach((v: any) => {
-            if (v.attributes && typeof v.attributes === 'string') {
-              v.parsedAttributes = JSON.parse(v.attributes);
-            }
-          });
-        }
+        this.product.variants?.forEach((variant) => {
+          try {
+            variant.parsedAttributes = typeof variant.attributes === 'string'
+              ? JSON.parse(variant.attributes)
+              : (variant.attributes || {});
+          } catch {
+            variant.parsedAttributes = {};
+          }
+        });
+        this.selectedVariant = this.product.variants?.[0] ?? null;
         this.isLoading = false;
       },
       error: (err) => {
@@ -87,7 +91,7 @@ export class ProductPageComponent implements OnInit {
 
     const dialogRef = this.dialog.open(AddToCartModalComponent, {
       ...APP_DIALOG_SIZE.addToCart,
-      data: { product: this.product },
+      data: { product: this.product, selectedVariantId: this.selectedVariant?.id },
       disableClose: false,
     });
 
@@ -102,7 +106,16 @@ export class ProductPageComponent implements OnInit {
   }
 
   getLabel(key: string): string {
-    return this.attributeDictionary[key] || key;
+    const label = this.attributeDictionary[key] || key.replace(/[_-]+/g, ' ');
+    return label ? label.charAt(0).toLocaleUpperCase('vi-VN') + label.slice(1) : label;
+  }
+
+  get selectedAttributes(): { key: string; value: unknown }[] {
+    const attributes = this.selectedVariant?.parsedAttributes;
+    if (!attributes || typeof attributes !== 'object' || Array.isArray(attributes)) return [];
+    return Object.entries(attributes)
+      .filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '')
+      .map(([key, value]) => ({ key, value }));
   }
 
   get isAcceptingOrders(): boolean {

@@ -77,7 +77,7 @@ export class WishlistComponent implements OnInit {
     this.dialog.open(ProductDetailComponent, {
       ...APP_DIALOG_SIZE.product,
       panelClass: 'product-detail-dialog-panel',
-      data: { id: id || null, availableTags: this.getAvailableTags(), isView: true },
+      data: { id: id || null, availableTags: this.getAvailableTags(), isView: true, allowPurchase: true },
       disableClose: false,
     });
   }

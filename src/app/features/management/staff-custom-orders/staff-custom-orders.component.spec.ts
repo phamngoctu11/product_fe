@@ -94,6 +94,7 @@ describe('StaffCustomOrdersComponent', () => {
   it('should create and load staff custom orders', () => {
     fixture.detectChanges();
     expect(component).toBeTruthy();
+    expect(component.statusFilter).toBe('DISCUSSING');
     expect(orderService.getMyStaffOrders).toHaveBeenCalled();
     expect(component.customOrders.length).toBe(1);
     expect(component.selectedOrderId).toBe(101);
