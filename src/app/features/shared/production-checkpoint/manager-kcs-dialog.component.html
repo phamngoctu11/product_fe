@@ -11,7 +11,7 @@
         </div>
         <div class="small text-muted mt-1">Duyệt sản phẩm hoàn thiện của từng hạng mục</div>
       </div>
-      <button type="button" class="btn-close btn-close-white" (click)="onClose()" aria-label="Đóng"></button>
+      <button type="button" class="btn-close btn-close-white clay-close-button" (click)="onClose()" aria-label="Đóng"></button>
     </div>
 
     <!-- Body -->
@@ -238,7 +238,7 @@
 <div *ngIf="lightboxImageUrl" class="kcs-lightbox-backdrop position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style="z-index: 2070;" (click)="closeLightbox()">
   <div class="position-relative max-w-100 max-h-100" (click)="$event.stopPropagation()">
     <img [src]="lightboxImageUrl" alt="Hình ảnh sản phẩm lớn" class="img-fluid shadow-lg" style="max-height: 85vh; max-width: 90vw; object-fit: contain; border-radius: 0 !important;" />
-    <button class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 shadow" (click)="closeLightbox()" aria-label="Đóng">
+    <button class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 shadow clay-close-button" (click)="closeLightbox()" aria-label="Đóng">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>

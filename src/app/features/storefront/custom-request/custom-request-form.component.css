@@ -57,6 +57,12 @@
   text-decoration: underline;
 }
 
+.cr-alert-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 0.85rem;
+}
+
 .cr-forms {
   display: flex;
   flex-direction: column;
@@ -236,6 +242,18 @@
   margin-top: 1rem;
 }
 
+.cr-delete-request {
+  margin-left: auto;
+  border-color: var(--clay-danger);
+  color: var(--clay-danger);
+}
+
+.cr-delete-request:hover:not(:disabled) {
+  border-color: var(--clay-danger);
+  background: var(--clay-danger);
+  color: #fff;
+}
+
 .cr-hint {
   color: var(--sf-muted);
   font-size: 0.85rem;
@@ -275,5 +293,6 @@
   .cr-form-actions,
   .cr-submit-actions,
   .cr-success-actions { flex-wrap: wrap; }
+  .cr-delete-request { margin-left: 0; }
 }
 

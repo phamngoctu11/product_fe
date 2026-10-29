@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderItem } from '../../../../model/order.model';
-import { formatOrderAttributes } from '../../../../model/order-display';
+import { getOrderItemDetailLines } from '../../../../model/order-display';
 
 export type OrderItemsMode = 'readonly' | 'receipt';
 
@@ -52,8 +52,8 @@ export class OrderItemsTableComponent {
     return item.imageUrl || item.image_url || '';
   }
 
-  getVariantLabel(item: OrderItem): string {
-    return formatOrderAttributes(item.attributes);
+  getDetailLines(item: OrderItem): string[] {
+    return getOrderItemDetailLines(item);
   }
 
   updateQuantity(item: OrderItem, value: number | string): void {

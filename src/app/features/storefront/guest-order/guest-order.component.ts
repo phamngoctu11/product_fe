@@ -15,17 +15,17 @@ import {
 } from '../../../model/order.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../../shared/order-detail-popup/order-detail-popup.component';
+import { OrderTimelineModalComponent } from '../../shared/order-timeline/order-timeline-modal.component';
 import { ViewStateComponent } from '../../shared/ui';
 import { SfPageIntroComponent } from '../ui/page-intro/sf-page-intro.component';
-import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-guest-order',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     OrderDetailPopupComponent,
+    OrderTimelineModalComponent,
     SfPageIntroComponent,
     ViewStateComponent,
   ],
@@ -57,172 +57,33 @@ import { FormsModule } from '@angular/forms';
               >
                 <i class="bi bi-clock-history mr-2"></i> Lịch sử
               </button>
-              <button 
-                *ngIf="order.status === 'SHIPPING'"
-                class="sf-button-primary text-sm py-2 px-4" 
-                (click)="openReceiptConfirm()"
-              >
-                <i class="bi bi-check2-circle mr-2"></i> Xác nhận nhận hàng
-              </button>
             </div>
           </div>
 
           <div class="guest-order-content">
-            <!-- Reuse OrderDetailPopup UI logically but embedded directly for Guest -->
             <app-order-detail-popup
-              *ngIf="!receiptMode"
               [order]="order"
-              [isLoading]="isLoading"
+              [isLoading]="isLoadingReceipt"
               [error]="error"
-              [guestToken]="token"
+              [receiptMode]="receiptMode"
               presentation="embedded"
+              [guestToken]="token"
+              [receivedQuantities]="receivedQuantities"
+              [receiptResponse]="receiptResponse"
+              [receiptError]="receiptError"
+              [isSubmittingReceipt]="isSubmittingReceipt"
+              [canConfirmReceipt]="receiptView?.canConfirmReceipt ?? false"
+              [dataWarning]="receiptView?.dataWarning || null"
+              (guestReceiptRequested)="openReceiptConfirm()"
+              (submitReceipt)="submitReceiptConfirm($event)"
+              (close)="cancelReceiptConfirm()"
+              (orderUpdated)="loadOrder()"
             ></app-order-detail-popup>
-
-            <!-- Receipt Confirm UI -->
-            <div *ngIf="receiptMode" class="guest-receipt-card">
-              <h4 class="font-medium text-lg mb-4 text-gray-900 border-b pb-3">Xác nhận số lượng thực nhận</h4>
-
-              <div *ngIf="receiptView?.dataWarning" class="bg-amber-50 text-amber-700 p-4 rounded-lg mb-4 text-sm flex gap-2 border border-amber-200">
-                <i class="bi bi-info-circle-fill mt-0.5"></i>
-                <div class="flex-1">Dữ liệu số lượng xuất kho được đồng bộ từ dữ liệu cũ (legacy fallback).</div>
-              </div>
-
-              <div *ngIf="receiptView && !receiptView.canConfirmReceipt" class="bg-gray-100 text-gray-700 p-4 rounded-lg mb-4 text-sm flex gap-2">
-                <i class="bi bi-hourglass-split mt-0.5"></i>
-                <div class="flex-1">Đơn hàng chưa ở trạng thái sẵn sàng để xác nhận nhận hàng.</div>
-              </div>
-
-              <div *ngIf="receiptError" class="bg-red-50 text-red-600 p-4 rounded-lg mb-4 text-sm flex gap-2">
-                <i class="bi bi-exclamation-circle-fill mt-0.5"></i>
-                <div class="flex-1">{{ receiptError }}</div>
-              </div>
-
-              <div class="space-y-4">
-                <div *ngFor="let item of (receiptView?.items || [])" class="guest-receipt-item">
-                  <div class="flex-1">
-                    <p class="font-medium text-gray-800">{{ item.productName || item.variantName || 'Sản phẩm #' + item.orderItemId }}</p>
-                    <p class="text-sm text-gray-500 mt-1" *ngIf="item.variantName && item.variantName !== item.productName">{{ item.variantName }}</p>
-                    <p class="text-sm text-gray-500 mt-1">
-                      Số lượng đặt: <span class="font-medium">{{ item.orderedQuantity }}</span>
-                      <span class="mx-2">•</span>
-                      Số lượng đã xuất: <span class="font-bold">{{ item.exportedQuantity ?? item.orderedQuantity }}</span>
-                    </p>
-                  </div>
-                  <div class="w-full sm:w-32">
-                    <label class="block text-xs text-gray-500 mb-1">Thực nhận</label>
-                    <input 
-                      type="number" 
-                      class="sf-input w-full"
-                      [(ngModel)]="receivedQuantities[item.orderItemId]"
-                      min="0"
-                      [disabled]="!receiptView?.canConfirmReceipt || isSubmittingReceipt"
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Mismatch table when matched=false and completed=false -->
-              <div *ngIf="receiptResponse && !receiptResponse.completed && receiptResponse.mismatches?.length" class="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <div class="font-medium text-amber-800 mb-2 flex items-center gap-2">
-                  <i class="bi bi-exclamation-triangle-fill"></i>
-                  Số lượng thực nhận đang lệch so với số lượng xuất kho:
-                </div>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-sm text-left">
-                    <thead>
-                      <tr class="border-b border-amber-200 text-gray-600">
-                        <th class="py-2">Sản phẩm</th>
-                        <th class="py-2 text-center">Đặt</th>
-                        <th class="py-2 text-center">Xuất</th>
-                        <th class="py-2 text-center">Thực nhận</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let m of receiptResponse.mismatches" class="border-b border-amber-100">
-                        <td class="py-2 font-medium">{{ m.productName || m.variantName || 'Item #' + m.orderItemId }}</td>
-                        <td class="py-2 text-center">{{ m.orderedQuantity }}</td>
-                        <td class="py-2 text-center">{{ m.exportedQuantity }}</td>
-                        <td class="py-2 text-center text-red-600 font-bold">{{ m.receivedQuantity }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <!-- Action buttons for receipt -->
-              <div class="mt-6 flex flex-wrap justify-end gap-3 pt-4 border-t">
-                <button 
-                  class="sf-button-outline" 
-                  (click)="cancelReceiptConfirm()" 
-                  [disabled]="isSubmittingReceipt"
-                >
-                  Quay lại
-                </button>
-                <button 
-                  *ngIf="receiptResponse && !receiptResponse.completed && receiptResponse.mismatches?.length"
-                  class="sf-button-primary bg-yellow-600 border-yellow-600 hover:bg-yellow-700" 
-                  (click)="submitReceiptConfirm(true)" 
-                  [disabled]="isSubmittingReceipt"
-                >
-                  <i class="bi bi-check-circle mr-2"></i> Xác nhận chấp nhận chênh lệch
-                </button>
-                <button 
-                  class="sf-button-primary" 
-                  (click)="submitReceiptConfirm()" 
-                  [disabled]="isSubmittingReceipt || !receiptView?.canConfirmReceipt"
-                >
-                  <span *ngIf="isSubmittingReceipt" class="spinner-border spinner-border-sm mr-2" role="status"></span>
-                  <i *ngIf="!isSubmittingReceipt" class="bi bi-check-circle mr-2"></i>
-                  Xác nhận
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </app-view-state>
 
-      <!-- Timeline Modal -->
-      <div 
-        class="modal fade guest-timeline-modal"
-        id="guestTimelineModal" 
-        tabindex="-1" 
-        aria-hidden="true"
-        [class.show]="isTimelineModalOpen"
-        [style.display]="isTimelineModalOpen ? 'block' : 'none'"
-      >
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-          <div class="modal-content border-0 rounded-2xl shadow-xl">
-            <div class="modal-header border-b border-gray-100 p-5 bg-gray-50/50 rounded-t-2xl">
-              <h5 class="modal-title font-medium text-gray-800">Lịch sử đơn hàng</h5>
-              <button type="button" class="btn-close" (click)="closeTimeline()"></button>
-            </div>
-            <div class="modal-body p-6">
-              <div *ngIf="isLoadingTimeline" class="text-center py-8">
-                <div class="spinner-border text-primary-600" role="status"></div>
-                <p class="text-gray-500 mt-3">Đang tải lịch sử...</p>
-              </div>
-              <div *ngIf="!isLoadingTimeline && history.length === 0" class="text-center py-8 text-gray-500">
-                Chưa có lịch sử trạng thái cho đơn hàng này.
-              </div>
-              <div *ngIf="!isLoadingTimeline && history.length > 0" class="guest-timeline">
-                <div class="guest-timeline-line"></div>
-                <div *ngFor="let step of history; let last = last" class="guest-timeline-item">
-                  <div class="guest-timeline-dot"
-                    [ngClass]="last ? 'bg-primary-500 ring-4 ring-primary-50' : 'bg-gray-300'"
-                  ></div>
-                  <div>
-                    <h6 class="font-medium" [ngClass]="last ? 'text-primary-800' : 'text-gray-700'">
-                      {{ getStatusLabel(step.newstatus) }}
-                    </h6>
-                    <p class="text-sm text-gray-500 mt-1">{{ step.updatetime | date:'dd/MM/yyyy HH:mm' }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div *ngIf="isTimelineModalOpen" class="modal-backdrop fade show guest-timeline-backdrop"></div>
+      <app-order-timeline-modal [open]="isTimelineModalOpen" [orderId]="orderId" [history]="history" [loading]="isLoadingTimeline" (closed)="closeTimeline()"></app-order-timeline-modal>
     </div>
   `,
   styleUrl: './guest-order.component.css',
@@ -242,6 +103,7 @@ export class GuestOrderComponent implements OnInit {
   isTimelineModalOpen = false;
 
   receiptMode = false;
+  isLoadingReceipt = false;
   isSubmittingReceipt = false;
   receiptError = '';
   receiptView: ReceiptViewDTO | null = null;
@@ -323,27 +185,32 @@ export class GuestOrderComponent implements OnInit {
 
   openReceiptConfirm(): void {
     if (!this.orderId || !this.token) return;
+    if ((this.order?.status || '').trim().toUpperCase() !== 'SHIPPING') return;
     this.receiptMode = true;
     this.receiptError = '';
     this.receiptResponse = null;
     this.receivedQuantities = {};
     this.receiptView = null;
+    this.isLoadingReceipt = true;
 
     this.orderService.getGuestReceiptView(this.orderId, this.token).subscribe({
       next: (rv) => {
         this.receiptView = rv;
+        this.isLoadingReceipt = false;
         (rv.items || []).forEach((item) => {
           this.receivedQuantities[item.orderItemId] = item.exportedQuantity ?? item.orderedQuantity ?? 0;
         });
       },
       error: (err) => {
         this.receiptError = getApiErrorMessage(err, 'Không thể tải thông tin xác nhận nhận hàng.');
+        this.isLoadingReceipt = false;
       },
     });
   }
   
   cancelReceiptConfirm(): void {
     this.receiptMode = false;
+    this.isLoadingReceipt = false;
     this.receiptView = null;
     this.receiptResponse = null;
     this.receiptError = '';

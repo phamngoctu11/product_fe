@@ -3,6 +3,7 @@
     <sf-page-intro
       eyebrow="ĐẶT LÀM RIÊNG"
       [title]="draftId ? 'Yêu cầu custom #' + draftId : 'Tạo yêu cầu custom'"
+      align="left"
       subtitle="Mô tả sản phẩm bạn muốn đặt làm riêng. Giá sẽ được chốt sau khi quản lý duyệt và nhân viên trao đổi với bạn.">
     </sf-page-intro>
 
@@ -33,6 +34,15 @@
           @if (currentDraft?.linkedOrderId) {
             Đơn liên kết: <a routerLink="/store/orders">#{{ currentDraft?.linkedOrderId }}</a> (chờ quản lý duyệt).
           }
+          <div class="cr-alert-actions">
+            <button type="button" class="sf-btn sf-btn--outline sf-btn--sm cr-delete-request"
+              [disabled]="!currentDraft?.deletable || isDeleting" (click)="deleteCustomRequest()"
+              [attr.title]="currentDraft?.deletable ? 'Xóa yêu cầu custom' : 'Chỉ xóa được yêu cầu chưa được chấp nhận, đơn đã hủy hoặc đã hoàn thành'">
+              @if (isDeleting) { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Đang xóa...</span> }
+              @else if (currentDraft?.deletable) { <i class="bi bi-trash" aria-hidden="true"></i><span>Xóa yêu cầu custom</span> }
+              @else { <i class="bi bi-lock" aria-hidden="true"></i><span>Không thể xóa</span> }
+            </button>
+          </div>
         </div>
       }
 
@@ -142,6 +152,15 @@
                 @if (isSaving) { <span class="spinner-border spinner-border-sm"></span> }
                 {{ draftId ? 'Cập nhật bản nháp' : 'Lưu bản nháp' }}
               </button>
+              @if (currentDraft) {
+                <button type="button" class="sf-btn sf-btn--outline sf-btn--sm cr-delete-request"
+                  [disabled]="!currentDraft.deletable || isDeleting || isSaving || isSubmitting || isUploading" (click)="deleteCustomRequest()"
+                  [attr.title]="currentDraft.deletable ? 'Xóa yêu cầu custom' : 'Không thể xóa ở trạng thái hiện tại'">
+                  @if (isDeleting) { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Đang xóa...</span> }
+                  @else if (currentDraft.deletable) { <i class="bi bi-trash" aria-hidden="true"></i><span>Xóa yêu cầu custom</span> }
+                  @else { <i class="bi bi-lock" aria-hidden="true"></i><span>Không thể xóa</span> }
+                </button>
+              }
               @if (currentDraft) {
                 <span class="cr-hint">Lưu lần cuối: {{ currentDraft.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
               }

@@ -12,7 +12,6 @@ export class InfoPageShellComponent {
   @Input({ required: true }) category = '';
   @Input({ required: true }) title = '';
   @Input({ required: true }) description = '';
-  @Input() icon = 'bi-info-circle';
 
   readonly navigation = [
     { label: 'Hướng dẫn mua hàng', route: '/store/help/shopping-guide', icon: 'bi-bag-check' },

@@ -4,7 +4,7 @@
       <i class="bi me-2" [ngClass]="isView ? 'bi-person-vcard' : (isEdit ? 'bi-pencil-square' : 'bi-person-plus-fill')"></i>
       {{ isSelfEdit ? 'Cập nhật hồ sơ cá nhân' : (isView ? 'Chi tiết Người dùng' : (isEdit ? 'Cập nhật Thông tin' : 'Thêm người dùng mới')) }}
     </h5>
-    <button mat-dialog-close type="button" class="btn-close btn-close-white"></button>
+    <button mat-dialog-close type="button" class="btn-close btn-close-white clay-close-button" aria-label="Đóng"></button>
   </div>
 
   <form #userForm="ngForm" (ngSubmit)="saveUser(userForm)">

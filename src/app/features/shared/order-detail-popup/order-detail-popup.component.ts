@@ -14,6 +14,7 @@ import { AuthService } from '../../../service/auth.service';
 import { ProductReviewService } from '../../../service/product-review.service';
 import { ToastService } from '../../../service/toast.service';
 import { environment } from '../../../../environments/environment';
+import { getOrderItemDetailLines } from '../../../model/order-display';
 import { RouterModule } from '@angular/router';
 import {
   OrderItemsTableComponent,
@@ -56,6 +57,7 @@ export class OrderDetailPopupComponent {
   @Input() canConfirmReceipt = true;
   @Input() dataWarning: string | null = null;
   @Output() close = new EventEmitter<void>();
+  @Output() guestReceiptRequested = new EventEmitter<void>();
   @Output() submitReceipt = new EventEmitter<boolean>();
   @Output() orderUpdated = new EventEmitter<void>();
 
@@ -79,6 +81,12 @@ export class OrderDetailPopupComponent {
 
   get isVisible(): boolean {
     return this.isLoading || !!this.order || !!this.error;
+  }
+
+  get canRequestGuestReceipt(): boolean {
+    return !!this.guestToken
+      && !this.receiptMode
+      && (this.order?.status || '').trim().toUpperCase() === 'SHIPPING';
   }
 
   canShowProductionProgress(order: Order | null): boolean {
@@ -316,6 +324,13 @@ export class OrderDetailPopupComponent {
 
   getItemVariantLabel(item: OrderItem): string {
     return item.attributes || (item.variantId ? `Variant #${item.variantId}` : 'Chưa có thuộc tính');
+  }
+
+  getFormattedItemDetails(item: OrderItem): string {
+    const details = getOrderItemDetailLines(item).join(' · ');
+    if (details) return details;
+    if (item.sourceType === 'CUSTOM') return '';
+    return this.getItemVariantLabel(item);
   }
 
   getReceivedQuantity(item: OrderItem): number {

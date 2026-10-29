@@ -27,7 +27,9 @@
             <div class="order-item-product">
               <div>
                 <div class="fw-bold text-dark">{{ item.variantName || item.productName || 'Sản phẩm' }}</div>
-                <div *ngIf="getVariantLabel(item)" class="text-muted small">{{ getVariantLabel(item) }}</div>
+                <div *ngIf="getDetailLines(item).length" class="order-item-details">
+                  <div *ngFor="let line of getDetailLines(item)" class="text-muted small order-item-detail-line">{{ line }}</div>
+                </div>
                 @if (item.computedCompletionAt) {
                   <div class="badge bg-info-subtle text-info border border-info-subtle mt-1 text-start">
                     <i class="bi bi-clock me-1"></i>Hạn hoàn thành: {{ item.computedCompletionAt | date: 'dd/MM/yyyy HH:mm' }}

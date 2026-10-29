@@ -19,7 +19,7 @@
           <span class="eyebrow">{{ editingType ? 'Chỉnh sửa' : 'Thêm mới' }}</span>
           <h2 id="type-editor-title">{{ editingType ? 'Cập nhật loại sản phẩm' : 'Tạo loại sản phẩm' }}</h2>
         </div>
-        <button class="icon-button" type="button" aria-label="Đóng biểu mẫu" [disabled]="busy" (click)="resetType()">
+        <button class="icon-button clay-close-button" type="button" aria-label="Đóng biểu mẫu" [disabled]="busy" (click)="resetType()">
           <i class="bi bi-x-lg" aria-hidden="true"></i>
         </button>
       </div>
@@ -167,7 +167,7 @@
         <header class="type-dialog-header">
           <span class="type-card-icon"><i class="bi bi-tag-fill" aria-hidden="true"></i></span>
           <div><span class="eyebrow">Chi tiết loại sản phẩm</span><h2>{{ type.name }}</h2></div>
-          <button class="icon-button" type="button" aria-label="Đóng" (click)="closeTypeDetails()"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+          <button class="icon-button clay-close-button" type="button" aria-label="Đóng" (click)="closeTypeDetails()"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </header>
         <div class="type-dialog-body">
           <div class="type-detail-meta">

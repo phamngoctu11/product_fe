@@ -233,25 +233,61 @@ textarea {
   accent-color: var(--clay-accent);
 }
 
-.app-shell .btn,
-.sf-shell main .btn {
+:is(.app-shell, .sf-shell, .cdk-overlay-container) .btn {
   min-height: 40px;
-  border-radius: var(--clay-radius-sm);
+  border-radius: 999px;
   font-weight: 650;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
 }
 
-.app-shell .btn-primary,
-.sf-shell main .btn-primary {
+:is(.app-shell, .sf-shell, .cdk-overlay-container) :is(.btn-primary, .btn-success, .btn-warning) {
   border-color: var(--clay-accent);
   background: var(--clay-accent);
   color: var(--clay-accent-ink);
 }
 
-.app-shell .btn-primary:hover,
-.sf-shell main .btn-primary:hover {
+:is(.app-shell, .sf-shell, .cdk-overlay-container) :is(.btn-primary, .btn-success, .btn-warning):hover:not(:disabled) {
   border-color: var(--clay-accent-hover);
   background: var(--clay-accent-hover);
   color: var(--clay-accent-ink);
+}
+
+:is(.app-shell, .sf-shell, .cdk-overlay-container) :is(.btn-secondary, .btn-light, .btn-dark, .btn-outline-primary, .btn-outline-secondary, .btn-outline-light) {
+  border-color: var(--clay-line-strong);
+  background: transparent;
+  color: var(--clay-ink);
+}
+
+:is(.app-shell, .sf-shell, .cdk-overlay-container) :is(.btn-secondary, .btn-light, .btn-dark, .btn-outline-primary, .btn-outline-secondary, .btn-outline-light):hover:not(:disabled) {
+  border-color: var(--clay-accent);
+  background: color-mix(in srgb, var(--clay-accent) 12%, transparent);
+  color: var(--clay-ink);
+}
+
+:is(.app-shell, .sf-shell, .cdk-overlay-container) :is(.btn-danger, .btn-outline-danger) {
+  border-color: color-mix(in srgb, var(--clay-danger) 68%, var(--clay-line));
+  color: var(--clay-danger);
+}
+
+:is(.app-shell, .sf-shell, .cdk-overlay-container) .btn-danger {
+  background: color-mix(in srgb, var(--clay-danger) 16%, var(--clay-bg));
+}
+
+:is(.app-shell, .sf-shell, .cdk-overlay-container) :is(.btn-danger, .btn-outline-danger):hover:not(:disabled) {
+  border-color: var(--clay-danger);
+  background: color-mix(in srgb, var(--clay-danger) 22%, var(--clay-bg));
+  color: var(--clay-danger);
+}
+
+:is(.app-shell, .sf-shell, .cdk-overlay-container) :is(.btn-info, .btn-outline-info) {
+  border-color: color-mix(in srgb, var(--clay-info) 68%, var(--clay-line));
+  background: transparent;
+  color: var(--clay-info);
+}
+
+:is(.app-shell, .sf-shell, .cdk-overlay-container) :is(.btn-info, .btn-outline-info):hover:not(:disabled) {
+  background: color-mix(in srgb, var(--clay-info) 12%, transparent);
+  color: var(--clay-info);
 }
 
 /* Semantic Bootstrap helpers use the same muted clay palette in both roles. */
@@ -325,18 +361,14 @@ textarea {
 .app-shell .border-secondary,
 .sf-shell main .border-secondary { border-color: var(--clay-line-strong) !important; }
 
-.app-shell .btn-outline-primary,
-.sf-shell main .btn-outline-primary { border-color: var(--clay-line-strong); color: var(--clay-ink); }
-.app-shell .btn-outline-primary:hover,
-.sf-shell main .btn-outline-primary:hover { border-color: var(--clay-accent); background: color-mix(in srgb, var(--clay-accent) 14%, transparent); color: var(--clay-ink); }
-.app-shell .btn-outline-secondary,
-.sf-shell main .btn-outline-secondary { border-color: var(--clay-line-strong); color: var(--clay-ink-soft); }
-.app-shell .btn-outline-secondary:hover,
-.sf-shell main .btn-outline-secondary:hover { border-color: var(--clay-line-strong); background: var(--clay-surface-soft); color: var(--clay-ink); }
-.app-shell .btn-outline-danger,
-.sf-shell main .btn-outline-danger { border-color: color-mix(in srgb, var(--clay-danger) 68%, var(--clay-line)); color: var(--clay-danger); }
-.app-shell .btn-outline-danger:hover,
-.sf-shell main .btn-outline-danger:hover { background: color-mix(in srgb, var(--clay-danger) 14%, transparent); color: var(--clay-danger); }
+.app-shell .table-light,
+.sf-shell .table-light,
+.cdk-overlay-container .table-light {
+  --bs-table-color: var(--clay-ink-soft);
+  --bs-table-bg: var(--clay-surface-soft);
+  --bs-table-border-color: var(--clay-line);
+  color: var(--clay-ink-soft);
+}
 
 .app-shell .table-responsive,
 .sf-shell main .table-responsive {
@@ -407,6 +439,53 @@ textarea {
   background: var(--clay-surface);
   color: var(--clay-ink);
   box-shadow: var(--clay-shadow-lg);
+}
+
+/* One close control for dialogs, popups, side panels and overlays. */
+button.clay-close-button {
+  display: inline-grid !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  flex: 0 0 36px;
+  place-items: center;
+  padding: 0 !important;
+  border: 1px solid var(--clay-line-strong) !important;
+  border-radius: 50% !important;
+  background: var(--clay-bg-raised) !important;
+  color: var(--clay-ink) !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  line-height: 1;
+  cursor: pointer;
+}
+
+button.clay-close-button > i { color: inherit; font-size: 0.82rem; }
+
+button.clay-close-button.btn-close {
+  background-image: none !important;
+  filter: none !important;
+}
+
+button.clay-close-button.btn-close::before {
+  content: '×';
+  color: inherit;
+  font-family: Arial, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+button.clay-close-button:hover:not(:disabled) {
+  border-color: var(--clay-accent) !important;
+  background: var(--clay-accent) !important;
+  color: var(--clay-accent-ink) !important;
+}
+
+button.clay-close-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56 !important;
 }
 
 @media (max-width: 991.98px) {

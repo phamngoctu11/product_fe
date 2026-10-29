@@ -3,7 +3,7 @@
     <h5 class="modal-title fw-bold m-0 fs-4">
       <i class="bi bi-palette me-2"></i>Cài đặt giao diện
     </h5>
-    <button type="button" class="btn-close btn-close-white" aria-label="Đóng cài đặt giao diện" (click)="close()"></button>
+    <button type="button" class="btn-close btn-close-white clay-close-button" aria-label="Đóng cài đặt giao diện" (click)="close()"></button>
   </div>
 
   <div class="modal-body p-4">
@@ -24,7 +24,7 @@
 
     <div class="mb-3">
       <label class="setting-label form-label fw-bold text-secondary mb-3 small text-uppercase">Màu gợi ý</label>
-      <div class="d-flex flex-wrap gap-3 justify-content-center bg-light p-4 rounded-4 border">
+      <div class="preset-color-list bg-light p-4 rounded-4 border">
         @for (color of presetColors; track color) {
           <button type="button" class="btn rounded-circle shadow-sm color-btn preset-color-btn"
                   [style.background-color]="color.color"
@@ -47,7 +47,7 @@
   </div>
 
   <div class="modal-footer bg-white border-top p-4">
-    <button class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm me-auto" (click)="resetColor()">
+    <button class="btn btn-secondary px-4 fw-bold me-auto" (click)="resetColor()">
       <i class="bi bi-arrow-counterclockwise me-1"></i>Khôi phục mặc định
     </button>
     <button class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" (click)="close()">Hoàn tất</button>

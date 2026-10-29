@@ -18,6 +18,8 @@ export interface CustomRequestDTO {
   submittedAt?: string | null;
   /** Backend quyết định draft còn được sửa/xóa/submit hay không */
   editable: boolean;
+  /** Backend quyết định yêu cầu có thể soft-delete theo trạng thái đơn liên kết hay không */
+  deletable: boolean;
   productTypeId: number | null;
   productTypeCode: string | null;
   productTypeName: string | null;

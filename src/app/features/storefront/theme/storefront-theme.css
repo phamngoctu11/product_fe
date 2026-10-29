@@ -79,6 +79,11 @@
   font-family: var(--sf-font-sans);
 }
 
+/* Keep display headings on the same serif family as the ClayArt wordmark. */
+.sf-shell .sf-display {
+  font-family: var(--sf-font-display);
+}
+
 /* ============================================================
    LAYOUT HELPERS
    ============================================================ */

@@ -110,12 +110,12 @@
 }
 
 .auth-panel-logo-name {
-  font-size: 1.85rem;
-  font-weight: 300;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-transform: none;
   color: var(--sf-ink, #ece5d8);
-  font-family: var(--sf-font-sans, 'Inter Tight', sans-serif);
+  font-family: var(--sf-font-display, 'Imbue', serif);
 }
 
 .auth-panel-tagline {

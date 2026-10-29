@@ -408,7 +408,7 @@
        style="z-index: 1080;"
        (click)="closeImageModal()">
     <div class="position-relative bg-white rounded-3 p-2 shadow-lg overflow-hidden" (click)="$event.stopPropagation()" style="max-width: 90vw; max-height: 90vh;">
-      <button class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle" (click)="closeImageModal()" aria-label="Đóng">
+      <button class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle clay-close-button" (click)="closeImageModal()" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
       </button>
       <img [src]="enlargedImageUrl" alt="Hình ảnh phóng to" class="d-block w-100 h-100 object-fit-contain" style="max-height: 85vh;">

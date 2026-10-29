@@ -7,6 +7,10 @@ export const APP_DIALOG_SIZE = {
     width: '500px',
     maxWidth: 'calc(100vw - 24px)',
   },
+  settings: {
+    width: '760px',
+    maxWidth: 'calc(100vw - 24px)',
+  },
   action: {
     width: '560px',
     maxWidth: 'calc(100vw - 24px)',

@@ -1,5 +1,7 @@
 .modal-content {
-  width: min(560px, calc(100vw - 32px));
+  width: 100%;
+  max-width: 760px;
+  min-width: 0;
   overflow: hidden;
   border: 1px solid var(--clay-line-strong) !important;
   border-radius: var(--clay-radius-lg) !important;
@@ -12,7 +14,7 @@
 .modal-header { min-height: 64px; }
 .modal-header :is(.modal-title, .text-white) { color: var(--clay-ink) !important; }
 .modal-header .btn-close { filter: invert(.85); }
-.modal-body { background: var(--clay-bg-raised); }
+.modal-body { overflow-x: hidden; background: var(--clay-bg-raised); }
 .modal-body .bg-light { border-color: var(--clay-line) !important; background: var(--clay-surface) !important; }
 .modal-body .text-secondary,
 .modal-body .text-muted { color: var(--clay-ink-soft) !important; }
@@ -29,6 +31,7 @@
 .custom-color-picker { width: 50px; height: 50px; cursor: pointer; }
 .preset-color-btn { width: 50px; height: 50px; border-color: color-mix(in srgb, var(--clay-ink) 16%, transparent) !important; }
 .preset-color-btn .text-primary { color: var(--clay-accent-ink) !important; }
+.preset-color-list { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1rem; max-width: 100%; }
 
 @media (max-width: 520px) {
   .modal-content { width: calc(100vw - 16px); }

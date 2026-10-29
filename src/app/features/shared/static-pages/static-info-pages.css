@@ -18,41 +18,10 @@
   border-bottom: 1px solid rgba(var(--app-primary-rgb), 0.14);
 }
 
-.static-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  margin-bottom: 1.4rem;
-  color: var(--app-primary-light);
-  font-size: .85rem;
-}
-
-.static-breadcrumb a {
-  color: var(--app-primary-light);
-  text-decoration: none;
-}
-
-.static-breadcrumb i {
-  font-size: .65rem;
-}
-
 .static-title-row {
   display: flex;
   align-items: center;
   gap: 1.2rem;
-}
-
-.static-title-icon {
-  display: inline-flex;
-  width: 68px;
-  height: 68px;
-  flex: 0 0 68px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(var(--app-primary-rgb), .34);
-  border-radius: 1rem;
-  background: var(--app-gradient-soft);
-  font-size: 1.8rem;
 }
 
 .static-eyebrow {
@@ -63,10 +32,14 @@
   text-transform: uppercase;
 }
 
-.static-title-row h1 {
+.sf-shell .static-title-row h1 {
   margin: .25rem 0 .4rem;
-  font-size: clamp(1.8rem, 4vw, 2.7rem);
-  font-weight: 800;
+  font-family: var(--sf-font-display, 'Imbue', serif);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: -.025em;
+  line-height: .95;
+  text-transform: none;
 }
 
 .static-title-row p {
@@ -445,13 +418,6 @@
 
   .static-title-row {
     align-items: flex-start;
-  }
-
-  .static-title-icon {
-    width: 52px;
-    height: 52px;
-    flex-basis: 52px;
-    font-size: 1.35rem;
   }
 
   .static-info-nav nav,

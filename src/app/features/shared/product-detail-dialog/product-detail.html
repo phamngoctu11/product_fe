@@ -7,7 +7,7 @@
       </span>
       <h2>{{ rawProduct.product_name || 'Sản phẩm mới' }}</h2>
     </div>
-    <button mat-dialog-close type="button" class="detail-close" aria-label="Đóng">
+    <button mat-dialog-close type="button" class="detail-close clay-close-button" aria-label="Đóng">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>
@@ -204,7 +204,7 @@
                 <span class="detail-kicker"><i class="bi bi-chat-square-heart"></i> Review người mua</span>
                 <h3>{{ selectedReviewVariantName }}</h3>
               </div>
-              <button type="button" class="detail-close review-close" aria-label="Đóng review" (click)="closeVariantReviews()">
+              <button type="button" class="detail-close review-close clay-close-button" aria-label="Đóng review" (click)="closeVariantReviews()">
                 <i class="bi bi-x-lg"></i>
               </button>
             </div>

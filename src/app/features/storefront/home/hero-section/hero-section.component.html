@@ -25,15 +25,39 @@
     </div>
 
     <div class="hero-visual">
-      <figure class="hero-image-wrap">
+      <figure
+        class="hero-image-wrap"
+        aria-roledescription="carousel"
+        aria-label="Ảnh giới thiệu các tác phẩm ClayArt">
         <img
-          src="/images/storefront/hero-vases-garden.jpg"
-          alt="Bộ sưu tập bình gốm thủ công với lớp men tự nhiên trong xưởng gốm"
-          fetchpriority="high">
+          *ngFor="let slide of slides; let i = index"
+          class="hero-slide"
+          [class.is-active]="i === activeSlide"
+          [src]="slide.src"
+          [alt]="slide.alt"
+          [attr.aria-hidden]="i !== activeSlide"
+          [attr.fetchpriority]="i === activeSlide ? 'high' : 'low'"
+          decoding="async">
         <figcaption class="hero-image-caption">
-          <span>01 / 04</span>
-          <span>Đất · Men · Lửa</span>
+          <span>{{ slideNumber }} / {{ slideCount }}</span>
+          <span>{{ slides[activeSlide].caption }}</span>
         </figcaption>
+        <div class="hero-carousel-controls" role="group" aria-label="Điều khiển trình chiếu">
+          <button type="button" aria-label="Ảnh trước" title="Ảnh trước" (click)="showSlide(activeSlide - 1)">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            aria-label="Tự động chuyển ảnh"
+            [title]="autoplayEnabled ? 'Tạm dừng trình chiếu' : 'Tiếp tục trình chiếu'"
+            [attr.aria-pressed]="autoplayEnabled"
+            (click)="toggleAutoplay()">
+            <i [class.bi-pause-fill]="autoplayEnabled" [class.bi-play-fill]="!autoplayEnabled" aria-hidden="true"></i>
+          </button>
+          <button type="button" aria-label="Ảnh tiếp theo" title="Ảnh tiếp theo" (click)="showSlide(activeSlide + 1)">
+            <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+        </div>
       </figure>
       <div class="hero-stamp" aria-hidden="true">
         <i class="bi bi-flower1"></i>

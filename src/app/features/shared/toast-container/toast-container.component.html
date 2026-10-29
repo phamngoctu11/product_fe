@@ -5,7 +5,7 @@
     role="status">
     <i class="bi toast-icon" [ngClass]="icon(item.type)" aria-hidden="true"></i>
     <p>{{ item.message }}</p>
-    <button type="button" aria-label="Đóng thông báo" (click)="toast.dismiss(item.id)">
+    <button type="button" aria-label="Đóng thông báo" (click)="toast.dismiss(item.id)" class="clay-close-button">
       <i class="bi bi-x-lg" aria-hidden="true"></i>
     </button>
     <span *ngIf="item.duration > 0" class="toast-progress" [style.animation-duration.ms]="item.duration"></span>

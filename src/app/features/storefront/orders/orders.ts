@@ -24,6 +24,7 @@ import { UserInforDTO } from '../../../model/user.model';
 import { getApiErrorMessage } from '../../../model/api-response.model';
 import { OrderDetailPopupComponent } from '../../shared/order-detail-popup/order-detail-popup.component';
 import { OrderPaymentModalComponent } from '../../shared/order-payment/order-payment-modal.component';
+import { OrderTimelineModalComponent } from '../../shared/order-timeline/order-timeline-modal.component';
 import { getOrderStatusLabel } from '../../shared/ui/order-status-badge/order-status.config';
 import {
   AppPaginationComponent,
@@ -40,6 +41,7 @@ import {
     RouterModule,
     OrderDetailPopupComponent,
     OrderPaymentModalComponent,
+    OrderTimelineModalComponent,
     AppPaginationComponent,
     OrderSummaryCardComponent,
     ViewStateComponent,
@@ -57,6 +59,7 @@ export class Orders implements OnInit {
   selectedOrderHistory: OrderStatusHistory[] = [];
   selectedOrderId: number | null = null;
   isLoadingTimeline = false;
+  isTimelineModalOpen = false;
   modalOrders: OrderListDTO[] = [];
   modalTitle = '';
   isLoadingOrders = false;
@@ -552,6 +555,7 @@ export class Orders implements OnInit {
     this.selectedOrderId = orderId;
     this.selectedOrderHistory = [];
     this.isLoadingTimeline = true;
+    this.isTimelineModalOpen = true;
 
     const order = this.orders.find((item) => item.id === orderId);
 

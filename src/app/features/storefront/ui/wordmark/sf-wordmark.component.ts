@@ -10,7 +10,7 @@ import { SF_BRAND } from '../../storefront.config';
   selector: 'sf-wordmark',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<span class="sf-wordmark" [class]="'sf-wordmark--' + size()">{{ text() }}</span>`,
+  template: `<span [class]="'sf-wordmark sf-wordmark--' + size()">{{ text() }}</span>`,
   styles: [`
     :host { display: inline-block; line-height: 0; }
     :host(.sf-wordmark-host--fluid) { display: block; width: 100%; }

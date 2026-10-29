@@ -3,6 +3,14 @@
   padding-inline: clamp(.75rem, 2vw, 1.5rem);
 }
 
+.sf-shell .custom-orders-title {
+  font-family: var(--sf-font-display, 'Imbue', serif);
+  font-size: clamp(1.8rem, 2.6vw, 2.4rem);
+  font-weight: 400;
+  letter-spacing: -.02em;
+  line-height: 1;
+}
+
 .master-card {
   min-height: min(76dvh, 840px);
   background-color: var(--app-surface, #2b251e) !important;

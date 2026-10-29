@@ -1,3 +1,24 @@
 .voucher-template-name {
   max-width: 220px;
 }
+
+.voucher-template-table {
+  table-layout: fixed;
+}
+
+.voucher-code-column { width: 52%; }
+.voucher-points-column,
+.voucher-quantity-column { width: 15%; }
+.voucher-discount-column { width: 18%; }
+
+.voucher-template-table thead th {
+  padding-block: 0.8rem;
+  background: var(--clay-surface-soft);
+  color: var(--clay-ink-soft);
+  border-bottom-color: var(--clay-line);
+}
+
+.voucher-template-table tbody td {
+  background: var(--clay-surface);
+  color: var(--clay-ink);
+}

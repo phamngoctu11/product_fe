@@ -18,9 +18,17 @@
           {{ receiptMode ? 'Kiểm tra và nhập số lượng thực nhận cho từng item' : 'Thông tin người phụ trách, người duyệt và từng item trong đơn' }}
         </div>
       </div>
-      <button *ngIf="presentation === 'modal'" type="button" class="btn btn-sm btn-light rounded-circle flex-shrink-0" (click)="close.emit()" aria-label="Đóng chi tiết đơn hàng">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <div class="order-detail-header-actions">
+        <button *ngIf="canRequestGuestReceipt"
+                type="button"
+                class="btn btn-primary px-3 fw-bold"
+                (click)="guestReceiptRequested.emit()">
+          <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Xác nhận đã nhận hàng
+        </button>
+        <button *ngIf="presentation === 'modal'" type="button" class="btn btn-sm btn-light rounded-circle flex-shrink-0 clay-close-button" (click)="close.emit()" aria-label="Đóng chi tiết đơn hàng">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     </div>
 
     <div class="p-4 overflow-auto order-detail-body">
@@ -169,7 +177,7 @@
                 </ng-template>
                 <div class="min-w-0">
                   <div class="fw-bold text-dark text-truncate">{{ getItemName(item) }}</div>
-                  <div class="text-muted small text-truncate">{{ getItemVariantLabel(item) }}</div>
+                  <div *ngIf="getFormattedItemDetails(item)" class="review-item-details">{{ getFormattedItemDetails(item) }}</div>
                   <div class="text-muted small">Số lượng nhận: {{ getReceivedQuantity(item) }}</div>
                 </div>
               </div>
@@ -194,11 +202,12 @@
               <div>
                 <div class="text-muted small fw-semibold">Đang đánh giá</div>
                 <div class="fw-bold text-dark">{{ getItemName(reviewingItem) }}</div>
-                <div class="text-muted small">{{ getItemVariantLabel(reviewingItem) }}</div>
+                <div *ngIf="getFormattedItemDetails(reviewingItem)" class="review-item-details">{{ getFormattedItemDetails(reviewingItem) }}</div>
               </div>
               <button
                 type="button"
-                class="btn btn-sm btn-outline-secondary rounded-circle"
+                class="btn btn-sm btn-outline-secondary rounded-circle clay-close-button"
+                aria-label="Đóng biểu mẫu đánh giá"
                 [disabled]="isSubmittingReview || isUploadingReviewImage"
                 (click)="closeReviewForm()">
                 <i class="bi bi-x-lg"></i>

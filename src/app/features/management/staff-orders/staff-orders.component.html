@@ -224,7 +224,7 @@
                 (click)="openOrderChat(selectedOrder)">
           <i class="bi bi-chat-dots me-1"></i>Trao đổi & Chat (Cửa sổ lớn)
         </button>
-        <button class="btn btn-sm btn-light rounded-circle" (click)="closeOrderDetail()" aria-label="Đóng">
+        <button class="btn btn-sm btn-light rounded-circle clay-close-button" (click)="closeOrderDetail()" aria-label="Đóng">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -376,7 +376,7 @@
   <div class="start-production-modal rounded-4 shadow-lg overflow-hidden w-100" style="max-width: 550px;">
     <div class="bg-success text-white p-3 px-4 d-flex justify-content-between align-items-center">
       <h5 class="fw-bold mb-0"><i class="bi bi-play-circle-fill me-2"></i>Bắt đầu sản xuất đơn #{{ (startingOrder || selectedOrder)?.id }}</h5>
-      <button class="btn btn-sm btn-light rounded-circle" (click)="closeStartProductionDialog()" [disabled]="isStartingProduction" aria-label="Đóng">
+      <button class="btn btn-sm btn-light rounded-circle clay-close-button" (click)="closeStartProductionDialog()" [disabled]="isStartingProduction" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -407,7 +407,7 @@
   <div class="start-production-modal rounded-4 shadow-lg overflow-hidden w-100" style="max-width: 600px;">
     <div class="bg-warning text-dark p-3 px-4 d-flex justify-content-between align-items-center">
       <h5 class="fw-bold mb-0"><i class="bi bi-truck me-2"></i>Bàn giao vận chuyển đơn #{{ handoverOrder?.id }}</h5>
-      <button class="btn btn-sm btn-light rounded-circle" (click)="closeShippingHandoverDialog()" [disabled]="isHandingOver" aria-label="Đóng">
+      <button class="btn btn-sm btn-light rounded-circle clay-close-button" (click)="closeShippingHandoverDialog()" [disabled]="isHandingOver" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -501,7 +501,7 @@
                 title="Xem đầy đủ chi tiết đơn hàng">
           <i class="bi bi-file-earmark-text me-1"></i>Xem chi tiết đơn
         </button>
-        <button type="button" class="btn btn-sm btn-light rounded-circle" (click)="closeOrderChat()" aria-label="Đóng">
+        <button type="button" class="btn btn-sm btn-light rounded-circle clay-close-button" (click)="closeOrderChat()" aria-label="Đóng">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>

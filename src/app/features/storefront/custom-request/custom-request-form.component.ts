@@ -66,6 +66,7 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
   isSaving = false;
   isSubmitting = false;
   isUploading = false;
+  isDeleting = false;
 
   private createKey: string | null = null;
   private submitKey: string | null = null;
@@ -377,6 +378,27 @@ export class CustomRequestFormComponent implements OnInit, OnDestroy {
             this.submitKey = null;
           }
           this.handleConflict(err, 'Không thể gửi yêu cầu.');
+        },
+      });
+  }
+
+  deleteCustomRequest() {
+    const request = this.currentDraft;
+    if (!request?.deletable || this.isDeleting || this.isSaving || this.isSubmitting || this.isUploading) return;
+    if (!confirm(`Xóa yêu cầu custom #${request.id}? Thao tác này không thể hoàn tác.`)) return;
+
+    this.isDeleting = true;
+    this.customRequestService
+      .delete(request.id, request.version, this.customRequestService.newIdempotencyKey())
+      .subscribe({
+        next: () => {
+          this.isDeleting = false;
+          this.toast.notify('Đã xóa yêu cầu custom.');
+          this.router.navigate(['/store/custom-requests']);
+        },
+        error: (err) => {
+          this.isDeleting = false;
+          this.handleConflict(err, 'Không thể xóa yêu cầu custom.');
         },
       });
   }

@@ -208,7 +208,7 @@ export class StorefrontLayoutComponent implements OnInit, OnDestroy {
   }
 
   openSettings(): void {
-    this.dialog.open(SettingsModalComponent, { ...APP_DIALOG_SIZE.compact, disableClose: false });
+    this.dialog.open(SettingsModalComponent, { ...APP_DIALOG_SIZE.settings, disableClose: false });
   }
 
   logout(): void {

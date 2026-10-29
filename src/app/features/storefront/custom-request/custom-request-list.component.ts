@@ -20,6 +20,7 @@ type StatusFilter = CustomRequestStatus | 'ALL';
       <sf-page-intro
         eyebrow="ĐẶT LÀM RIÊNG"
         title="Yêu cầu custom của tôi"
+        align="left"
         subtitle="Lưu nhiều bản nháp, chọn một bản để gửi thành đơn. Đơn sẽ chờ quản lý duyệt khả năng làm.">
       </sf-page-intro>
 
@@ -73,16 +74,19 @@ type StatusFilter = CustomRequestStatus | 'ALL';
                   <td class="text-end text-nowrap">
                     @if (req.editable) {
                       <button class="btn btn-sm btn-outline-primary me-1" (click)="open(req)">Sửa / Gửi</button>
-                      <button class="btn btn-sm btn-outline-danger" [disabled]="deletingId === req.id" (click)="remove(req)">
-                        @if (deletingId === req.id) { <span class="spinner-border spinner-border-sm"></span> }
-                        @else { <i class="bi bi-trash"></i> }
-                      </button>
                     } @else {
                       <button class="btn btn-sm btn-outline-secondary me-1" (click)="open(req)">Xem</button>
                       @if (req.linkedOrderId) {
                         <a class="btn btn-sm btn-outline-primary" routerLink="/store/orders">Đơn #{{ req.linkedOrderId }}</a>
                       }
                     }
+                    <button class="btn btn-sm btn-outline-danger ms-1"
+                      [disabled]="deletingId === req.id || !req.deletable" (click)="remove(req)"
+                      [attr.aria-label]="req.deletable ? 'Xóa yêu cầu custom #' + req.id : 'Không thể xóa yêu cầu custom #' + req.id"
+                      [attr.title]="req.deletable ? 'Xóa yêu cầu custom' : 'Chỉ xóa được bản nháp, yêu cầu chưa được chấp nhận, đơn đã hủy hoặc đã hoàn thành'">
+                      @if (deletingId === req.id) { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span class="ms-1">Đang xóa</span> }
+                      @else { <i class="bi bi-trash" aria-hidden="true"></i><span class="ms-1">{{ req.deletable ? 'Xóa' : 'Không thể xóa' }}</span> }
+                    </button>
                   </td>
                 </tr>
               }
@@ -144,7 +148,7 @@ export class CustomRequestListComponent implements OnInit {
   }
 
   remove(req: CustomRequestDTO) {
-    if (!req.editable || !confirm(`Xóa bản nháp #${req.id}?`)) return;
+    if (!req.deletable || !confirm(`Xóa yêu cầu custom #${req.id}? Thao tác này không thể hoàn tác.`)) return;
     this.deletingId = req.id;
     this.customRequestService
       .delete(req.id, req.version, this.customRequestService.newIdempotencyKey())
@@ -152,11 +156,11 @@ export class CustomRequestListComponent implements OnInit {
         next: () => {
           this.deletingId = null;
           this.requests = this.requests.filter((r) => r.id !== req.id);
-          this.toast.notify('Đã xóa bản nháp.');
+          this.toast.notify('Đã xóa yêu cầu custom.');
         },
         error: (err) => {
           this.deletingId = null;
-          this.toast.notify(getApiErrorMessage(err, 'Không thể xóa bản nháp.'));
+          this.toast.notify(getApiErrorMessage(err, 'Không thể xóa yêu cầu custom.'));
           this.loadRequests();
         },
       });

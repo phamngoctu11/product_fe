@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { ROUTE_ACCESS } from './config/navigation.config';
-import { authGuard, backofficeGuard, storefrontGuard } from './guard/auth.guard';
+import { authGuard, backofficeGuard, customRequestMemberGuard, storefrontGuard } from './guard/auth.guard';
 
 export const routes: Routes = [
   {
@@ -43,8 +43,8 @@ export const routes: Routes = [
       { path: 'orders', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/orders/orders').then((m) => m.Orders) },
       { path: 'cart', loadComponent: () => import('./features/storefront/cart/cart-modal').then((m) => m.CartModalComponent) },
       { path: 'wishlist', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/wishlist/wishlist.component').then((m) => m.WishlistComponent) },
-      { path: 'custom-requests', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/custom-request/custom-request-list.component').then((m) => m.CustomRequestListComponent) },
-      { path: 'custom-requests/:id', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/custom-request/custom-request-form.component').then((m) => m.CustomRequestFormComponent) },
+      { path: 'custom-requests', canActivate: [customRequestMemberGuard], loadComponent: () => import('./features/storefront/custom-request/custom-request-list.component').then((m) => m.CustomRequestListComponent) },
+      { path: 'custom-requests/:id', canActivate: [customRequestMemberGuard], loadComponent: () => import('./features/storefront/custom-request/custom-request-form.component').then((m) => m.CustomRequestFormComponent) },
       { path: 'custom-orders', canActivate: [storefrontGuard], loadComponent: () => import('./features/storefront/custom-orders/custom-orders.component').then((m) => m.CustomOrdersComponent) },
       { path: 'myinfor', canActivate: [storefrontGuard], loadComponent: () => import('./features/shared/myinfor/myinfor').then((m) => m.Myinfor) },
       { path: 'payment-success', loadComponent: () => import('./features/storefront/payment-success/payment-success').then((m) => m.PaymentSuccessComponent) },

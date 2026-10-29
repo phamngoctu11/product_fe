@@ -106,8 +106,9 @@
 
 .cart-side {
   padding: 4rem 15% 4rem 10%;
-  background: var(--sf-ink);
-  color: var(--sf-bg);
+  border-left: 1px solid var(--sf-line);
+  background: var(--sf-bg-elev);
+  color: var(--sf-ink);
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -245,10 +246,11 @@
 }
 .cart-btn {
   flex: 1;
-  height: 50px;
-  border: 1px solid var(--sf-ink);
-  background: var(--sf-ink);
-  color: var(--sf-bg);
+  min-height: 48px;
+  border: 1px solid var(--sf-accent);
+  border-radius: 999px;
+  background: var(--sf-accent);
+  color: var(--sf-accent-ink);
   font-size: 0.85rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -261,14 +263,15 @@
   gap: 0.5rem;
 }
 .cart-btn:hover {
-  background: transparent;
-  color: var(--sf-ink);
+  border-color: var(--sf-accent-hover);
+  background: var(--sf-accent-hover);
+  color: var(--sf-accent-ink);
 }
 .cart-btn-close {
   display: none; /* Hide bottom close button */
 }
 
-/* Right side elements (Beige background) */
+/* Right-side cart items use the same dark surface scale as the rest of the store. */
 .cart-items {
   display: flex;
   flex-direction: column;

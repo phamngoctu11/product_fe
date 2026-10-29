@@ -48,6 +48,15 @@
   color: var(--app-text);
 }
 
+.order-detail-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .65rem;
+  flex-wrap: wrap;
+}
+
 .order-detail-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -150,6 +159,17 @@
 
 .review-item-main {
   min-width: 0;
+}
+
+.review-item-details {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: var(--app-muted-text);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .review-item-main img,

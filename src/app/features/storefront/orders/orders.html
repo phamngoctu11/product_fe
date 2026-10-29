@@ -75,7 +75,7 @@
          (click)="$event.stopPropagation()">
         <i class="bi bi-chat-dots me-1"></i> Trao đổi & Thỏa thuận
       </a>
-      <button class="btn btn-sm btn-outline-info px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#timelineModal" (click)="$event.stopPropagation(); viewTimeline(order.id)">
+      <button class="btn btn-sm btn-outline-info px-3 fw-bold" (click)="$event.stopPropagation(); viewTimeline(order.id)">
         <i class="bi bi-clock-history"></i> Tiến trình
       </button>
       <button *ngIf="order.status === 'SHIPPING'" class="btn btn-sm btn-primary px-3 fw-bold" (click)="$event.stopPropagation(); openReceiptConfirm(order)">
@@ -128,7 +128,7 @@
   <div class="reorder-modal-card">
     <div class="reorder-modal-header p-3 px-4 d-flex justify-content-between align-items-center">
       <h5 class="fw-bold mb-0"><i class="bi bi-cart-check me-2"></i>Kết quả mua lại đơn hàng</h5>
-      <button class="btn btn-sm btn-light rounded-circle" (click)="closeReorderModal()" aria-label="Đóng">
+      <button class="btn btn-sm btn-light rounded-circle clay-close-button" (click)="closeReorderModal()" aria-label="Đóng">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -189,7 +189,7 @@
     <div class="modal-content orders-modal-content overflow-hidden">
       <div class="modal-header orders-modal-header">
         <h5 class="modal-title fw-bold"><i class="bi bi-archive me-2"></i>{{ modalTitle }}</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white clay-close-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body orders-modal-body">
         <div *ngIf="modalOrders.length === 0" class="text-center py-4 text-muted fw-medium">
@@ -218,51 +218,13 @@
   </div>
 </div>
 
-<div class="modal fade" id="timelineModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content orders-modal-content overflow-hidden">
-      <div class="modal-header orders-modal-header">
-        <h5 class="modal-title fw-bold">
-          <i class="bi bi-clock-history me-2"></i>Tiến trình đơn hàng #{{ selectedOrderId }}
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body orders-modal-body">
-        <div *ngIf="isLoadingTimeline" class="text-center text-muted py-4">
-          <div class="spinner-border text-info mb-2" role="status"></div>
-          <p>Đang tải dữ liệu...</p>
-        </div>
-
-        <ul *ngIf="!isLoadingTimeline && selectedOrderHistory.length > 0" class="timeline">
-          <li *ngFor="let step of selectedOrderHistory; let i = index" class="timeline-item"
-              [class.completed]="step.newstatus === 'DELIVERED'"
-              [class.cancelled]="step.newstatus === 'CANCELLED'"
-              [class.active]="i === selectedOrderHistory.length - 1 && step.newstatus !== 'DELIVERED' && step.newstatus !== 'CANCELLED'">
-            <div class="fw-bold fs-6" [ngClass]="{'text-danger': step.newstatus === 'CANCELLED', 'text-success': step.newstatus === 'DELIVERED'}">
-              {{ statusLabel(step.newstatus) }}
-            </div>
-            <div class="timeline-date">
-              <i class="bi bi-calendar3 me-1"></i> {{ step.updatetime | date:'dd/MM/yyyy HH:mm:ss' }}
-            </div>
-            <div class="timeline-previous-status" *ngIf="step.oldstatus">
-              <i class="bi bi-arrow-return-right me-1"></i> Trước đó: {{ statusLabel(step.oldstatus) }}
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div class="modal-footer orders-modal-footer">
-        <button type="button" class="btn btn-secondary px-4 fw-bold" data-bs-dismiss="modal">Đóng</button>
-      </div>
-    </div>
-  </div>
-</div>
-
+<app-order-timeline-modal [open]="isTimelineModalOpen" [orderId]="selectedOrderId" [history]="selectedOrderHistory" [loading]="isLoadingTimeline" (closed)="isTimelineModalOpen = false"></app-order-timeline-modal>
 <div class="modal fade" id="reputationPolicyModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content orders-modal-content overflow-hidden">
       <div class="modal-header orders-modal-header">
         <h5 class="modal-title fw-bold"><i class="bi bi-shield-exclamation me-2"></i> Chính sách điểm uy tín</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        <button type="button" class="btn-close btn-close-white clay-close-button" data-bs-dismiss="modal" aria-label="Đóng"></button>
       </div>
       <div class="modal-body orders-modal-body">
         <h6 class="fw-bold text-danger mb-3"><i class="bi bi-dash-circle me-2"></i>Quy định trừ điểm:</h6>

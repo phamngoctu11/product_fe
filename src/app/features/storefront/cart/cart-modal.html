@@ -1,6 +1,6 @@
 <div class="cart-page" tabindex="-1">
   <div class="cart-shell">
-    <button type="button" class="cart-close-btn" (click)="onClose()" aria-label="Đóng">
+    <button type="button" class="cart-close-btn clay-close-button" (click)="onClose()" aria-label="Đóng">
       <i class="bi bi-x-lg"></i>
     </button>
 
@@ -15,9 +15,6 @@
         <div>
           <h5>Giỏ hàng của tôi</h5></div>
       </div>
-      <button type="button" class="cart-close-btn" (click)="onClose()" aria-label="Đóng">
-        <i class="bi bi-x-lg"></i>
-      </button>
     </header>
         <div *ngIf="checkoutErrorMessage && !isLoading" class="cart-inline-alert">
           <i class="bi bi-exclamation-triangle-fill"></i>

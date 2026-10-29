@@ -117,64 +117,6 @@
   padding: 0.85rem 1.4rem;
 }
 
-/* --- Timeline --- */
-.timeline {
-  list-style: none;
-  padding: 0;
-  position: relative;
-}
-
-.timeline::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 10px;
-  width: 2px;
-  background: var(--sf-line);
-  border-radius: 999px;
-}
-
-.timeline-item {
-  position: relative;
-  margin-bottom: 24px;
-  padding-left: 36px;
-}
-
-.timeline-item:last-child {
-  margin-bottom: 0;
-}
-
-.timeline-item::before {
-  content: '';
-  position: absolute;
-  left: 5px;
-  top: 5px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: var(--sf-bg-elev);
-  border: 2px solid var(--sf-line-strong);
-  z-index: 1;
-  transition: all 0.2s ease;
-}
-
-.timeline-item.completed::before {
-  background-color: var(--clay-success);
-  border-color: var(--clay-success);
-}
-
-.timeline-item.cancelled::before {
-  background-color: var(--clay-danger);
-  border-color: var(--clay-danger);
-}
-
-.timeline-item.active::before {
-  background-color: var(--sf-accent);
-  border-color: var(--sf-accent-hover);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sf-accent) 24%, transparent);
-}
-
 .orders-page .btn-primary {
   border-color: var(--sf-accent);
   background: var(--sf-accent);

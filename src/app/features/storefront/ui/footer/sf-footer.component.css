@@ -28,6 +28,12 @@
 
 .sf-footer__logo {
   margin-bottom: 1.5rem;
+  font-family: var(--sf-font-display);
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  text-transform: none;
 }
 
 .sf-footer__slogan {

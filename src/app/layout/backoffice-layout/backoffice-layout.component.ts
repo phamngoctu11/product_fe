@@ -126,7 +126,7 @@ export class BackofficeLayoutComponent implements OnInit, OnDestroy {
 
   openSettings() {
     this.dialog.open(SettingsModalComponent, {
-      ...APP_DIALOG_SIZE.compact,
+      ...APP_DIALOG_SIZE.settings,
       disableClose: false
     });
   }
